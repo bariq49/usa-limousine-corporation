@@ -1,0 +1,38 @@
+{
+  "name": "usa-limousine-corporation",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "USA Limousine Corporation — multi-tenant Taxi SaaS platform monorepo",
+  "license": "UNLICENSED",
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "dev": "turbo run dev --filter=@usa-limousine-corporation/backend --filter=@usa-limousine-corporation/admin --filter=@usa-limousine-corporation/customer --concurrency=15 --ui=tui",
+    "build": "turbo run build",
+    "lint": "eslint . --max-warnings=0 && turbo run lint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test --filter=@usa-limousine-corporation/ui --filter=@usa-limousine-corporation/admin --filter=@usa-limousine-corporation/customer",
+    "test:e2e": "playwright test",
+    "clean": "rm -rf node_modules .turbo"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.22.0",
+    "@playwright/test": "^1.61.1",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.2",
+    "eslint": "^9.22.0",
+    "globals": "^16.0.0",
+    "jsdom": "^30.0.1",
+    "prettier": "^3.5.3",
+    "turbo": "^2.4.4",
+    "typescript": "^5.8.2",
+    "typescript-eslint": "^8.26.1",
+    "vitest": "^4.1.10"
+  }
+}

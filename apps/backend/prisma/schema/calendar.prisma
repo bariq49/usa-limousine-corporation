@@ -1,0 +1,45 @@
+enum CalendarEventType {
+  BOOKING
+  SHIFT
+  CUSTOM
+}
+
+enum CalendarEventStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum CalendarOwnerType {
+  DRIVER
+  PASSENGER
+  AGENCY
+}
+
+model CalendarEvent {
+  id          String              @id @default(cuid())
+  ownerType   CalendarOwnerType
+  ownerId     String
+  bookingId   String?
+  bookingType BookingType?
+  type        CalendarEventType   @default(BOOKING)
+  status      CalendarEventStatus @default(SCHEDULED)
+  title       String
+  description String?
+  startAt     DateTime
+  endAt       DateTime
+  timezone    String              @default("Europe/Amsterdam")
+  metadata    Json?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  deletedAt   DateTime?
+
+  @@unique([bookingId, bookingType])
+  @@index([ownerType, ownerId])
+  @@index([ownerType, ownerId, startAt])
+  @@index([bookingId])
+  @@index([type])
+  @@index([status])
+  @@index([deletedAt])
+}

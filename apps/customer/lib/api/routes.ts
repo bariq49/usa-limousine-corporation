@@ -1,0 +1,16 @@
+const API_ROUTES = {
+  AUTH_CSRF: "/auth/csrf",
+  AUTH_ME: "/auth/me",
+  AUTH_LOGIN: "/auth/login",
+  AUTH_REGISTER: "/auth/register",
+  AUTH_REFRESH: "/auth/refresh",
+  AUTH_LOGOUT: "/auth/logout",
+  AUTH_LOGOUT_ALL: "/auth/logout-all",
+  AUTH_VERIFY: "/auth/verify-email",
+  AUTH_RESEND_OTP: "/auth/resend-otp",
+  AUTH_FORGOT: "/auth/forgot-password",
+  AUTH_RESET: "/auth/reset-password",
+  AUTH_CHANGE_PASSWORD: "/auth/change-password",
+} as const;
+
+export default API_ROUTES;

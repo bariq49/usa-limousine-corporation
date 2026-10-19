@@ -1,0 +1,76 @@
+enum PayoutStatus {
+  PENDING
+  APPROVED
+  PROCESSING
+  PAID
+  REJECTED
+  CANCELLED
+}
+
+enum PayoutLifecycleEvent {
+  CREATED
+  SUBMITTED
+  APPROVED
+  REJECTED
+  PROCESSING
+  PAID
+  CANCELLED
+  RECONCILED
+}
+
+model PayoutSequence {
+  id        String   @id @default("global")
+  lastValue Int      @default(0)
+  updatedAt DateTime @updatedAt
+}
+
+model Payout {
+  id                String          @id @default(cuid())
+  payoutNumber      String          @unique
+  recipientType     WalletOwnerType
+  recipientId       String
+  bankAccountId     String
+  accountHolderName String
+  iban              String
+  bic               String?
+  bankName          String?
+  amount            Decimal         @db.Decimal(14, 4)
+  status            PayoutStatus    @default(PENDING)
+  idempotencyKey    String?         @unique
+  approvedAt        DateTime?
+  processingAt      DateTime?
+  paidAt            DateTime?
+  rejectedAt        DateTime?
+  cancelledAt       DateTime?
+  failureReason     String?
+  notes             String?
+  createdBy         String
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  walletTransaction WalletTransaction?
+  events            PayoutEvent[]
+  createdByUser     User @relation("PayoutCreatedBy", fields: [createdBy], references: [id], onDelete: Restrict)
+
+  @@index([recipientType, recipientId, status])
+  @@index([recipientType, recipientId, createdAt])
+  @@index([status])
+  @@index([createdAt])
+  @@index([payoutNumber])
+}
+
+model PayoutEvent {
+  id             String               @id @default(cuid())
+  payoutId       String
+  event          PayoutLifecycleEvent
+  previousStatus PayoutStatus?
+  newStatus      PayoutStatus?
+  metadata       Json?
+  createdAt      DateTime             @default(now())
+
+  payout Payout @relation(fields: [payoutId], references: [id], onDelete: Cascade)
+
+  @@index([payoutId])
+  @@index([event])
+  @@index([createdAt])
+}

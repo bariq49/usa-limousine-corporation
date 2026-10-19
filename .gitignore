@@ -1,0 +1,64 @@
+# Dependencies
+node_modules/
+pnpm-workspace.yaml.lock
+
+# Build outputs
+dist/
+build/
+out/
+apps/backend/src/generated/
+
+# Postman
+docs/postman/
+
+# Test / coverage
+coverage/
+*.lcov
+test-results/
+tests/results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# Turborepo
+.turbo/
+
+# Next.js (reserved for future apps)
+.next/
+out/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editors / IDEs
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.swp
+*.swo
+*~
+
+# TypeScript
+*.tsbuildinfo
+
+# Misc
+*.local
+.cache/
+tmp/
+temp/

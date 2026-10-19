@@ -1,0 +1,306 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_call:
+    inputs:
+      run_backend:
+        description: Run backend lint/test/build jobs
+        type: boolean
+        default: true
+      run_frontend:
+        description: Run frontend lint/test/build and dashboard e2e
+        type: boolean
+        default: true
+      run_compose:
+        description: Validate docker compose config
+        type: boolean
+        default: true
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  changes:
+    name: Detect CI targets
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.resolve.outputs.backend }}
+      frontend: ${{ steps.resolve.outputs.frontend }}
+      compose: ${{ steps.resolve.outputs.compose }}
+    steps:
+      - uses: actions/checkout@v4
+        if: github.event_name != 'workflow_call'
+        with:
+          fetch-depth: 0
+
+      - name: Path filter
+        id: filter
+        if: github.event_name != 'workflow_call'
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            backend:
+              - 'apps/backend/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'turbo.json'
+              - 'tsconfig.base.json'
+              - 'eslint.config.js'
+              - '.github/workflows/ci.yml'
+            frontend:
+              - 'apps/admin/**'
+              - 'apps/customer/**'
+              - 'packages/ui/**'
+              - 'tests/e2e/**'
+              - 'playwright.config.ts'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'turbo.json'
+              - 'tsconfig.base.json'
+              - 'eslint.config.js'
+              - '.github/workflows/ci.yml'
+            compose:
+              - 'deploy/vps/**'
+              - '.github/workflows/ci.yml'
+
+      - name: Resolve targets
+        id: resolve
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.event_name }}" == "workflow_call" ]]; then
+            echo "backend=${{ inputs.run_backend }}" >> "$GITHUB_OUTPUT"
+            echo "frontend=${{ inputs.run_frontend }}" >> "$GITHUB_OUTPUT"
+            echo "compose=${{ inputs.run_compose }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "backend=${{ steps.filter.outputs.backend }}" >> "$GITHUB_OUTPUT"
+            echo "frontend=${{ steps.filter.outputs.frontend }}" >> "$GITHUB_OUTPUT"
+            echo "compose=${{ steps.filter.outputs.compose }}" >> "$GITHUB_OUTPUT"
+          fi
+
+  backend:
+    name: Backend lint, test, build
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: usa_limousine_corporation_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d usa_limousine_corporation_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Write backend test env
+        run: cp apps/backend/test/ci.env apps/backend/.env.test
+      - run: pnpm install --frozen-lockfile
+      - name: Apply and verify Prisma migrations
+        working-directory: apps/backend
+        env:
+          NODE_ENV: test
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/usa_limousine_corporation_test?schema=public
+          SHADOW_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/prisma_shadow?schema=public
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client
+          PGPASSWORD=postgres psql -h localhost -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = 'prisma_shadow'" | grep -q 1 \
+            || PGPASSWORD=postgres psql -h localhost -U postgres -c "CREATE DATABASE prisma_shadow"
+          pnpm exec prisma migrate deploy
+          if ! pnpm exec prisma migrate diff \
+            --from-migrations prisma/migrations \
+            --to-schema-datamodel prisma \
+            --shadow-database-url "$SHADOW_DATABASE_URL" \
+            --exit-code; then
+            echo "ERROR: Prisma schema is ahead of migrations."
+            echo "Create a migration: cd apps/backend && pnpm db:migrate"
+            exit 1
+          fi
+          pnpm exec prisma migrate status
+      - run: pnpm --filter @usa-limousine-corporation/backend lint
+      - run: pnpm --filter @usa-limousine-corporation/backend typecheck
+      - run: pnpm --filter @usa-limousine-corporation/backend test
+      - run: pnpm --filter @usa-limousine-corporation/backend test:e2e
+      - run: pnpm --filter @usa-limousine-corporation/backend build
+
+  frontend:
+    name: Frontend lint, test, build
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Write dashboard env
+        run: |
+          for pair in admin:3001 customer:3002; do
+            app="${pair%%:*}"
+            port="${pair##*:}"
+            printf '%s\n' \
+              "NEXT_PUBLIC_API_BASE_URL=http://localhost:3000/api/v1" \
+              "NEXT_PUBLIC_APP_URL=http://localhost:${port}" \
+              "NEXT_PUBLIC_APP_ENV=test" \
+              > "apps/${app}/.env"
+          done
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec turbo run lint --filter=@usa-limousine-corporation/ui --filter=@usa-limousine-corporation/admin --filter=@usa-limousine-corporation/customer
+      - run: pnpm exec turbo run typecheck --filter=@usa-limousine-corporation/ui --filter=@usa-limousine-corporation/admin --filter=@usa-limousine-corporation/customer
+      - run: pnpm exec turbo run test --filter=@usa-limousine-corporation/ui --filter=@usa-limousine-corporation/admin --filter=@usa-limousine-corporation/customer
+      - run: pnpm exec turbo run build --filter=@usa-limousine-corporation/admin --filter=@usa-limousine-corporation/customer
+
+  e2e:
+    name: Dashboard Playwright smokes
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: frontend
+    if: needs.frontend.result == 'success'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Write dashboard env
+        run: |
+          for pair in admin:3001 customer:3002; do
+            app="${pair%%:*}"
+            port="${pair##*:}"
+            printf '%s\n' \
+              "NEXT_PUBLIC_API_BASE_URL=http://localhost:3000/api/v1" \
+              "NEXT_PUBLIC_APP_URL=http://localhost:${port}" \
+              "NEXT_PUBLIC_APP_ENV=test" \
+              > "apps/${app}/.env"
+          done
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm exec playwright test tests/e2e/admin tests/e2e/customer
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-results
+          path: tests/results
+          if-no-files-found: ignore
+
+  e2e-api:
+    name: Playwright against Nest health
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: backend
+    if: needs.backend.result == 'success'
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: usa_limousine_corporation_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d usa_limousine_corporation_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Write backend test env
+        run: cp apps/backend/test/ci.env apps/backend/.env.test
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @usa-limousine-corporation/backend build
+      - run: pnpm --filter @usa-limousine-corporation/backend db:migrate:deploy:test
+      - name: Start API
+        working-directory: apps/backend
+        env:
+          NODE_ENV: test
+          PORT: "3000"
+        run: |
+          node dist/main.js &
+          for i in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:3000/api/v1/health >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "API failed to start"
+          exit 1
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Playwright API health
+        env:
+          PLAYWRIGHT_SKIP_WEBSERVER: "1"
+          PLAYWRIGHT_API_URL: http://127.0.0.1:3000
+        run: pnpm exec playwright test tests/e2e/api
+
+  compose:
+    name: Compose file validates
+    needs: changes
+    if: needs.changes.outputs.compose == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dummy gitignored env files
+        run: |
+          for app in backend admin customer; do
+            mkdir -p "apps/${app}"
+            touch "apps/${app}/.env.production"
+          done
+      - run: docker compose --env-file deploy/vps/ci.env -f deploy/vps/docker-compose.yml config >/dev/null

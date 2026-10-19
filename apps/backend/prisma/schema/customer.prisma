@@ -1,0 +1,53 @@
+enum CustomerType {
+  NORMAL
+  VIP
+  CORPORATE
+}
+
+model Customer {
+  id                    String       @id @default(cuid())
+  userId                String       @unique
+  type                  CustomerType @default(NORMAL)
+  stripeCustomerId      String?      @unique
+  stripePaymentMethodId String?
+  fcmToken              String?
+  isActive              Boolean      @default(true)
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+  deletedAt             DateTime?
+
+  user     User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  settings CustomerSettings?
+  pushDevices CustomerPushDevice[]
+  reviews  DriverReview[]
+
+  @@index([type])
+  @@index([deletedAt])
+}
+
+model CustomerSettings {
+  id                String   @id @default(cuid())
+  customerId        String   @unique
+  email     Boolean  @default(true)
+  push      Boolean  @default(true)
+  timezone  String   @default("Europe/Amsterdam")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+}
+
+model CustomerPushDevice {
+  id         String   @id @default(cuid())
+  customerId String
+  token      String   @unique
+  deviceId   String?
+  platform   String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@unique([customerId, deviceId])
+  @@index([customerId])
+}

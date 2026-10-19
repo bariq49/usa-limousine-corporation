@@ -1,0 +1,52 @@
+enum RoleKey {
+  SUPER_ADMIN
+  EMPLOYEE
+  AGENCY_OWNER
+  AGENCY_STAFF
+  DRIVER
+  CUSTOMER
+  BUSINESS_CUSTOMER
+  VIP_CUSTOMER
+}
+
+model Role {
+  id          String           @id @default(cuid())
+  key         RoleKey          @unique
+  name        String
+  description String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  users       UserRole[]
+  permissions RolePermission[]
+}
+
+model Permission {
+  id          String           @id @default(cuid())
+  key         String           @unique
+  description String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  roles       RolePermission[]
+}
+
+model UserRole {
+  userId     String
+  roleId     String
+  assignedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  assignedAt   DateTime @default(now())
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+}

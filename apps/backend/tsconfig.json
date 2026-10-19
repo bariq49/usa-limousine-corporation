@@ -1,0 +1,23 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "useDefineForClassFields": false,
+    "verbatimModuleSyntax": false,
+    "incremental": false,
+    "declaration": false,
+    "declarationMap": false,
+    "types": ["node"],
+    "baseUrl": ".",
+    "paths": {
+      "@prisma/client": ["./src/generated/prisma"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "src/generated"]
+}

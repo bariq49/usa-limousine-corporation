@@ -1,0 +1,248 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy_scope:
+        description: "What to rebuild on the VPS (auto = detect from git changes)"
+        type: choice
+        options:
+          - auto
+          - all
+          - backend
+          - dashboards
+          - admin
+          - customer
+        default: auto
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-vps
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  changes:
+    name: Detect deploy targets
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.targets.outputs.backend }}
+      admin: ${{ steps.targets.outputs.admin }}
+      customer: ${{ steps.targets.outputs.customer }}
+      any: ${{ steps.targets.outputs.any }}
+      deploy_services: ${{ steps.targets.outputs.deploy_services }}
+      ci_backend: ${{ steps.targets.outputs.ci_backend }}
+      ci_frontend: ${{ steps.targets.outputs.ci_frontend }}
+      ci_compose: ${{ steps.targets.outputs.ci_compose }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Path filter
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            backend:
+              - 'apps/backend/**'
+              - 'deploy/vps/Dockerfile'
+              - 'deploy/vps/entrypoint.sh'
+            admin:
+              - 'apps/admin/**'
+              - 'deploy/vps/Dockerfile.admin'
+            customer:
+              - 'apps/customer/**'
+              - 'deploy/vps/Dockerfile.customer'
+            ui:
+              - 'packages/ui/**'
+            shared:
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'turbo.json'
+              - 'tsconfig.base.json'
+              - 'eslint.config.js'
+            deploy_infra:
+              - 'deploy/vps/docker-compose.yml'
+              - 'deploy/vps/Caddyfile'
+              - 'deploy/vps/update.sh'
+              - 'deploy/vps/smoke.sh'
+              - 'deploy/vps/bootstrap.sh'
+              - 'deploy/vps/ci.env'
+              - 'deploy/vps/rsync.exclude'
+              - '.github/workflows/deploy.yml'
+
+      - name: Resolve targets
+        id: targets
+        env:
+          SCOPE: ${{ github.event_name == 'workflow_dispatch' && inputs.deploy_scope || 'auto' }}
+          F_BACKEND: ${{ steps.filter.outputs.backend }}
+          F_ADMIN: ${{ steps.filter.outputs.admin }}
+          F_CUSTOMER: ${{ steps.filter.outputs.customer }}
+          F_UI: ${{ steps.filter.outputs.ui }}
+          F_SHARED: ${{ steps.filter.outputs.shared }}
+          F_INFRA: ${{ steps.filter.outputs.deploy_infra }}
+        run: |
+          set -euo pipefail
+
+          backend=false
+          admin=false
+          customer=false
+
+          force_all=false
+          case "${SCOPE}" in
+            all) force_all=true ;;
+            backend) backend=true ;;
+            admin) admin=true ;;
+            customer) customer=true ;;
+            dashboards)
+              admin=true
+              customer=true
+              ;;
+            auto)
+              if [[ "${F_SHARED}" == "true" || "${F_INFRA}" == "true" ]]; then
+                force_all=true
+              else
+                [[ "${F_BACKEND}" == "true" ]] && backend=true
+                if [[ "${F_UI}" == "true" ]]; then
+                  admin=true
+                  customer=true
+                else
+                  [[ "${F_ADMIN}" == "true" ]] && admin=true
+                  [[ "${F_CUSTOMER}" == "true" ]] && customer=true
+                fi
+              fi
+              ;;
+            *)
+              echo "Unknown deploy_scope: ${SCOPE}"
+              exit 1
+              ;;
+          esac
+
+          if [[ "${force_all}" == "true" ]]; then
+            backend=true
+            admin=true
+            customer=true
+          fi
+
+          services=()
+          [[ "${backend}" == "true" ]] && services+=(backend)
+          [[ "${admin}" == "true" ]] && services+=(admin)
+          [[ "${customer}" == "true" ]] && services+=(customer)
+
+          any=false
+          [[ "${#services[@]}" -gt 0 ]] && any=true
+
+          deploy_services="all"
+          if [[ "${force_all}" != "true" ]]; then
+            deploy_services="${services[*]:-}"
+          fi
+
+          ci_backend=false
+          ci_frontend=false
+          ci_compose=false
+          if [[ "${force_all}" == "true" || "${SCOPE}" == "all" ]]; then
+            ci_backend=true
+            ci_frontend=true
+            ci_compose=true
+          else
+            [[ "${backend}" == "true" ]] && ci_backend=true
+            if [[ "${admin}" == "true" || "${customer}" == "true" ]]; then
+              ci_frontend=true
+            fi
+            [[ "${F_INFRA}" == "true" || "${force_all}" == "true" ]] && ci_compose=true
+            # Always validate compose when deploying anything that touches images
+            [[ "${any}" == "true" ]] && ci_compose=true
+          fi
+
+          {
+            echo "backend=${backend}"
+            echo "admin=${admin}"
+            echo "customer=${customer}"
+            echo "any=${any}"
+            echo "deploy_services=${deploy_services}"
+            echo "ci_backend=${ci_backend}"
+            echo "ci_frontend=${ci_frontend}"
+            echo "ci_compose=${ci_compose}"
+          } >> "${GITHUB_OUTPUT}"
+
+          echo "scope=${SCOPE}"
+          echo "deploy_services=${deploy_services}"
+          echo "ci_backend=${ci_backend} ci_frontend=${ci_frontend} ci_compose=${ci_compose}"
+
+  ci:
+    name: Gate on CI
+    needs: changes
+    if: needs.changes.outputs.any == 'true'
+    uses: ./.github/workflows/ci.yml
+    with:
+      run_backend: ${{ needs.changes.outputs.ci_backend == 'true' }}
+      run_frontend: ${{ needs.changes.outputs.ci_frontend == 'true' }}
+      run_compose: ${{ needs.changes.outputs.ci_compose == 'true' }}
+
+  release:
+    name: Rsync and Compose on VPS
+    needs: [changes, ci]
+    if: needs.changes.outputs.any == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start ssh-agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
+
+      - name: Trust VPS host key
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Ensure install dir and rsync
+        env:
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+        run: |
+          set -euo pipefail
+          ssh "${VPS_USER}@${VPS_HOST}" "command -v rsync >/dev/null || { apt-get update && apt-get install -y rsync; }; mkdir -p /opt/usa-limousine-corporation"
+          rsync -az --delete \
+            --filter "P .env" \
+            --filter "P .env.*" \
+            --filter "P apps/backend/.env" \
+            --filter "P apps/backend/.env.*" \
+            --filter "P apps/admin/.env" \
+            --filter "P apps/admin/.env.*" \
+            --filter "P apps/customer/.env" \
+            --filter "P apps/customer/.env.*" \
+            --exclude-from=deploy/vps/rsync.exclude \
+            ./ "${VPS_USER}@${VPS_HOST}:/opt/usa-limousine-corporation/"
+
+      - name: Compose up with health check
+        uses: appleboy/ssh-action@v1.2.2
+        env:
+          DEPLOY_SERVICES: ${{ needs.changes.outputs.deploy_services }}
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          command_timeout: 35m
+          envs: DEPLOY_SERVICES
+          script: |
+            set -euo pipefail
+            export SKIP_GIT_PULL=1
+            export DEPLOY_SERVICES="${DEPLOY_SERVICES}"
+            echo "VPS deploy services: ${DEPLOY_SERVICES}"
+            bash /opt/usa-limousine-corporation/deploy/vps/update.sh
+
+  skip:
+    name: Nothing to deploy
+    needs: changes
+    if: needs.changes.outputs.any != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "No backend/dashboard/deploy-related changes — skipping CI and VPS deploy."

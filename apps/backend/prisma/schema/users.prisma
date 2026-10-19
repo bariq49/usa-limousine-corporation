@@ -1,0 +1,32 @@
+model User {
+  id                String    @id @default(cuid())
+  firstName         String?
+  lastName          String?
+  email             String    @unique
+  phone             String?
+  avatar            String?
+  passwordHash      String
+  isEmailVerified   Boolean   @default(false)
+  isActive          Boolean   @default(true)
+  failedLoginCount  Int       @default(0)
+  lockoutUntil      DateTime?
+  defaultAdminEmail String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  roles                   UserRole[]
+  sessions                Session[]
+  emailVerificationTokens EmailVerificationToken[]
+  passwordResetTokens     PasswordResetToken[]
+  auditLogs               AuditLog[]
+  drivers                 Driver[]
+  customer                Customer?
+  bookings                Booking[]
+  tripEvents         TripEvent[]
+  helpTicketMessages HelpTicketMessage[]
+  helpTicketEvents   HelpTicketEvent[]
+  payoutsCreated     Payout[]              @relation("PayoutCreatedBy")
+  chatParticipations ConversationParticipant[]
+  chatMessagesSent   ChatMessage[]         @relation("ChatMessageSender")
+  chatReceipts       ChatMessageReceipt[]
+}

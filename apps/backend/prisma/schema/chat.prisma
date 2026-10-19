@@ -1,0 +1,96 @@
+enum ConversationKind {
+  DIRECT
+  CONTEXT
+}
+
+enum ConversationSubjectType {
+  TRIP
+}
+
+enum ConversationStatus {
+  PENDING
+  ACTIVE
+  READ_ONLY
+}
+
+enum ChatMessageType {
+  TEXT
+}
+
+model Conversation {
+  id          String                    @id @default(cuid())
+  kind        ConversationKind          @default(CONTEXT)
+  subjectType ConversationSubjectType?
+  subjectId   String?
+  status      ConversationStatus        @default(PENDING)
+  createdAt   DateTime                  @default(now())
+  updatedAt   DateTime                  @updatedAt
+  activatedAt DateTime?
+  closedAt    DateTime?
+
+  participants ConversationParticipant[]
+  messages     ChatMessage[]
+
+  @@unique([subjectType, subjectId])
+  @@index([status])
+  @@index([updatedAt])
+}
+
+model ConversationParticipant {
+  id                String    @id @default(cuid())
+  conversationId    String
+  userId            String
+  lastReadMessageId String?
+  lastReadAt        DateTime?
+  joinedAt          DateTime  @default(now())
+  leftAt            DateTime?
+
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lastReadMessage ChatMessage? @relation("ParticipantLastRead", fields: [lastReadMessageId], references: [id], onDelete: SetNull)
+
+  @@unique([conversationId, userId])
+  @@index([userId])
+  @@index([conversationId])
+  @@index([lastReadMessageId])
+}
+
+model ChatMessage {
+  id              String          @id @default(cuid())
+  conversationId  String
+  senderUserId    String
+  type            ChatMessageType @default(TEXT)
+  body            String
+  clientMessageId String?
+  replyToMessageId String?
+  createdAt       DateTime        @default(now())
+  editedAt        DateTime?
+  deletedAt       DateTime?
+
+  conversation         Conversation             @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender               User                     @relation("ChatMessageSender", fields: [senderUserId], references: [id], onDelete: Restrict)
+  replyTo              ChatMessage?             @relation("ChatMessageReply", fields: [replyToMessageId], references: [id], onDelete: SetNull)
+  replies              ChatMessage[]            @relation("ChatMessageReply")
+  receipts             ChatMessageReceipt[]
+  lastReadByParticipants ConversationParticipant[] @relation("ParticipantLastRead")
+
+  @@unique([conversationId, senderUserId, clientMessageId])
+  @@index([conversationId, createdAt])
+  @@index([senderUserId])
+  @@index([deletedAt])
+}
+
+model ChatMessageReceipt {
+  id          String    @id @default(cuid())
+  messageId   String
+  userId      String
+  deliveredAt DateTime?
+  readAt      DateTime?
+
+  message ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId])
+  @@index([userId])
+  @@index([messageId])
+}

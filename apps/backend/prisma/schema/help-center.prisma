@@ -1,0 +1,106 @@
+enum HelpTicketStatus {
+  PENDING
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum HelpTicketCategory {
+  ACCOUNT
+  PAYMENTS
+  TRIPS
+  VEHICLE
+  DOCUMENTS
+  APP
+  PASSENGER_NO_SHOW
+  FLAT_TIRE
+  OTHER
+}
+
+enum HelpTicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum HelpTicketEventType {
+  CREATED
+  STATUS_CHANGED
+  PRIORITY_CHANGED
+  MESSAGE_ADDED
+}
+
+enum HelpTicketOwnerType {
+  DRIVER
+  CUSTOMER
+}
+
+model HelpTicketSequence {
+  id        String   @id @default("global")
+  lastValue Int      @default(0)
+  updatedAt DateTime @updatedAt
+}
+
+model HelpTicket {
+  id           String              @id @default(cuid())
+  ticketNumber String              @unique
+  ownerType    HelpTicketOwnerType
+  ownerId      String
+  ownerName    String?
+  ownerEmail   String?
+  subject      String
+  description  String
+  attachment   String?
+  category     HelpTicketCategory  @default(OTHER)
+  status       HelpTicketStatus    @default(PENDING)
+  priority     HelpTicketPriority  @default(MEDIUM)
+  resolvedAt   DateTime?
+  closedAt     DateTime?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  deletedAt    DateTime?
+
+  messages HelpTicketMessage[]
+  events   HelpTicketEvent[]
+
+  @@index([ownerType, ownerId])
+  @@index([status])
+  @@index([category])
+  @@index([priority])
+  @@index([createdAt])
+  @@index([deletedAt])
+}
+
+model HelpTicketMessage {
+  id           String   @id @default(cuid())
+  ticketId     String
+  authorUserId String
+  body         String
+  createdAt    DateTime @default(now())
+
+  ticket HelpTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author User       @relation(fields: [authorUserId], references: [id], onDelete: Restrict)
+
+  @@index([ticketId])
+  @@index([createdAt])
+}
+
+model HelpTicketEvent {
+  id               String               @id @default(cuid())
+  ticketId         String
+  event            HelpTicketEventType
+  actorUserId      String
+  previousStatus   HelpTicketStatus?
+  newStatus        HelpTicketStatus?
+  previousPriority HelpTicketPriority?
+  newPriority      HelpTicketPriority?
+  note             String?
+  createdAt        DateTime             @default(now())
+
+  ticket HelpTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  actor  User       @relation(fields: [actorUserId], references: [id], onDelete: Restrict)
+
+  @@index([ticketId])
+  @@index([createdAt])
+}

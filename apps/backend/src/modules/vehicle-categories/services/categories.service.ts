@@ -1,0 +1,140 @@
+import { BadRequestException, Inject, Injectable, NotFoundException } from "@nestjs/common";
+import type { BulkDeleteDto } from "../dto/bulk-delete.dto";
+import type { CreateDto } from "../dto/create.dto";
+import type { VehicleCategoryLuggageCapacityInput } from "../dto/luggage-capacity.dto";
+import type { VehicleCategoryQueryDto } from "../dto/query.dto";
+import type { UpdateDto } from "../dto/update.dto";
+import { CategoriesRepository } from "../repositories/categories.repository";
+import { LuggageRepository } from "../repositories/luggage.repository";
+
+@Injectable()
+export class CategoriesService {
+  constructor(
+    @Inject(CategoriesRepository)
+    private readonly categoriesRepository: CategoriesRepository,
+    @Inject(LuggageRepository)
+    private readonly luggageRepository: LuggageRepository,
+  ) {}
+
+  async create(body: CreateDto) {
+    const luggageCapacity = await this.validateLuggageCapacity(
+      body.standardLuggageCapacity,
+      body.specialLuggageCapacity ?? [],
+    );
+    return this.categoriesRepository.create(body, luggageCapacity);
+  }
+
+  async findAll(query: VehicleCategoryQueryDto) {
+    return this.categoriesRepository.findMany(query);
+  }
+
+  async findById(id: string) {
+    const category = await this.categoriesRepository.findById(id);
+    if (!category) {
+      throw new NotFoundException("Vehicle category not found");
+    }
+    return category;
+  }
+
+  async update(id: string, body: UpdateDto) {
+    const existing = await this.categoriesRepository.findById(id);
+    if (!existing) {
+      throw new NotFoundException("Vehicle category not found");
+    }
+
+    const hasStandardLuggage = body.standardLuggageCapacity !== undefined;
+    const hasSpecialLuggage = body.specialLuggageCapacity !== undefined;
+    if (hasStandardLuggage !== hasSpecialLuggage) {
+      throw new BadRequestException(
+        "standardLuggageCapacity and specialLuggageCapacity must be submitted together",
+      );
+    }
+
+    const luggageCapacity = hasStandardLuggage
+      ? await this.validateLuggageCapacity(
+          body.standardLuggageCapacity ?? [],
+          body.specialLuggageCapacity ?? [],
+        )
+      : undefined;
+
+    return this.categoriesRepository.update(id, body, luggageCapacity);
+  }
+
+  async remove(id: string) {
+    const existing = await this.categoriesRepository.findById(id);
+    if (!existing) {
+      throw new NotFoundException("Vehicle category not found");
+    }
+
+    const linkedVehicles = await this.categoriesRepository.countDriverVehiclesByCategoryIds([id]);
+    if (linkedVehicles > 0) {
+      throw new BadRequestException(
+        "Vehicle category cannot be deleted because it is assigned to one or more driver vehicles",
+      );
+    }
+
+    return this.categoriesRepository.delete(id);
+  }
+
+  async bulkRemove(body: BulkDeleteDto) {
+    const ids = [...new Set(body.ids)];
+    const activeCount = await this.categoriesRepository.countActiveByIds(ids);
+    if (activeCount !== ids.length) {
+      throw new BadRequestException("One or more vehicle categories were not found");
+    }
+
+    const linkedVehicles = await this.categoriesRepository.countDriverVehiclesByCategoryIds(ids);
+    if (linkedVehicles > 0) {
+      throw new BadRequestException(
+        "One or more vehicle categories cannot be deleted because they are assigned to driver vehicles",
+      );
+    }
+
+    const result = await this.categoriesRepository.deleteMany(ids);
+    return {
+      message: "Vehicle categories deleted",
+      deletedCount: result.count,
+      ids,
+    };
+  }
+
+  private async validateLuggageCapacity(
+    standardLuggageCapacity: VehicleCategoryLuggageCapacityInput[],
+    specialLuggageCapacity: VehicleCategoryLuggageCapacityInput[],
+  ): Promise<VehicleCategoryLuggageCapacityInput[]> {
+    const luggageCapacity = [...standardLuggageCapacity, ...specialLuggageCapacity];
+    const luggageTypeIds = luggageCapacity.map((capacity) => capacity.luggageTypeId);
+
+    if (new Set(luggageTypeIds).size !== luggageTypeIds.length) {
+      throw new BadRequestException(
+        "Luggage types may only be configured once per vehicle category",
+      );
+    }
+
+    const luggageTypes = await this.luggageRepository.findByIds(luggageTypeIds);
+    if (luggageTypes.length !== luggageTypeIds.length) {
+      throw new BadRequestException("One or more luggage types are not active or do not exist");
+    }
+
+    const specialLuggageTypeIds = new Set(
+      luggageTypes
+        .filter((luggageType) => luggageType.isSpecial)
+        .map((luggageType) => luggageType.id),
+    );
+    const incorrectStandardType = standardLuggageCapacity.find((capacity) =>
+      specialLuggageTypeIds.has(capacity.luggageTypeId),
+    );
+    if (incorrectStandardType) {
+      throw new BadRequestException("Special luggage must be sent in specialLuggageCapacity");
+    }
+
+    const incorrectSpecialType = specialLuggageCapacity.find(
+      (capacity) => !specialLuggageTypeIds.has(capacity.luggageTypeId),
+    );
+    if (incorrectSpecialType) {
+      throw new BadRequestException("Standard luggage must be sent in standardLuggageCapacity");
+    }
+
+    return luggageCapacity;
+  }
+}

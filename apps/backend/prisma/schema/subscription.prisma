@@ -1,0 +1,109 @@
+enum Audience {
+  DRIVER
+  AGENCY
+}
+
+enum SubscriptionInterval {
+  MONTH
+  YEAR
+}
+
+enum SubscriptionStatus {
+  INCOMPLETE
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  EXPIRED
+}
+
+model SubscriptionPlan {
+  id              String               @id @default(cuid())
+  audience        Audience
+  name            String
+  description     String?
+  interval        SubscriptionInterval @default(MONTH)
+  amount          Decimal              @db.Decimal(12, 2)
+  tripsPerMonth   Int?
+  features        Json
+  freeMonths      Int                  @default(0)
+  freeDays        Int                  @default(0)
+  graceDays       Int                  @default(3)
+  isPopular       Boolean              @default(false)
+  isActive        Boolean              @default(true)
+  sortOrder       Int                  @default(0)
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  subscriptions   Subscription[] @relation("SubscriptionCurrentPlan")
+  pendingUpgrades Subscription[] @relation("SubscriptionPendingPlan")
+  periods         SubscriptionPeriod[]
+
+  @@index([audience])
+  @@index([isActive])
+  @@index([sortOrder])
+  @@index([createdAt])
+}
+
+model Subscription {
+  id                   String               @id @default(cuid())
+  planId               String
+  audience             Audience
+  referenceId          String
+  status               SubscriptionStatus   @default(INCOMPLETE)
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  tripsUsed            Int                  @default(0)
+  trialEnd             DateTime?
+  cancelAtPeriodEnd    Boolean              @default(false)
+  pendingPlanId        String?
+  pendingChargeAmount  Decimal?             @db.Decimal(12, 2)
+  stripeCustomerId     String?
+  stripePaymentMethodId String?
+  dunningAttempts      Int                  @default(0)
+  lastDunningAt        DateTime?
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+
+  plan        SubscriptionPlan  @relation("SubscriptionCurrentPlan", fields: [planId], references: [id], onDelete: Restrict)
+  pendingPlan SubscriptionPlan? @relation("SubscriptionPendingPlan", fields: [pendingPlanId], references: [id], onDelete: SetNull)
+  periods     SubscriptionPeriod[]
+  events      SubscriptionEvent[]
+
+  @@index([audience, referenceId, status])
+  @@index([planId])
+  @@index([pendingPlanId])
+  @@index([status])
+  @@index([currentPeriodEnd])
+  @@index([createdAt])
+}
+
+model SubscriptionPeriod {
+  id              String    @id @default(cuid())
+  subscriptionId  String
+  planId          String
+  periodStart     DateTime
+  periodEnd       DateTime
+  tripsUsed       Int       @default(0)
+  tripsLimit      Int?
+  createdAt       DateTime  @default(now())
+
+  subscription Subscription     @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  plan         SubscriptionPlan @relation(fields: [planId], references: [id], onDelete: Restrict)
+
+  @@index([subscriptionId, periodStart])
+  @@index([planId])
+}
+
+model SubscriptionEvent {
+  id             String   @id @default(cuid())
+  subscriptionId String
+  type           String
+  payload        Json?
+  createdAt      DateTime @default(now())
+
+  subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@index([subscriptionId, createdAt])
+  @@index([type])
+}

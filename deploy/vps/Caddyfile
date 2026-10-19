@@ -1,0 +1,11 @@
+api.usalimocorp.com {
+	reverse_proxy backend:3000
+}
+
+admin.usalimocorp.com {
+	reverse_proxy admin:3001
+}
+
+customer.usalimocorp.com, www.usalimocorp.com, usalimocorp.com {
+	reverse_proxy customer:3002
+}

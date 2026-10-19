@@ -1,0 +1,20 @@
+enum ActivityOwnerType {
+  DRIVER
+  CUSTOMER
+  USER
+}
+
+model Activity {
+  id        String            @id @default(cuid())
+  ownerType ActivityOwnerType
+  ownerId   String
+  type      String
+  actorType ActivityOwnerType?
+  actorId   String?
+  data      Json?
+  createdAt DateTime          @default(now())
+
+  @@index([ownerType, ownerId, createdAt])
+  @@index([type])
+  @@index([createdAt])
+}

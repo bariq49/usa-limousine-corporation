@@ -1,0 +1,94 @@
+enum PricingType {
+  FIXED
+  PER_UNIT
+  PERCENTAGE
+}
+
+enum PricingStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model VehicleCategory {
+  id             String   @id @default(cuid())
+  name           String
+  description    String?
+  image          String?
+
+  passengerCount Int      @default(4)
+  isActive       Boolean  @default(true)
+
+  luggageCapacity VehicleCategoryLuggageCapacity[]
+  driverVehicles  DriverVehicle[]
+  bookings        Booking[]
+  pricing         VehicleCategoryPricing[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  @@index([isActive])
+  @@index([deletedAt])
+}
+
+model LuggageType {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  dimensions  String?
+  image       String?
+  price       Float?
+  isSpecial   Boolean  @default(false)
+  isActive    Boolean  @default(true)
+
+  capacities              VehicleCategoryLuggageCapacity[]
+  driverVehicleCapacities DriverVehicleLuggageCapacity[]
+  bookingSelections       BookingLuggage[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([isSpecial])
+}
+
+model VehicleCategoryLuggageCapacity {
+  id            String   @id @default(cuid())
+  categoryId    String
+  luggageTypeId String
+  quantity      Int      @default(0)
+  category    VehicleCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  luggageType LuggageType     @relation(fields: [luggageTypeId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([categoryId, luggageTypeId])
+  @@index([categoryId])
+  @@index([luggageTypeId])
+}
+
+model VehicleCategoryPricing {
+  id                String @id @default(cuid())
+
+  vehicleCategoryId String
+
+  minimumDistance   Float
+  maximumDistance   Float?
+
+  pricingType       PricingType
+
+  basePrice         Float
+  perUnitRate       Float?
+  percentageRate    Float?
+
+  status            PricingStatus @default(ACTIVE)
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  vehicleCategory   VehicleCategory @relation(fields: [vehicleCategoryId], references: [id], onDelete: Cascade)
+
+  @@index([vehicleCategoryId, status, minimumDistance])
+  @@index([vehicleCategoryId, minimumDistance, maximumDistance])
+}
