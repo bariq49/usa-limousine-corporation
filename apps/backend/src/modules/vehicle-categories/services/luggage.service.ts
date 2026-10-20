@@ -24,14 +24,6 @@ export class LuggageService {
     return luggage;
   }
 
-  async createStandard(body: CreateDto) {
-    return this.create(body, false);
-  }
-
-  async createSpecial(body: CreateDto) {
-    return this.create(body, true);
-  }
-
   async update(id: string, body: UpdateLuggageDto) {
     const existing = await this.luggageRepository.findById(id);
     if (!existing) {
@@ -67,8 +59,8 @@ export class LuggageService {
     };
   }
 
-  private async create(body: CreateDto, isSpecial: boolean) {
-    return this.luggageRepository.create(body, isSpecial);
+  async create(body: CreateDto) {
+    return this.luggageRepository.create(body);
   }
 
   private async ensureNotInUse(ids: string[]) {

@@ -106,79 +106,67 @@ const DEFAULT_LUGGAGES: Array<{
   name: string;
   description: string;
   dimensions?: string;
-  isSpecial: boolean;
   price?: number;
   isActive: boolean;
 }> = [
-  // Standard Luggage
   {
     name: "Large Case",
     description: "Standard large suitcase",
     dimensions: "85cm × 55cm × 35cm",
-    isSpecial: false,
     isActive: true,
   },
   {
     name: "Medium Case",
     description: "Standard medium suitcase",
     dimensions: "68cm × 45cm × 28cm",
-    isSpecial: false,
     isActive: true,
   },
   {
     name: "Cabin Bag",
     description: "Carry-on cabin bag",
     dimensions: "55cm × 40cm × 20cm",
-    isSpecial: false,
     isActive: true,
   },
-  // Special Luggage
   {
     name: "Bicycle",
-    description: "Special luggage: bicycle",
+    description: "Bicycle",
     dimensions: "175cm × 100cm × 40cm",
     price: 15,
-    isSpecial: true,
     isActive: true,
   },
   {
     name: "Winter Sport",
-    description: "Special luggage: winter sports equipment",
+    description: "Winter sports equipment",
     dimensions: "190cm × 35cm × 20cm",
     price: 15,
-    isSpecial: true,
     isActive: true,
   },
   {
     name: "Stroller",
-    description: "Special luggage: baby stroller",
+    description: "Baby stroller",
     dimensions: "100cm × 60cm × 45cm",
     price: 10,
-    isSpecial: true,
     isActive: true,
   },
   {
     name: "Golf Bag",
-    description: "Special luggage: golf bag",
+    description: "Golf bag",
     dimensions: "125cm × 30cm × 30cm",
     price: 15,
-    isSpecial: true,
     isActive: true,
   },
   {
     name: "Ski",
-    description: "Special luggage: ski equipment",
+    description: "Ski equipment",
     dimensions: "200cm × 30cm × 20cm",
     price: 15,
-    isSpecial: true,
     isActive: true,
   },
   {
     name: "Wheelchair",
-    description: "Special luggage: wheelchair",
+    description: "Wheelchair",
     dimensions: "110cm × 65cm × 95cm",
     price: 0,
-    isSpecial: true,
     isActive: true,
   },
 ];
@@ -186,10 +174,7 @@ const DEFAULT_LUGGAGES: Array<{
 async function ensureLuggages() {
   for (const luggage of DEFAULT_LUGGAGES) {
     const existing = await prisma.luggageType.findFirst({
-      where: {
-        name: luggage.name,
-        isSpecial: luggage.isSpecial,
-      },
+      where: { name: luggage.name },
     });
 
     if (existing) {

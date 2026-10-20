@@ -41,7 +41,7 @@ function serviceRows(services: ExtraServiceItem[] | null | undefined) {
 
 export function BookingPaymentSummary(props: Props) {
   const pricing = (props.booking.pricing ?? {}) as Pricing;
-  const specialLuggage = (props.booking.luggage ?? []).filter(
+  const luggage = (props.booking.luggage ?? []).filter(
     (item) => item.quantity > 0 && item.luggageType?.isSpecial,
   );
 
@@ -53,12 +53,12 @@ export function BookingPaymentSummary(props: Props) {
         {row("Additional Stops", Number(pricing.stopsPrice ?? 0))}
         {row("Airport Pickup", Number(pricing.airportPickupPrice ?? 0))}
         {serviceRows(props.booking.extraServices)}
-        {specialLuggage.map((item) => {
+        {luggage.map((item) => {
           const amount = Number(item.luggageType?.price ?? 0) * item.quantity;
           const label =
             item.quantity > 1
-              ? `${item.luggageType?.name || "Special luggage"} ×${item.quantity}`
-              : item.luggageType?.name || "Special luggage";
+              ? `${item.luggageType?.name || "Luggage"} ×${item.quantity}`
+              : item.luggageType?.name || "Luggage";
           return (
             <div key={item.id} className="flex items-center justify-between gap-4">
               <span className="text-default-600">{label}</span>

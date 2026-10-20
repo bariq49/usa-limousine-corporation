@@ -9,7 +9,6 @@ export const luggageSchema = z.object({
     (val) => (val === "" || val === undefined || val === null ? undefined : val),
     z.coerce.number().min(0, "Price cannot be negative").optional().nullable(),
   ),
-  isSpecial: z.boolean().default(false),
   isActive: z.boolean().default(true),
 });
 

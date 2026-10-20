@@ -14,8 +14,8 @@
   --border: hsl(215.3 25% 26.7%);
   --input: hsl(215 27.9% 16.9%);
 
-  --primary: hsl(25 97% 56%);
-  --primary-foreground: hsl(0 0% 100%);
+  --primary: #C9A84C;
+  --primary-foreground: hsl(222 47% 11%);
 
   --secondary: hsl(215.3 25% 26.7%);
   --secondary-foreground: hsl(210 40% 98%);
@@ -26,7 +26,7 @@
   --destructive: hsl(0 62.8% 30.6%);
   --destructive-foreground: hsl(210 40% 98%);
 
-  --ring: hsl(25 97% 56%);
+  --ring: #C9A84C;
 
   --default-950: hsl(210 40% 98%);
   --default-900: hsl(210 40% 96.1%);

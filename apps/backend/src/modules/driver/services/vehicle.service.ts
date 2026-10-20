@@ -51,9 +51,8 @@ export class DriverVehicleService {
         luggageTypeId: capacity.luggageTypeId,
         name: capacity.luggageType.name,
         image: capacity.luggageType.image,
-        isSpecial: capacity.luggageType.isSpecial,
         quantity: capacity.quantity,
-        price: capacity.luggageType.isSpecial ? capacity.luggageType.price : null,
+        price: capacity.luggageType.price,
       })),
       images,
     };

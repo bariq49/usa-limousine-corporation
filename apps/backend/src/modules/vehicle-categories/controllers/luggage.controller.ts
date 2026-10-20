@@ -39,14 +39,9 @@ export class LuggageController {
     return this.luggageService.findById(id);
   }
 
-  @Post("standard")
-  createStandard(@Body() body: CreateDto) {
-    return this.luggageService.createStandard(body);
-  }
-
-  @Post("special")
-  createSpecial(@Body() body: CreateDto) {
-    return this.luggageService.createSpecial(body);
+  @Post()
+  create(@Body() body: CreateDto) {
+    return this.luggageService.create(body);
   }
 
   @Patch(":id")

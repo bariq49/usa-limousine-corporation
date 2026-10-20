@@ -27,7 +27,6 @@ const bookingDetailInclude = {
         select: {
           id: true,
           name: true,
-          isSpecial: true,
         },
       },
     },

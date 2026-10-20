@@ -63,7 +63,6 @@ export type CreatePayload = {
   image?: string;
   passengerCount: number;
   standardLuggageCapacity: LuggageCapacityInput[];
-  specialLuggageCapacity?: LuggageCapacityInput[];
 };
 
 export type UpdatePayload = {
@@ -73,5 +72,4 @@ export type UpdatePayload = {
   passengerCount?: number;
   isActive?: boolean;
   standardLuggageCapacity?: LuggageCapacityInput[];
-  specialLuggageCapacity?: LuggageCapacityInput[];
 };

@@ -35,7 +35,6 @@ export default function StandardLuggagePage() {
     page,
     limit: pageSize,
     search: search || undefined,
-    isSpecial: false,
     isActive: selectedStatus,
   });
 
@@ -79,7 +78,7 @@ export default function StandardLuggagePage() {
         items={[
           { label: "Home", href: "/analytics" },
           { label: "Vehicle" },
-          { label: "Standard Luggage" },
+          { label: "Luggage" },
         ]}
       />
 
@@ -87,9 +86,9 @@ export default function StandardLuggagePage() {
         <CardContent className="p-6">
           <div className="mb-5 flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-bold text-default-900">Standard Luggage</h2>
+              <h2 className="text-lg font-bold text-default-900">Luggage</h2>
               <p className="text-xs text-default-500 mt-1">
-                Overview and management of standard passenger luggage sizes (e.g. cabin bags, medium
+                Overview and management of passenger luggage sizes (e.g. cabin bags, medium
                 cases, large cases).
               </p>
             </div>
@@ -108,7 +107,7 @@ export default function StandardLuggagePage() {
               setSearch(value);
               setPage(1);
             }}
-            searchPlaceholder="Search standard luggage..."
+            searchPlaceholder="Search luggage..."
             filterColumns={statusFilter}
             columnFilters={columnFilters}
             onColumnFiltersChange={(updater) => {
@@ -135,7 +134,6 @@ export default function StandardLuggagePage() {
       <LuggageModal
         open={modalOpen}
         onOpenChange={setModalOpen}
-        isSpecial={false}
         initialData={editingItem}
         onSuccess={() => setEditingItem(null)}
       />

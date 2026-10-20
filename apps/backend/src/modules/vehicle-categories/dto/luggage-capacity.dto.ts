@@ -13,7 +13,6 @@ export class StandardLuggageCapacityDto {
   quantity!: number;
 }
 
-export class SpecialLuggageCapacityDto extends StandardLuggageCapacityDto {}
 
 export type VehicleCategoryLuggageCapacityInput = {
   luggageTypeId: string;

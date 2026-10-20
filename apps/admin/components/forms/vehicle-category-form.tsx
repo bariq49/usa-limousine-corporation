@@ -8,7 +8,7 @@ import { Form } from "@usa-limousine-corporation/ui/components/form";
 import { Input } from "@usa-limousine-corporation/ui/components/input";
 import { useLuggage } from "@/hooks/queries/use-luggage";
 import { useUploadFile } from "@/hooks/queries/use-upload";
-import { SpecialLuggageCard, StandardLuggageCard } from "@/components/luggage-capacity-cards";
+import { StandardLuggageCard } from "@/components/luggage-capacity-cards";
 import { vehicleCategorySchema, type Schema as FormValues } from "@/lib/schemas/vehicle-category";
 
 type Props = {
@@ -40,16 +40,9 @@ export function VehicleCategoryForm(props: Props) {
   const { data: standardData, isLoading: loadingStandard } = useLuggage({
     isActive: true,
     limit: 100,
-    isSpecial: false,
-  });
-  const { data: specialData, isLoading: loadingSpecial } = useLuggage({
-    isActive: true,
-    limit: 100,
-    isSpecial: true,
   });
 
   const standardLuggage = standardData?.data ?? [];
-  const specialLuggage = specialData?.data ?? [];
 
   const form = useForm<FormValues>({
     resolver: zodResolver(vehicleCategorySchema),
@@ -61,7 +54,6 @@ export function VehicleCategoryForm(props: Props) {
       passengerCount: initialValues?.passengerCount ?? 4,
       isActive: initialValues?.isActive ?? true,
       standardLuggageCapacity: [],
-      specialLuggageCapacity: [],
     },
   });
 
@@ -69,25 +61,15 @@ export function VehicleCategoryForm(props: Props) {
     control: form.control,
     name: "standardLuggageCapacity",
   });
-  const specialCapacities = useWatch({
-    control: form.control,
-    name: "specialLuggageCapacity",
-  });
-
-  const ready =
-    !loadingStandard &&
-    !loadingSpecial &&
-    (standardCapacities?.length ?? 0) === standardLuggage.length &&
-    (specialCapacities?.length ?? 0) === specialLuggage.length;
+  const ready = !loadingStandard && (standardCapacities?.length ?? 0) === standardLuggage.length;
 
   useEffect(() => {
-    if (loadingStandard || loadingSpecial) return;
+    if (loadingStandard) return;
 
     const qtyById = new Map(
       (existingCapacities ?? []).map((item) => [item.luggageTypeId, item.quantity]),
     );
     const standard = standardData?.data ?? [];
-    const special = specialData?.data ?? [];
 
     form.setValue(
       "standardLuggageCapacity",
@@ -97,20 +79,10 @@ export function VehicleCategoryForm(props: Props) {
       })),
       { shouldValidate: false },
     );
-    form.setValue(
-      "specialLuggageCapacity",
-      special.map((item) => ({
-        luggageTypeId: item.id,
-        quantity: qtyById.get(item.id) ?? 0,
-      })),
-      { shouldValidate: false },
-    );
   }, [
     existingCapacities,
     form,
-    loadingSpecial,
     loadingStandard,
-    specialData?.data,
     standardData?.data,
   ]);
 
@@ -165,9 +137,9 @@ export function VehicleCategoryForm(props: Props) {
 
           <div className="space-y-3">
             <div>
-              <h3 className="text-sm font-semibold text-default-900">Standard Luggage Capacity</h3>
+              <h3 className="text-sm font-semibold text-default-900">Luggage Capacity</h3>
               <p className="text-xs text-default-500 mt-0.5">
-                Set how many of each standard luggage type this category can carry.
+                Set how many of each luggage type this category can carry.
               </p>
             </div>
 
@@ -175,7 +147,7 @@ export function VehicleCategoryForm(props: Props) {
               <p className="text-sm text-default-500">Loading luggage types...</p>
             ) : standardLuggage.length === 0 ? (
               <p className="text-sm text-default-500">
-                No active standard luggage types found. Add some first.
+                No active luggage types found. Add some first.
               </p>
             ) : (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -196,37 +168,6 @@ export function VehicleCategoryForm(props: Props) {
             )}
 
             {standardError ? <p className="text-xs text-destructive">{standardError}</p> : null}
-          </div>
-
-          <div className="space-y-3">
-            <div>
-              <h3 className="text-sm font-semibold text-default-900">Special Luggage Capacity</h3>
-              <p className="text-xs text-default-500 mt-0.5">
-                Set quantities for special luggage this category supports.
-              </p>
-            </div>
-
-            {!ready ? (
-              <p className="text-sm text-default-500">Loading luggage types...</p>
-            ) : specialLuggage.length === 0 ? (
-              <p className="text-sm text-default-500">No active special luggage types found.</p>
-            ) : (
-              <div className="grid gap-3 md:grid-cols-2">
-                {specialLuggage.map((item, index) => (
-                  <SpecialLuggageCard
-                    key={item.id}
-                    item={item}
-                    quantity={specialCapacities?.[index]?.quantity ?? 0}
-                    onQuantityChange={(quantity) =>
-                      form.setValue(`specialLuggageCapacity.${index}.quantity`, quantity, {
-                        shouldDirty: true,
-                        shouldValidate: true,
-                      })
-                    }
-                  />
-                ))}
-              </div>
-            )}
           </div>
 
           {showStatus ? (

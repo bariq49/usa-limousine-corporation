@@ -21,7 +21,6 @@ import type { Item } from "@/lib/types/luggage";
 type LuggageModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  isSpecial?: boolean;
   initialData?: Item | null;
   onSuccess?: () => void;
 };
@@ -29,12 +28,10 @@ type LuggageModalProps = {
 export function LuggageModal({
   open,
   onOpenChange,
-  isSpecial = false,
   initialData,
   onSuccess,
 }: LuggageModalProps) {
   const isEditing = Boolean(initialData);
-  const isSpecialLuggage = isSpecial || Boolean(initialData?.isSpecial);
 
   const createMutation = useCreateLuggage();
   const updateMutation = useUpdateLuggage();
@@ -49,7 +46,6 @@ export function LuggageModal({
       dimensions: "",
       image: "",
       price: undefined,
-      isSpecial: isSpecialLuggage,
       isActive: true,
     },
   });
@@ -62,7 +58,6 @@ export function LuggageModal({
         dimensions: initialData.dimensions || "",
         image: initialData.image || "",
         price: initialData.price != null ? Number(initialData.price) : undefined,
-        isSpecial: initialData.isSpecial,
         isActive: initialData.isActive,
       });
     } else {
@@ -72,11 +67,10 @@ export function LuggageModal({
         dimensions: "",
         image: "",
         price: undefined,
-        isSpecial: isSpecialLuggage,
         isActive: true,
       });
     }
-  }, [initialData, form, open, isSpecialLuggage]);
+  }, [initialData, form, open]);
 
   const handleUpload = async (file: File) => {
     const uploadResult = await uploadMutation.mutateAsync({
@@ -94,7 +88,6 @@ export function LuggageModal({
         dimensions: values.dimensions?.trim() || undefined,
         image: values.image?.trim() || undefined,
         price: values.price !== undefined && values.price !== null ? Number(values.price) : null,
-        isSpecial: values.isSpecial,
         isActive: values.isActive,
       };
 
@@ -116,13 +109,7 @@ export function LuggageModal({
   const isPending =
     createMutation.isPending || updateMutation.isPending || uploadMutation.isPending;
 
-  const title = isEditing
-    ? isSpecialLuggage
-      ? "Edit Special Luggage"
-      : "Edit Standard Luggage"
-    : isSpecialLuggage
-      ? "Add Special Luggage"
-      : "Add Standard Luggage";
+  const title = isEditing ? "Edit Luggage" : "Add Luggage";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

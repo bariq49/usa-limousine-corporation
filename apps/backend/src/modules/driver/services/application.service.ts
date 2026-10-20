@@ -141,7 +141,6 @@ export class DriverApplicationService {
         luggageTypeId: capacity.luggageTypeId,
         name: capacity.luggageType.name,
         image: capacity.luggageType.image,
-        isSpecial: capacity.luggageType.isSpecial,
         quantity: capacity.quantity,
         dimensions: capacity.luggageType.dimensions,
       })),

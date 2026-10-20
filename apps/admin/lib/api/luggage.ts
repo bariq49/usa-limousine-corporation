@@ -10,17 +10,8 @@ export const getLuggageItem = (id: string) => {
   return http.get<Item>(`${API_ROUTES.LUGGAGE}/${id}`);
 };
 
-export const createStandardLuggage = (payload: CreatePayload) => {
-  return http.post<Item>(`${API_ROUTES.LUGGAGE}/standard`, payload);
-};
-
-export const createSpecialLuggage = (payload: CreatePayload) => {
-  return http.post<Item>(`${API_ROUTES.LUGGAGE}/special`, payload);
-};
-
 export const createLuggage = (payload: CreatePayload) => {
-  const isSpecial = Boolean(payload.isSpecial);
-  return isSpecial ? createSpecialLuggage(payload) : createStandardLuggage(payload);
+  return http.post<Item>(API_ROUTES.LUGGAGE, payload);
 };
 
 export const updateLuggage = (id: string, payload: UpdatePayload) => {

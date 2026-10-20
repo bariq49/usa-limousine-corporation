@@ -17,7 +17,6 @@ export type Item = {
   dimensions?: string | null | undefined;
   image?: string | null | undefined;
   price?: number | string | null | undefined;
-  isSpecial: boolean;
   isActive: boolean;
   capacities?: LuggageCategoryCapacity[] | undefined;
   _count?:
@@ -35,7 +34,6 @@ export type CreatePayload = {
   dimensions?: string | null | undefined;
   image?: string | null | undefined;
   price?: number | null | undefined;
-  isSpecial?: boolean | undefined;
   isActive?: boolean | undefined;
 };
 
@@ -45,7 +43,6 @@ export type Query = {
   page?: number | undefined;
   limit?: number | undefined;
   search?: string | undefined;
-  isSpecial?: boolean | undefined;
   isActive?: boolean | undefined;
   sortBy?: string | undefined;
   sortOrder?: "asc" | "desc" | undefined;

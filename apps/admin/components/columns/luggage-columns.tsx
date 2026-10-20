@@ -200,26 +200,6 @@ export const getColumns = (options?: LuggageColumnOptions): ColumnDef<Item>[] =>
     },
   },
   {
-    id: "Type",
-    accessorKey: "isSpecial",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Type" />,
-    cell: ({ row }) => {
-      const isSpecial = row.original.isSpecial;
-      return (
-        <Badge variant="soft" color={isSpecial ? "warning" : "secondary"}>
-          {isSpecial ? "Special" : "Standard"}
-        </Badge>
-      );
-    },
-    filterFn: (row, _id, value) => {
-      const rowVal = String(row.original.isSpecial);
-      if (Array.isArray(value)) {
-        return value.includes(rowVal);
-      }
-      return rowVal === String(value);
-    },
-  },
-  {
     id: "Status",
     accessorKey: "isActive",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,

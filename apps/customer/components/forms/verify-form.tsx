@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useSearchParams } from "next/navigation";
+import type { ClipboardEvent } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@usa-limousine-corporation/ui/components/button";
 import { Form } from "@usa-limousine-corporation/ui/components/form";
@@ -33,12 +34,20 @@ export function VerifyForm() {
     form.setValue("token", next, { shouldValidate: true, shouldDirty: true });
   };
 
+  const pasteCode = (event: ClipboardEvent<HTMLInputElement>) => {
+    event.preventDefault();
+    const code = event.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (!code) return;
+
+    form.setValue("token", code, { shouldValidate: true, shouldDirty: true });
+  };
+
   const onSubmit = (data: VerifySchema) => {
     verify(data);
   };
 
   return (
-    <div className="w-full py-5 md:w-[480px]">
+    <div className="w-full py-5 md:w-[420px]">
       <span className="inline-block">
         <SiteLogo className="h-10 w-10 text-primary 2xl:h-14 2xl:w-14" />
       </span>
@@ -50,15 +59,17 @@ export function VerifyForm() {
       </div>
       <Form {...form}>
         <form className="mt-8" onSubmit={form.handleSubmit(onSubmit)}>
-          <Input name="email" label="Email" type="email" autoComplete="email" />
-          <div className="mt-4 flex gap-3">
+          <div className="flex gap-3">
             {digits.map((digit, index) => (
               <Input
                 key={index}
                 inputMode="numeric"
                 maxLength={1}
                 value={digit}
-                className="h-12 w-12 text-center text-lg"
+                autoComplete={index === 0 ? "one-time-code" : "off"}
+                aria-label={`Verification code digit ${index + 1}`}
+                className="h-12 flex-1 text-center text-lg"
+                onPaste={pasteCode}
                 onChange={(event) => {
                   const next = event.target.value.replace(/\D/g, "").slice(-1);
                   setDigit(index, next);

@@ -46,9 +46,6 @@ export default function EditVehicleCategoryPage() {
       const standardLuggageCapacity = values.standardLuggageCapacity.filter(
         (item) => item.quantity > 0,
       );
-      const specialLuggageCapacity = (values.specialLuggageCapacity ?? []).filter(
-        (item) => item.quantity > 0,
-      );
 
       const payload: UpdatePayload = {
         name: values.name.trim(),
@@ -57,7 +54,6 @@ export default function EditVehicleCategoryPage() {
         passengerCount: values.passengerCount,
         isActive: values.isActive,
         standardLuggageCapacity,
-        specialLuggageCapacity,
       };
 
       await update.mutateAsync({ id, payload });

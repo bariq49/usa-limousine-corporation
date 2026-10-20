@@ -79,7 +79,6 @@ export class BookingRepository {
               select: {
                 id: true,
                 name: true,
-                isSpecial: true,
                 price: true,
               },
             },
@@ -176,7 +175,6 @@ export class BookingRepository {
               select: {
                 id: true,
                 name: true,
-                isSpecial: true,
                 price: true,
               },
             },

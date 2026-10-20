@@ -40,19 +40,16 @@ export function RegisterForm() {
         Create an account to start using USA Limousine Corporation.
       </div>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="mt-5 xl:mt-7">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="mt-5 xl:mt-7 space-y-4">
           <Input name="name" label="Full Name" type="text" autoComplete="name" />
-          <Input name="email" label="Email" type="email" autoComplete="email" className="mt-4" />
+          <Input name="email" label="Email" type="email" autoComplete="email" />
           <Input
             name="password"
             label="Password"
             type="password"
             autoComplete="new-password"
-            className="mt-4"
           />
-          <div className="mt-5 mb-8">
-            <Input name="terms" type="checkbox" label="You accept our Terms & Conditions" />
-          </div>
+          <Input name="terms" type="checkbox" label="You accept our Terms & Conditions" checkboxSize="md" />
           <Button type="submit" className="w-full" disabled={isLoading} isLoading={isLoading}>
             Create an Account
           </Button>

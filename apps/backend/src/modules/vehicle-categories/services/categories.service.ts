@@ -17,10 +17,7 @@ export class CategoriesService {
   ) {}
 
   async create(body: CreateDto) {
-    const luggageCapacity = await this.validateLuggageCapacity(
-      body.standardLuggageCapacity,
-      body.specialLuggageCapacity ?? [],
-    );
+    const luggageCapacity = await this.validateLuggageCapacity(body.standardLuggageCapacity);
     return this.categoriesRepository.create(body, luggageCapacity);
   }
 
@@ -43,18 +40,8 @@ export class CategoriesService {
     }
 
     const hasStandardLuggage = body.standardLuggageCapacity !== undefined;
-    const hasSpecialLuggage = body.specialLuggageCapacity !== undefined;
-    if (hasStandardLuggage !== hasSpecialLuggage) {
-      throw new BadRequestException(
-        "standardLuggageCapacity and specialLuggageCapacity must be submitted together",
-      );
-    }
-
     const luggageCapacity = hasStandardLuggage
-      ? await this.validateLuggageCapacity(
-          body.standardLuggageCapacity ?? [],
-          body.specialLuggageCapacity ?? [],
-        )
+      ? await this.validateLuggageCapacity(body.standardLuggageCapacity ?? [])
       : undefined;
 
     return this.categoriesRepository.update(id, body, luggageCapacity);
@@ -100,9 +87,8 @@ export class CategoriesService {
 
   private async validateLuggageCapacity(
     standardLuggageCapacity: VehicleCategoryLuggageCapacityInput[],
-    specialLuggageCapacity: VehicleCategoryLuggageCapacityInput[],
   ): Promise<VehicleCategoryLuggageCapacityInput[]> {
-    const luggageCapacity = [...standardLuggageCapacity, ...specialLuggageCapacity];
+    const luggageCapacity = standardLuggageCapacity;
     const luggageTypeIds = luggageCapacity.map((capacity) => capacity.luggageTypeId);
 
     if (new Set(luggageTypeIds).size !== luggageTypeIds.length) {
@@ -114,25 +100,6 @@ export class CategoriesService {
     const luggageTypes = await this.luggageRepository.findByIds(luggageTypeIds);
     if (luggageTypes.length !== luggageTypeIds.length) {
       throw new BadRequestException("One or more luggage types are not active or do not exist");
-    }
-
-    const specialLuggageTypeIds = new Set(
-      luggageTypes
-        .filter((luggageType) => luggageType.isSpecial)
-        .map((luggageType) => luggageType.id),
-    );
-    const incorrectStandardType = standardLuggageCapacity.find((capacity) =>
-      specialLuggageTypeIds.has(capacity.luggageTypeId),
-    );
-    if (incorrectStandardType) {
-      throw new BadRequestException("Special luggage must be sent in specialLuggageCapacity");
-    }
-
-    const incorrectSpecialType = specialLuggageCapacity.find(
-      (capacity) => !specialLuggageTypeIds.has(capacity.luggageTypeId),
-    );
-    if (incorrectSpecialType) {
-      throw new BadRequestException("Standard luggage must be sent in standardLuggageCapacity");
     }
 
     return luggageCapacity;

@@ -25,27 +25,27 @@ export function layout({ preheader, title, content }: Layout): string {
     <meta name="x-apple-disable-message-reformatting" />
     <title>${escapeHtml(title)}</title>
   </head>
-  <body style="margin:0;background:#f3f4f6;color:#111827;font-family:Arial,Helvetica,sans-serif;">
+  <body style="margin:0;background:#f5f3ed;color:#172033;font-family:Arial,Helvetica,sans-serif;">
     <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">
       ${escapeHtml(preheader)}
     </div>
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f3f4f6;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f5f3ed;">
       <tr>
-        <td align="center" style="padding:40px 16px;">
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:600px;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;">
+        <td align="center" style="padding:48px 16px;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:600px;background:#ffffff;border:1px solid #e7e2d5;border-radius:16px;overflow:hidden;">
             <tr>
-              <td style="padding:24px 32px;background:#111827;border-radius:12px 12px 0 0;">
+              <td style="padding:28px 36px;background:#111827;border-top:4px solid #c9a84c;border-radius:16px 16px 0 0;">
                 <div style="font-size:22px;font-weight:700;color:#ffffff;">${BRAND_NAME}</div>
               </td>
             </tr>
             <tr>
-              <td style="padding:36px 32px;">
-                <h1 style="margin:0 0 20px;font-size:26px;line-height:1.3;color:#111827;">${escapeHtml(title)}</h1>
+              <td style="padding:40px 36px;">
+                <h1 style="margin:0 0 18px;font-size:28px;line-height:1.25;letter-spacing:-0.4px;color:#111827;">${escapeHtml(title)}</h1>
                 ${content}
               </td>
             </tr>
             <tr>
-              <td style="padding:24px 32px;border-top:1px solid #e5e7eb;font-size:12px;line-height:1.6;color:#6b7280;">
+              <td style="padding:24px 36px;border-top:1px solid #e7e2d5;background:#fcfbf8;font-size:12px;line-height:1.7;color:#64748b;">
                 ${SUPPORT_MESSAGE}<br />
                 &copy; ${new Date().getUTCFullYear()} ${BRAND_NAME}. All rights reserved.
               </td>

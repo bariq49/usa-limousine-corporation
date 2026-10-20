@@ -12,7 +12,7 @@ import {
   MinLength,
   ValidateNested,
 } from "class-validator";
-import { SpecialLuggageCapacityDto, StandardLuggageCapacityDto } from "./luggage-capacity.dto";
+import { StandardLuggageCapacityDto } from "./luggage-capacity.dto";
 
 export class CreateDto {
   @IsString()
@@ -42,9 +42,4 @@ export class CreateDto {
   @Type(() => StandardLuggageCapacityDto)
   standardLuggageCapacity!: StandardLuggageCapacityDto[];
 
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => SpecialLuggageCapacityDto)
-  specialLuggageCapacity?: SpecialLuggageCapacityDto[];
 }

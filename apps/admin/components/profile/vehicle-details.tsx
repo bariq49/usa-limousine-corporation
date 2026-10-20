@@ -139,7 +139,7 @@ export function VehicleDetails({ driverId }: VehicleDetailsProps) {
                 <div className="flex items-center gap-2 -ml-2">
                   <Luggage className="h-6 w-6 text-primary" />
                   <CardTitle className="text-lg font-semibold text-default-900">
-                    Special Luggage
+                    Additional Luggage
                   </CardTitle>
                 </div>
               </CardHeader>

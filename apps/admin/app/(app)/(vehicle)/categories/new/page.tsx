@@ -20,9 +20,6 @@ export default function CreateVehicleCategoryPage() {
       const standardLuggageCapacity = values.standardLuggageCapacity.filter(
         (item) => item.quantity > 0,
       );
-      const specialLuggageCapacity = (values.specialLuggageCapacity ?? []).filter(
-        (item) => item.quantity > 0,
-      );
 
       const payload: CreatePayload = {
         name: values.name.trim(),
@@ -35,10 +32,6 @@ export default function CreateVehicleCategoryPage() {
 
       const image = values.image?.trim();
       if (image) payload.image = image;
-
-      if (specialLuggageCapacity.length) {
-        payload.specialLuggageCapacity = specialLuggageCapacity;
-      }
 
       await create.mutateAsync(payload);
       router.push("/categories");

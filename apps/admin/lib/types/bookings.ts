@@ -39,7 +39,6 @@ export type Pricing = {
   stopsPrice?: number | undefined;
   airportPickupPrice?: number | undefined;
   extraServicesPrice?: number | undefined;
-  specialLuggagePrice?: number | undefined;
   subtotal?: number | undefined;
   currency?: string | undefined;
 };

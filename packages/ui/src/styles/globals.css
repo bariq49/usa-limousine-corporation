@@ -71,26 +71,26 @@
   --card-foreground: hsl(222.2 84% 4.9%);
   --border: hsl(214.3 20% 87%);
   --input: hsl(214.3 20% 87%);
-  --primary-50: hsl(25 100% 97%);
-  --primary-100: hsl(25 95% 92%);
-  --primary-200: hsl(25 93% 84%);
-  --primary-300: hsl(25 94% 72%);
-  --primary-400: hsl(25 95% 64%);
-  --primary-500: hsl(25 97% 56%);
-  --primary-600: hsl(24 90% 48%);
-  --primary-700: hsl(22 85% 40%);
-  --primary-800: hsl(20 80% 32%);
-  --primary-900: hsl(18 75% 24%);
-  --primary-950: hsl(16 70% 16%);
-  --primary: hsl(25 97% 56%);
-  --primary-foreground: hsl(0 0% 100%);
+  --primary-50: hsl(45 55% 97%);
+  --primary-100: hsl(45 57% 92%);
+  --primary-200: hsl(44 55% 83%);
+  --primary-300: hsl(44 54% 72%);
+  --primary-400: hsl(44 54% 63%);
+  --primary-500: #C9A84C;
+  --primary-600: hsl(43 47% 45%);
+  --primary-700: hsl(42 43% 36%);
+  --primary-800: hsl(40 40% 28%);
+  --primary-900: hsl(38 37% 21%);
+  --primary-950: hsl(37 35% 14%);
+  --primary: #C9A84C;
+  --primary-foreground: hsl(222 47% 11%);
   --secondary: hsl(210 40% 96.1%);
   --secondary-foreground: hsl(222.2 47.4% 11.2%);
   --accent: hsl(210 40% 96.1%);
   --accent-foreground: hsl(222.2 47.4% 11.2%);
   --destructive: hsl(0 84.2% 60.2%);
   --destructive-foreground: hsl(210 40% 98%);
-  --ring: hsl(25 97% 56%);
+  --ring: #C9A84C;
   --success: hsl(142.1 70.6% 45.3%);
   --success-foreground: hsl(138.5 76.5% 96.7%);
   --warning: hsl(24.6 95% 53.1%);
@@ -231,7 +231,7 @@ html {
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: var(--color-primary, var(--primary, #f97316));
+  background-color: var(--color-primary, var(--primary, #C9A84C));
   border-radius: 9999px;
   border: 2px solid transparent;
   background-clip: content-box;
@@ -239,14 +239,14 @@ html {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: var(--color-primary-600, var(--primary-600, #ea580c));
+  background-color: var(--color-primary-600, var(--primary-600, #A8883D));
   border: 2px solid transparent;
   background-clip: content-box;
 }
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--color-primary, var(--primary, #f97316)) transparent;
+  scrollbar-color: var(--color-primary, var(--primary, #C9A84C)) transparent;
 }
 
 html body[data-scroll-locked] {

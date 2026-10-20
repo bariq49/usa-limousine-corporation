@@ -95,8 +95,6 @@ export function BookingDetailView(props: Props) {
   const canConfirm = booking.status === "PENDING";
   const canCancel = booking.status === "PENDING" || booking.status === "CONFIRMED";
   const luggageItems = (booking.luggage ?? []).filter((item) => item.quantity > 0);
-  const standardLuggage = luggageItems.filter((item) => !item.luggageType?.isSpecial);
-  const specialLuggage = luggageItems.filter((item) => item.luggageType?.isSpecial);
   const childSeats = (booking.extraServices ?? []).filter((item) => /seat/i.test(item.name || ""));
   const otherExtras = (booking.extraServices ?? []).filter(
     (item) => !/seat/i.test(item.name || ""),
@@ -259,19 +257,11 @@ export function BookingDetailView(props: Props) {
                       {item.name || "Child seat"}: {item.quantity}
                     </DetailItem>
                   ))}
-                  {standardLuggage.map((item) => {
+                  {luggageItems.map((item) => {
                     const LuggageIcon = getLuggageIcon(item.luggageType?.name);
                     return (
                       <DetailItem key={item.id} icon={preferenceIcon(LuggageIcon)}>
                         {item.luggageType?.name || "Luggage"}: {item.quantity}
-                      </DetailItem>
-                    );
-                  })}
-                  {specialLuggage.map((item) => {
-                    const LuggageIcon = getLuggageIcon(item.luggageType?.name);
-                    return (
-                      <DetailItem key={item.id} icon={preferenceIcon(LuggageIcon)}>
-                        Special — {item.luggageType?.name || "Luggage"}: {item.quantity}
                       </DetailItem>
                     );
                   })}

@@ -38,13 +38,13 @@ export class LuggageRepository {
   findByIds(ids: string[]) {
     return this.prisma.luggageType.findMany({
       where: { id: { in: ids }, isActive: true },
-      select: { id: true, isSpecial: true },
+      select: { id: true },
     });
   }
 
   findMany(query: QueryDto) {
     const feature = new APIFeature(query, {
-      filterFields: ["isSpecial", "isActive"],
+      filterFields: ["isActive"],
       search: {
         searchFields: ["name", "description", "dimensions"],
       },
@@ -105,7 +105,7 @@ export class LuggageRepository {
   findPublicMany(query: LuggageQueryDto) {
     const feature = new APIFeature(query, {
       initialFilter: { isActive: true },
-      filterFields: ["isSpecial"],
+      filterFields: [],
       search: {
         searchFields: ["name", "description", "dimensions"],
       },
@@ -132,7 +132,7 @@ export class LuggageRepository {
     });
   }
 
-  create(data: CreateDto, isSpecial: boolean) {
+  create(data: CreateDto) {
     return this.prisma.luggageType.create({
       data: {
         name: data.name.trim(),
@@ -140,7 +140,6 @@ export class LuggageRepository {
         dimensions: data.dimensions?.trim() ?? null,
         image: data.image?.trim() ?? null,
         price: data.price !== undefined ? data.price : null,
-        isSpecial,
         isActive: data.isActive ?? true,
       },
     });

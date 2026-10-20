@@ -26,10 +26,9 @@ export const vehicleCategorySchema = z
     ),
     isActive: z.boolean().default(true),
     standardLuggageCapacity: z.array(luggageCapacitySchema),
-    specialLuggageCapacity: z.array(luggageCapacitySchema).optional().default([]),
   })
   .refine((data) => data.standardLuggageCapacity.some((item) => item.quantity > 0), {
-    message: "Set quantity for at least one standard luggage type",
+    message: "Set quantity for at least one luggage type",
     path: ["standardLuggageCapacity"],
   });
 
