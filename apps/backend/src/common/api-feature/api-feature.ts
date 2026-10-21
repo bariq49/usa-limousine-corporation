@@ -122,9 +122,15 @@ export class APIFeature {
       return this;
     }
 
-    const orConditions = searchFields.map((field) => ({
-      [field]: { contains: term, mode: "insensitive" as const },
-    }));
+    // Dotted fields search relations, e.g. "customer.user.email".
+    const orConditions = searchFields.map((field) =>
+      field
+        .split(".")
+        .reduceRight<Record<string, unknown>>(
+          (inner, key) => ({ [key]: inner }),
+          { contains: term, mode: "insensitive" },
+        ),
+    );
 
     const existingOr = this.where["OR"];
     if (Array.isArray(existingOr)) {

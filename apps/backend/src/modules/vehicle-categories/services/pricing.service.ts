@@ -1,4 +1,10 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  ConflictException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import type { BulkDeleteDto } from "../dto/bulk-delete.dto";
 import type { CreatePricingDto } from "../dto/create-pricing.dto";
 import type { PricingQueryDto } from "../dto/pricing-query.dto";
@@ -27,6 +33,17 @@ export class PricingService {
       body.maximumDistance <= body.minimumDistance
     ) {
       throw new BadRequestException("maximumDistance must be greater than minimumDistance");
+    }
+
+    if (body.status !== "INACTIVE") {
+      const overlap = await this.pricingRepository.findOverlapping({
+        vehicleCategoryId: body.vehicleCategoryId,
+        minimumDistance: body.minimumDistance,
+        maximumDistance: body.maximumDistance ?? null,
+      });
+      if (overlap) {
+        throw new ConflictException("This distance range overlaps an active pricing tier");
+      }
     }
 
     return this.pricingRepository.create(body);
@@ -69,6 +86,19 @@ export class PricingService {
 
     if (maxDistance !== null && maxDistance <= minDistance) {
       throw new BadRequestException("maximumDistance must be greater than minimumDistance");
+    }
+
+    const status = body.status ?? existing.status;
+    if (status !== "INACTIVE") {
+      const overlap = await this.pricingRepository.findOverlapping({
+        vehicleCategoryId: body.vehicleCategoryId ?? existing.vehicleCategoryId,
+        minimumDistance: minDistance,
+        maximumDistance: maxDistance,
+        excludeId: id,
+      });
+      if (overlap) {
+        throw new ConflictException("This distance range overlaps an active pricing tier");
+      }
     }
 
     return this.pricingRepository.update(id, body);

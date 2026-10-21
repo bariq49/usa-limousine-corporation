@@ -1,14 +1,7 @@
-import type {
-  HelpTicketCategory,
-  HelpTicketOwnerType,
-  HelpTicketStatus,
-  NotificationType,
-  Prisma,
-} from "@prisma/client";
+import type { HelpTicketCategory, HelpTicketStatus, NotificationType, Prisma } from "@prisma/client";
 
 type Owner = {
-  ownerType: HelpTicketOwnerType;
-  ownerId: string;
+  customerId: string;
   actorUserId: string;
 };
 

@@ -5,7 +5,19 @@ import { PrismaService } from "../../../infrastructure/database/prisma.service";
 import type { QueryDto } from "../dto/ticket.dto";
 import type { CreateData, MessageData, PriorityData, StatusData } from "../types/ticket";
 
+/** Owner name/email/phone come from the customer's user (no copied columns). */
+const customerSummary = {
+  select: {
+    id: true,
+    type: true,
+    user: {
+      select: { id: true, firstName: true, lastName: true, email: true, phone: true },
+    },
+  },
+} as const;
+
 const ticketInclude = {
+  customer: customerSummary,
   messages: {
     orderBy: { createdAt: "asc" as const },
     include: {
@@ -42,9 +54,15 @@ export class TicketRepository {
 
     const feature = new APIFeature(query, {
       initialFilter,
-      filterFields: ["status", "category", "priority", "ownerType", "ownerId"],
+      filterFields: ["status", "category", "priority", "customerId"],
       search: {
-        searchFields: ["ticketNumber", "subject", "ownerName", "ownerEmail"],
+        searchFields: [
+          "ticketNumber",
+          "subject",
+          "customer.user.email",
+          "customer.user.firstName",
+          "customer.user.lastName",
+        ],
       },
       sort: {
         allowedFields: ["createdAt", "updatedAt", "status", "priority", "ticketNumber"],
@@ -67,6 +85,7 @@ export class TicketRepository {
           orderBy: args.orderBy as never,
           skip: args.skip,
           take: args.take,
+          include: { customer: customerSummary },
         }),
       count: ({ where }) => this.prisma.helpTicket.count({ where: where as never }),
     });
@@ -87,10 +106,7 @@ export class TicketRepository {
     const ticket = await tx.helpTicket.create({
       data: {
         ticketNumber: data.ticketNumber,
-        ownerType: data.ownerType,
-        ownerId: data.ownerId,
-        ownerName: data.ownerName,
-        ownerEmail: data.ownerEmail,
+        customerId: data.customerId,
         subject: data.subject,
         description: data.description,
         attachment: data.attachment,

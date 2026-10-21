@@ -8,13 +8,9 @@ enum HelpTicketStatus {
 
 enum HelpTicketCategory {
   ACCOUNT
+  BOOKING
   PAYMENTS
-  TRIPS
-  VEHICLE
-  DOCUMENTS
   APP
-  PASSENGER_NO_SHOW
-  FLAT_TIRE
   OTHER
 }
 
@@ -31,23 +27,11 @@ enum HelpTicketEventType {
   MESSAGE_ADDED
 }
 
-enum HelpTicketOwnerType {
-  CUSTOMER
-}
-
-model HelpTicketSequence {
-  id        String   @id @default("global")
-  lastValue Int      @default(0)
-  updatedAt DateTime @updatedAt
-}
-
 model HelpTicket {
   id           String              @id @default(cuid())
   ticketNumber String              @unique
-  ownerType    HelpTicketOwnerType
-  ownerId      String
-  ownerName    String?
-  ownerEmail   String?
+  /// Name and email are read from customer.user (no copies).
+  customerId   String
   subject      String
   description  String
   attachment   String?
@@ -60,10 +44,11 @@ model HelpTicket {
   updatedAt    DateTime            @updatedAt
   deletedAt    DateTime?
 
+  customer Customer            @relation(fields: [customerId], references: [id], onDelete: Cascade)
   messages HelpTicketMessage[]
   events   HelpTicketEvent[]
 
-  @@index([ownerType, ownerId])
+  @@index([customerId, createdAt])
   @@index([status])
   @@index([category])
   @@index([priority])
@@ -86,7 +71,7 @@ model HelpTicketMessage {
 }
 
 model HelpTicketEvent {
-  id               String               @id @default(cuid())
+  id               String              @id @default(cuid())
   ticketId         String
   event            HelpTicketEventType
   actorUserId      String
@@ -95,7 +80,7 @@ model HelpTicketEvent {
   previousPriority HelpTicketPriority?
   newPriority      HelpTicketPriority?
   note             String?
-  createdAt        DateTime             @default(now())
+  createdAt        DateTime            @default(now())
 
   ticket HelpTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
   actor  User       @relation(fields: [actorUserId], references: [id], onDelete: Restrict)

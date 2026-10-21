@@ -1,18 +1,17 @@
 model User {
-  id                String    @id @default(cuid())
-  firstName         String?
-  lastName          String?
-  email             String    @unique
-  phone             String?
-  avatar            String?
-  passwordHash      String
-  isEmailVerified   Boolean   @default(false)
-  isActive          Boolean   @default(true)
-  failedLoginCount  Int       @default(0)
-  lockoutUntil      DateTime?
-  defaultAdminEmail String?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  id               String    @id @default(cuid())
+  firstName        String?
+  lastName         String?
+  email            String    @unique
+  phone            String?
+  avatar           String?
+  passwordHash     String
+  isEmailVerified  Boolean   @default(false)
+  isActive         Boolean   @default(true)
+  failedLoginCount Int       @default(0)
+  lockoutUntil     DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   roles                   UserRole[]
   sessions                Session[]
@@ -21,6 +20,8 @@ model User {
   auditLogs               AuditLog[]
   customer                Customer?
   bookings                Booking[]
-  helpTicketMessages HelpTicketMessage[]
-  helpTicketEvents   HelpTicketEvent[]
+  notifications           Notification[]
+  helpTicketMessages      HelpTicketMessage[]
+  helpTicketEvents        HelpTicketEvent[]
+  activitiesActed         Activity[]
 }

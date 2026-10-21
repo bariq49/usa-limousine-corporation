@@ -70,9 +70,9 @@ export class PublicService {
           },
           price: this.computePrice({
             pricingType: pricing.pricingType,
-            basePrice: pricing.basePrice,
-            perUnitRate: pricing.perUnitRate,
-            percentageRate: pricing.percentageRate,
+            basePrice: pricing.basePrice.toNumber(),
+            perUnitRate: pricing.perUnitRate?.toNumber() ?? null,
+            percentageRate: pricing.percentageRate?.toNumber() ?? null,
             distance,
           }),
         };

@@ -1,7 +1,6 @@
 import { ExtraServiceType, PrismaClient, RoleKey } from "@prisma/client";
 
 const prisma = new PrismaClient();
-const AUTH_ADMIN_PERMISSION = "auth:admin";
 const runtime = globalThis as unknown as {
   process: {
     exitCode?: number;
@@ -11,8 +10,6 @@ const runtime = globalThis as unknown as {
 const DEFAULT_ROLES: Array<{ key: RoleKey; name: string }> = [
   { key: RoleKey.SUPER_ADMIN, name: "Super Admin" },
   { key: RoleKey.CUSTOMER, name: "Customer" },
-  { key: RoleKey.BUSINESS_CUSTOMER, name: "Business Customer" },
-  { key: RoleKey.VIP_CUSTOMER, name: "VIP Customer" },
 ];
 
 async function ensureRoles() {
@@ -23,34 +20,6 @@ async function ensureRoles() {
       create: role,
     });
   }
-}
-
-async function seedAuthAdminPermission() {
-  const permission = await prisma.permission.upsert({
-    where: { key: AUTH_ADMIN_PERMISSION },
-    update: {},
-    create: {
-      key: AUTH_ADMIN_PERMISSION,
-      description: "Access to authentication administration endpoints",
-    },
-  });
-  const superAdminRole = await prisma.role.findUniqueOrThrow({
-    where: { key: RoleKey.SUPER_ADMIN },
-  });
-
-  await prisma.rolePermission.upsert({
-    where: {
-      roleId_permissionId: {
-        roleId: superAdminRole.id,
-        permissionId: permission.id,
-      },
-    },
-    update: {},
-    create: {
-      roleId: superAdminRole.id,
-      permissionId: permission.id,
-    },
-  });
 }
 
 async function seedSuperAdmin() {
@@ -369,7 +338,6 @@ async function ensureExtraServices() {
 
 async function main() {
   await ensureRoles();
-  await seedAuthAdminPermission();
   await seedSuperAdmin();
   await ensureLuggages();
   await removeVanCategory();

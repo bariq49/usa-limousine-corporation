@@ -15,7 +15,13 @@ import {
   updateProfile,
   verify,
 } from "@/lib/api/auth";
-import { applyAuthSession, hasAccessToken, setCsrfToken } from "@/lib/auth/session";
+import { isCustomerUser } from "@/lib/auth/roles";
+import {
+  applyAuthSession,
+  clearAuthSession,
+  hasAccessToken,
+  setCsrfToken,
+} from "@/lib/auth/session";
 import { isHttpError } from "@/lib/http/error";
 
 function errorMessage(error: unknown, fallback: string): string {
@@ -55,6 +61,12 @@ export const useAuthLogin = () => {
 
       const csrfResponse = await csrf();
       setCsrfToken(csrfResponse.csrfToken);
+
+      const user = await getMe();
+      if (!isCustomerUser(user)) {
+        clearAuthSession();
+        throw new Error("Access denied. This portal is for customer accounts only.");
+      }
 
       return data;
     },

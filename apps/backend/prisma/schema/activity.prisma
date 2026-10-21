@@ -1,19 +1,17 @@
-enum ActivityOwnerType {
-  CUSTOMER
-  USER
-}
-
+/// Customer timeline (ticket created/replied/status changed, ...).
 model Activity {
-  id        String            @id @default(cuid())
-  ownerType ActivityOwnerType
-  ownerId   String
-  type      String
-  actorType ActivityOwnerType?
-  actorId   String?
-  data      Json?
-  createdAt DateTime          @default(now())
+  id          String   @id @default(cuid())
+  customerId  String
+  type        String
+  /// User who performed the action (staff or the customer); null once that user is deleted.
+  actorUserId String?
+  data        Json?
+  createdAt   DateTime @default(now())
 
-  @@index([ownerType, ownerId, createdAt])
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  actor    User?    @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([customerId, createdAt])
+  @@index([actorUserId])
   @@index([type])
-  @@index([createdAt])
 }

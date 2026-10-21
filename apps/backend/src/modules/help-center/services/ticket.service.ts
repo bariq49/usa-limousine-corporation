@@ -45,10 +45,7 @@ export class TicketService {
       const ticket = await this.tickets.create(
         {
           ticketNumber,
-          ownerType: input.ownerType,
-          ownerId: input.ownerId,
-          ownerName: input.ownerName?.trim() || null,
-          ownerEmail: input.ownerEmail?.trim() || null,
+          customerId: input.customerId,
           subject: input.subject,
           description: input.description,
           attachment: input.attachment ?? null,
@@ -68,7 +65,7 @@ export class TicketService {
             type: "TICKET_CREATED",
             ticketId: ticket.id,
             ticketNumber: ticket.ticketNumber,
-            ownerType: ticket.ownerType,
+            customerId: ticket.customerId,
           },
           excludeUserId: actorUserId,
           idempotencyKey: `TICKET_CREATED:${ticket.id}`,
@@ -90,14 +87,12 @@ export class TicketService {
       metadata: {
         ticketId: ticket.id,
         ticketNumber: ticket.ticketNumber,
-        ownerType: input.ownerType,
-        ownerId: input.ownerId,
+        customerId: input.customerId,
       },
     });
 
     const payload: Created = {
-      ownerType: input.ownerType,
-      ownerId: input.ownerId,
+      customerId: input.customerId,
       actorUserId,
       ticketId: ticket.id,
       ticketNumber: ticket.ticketNumber,
@@ -152,8 +147,7 @@ export class TicketService {
       }
 
       const payload: Reply = {
-        ownerType: ticket.ownerType,
-        ownerId: ticket.ownerId,
+        customerId: ticket.customerId,
         actorUserId,
         ticketId: ticket.id,
         ticketNumber: ticket.ticketNumber,
@@ -161,11 +155,13 @@ export class TicketService {
         messageId: message.id,
       };
       const owner = await tx.customer.findUnique({
-        where: { id: ticket.ownerId },
-        select: { userId: true },
+        where: { id: ticket.customerId },
+        select: { userId: true, settings: { select: { notification: true } } },
       });
+      // Customers who turned off notifications get no notification row (and so no push).
+      const wantsNotification = owner !== null && owner.settings?.notification !== false;
       const notify = replyNotify(payload);
-      const notifications = owner
+      const notifications = wantsNotification
         ? await this.notificationService.stage(
             [
               {
@@ -218,8 +214,7 @@ export class TicketService {
     this.assertCanTransition(ticket.status, body.status);
 
     const payload: StatusUpdated = {
-      ownerType: ticket.ownerType,
-      ownerId: ticket.ownerId,
+      customerId: ticket.customerId,
       actorUserId,
       ticketId: ticket.id,
       ticketNumber: ticket.ticketNumber,
@@ -236,11 +231,13 @@ export class TicketService {
         tx,
       );
       const owner = await tx.customer.findUnique({
-        where: { id: ticket.ownerId },
-        select: { userId: true },
+        where: { id: ticket.customerId },
+        select: { userId: true, settings: { select: { notification: true } } },
       });
+      // Customers who turned off notifications get no notification row (and so no push).
+      const wantsNotification = owner !== null && owner.settings?.notification !== false;
       const notify = statusNotify(payload);
-      const notifications = owner
+      const notifications = wantsNotification
         ? await this.notificationService.stage(
             [
               {

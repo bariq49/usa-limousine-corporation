@@ -10,7 +10,6 @@ import {
   IsNumber,
   IsOptional,
   IsString,
-  IsUrl,
   Max,
   MaxLength,
   Min,
@@ -142,7 +141,7 @@ export class PricingDto {
   @Min(0)
   extraServicesPrice?: number;
 
-  @IsNumber()
+  @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
   total!: number;
 }
@@ -185,12 +184,6 @@ export class ExtraServiceItemDto {
   @Min(1)
   @Max(20)
   quantity!: number;
-
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber({ maxDecimalPlaces: 2 })
-  @Min(0)
-  price?: number;
 }
 
 export class LuggageItemDto {
@@ -249,7 +242,7 @@ export class CreateDto {
   @IsOptional()
   @IsString()
   @MaxLength(1000)
-  driverNotes?: string;
+  notes?: string;
 
   @ValidateNested()
   @Type(() => PricingDto)
@@ -261,14 +254,6 @@ export class CreateDto {
   @Type(() => LuggageItemDto)
   @ArrayMaxSize(20)
   luggage?: LuggageItemDto[];
-
-  @IsOptional()
-  @IsUrl({ require_tld: false })
-  successUrl?: string;
-
-  @IsOptional()
-  @IsUrl({ require_tld: false })
-  cancelUrl?: string;
 }
 
 export class UpdateDto {
@@ -316,7 +301,7 @@ export class UpdateDto {
   @IsOptional()
   @IsString()
   @MaxLength(1000)
-  driverNotes?: string;
+  notes?: string;
 
   @IsOptional()
   @ValidateNested()
@@ -346,4 +331,14 @@ export class QueryDto extends ApiFeatureQueryDto {
   @IsOptional()
   @IsEnum(BookingType)
   bookingType?: BookingType;
+}
+
+export class AnalyticsQueryDto {
+  /** Calendar year to report on; defaults to the current year. */
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(2000)
+  @Max(2100)
+  year?: number;
 }

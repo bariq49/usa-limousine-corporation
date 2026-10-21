@@ -1,15 +1,13 @@
-import { ActivityOwnerType as OwnerType, type Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import type { ActivityTypeName } from "../constants/activity.constants";
 
-export { OwnerType };
 export type { ActivityTypeName };
 
 export type Create = {
-  ownerType: OwnerType;
-  ownerId: string;
+  customerId: string;
   type: ActivityTypeName | string;
-  actorType?: OwnerType | null | undefined;
-  actorId?: string | null | undefined;
+  /** User who performed the action (staff or the customer). */
+  actorUserId?: string | null | undefined;
   data?: Prisma.InputJsonValue | null | undefined;
 };
 
@@ -27,11 +25,9 @@ export type Query = {
 };
 
 export type List = Query & {
-  ownerType: OwnerType;
-  ownerId: string;
+  customerId: string;
 };
 
 export type Owner = {
-  ownerType: OwnerType;
-  ownerId: string;
+  customerId: string;
 };

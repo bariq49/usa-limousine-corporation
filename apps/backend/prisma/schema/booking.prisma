@@ -13,56 +13,70 @@ enum BookingType {
   CREW_RIDE
 }
 
-model BookingSequence {
-  id        String   @id @default("global")
-  lastValue Int      @default(0)
-  updatedAt DateTime @updatedAt
-}
-
 model Booking {
-  id                   String        @id @default(cuid())
-  userId               String?
-  vehicleCategoryId    String
-  bookingNumber        String        @unique
-  status               BookingStatus @default(DRAFT)
-  bookingType          BookingType   @default(ONE_WAY)
-  pricing              Json
-  address              Json
-  passenger            Json
-  bookingTime          Json
-  flightDetails        Json?
-  meetAndGreet         Json?
-  extraServices        Json?
-  driverNotes          String?
-  confirmedAt          DateTime?
-  completedAt          DateTime?
-  cancelledAt          DateTime?
-  cancellationReason   String?
-  createdAt            DateTime      @default(now())
-  updatedAt            DateTime      @updatedAt
-  deletedAt            DateTime?
+  id                 String        @id @default(cuid())
+  /// Null for bookings an admin created without a customer account, or whose account was deleted.
+  userId             String?
+  vehicleCategoryId  String
+  bookingNumber      String        @unique
+  status             BookingStatus @default(DRAFT)
+  bookingType        BookingType   @default(ONE_WAY)
+  /// Amount charged for the booking; `pricing` keeps the breakdown snapshot.
+  totalPrice         Decimal       @db.Decimal(12, 2)
+  currency           String        @default("EUR") @db.VarChar(3)
+  pricing            Json
+  address            Json
+  passenger          Json
+  bookingTime        Json
+  flightDetails      Json?
+  meetAndGreet       Json?
+  notes              String?
+  confirmedAt        DateTime?
+  completedAt        DateTime?
+  cancelledAt        DateTime?
+  cancellationReason String?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  deletedAt          DateTime?
 
-  user            User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  vehicleCategory VehicleCategory @relation(fields: [vehicleCategoryId], references: [id], onDelete: Restrict)
+  user            User?                 @relation(fields: [userId], references: [id], onDelete: SetNull)
+  vehicleCategory VehicleCategory       @relation(fields: [vehicleCategoryId], references: [id], onDelete: Restrict)
   luggage         BookingLuggage[]
+  extraServices   BookingExtraService[]
 
-  @@index([userId])
+  @@index([userId, createdAt])
+  @@index([deletedAt, createdAt])
   @@index([vehicleCategoryId])
   @@index([status])
   @@index([bookingType])
-  @@index([deletedAt])
 }
 
 model BookingLuggage {
-  id            String @id @default(cuid())
+  id            String  @id @default(cuid())
   bookingId     String
   luggageTypeId String
-  quantity      Int    @default(1)
+  quantity      Int     @default(1)
+  /// Price per item at booking time (catalog price can change later).
+  unitPrice     Decimal @default(0) @db.Decimal(12, 2)
 
   booking     Booking     @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   luggageType LuggageType @relation(fields: [luggageTypeId], references: [id], onDelete: Restrict)
 
   @@unique([bookingId, luggageTypeId])
-  @@index([bookingId])
   @@index([luggageTypeId])
+}
+
+model BookingExtraService {
+  id             String  @id @default(cuid())
+  bookingId      String
+  extraServiceId String
+  quantity       Int     @default(1)
+  /// Price per item at booking time (catalog price can change later).
+  unitPrice      Decimal @db.Decimal(12, 2)
+
+  booking      Booking      @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  extraService ExtraService @relation(fields: [extraServiceId], references: [id], onDelete: Restrict)
+
+  @@unique([bookingId, extraServiceId])
+  @@index([extraServiceId])
 }

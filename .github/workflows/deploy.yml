@@ -72,6 +72,7 @@ jobs:
               - 'deploy/vps/update.sh'
               - 'deploy/vps/smoke.sh'
               - 'deploy/vps/bootstrap.sh'
+              - 'deploy/vps/push-env.sh'
               - 'deploy/vps/ci.env'
               - 'deploy/vps/rsync.exclude'
               - '.github/workflows/deploy.yml'

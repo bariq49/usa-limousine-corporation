@@ -2,7 +2,6 @@ import { Inject, Injectable, Logger } from "@nestjs/common";
 import { OnEvent } from "@nestjs/event-emitter";
 import { ACTIVITY_TYPE } from "../../activity/constants/activity.constants";
 import { ActivityService } from "../../activity/services/activity.service";
-import { OwnerType } from "../../activity/types/activity";
 import { TICKET_EVENT } from "../constants/ticket.events";
 import type { Created, Reply, StatusUpdated } from "../types/ticket.events";
 
@@ -16,11 +15,9 @@ export class TicketActivityListener {
   async onCreated(payload: Created) {
     try {
       await this.activities.record({
-        ownerType: payload.ownerType as OwnerType,
-        ownerId: payload.ownerId,
+        customerId: payload.customerId,
         type: ACTIVITY_TYPE.TICKET_CREATED,
-        actorType: OwnerType.USER,
-        actorId: payload.actorUserId,
+        actorUserId: payload.actorUserId,
         data: {
           ticketId: payload.ticketId,
           ticketNumber: payload.ticketNumber,
@@ -41,11 +38,9 @@ export class TicketActivityListener {
   async onReplied(payload: Reply) {
     try {
       await this.activities.record({
-        ownerType: payload.ownerType as OwnerType,
-        ownerId: payload.ownerId,
+        customerId: payload.customerId,
         type: ACTIVITY_TYPE.TICKET_REPLIED,
-        actorType: OwnerType.USER,
-        actorId: payload.actorUserId,
+        actorUserId: payload.actorUserId,
         data: {
           ticketId: payload.ticketId,
           ticketNumber: payload.ticketNumber,
@@ -65,11 +60,9 @@ export class TicketActivityListener {
   async onStatusUpdated(payload: StatusUpdated) {
     try {
       await this.activities.record({
-        ownerType: payload.ownerType as OwnerType,
-        ownerId: payload.ownerId,
+        customerId: payload.customerId,
         type: ACTIVITY_TYPE.TICKET_STATUS_UPDATED,
-        actorType: OwnerType.USER,
-        actorId: payload.actorUserId,
+        actorUserId: payload.actorUserId,
         data: {
           ticketId: payload.ticketId,
           ticketNumber: payload.ticketNumber,

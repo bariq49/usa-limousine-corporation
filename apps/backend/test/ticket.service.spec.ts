@@ -238,6 +238,34 @@ describe("TicketService", () => {
     expect(notificationService.deliverStaged).toHaveBeenCalledWith(staged);
   });
 
+  it("does not stage a customer notification when dashboard notifications are off", async () => {
+    tx.customer.findUnique.mockResolvedValue({
+      userId: "customer-user-1",
+      settings: { notification: false },
+    });
+    tickets.findById.mockResolvedValue({
+      id: "ticket-1",
+      status: HelpTicketStatus.IN_PROGRESS,
+      ownerType: HelpTicketOwnerType.CUSTOMER,
+      ownerId: "customer-1",
+      ticketNumber: "HC-000001",
+      subject: "Wallet issue",
+    });
+    tickets.updateStatus.mockResolvedValue({
+      id: "ticket-1",
+      status: HelpTicketStatus.RESOLVED,
+      updatedAt: new Date("2026-08-24T00:00:00.000Z"),
+    });
+
+    await service.updateStatus("ticket-1", { status: HelpTicketStatus.RESOLVED }, {
+      headers: {},
+      user: { sub: "admin-user", sid: "s1", email: "a@test.com", roles: [] },
+    } as never);
+
+    expect(notificationService.stage).not.toHaveBeenCalled();
+    expect(notificationService.deliverStaged).toHaveBeenCalledWith([]);
+  });
+
   it("emits status updated on non-resolved status changes", async () => {
     const updated = {
       id: "ticket-1",

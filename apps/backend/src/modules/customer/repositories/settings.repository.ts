@@ -25,13 +25,11 @@ export class CustomerSettingsRepository {
       create: {
         customerId,
         email: data.email,
-        push: data.push,
-        timezone: data.timezone,
+        notification: data.notification,
       },
       update: {
         email: data.email,
-        push: data.push,
-        timezone: data.timezone,
+        notification: data.notification,
       },
     });
   }

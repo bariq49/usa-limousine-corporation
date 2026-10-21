@@ -17,7 +17,7 @@ import { Roles } from "../../auth/decorators/roles.decorator";
 import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../../auth/guards/roles.guard";
 import { BulkDeleteDto } from "../../vehicle-categories/dto/bulk-delete.dto";
-import { CancelDto, CreateDto, QueryDto, UpdateDto } from "../dto/booking.dto";
+import { AnalyticsQueryDto, CancelDto, CreateDto, QueryDto, UpdateDto } from "../dto/booking.dto";
 import { BookingService } from "../services/booking.service";
 
 @Controller("admin/bookings")
@@ -34,6 +34,11 @@ export class BookingController {
   @Get()
   list(@Query() query: QueryDto) {
     return this.bookingService.list(query);
+  }
+
+  @Get("analytics")
+  analytics(@Query() query: AnalyticsQueryDto) {
+    return this.bookingService.analytics(query);
   }
 
   @Get(":id")

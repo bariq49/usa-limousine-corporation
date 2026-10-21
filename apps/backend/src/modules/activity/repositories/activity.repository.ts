@@ -9,18 +9,13 @@ export class ActivityRepository {
   constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
   create(input: Create): Promise<Activity> {
-    const data: Prisma.ActivityCreateInput = {
-      ownerType: input.ownerType,
-      ownerId: input.ownerId,
+    const data: Prisma.ActivityUncheckedCreateInput = {
+      customerId: input.customerId,
       type: input.type,
     };
 
-    if (input.actorType) {
-      data.actorType = input.actorType;
-    }
-
-    if (input.actorId) {
-      data.actorId = input.actorId;
+    if (input.actorUserId) {
+      data.actorUserId = input.actorUserId;
     }
 
     if (input.data !== undefined && input.data !== null) {
@@ -31,14 +26,13 @@ export class ActivityRepository {
   }
 
   list(params: List) {
-    const { ownerType, ownerId, ...query } = params;
     const initialFilter: Prisma.ActivityWhereInput = {
-      ownerType,
-      ownerId,
+      customerId: params.customerId,
     };
 
-    const feature = new APIFeature(query, {
+    const feature = new APIFeature(params, {
       initialFilter,
+      excludeQueryKeys: ["customerId"],
       filterFields: ["type"],
       search: {
         searchFields: ["type"],
@@ -68,8 +62,7 @@ export class ActivityRepository {
             id: true,
             type: true,
             data: true,
-            actorType: true,
-            actorId: true,
+            actorUserId: true,
             createdAt: true,
           },
         }),
@@ -78,16 +71,14 @@ export class ActivityRepository {
   }
 
   count(params: Owner) {
-    const { ownerType, ownerId } = params;
     return this.prisma.activity.count({
-      where: { ownerType, ownerId },
+      where: { customerId: params.customerId },
     });
   }
 
   removeByOwner(params: Owner) {
-    const { ownerType, ownerId } = params;
     return this.prisma.activity.deleteMany({
-      where: { ownerType, ownerId },
+      where: { customerId: params.customerId },
     });
   }
 }

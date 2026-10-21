@@ -20,7 +20,6 @@ import { HelpCenterModule } from "./modules/help-center/help-center.module";
 import { HealthModule } from "./modules/health/health.module";
 import { BookingModule } from "./modules/booking/booking.module";
 import { VehicleCategoryModule } from "./modules/vehicle-categories/vehicle-category.module";
-import { PermissionsModule } from "./modules/permissions/permissions.module";
 import { RolesModule } from "./modules/roles/roles.module";
 import { SessionsModule } from "./modules/sessions/sessions.module";
 import { UploadsModule } from "./modules/uploads/uploads.module";
@@ -59,7 +58,6 @@ import { ExtraServiceModule } from "./modules/extra-services/extra-service.modul
     UsersModule,
     CustomerModule,
     RolesModule,
-    PermissionsModule,
     SessionsModule,
     ActivityModule,
     NotificationModule,

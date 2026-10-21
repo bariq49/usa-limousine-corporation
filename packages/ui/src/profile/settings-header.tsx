@@ -5,16 +5,30 @@ import { Refresh, Mail, Pencil } from "../svg";
 import { Card, CardContent } from "../components/card";
 import { Breadcrumbs } from "../layout/breadcrumbs";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/avatar";
+import { Tabs, TabsList, TabsTrigger } from "../components/tabs";
 import { useUser } from "../providers/user-context";
+import { cn } from "../utils/cn";
+
+export interface ProfileHeaderTab {
+  value: string;
+  label: string;
+}
 
 export interface ProfileSettingsHeaderProps {
   onUploadAvatar?: ((file: File) => Promise<void> | void) | undefined;
   isUploading?: boolean | undefined;
+  /** Optional page tabs shown under the cover, right-aligned. */
+  tabs?: ProfileHeaderTab[] | undefined;
+  activeTab?: string | undefined;
+  onTabChange?: ((value: string) => void) | undefined;
 }
 
 export function ProfileSettingsHeader({
   onUploadAvatar,
   isUploading,
+  tabs,
+  activeTab,
+  onTabChange,
 }: ProfileSettingsHeaderProps = {}) {
   const { user } = useUser();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -46,17 +60,20 @@ export function ProfileSettingsHeader({
         <Card className="overflow-visible rounded-lg shadow-xs">
           <CardContent className="p-0">
             <div
-              className="relative h-[180px] w-full rounded-lg bg-cover bg-center bg-no-repeat lg:h-[200px]"
+              className={cn(
+                "relative h-[180px] w-full bg-cover bg-center bg-no-repeat lg:h-[200px]",
+                tabs && tabs.length > 0 ? "rounded-t-lg" : "rounded-lg",
+              )}
               style={{
                 backgroundImage:
                   "linear-gradient(to top, rgb(0 0 0 / 0.75), rgb(0 0 0 / 0.2), transparent), url(/assets/images/profile/user-cover.png)",
               }}
             >
-              {/* Profile information at bottom-left */}
-              <div className="absolute inset-x-0 -bottom-7 px-6 pb-5 lg:px-8">
+              {/* Profile information at bottom-left; overhangs the tab strip, so only the avatar takes clicks */}
+              <div className="pointer-events-none absolute inset-x-0 -bottom-7 px-6 pb-5 lg:px-8">
                 <div className="flex min-w-0 items-center gap-4">
                   {/* Profile Avatar */}
-                  <div className="relative z-10 shrink-0 group">
+                  <div className="pointer-events-auto relative z-20 shrink-0 group">
                     <Avatar className="h-[72px] w-[72px] rounded-full border-4 border-background bg-background shadow-md lg:h-[80px] lg:w-[80px]">
                       {user?.avatar ? (
                         <AvatarImage
@@ -113,6 +130,25 @@ export function ProfileSettingsHeader({
                 </div>
               </div>
             </div>
+            {tabs && tabs.length > 0 ? (
+              <Tabs
+                value={activeTab ?? tabs[0]?.value ?? ""}
+                onValueChange={(value) => onTabChange?.(value)}
+                className="relative z-10 flex justify-end px-6 pt-10 pb-3 sm:pt-4 lg:px-8"
+              >
+                <TabsList className="h-auto gap-6 rounded-none bg-transparent p-0">
+                  {tabs.map((tab) => (
+                    <TabsTrigger
+                      key={tab.value}
+                      value={tab.value}
+                      className="cursor-pointer rounded-none border-b-2 border-transparent bg-transparent px-1 pb-1 text-sm font-semibold shadow-none transition-colors hover:text-primary data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=inactive]:text-default-600"
+                    >
+                      {tab.label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
+            ) : null}
           </CardContent>
         </Card>
       </div>

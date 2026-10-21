@@ -1,9 +1,28 @@
-import { Inject, Injectable } from "@nestjs/common";
-import type { BookingStatus, Prisma } from "@prisma/client";
+import { BadRequestException, Inject, Injectable } from "@nestjs/common";
+import { type BookingStatus, Prisma } from "@prisma/client";
 import { APIFeature } from "../../../common/api-feature";
 import { PrismaService } from "../../../infrastructure/database/prisma.service";
 import type { QueryDto } from "../dto/booking.dto";
-import type { CreateData, StatusUpdate, UpdateData, UpdateStatusData } from "../types/booking";
+import type {
+  AnalyticsRow,
+  CreateData,
+  ExtraServiceItemInput,
+  LuggageItemInput,
+  PricedItems,
+  StatusUpdate,
+  UpdateData,
+  UpdateStatusData,
+} from "../types/booking";
+
+/** Line items with names; `unitPrice` is the price charged, not today's catalog price. */
+const itemsInclude = {
+  luggage: {
+    include: { luggageType: { select: { id: true, name: true } } },
+  },
+  extraServices: {
+    include: { extraService: { select: { id: true, name: true, type: true } } },
+  },
+} as const;
 
 @Injectable()
 export class BookingRepository {
@@ -77,22 +96,67 @@ export class BookingRepository {
             passengerCount: true,
           },
         },
-        luggage: {
-          include: {
-            luggageType: {
-              select: {
-                id: true,
-                name: true,
-                price: true,
-              },
-            },
-          },
-        },
+        luggage: itemsInclude.luggage,
+        extraServices: itemsInclude.extraServices,
       },
     });
   }
 
-  create(data: CreateData, client: Prisma.TransactionClient = this.prisma) {
+  /**
+   * Looks up active catalog items and captures their current price.
+   * Unknown or inactive items are rejected so a booking never references a hidden product.
+   */
+  async priceItems(
+    extraServices: ExtraServiceItemInput[],
+    luggage: LuggageItemInput[],
+    client: Prisma.TransactionClient = this.prisma,
+  ): Promise<PricedItems> {
+    const [services, luggageTypes] = await Promise.all([
+      client.extraService.findMany({
+        where: {
+          id: { in: extraServices.map((item) => item.extraServiceId) },
+          isActive: true,
+          deletedAt: null,
+        },
+        select: { id: true, price: true },
+      }),
+      client.luggageType.findMany({
+        where: { id: { in: luggage.map((item) => item.luggageTypeId) }, isActive: true },
+        select: { id: true, price: true },
+      }),
+    ]);
+
+    const servicePrice = new Map(services.map((row) => [row.id, row.price]));
+    const luggagePrice = new Map(luggageTypes.map((row) => [row.id, row.price]));
+
+    const unknownServices = extraServices.filter((item) => !servicePrice.has(item.extraServiceId));
+    const unknownLuggage = luggage.filter((item) => !luggagePrice.has(item.luggageTypeId));
+    if (unknownServices.length > 0 || unknownLuggage.length > 0) {
+      throw new BadRequestException(
+        `Unknown or inactive items: ${unknownServices
+          .map((item) => item.extraServiceId)
+          .concat(unknownLuggage.map((item) => item.luggageTypeId))
+          .join(", ")}`,
+      );
+    }
+
+    return {
+      extraServices: extraServices.map((item) => ({
+        extraServiceId: item.extraServiceId,
+        quantity: item.quantity,
+        unitPrice: servicePrice.get(item.extraServiceId) as Prisma.Decimal,
+      })),
+      luggage: luggage.map((item) => ({
+        luggageTypeId: item.luggageTypeId,
+        quantity: item.quantity,
+        unitPrice: luggagePrice.get(item.luggageTypeId) ?? new Prisma.Decimal(0),
+      })),
+    };
+  }
+
+  async create(data: CreateData, client: Prisma.TransactionClient = this.prisma) {
+    const items = await this.priceItems(data.extraServices ?? [], data.luggage, client);
+
     return client.booking.create({
       data: {
         userId: data.userId ?? null,
@@ -100,23 +164,40 @@ export class BookingRepository {
         bookingNumber: data.bookingNumber,
         bookingType: data.bookingType,
         status: data.status,
+        totalPrice: data.pricing.total,
         pricing: data.pricing,
         address: data.address,
         passenger: data.passenger,
         bookingTime: data.bookingTime,
         flightDetails: data.flightDetails as Prisma.InputJsonValue,
         meetAndGreet: data.meetAndGreet as Prisma.InputJsonValue,
-        extraServices: data.extraServices as Prisma.InputJsonValue,
-        driverNotes: data.driverNotes ?? null,
+        notes: data.notes ?? null,
         confirmedAt: data.confirmedAt ?? null,
-        luggage: {
-          create: data.luggage.map((item) => ({
-            luggageTypeId: item.luggageTypeId,
-            quantity: item.quantity,
-          })),
-        },
+        luggage: { create: items.luggage },
+        extraServices: { create: items.extraServices },
       },
     });
+  }
+
+  /** Count + `pricing.total` per (month, status) for one year; one customer's when `userId` is set. */
+  analyticsRows(year: number, userId?: string): Promise<AnalyticsRow[]> {
+    const from = new Date(Date.UTC(year, 0, 1));
+    const to = new Date(Date.UTC(year + 1, 0, 1));
+    const byUser = userId ? Prisma.sql`AND "userId" = ${userId}` : Prisma.empty;
+
+    return this.prisma.$queryRaw<AnalyticsRow[]>`
+      SELECT
+        EXTRACT(MONTH FROM "createdAt")::int AS month,
+        "status" AS status,
+        COUNT(*)::int AS count,
+        COALESCE(SUM("totalPrice"), 0)::float8 AS amount
+      FROM "Booking"
+      WHERE "deletedAt" IS NULL
+        AND "createdAt" >= ${from}
+        AND "createdAt" < ${to}
+        ${byUser}
+      GROUP BY 1, 2
+    `;
   }
 
   findOwnedByUser(id: string, userId: string) {
@@ -132,34 +213,38 @@ export class BookingRepository {
             passengerCount: true,
           },
         },
-        luggage: {
-          include: {
-            luggageType: {
-              select: {
-                id: true,
-                name: true,
-                price: true,
-              },
-            },
-          },
-        },
+        luggage: itemsInclude.luggage,
+        extraServices: itemsInclude.extraServices,
       },
     });
   }
 
   update(id: string, data: UpdateData) {
     return this.prisma.$transaction(async (tx) => {
+      const items = await this.priceItems(data.extraServices ?? [], data.luggage ?? [], tx);
+
       if (data.luggage !== undefined) {
         await tx.bookingLuggage.deleteMany({ where: { bookingId: id } });
-        if (data.luggage.length > 0) {
-          await tx.bookingLuggage.createMany({
-            data: data.luggage.map((item) => ({
-              bookingId: id,
-              luggageTypeId: item.luggageTypeId,
-              quantity: item.quantity,
-            })),
-          });
-        }
+        await tx.bookingLuggage.createMany({
+          data: items.luggage.map((item) => ({
+            bookingId: id,
+            luggageTypeId: item.luggageTypeId,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+          })),
+        });
+      }
+
+      if (data.extraServices !== undefined) {
+        await tx.bookingExtraService.deleteMany({ where: { bookingId: id } });
+        await tx.bookingExtraService.createMany({
+          data: items.extraServices.map((item) => ({
+            bookingId: id,
+            extraServiceId: item.extraServiceId,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+          })),
+        });
       }
 
       const bookingUpdate: Prisma.BookingUncheckedUpdateInput = {};
@@ -171,6 +256,7 @@ export class BookingRepository {
       }
       if (data.pricing !== undefined) {
         bookingUpdate.pricing = data.pricing;
+        bookingUpdate.totalPrice = data.pricing.total;
       }
       if (data.address !== undefined) {
         bookingUpdate.address = data.address;
@@ -187,11 +273,8 @@ export class BookingRepository {
       if (data.meetAndGreet !== undefined) {
         bookingUpdate.meetAndGreet = data.meetAndGreet as Prisma.InputJsonValue;
       }
-      if (data.extraServices !== undefined) {
-        bookingUpdate.extraServices = data.extraServices as Prisma.InputJsonValue;
-      }
-      if (data.driverNotes !== undefined) {
-        bookingUpdate.driverNotes = data.driverNotes ?? null;
+      if (data.notes !== undefined) {
+        bookingUpdate.notes = data.notes ?? null;
       }
 
       return tx.booking.update({

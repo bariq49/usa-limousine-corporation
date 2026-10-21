@@ -19,6 +19,7 @@
     "./utils/*": "./src/utils/*.ts",
     "./constants": "./src/constants/index.ts",
     "./charts/*": "./src/charts/*.tsx",
+    "./dashboard/*": "./src/dashboard/*.tsx",
     "./store": "./src/store/index.ts",
     "./config/themes": "./src/config/themes.ts"
   },

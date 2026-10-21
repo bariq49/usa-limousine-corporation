@@ -32,7 +32,6 @@ export class CustomerTokenResolver implements TokenResolver, OnModuleInit {
       where: {
         userId: { in: recipientIds },
         deletedAt: null,
-        OR: [{ settings: null }, { settings: { push: true } }],
       },
       select: {
         userId: true,
@@ -54,13 +53,9 @@ export class CustomerTokenResolver implements TokenResolver, OnModuleInit {
       return 0;
     }
 
-    const [devices, legacy] = await Promise.all([
-      this.prisma.customerPushDevice.deleteMany({ where: { token: { in: tokens } } }),
-      this.prisma.customer.updateMany({
-        where: { fcmToken: { in: tokens } },
-        data: { fcmToken: null },
-      }),
-    ]);
-    return devices.count + legacy.count;
+    const devices = await this.prisma.customerPushDevice.deleteMany({
+      where: { token: { in: tokens } },
+    });
+    return devices.count;
   }
 }

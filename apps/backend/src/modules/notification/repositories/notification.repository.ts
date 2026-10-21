@@ -37,7 +37,7 @@ export class NotificationRepository {
   }
 
   create(input: Create, client: Client = this.prisma): Promise<Notification> {
-    const data: Prisma.NotificationCreateInput = {
+    const data: Prisma.NotificationUncheckedCreateInput = {
       recipientType: input.recipientType,
       recipientId: input.recipientId,
       type: input.type,

@@ -76,3 +76,33 @@ export type NotificationList = {
   hasNextPage: boolean;
   unreadCount: number;
 };
+
+/** Response of GET /customers/bookings/analytics (the customer's own bookings, one year). */
+export type BookingAnalytics = {
+  year: number;
+  totalBookings: number;
+  /** Amount of completed bookings. */
+  totalRevenue: number;
+  completedBookings: number;
+  confirmedBookings: number;
+  pendingBookings: number;
+  cancelledBookings: number;
+  monthlyRevenue: number[];
+  monthlyBookings: {
+    completed: number[];
+    confirmed: number[];
+    pending: number[];
+    cancelled: number[];
+  };
+};
+
+export type CustomerSettings = {
+  email: boolean;
+  /** In-app (dashboard bell) notifications. */
+  notification: boolean;
+};
+
+export type UpdateCustomerSettings = {
+  email?: boolean | undefined;
+  notification?: boolean | undefined;
+};

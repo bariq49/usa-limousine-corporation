@@ -130,7 +130,7 @@ Production refuses `AUTH_COOKIE_SECURE=false` and `AUTH_COOKIE_HTTP_ONLY=false`.
 
 ### Production topology
 
-Dashboards: `https://admin.usalimocorp.com`, `https://customer.usalimocorp.com`  
+Dashboards: `https://admin.usalimocorp.com`, `https://login.usalimocorp.com`  
 API: `https://api.usalimocorp.com`
 
 Host-only cookies on the API host are sent on credentialed cross-origin calls to the API. Parent-domain `AUTH_COOKIE_DOMAIN` is optional. Same-site (`usalimocorp.com`) works with Lax/Strict. Unrelated sites would need `SameSite=None; Secure`.

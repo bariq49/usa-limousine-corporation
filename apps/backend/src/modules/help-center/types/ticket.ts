@@ -1,15 +1,7 @@
-import type {
-  HelpTicketCategory,
-  HelpTicketOwnerType,
-  HelpTicketPriority,
-  HelpTicketStatus,
-} from "@prisma/client";
+import type { HelpTicketCategory, HelpTicketPriority, HelpTicketStatus } from "@prisma/client";
 
 export type Create = {
-  ownerType: HelpTicketOwnerType;
-  ownerId: string;
-  ownerName?: string | null | undefined;
-  ownerEmail?: string | null | undefined;
+  customerId: string;
   subject: string;
   description: string;
   attachment?: string | undefined;
@@ -19,10 +11,7 @@ export type Create = {
 
 export type CreateData = {
   ticketNumber: string;
-  ownerType: HelpTicketOwnerType;
-  ownerId: string;
-  ownerName: string | null;
-  ownerEmail: string | null;
+  customerId: string;
   subject: string;
   description: string;
   attachment: string | null;

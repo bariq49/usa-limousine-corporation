@@ -1,35 +1,38 @@
+/// Customer tier (pricing/support level); access is controlled by the CUSTOMER role.
 enum CustomerType {
   NORMAL
   VIP
   CORPORATE
 }
 
+/// Customer profile for a User with the CUSTOMER role. Login, name, email, phone and
+/// active flag live on User.
 model Customer {
-  id                    String       @id @default(cuid())
-  userId                String       @unique
-  type                  CustomerType @default(NORMAL)
-  fcmToken              String?
-  isActive              Boolean      @default(true)
-  createdAt             DateTime     @default(now())
-  updatedAt             DateTime     @updatedAt
-  deletedAt             DateTime?
+  id        String       @id @default(cuid())
+  userId    String       @unique
+  type      CustomerType @default(NORMAL)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  deletedAt DateTime?
 
-  user     User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  settings CustomerSettings?
+  user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  settings    CustomerSettings?
   pushDevices CustomerPushDevice[]
+  helpTickets HelpTicket[]
+  activities  Activity[]
 
   @@index([type])
   @@index([deletedAt])
 }
 
 model CustomerSettings {
-  id                String   @id @default(cuid())
-  customerId        String   @unique
-  email     Boolean  @default(true)
-  push      Boolean  @default(true)
-  timezone  String   @default("Europe/Amsterdam")
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id           String   @id @default(cuid())
+  customerId   String   @unique
+  email        Boolean  @default(true)
+  /// In-app (dashboard bell) notifications.
+  notification Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
 }

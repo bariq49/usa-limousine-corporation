@@ -1,4 +1,4 @@
-import type { BookingStatus, BookingType } from "@prisma/client";
+import type { BookingStatus, BookingType, Prisma } from "@prisma/client";
 
 export type LocationInput = {
   address: string;
@@ -49,12 +49,17 @@ export type MeetAndGreetInput = {
 export type ExtraServiceItemInput = {
   extraServiceId: string;
   quantity: number;
-  price?: number | undefined;
 };
 
 export type LuggageItemInput = {
   luggageTypeId: string;
   quantity: number;
+};
+
+/** Items with the catalog unit price captured at booking time. */
+export type PricedItems = {
+  extraServices: { extraServiceId: string; quantity: number; unitPrice: Prisma.Decimal }[];
+  luggage: { luggageTypeId: string; quantity: number; unitPrice: Prisma.Decimal }[];
 };
 
 export type CreateData = {
@@ -71,7 +76,7 @@ export type CreateData = {
   flightDetails?: FlightDetailsInput | undefined;
   meetAndGreet?: MeetAndGreetInput | undefined;
   extraServices?: ExtraServiceItemInput[] | undefined;
-  driverNotes?: string | null | undefined;
+  notes?: string | null | undefined;
   luggage: LuggageItemInput[];
 };
 
@@ -85,7 +90,7 @@ export type UpdateData = {
   flightDetails?: FlightDetailsInput | undefined;
   meetAndGreet?: MeetAndGreetInput | undefined;
   extraServices?: ExtraServiceItemInput[] | undefined;
-  driverNotes?: string | null | undefined;
+  notes?: string | null | undefined;
   luggage?: LuggageItemInput[] | undefined;
 };
 
@@ -102,4 +107,32 @@ export type StatusUpdate = {
   completedAt?: Date;
   cancelledAt?: Date;
   cancellationReason?: string;
+};
+
+export type MonthlySeries = {
+  completed: number[];
+  confirmed: number[];
+  pending: number[];
+  cancelled: number[];
+};
+
+/** Booking totals for one year plus 12 monthly buckets (Jan..Dec), by booking creation month. */
+export type Analytics = {
+  year: number;
+  totalBookings: number;
+  /** Sum of `pricing.total` over completed bookings. */
+  totalRevenue: number;
+  completedBookings: number;
+  confirmedBookings: number;
+  pendingBookings: number;
+  cancelledBookings: number;
+  monthlyRevenue: number[];
+  monthlyBookings: MonthlySeries;
+};
+
+export type AnalyticsRow = {
+  month: number;
+  status: BookingStatus;
+  count: number;
+  amount: number;
 };

@@ -11,8 +11,6 @@ export class RolesService {
     const defaults: Array<{ key: RoleKey; name: string }> = [
       { key: RoleKey.SUPER_ADMIN, name: "Super Admin" },
       { key: RoleKey.CUSTOMER, name: "Customer" },
-      { key: RoleKey.BUSINESS_CUSTOMER, name: "Business Customer" },
-      { key: RoleKey.VIP_CUSTOMER, name: "VIP Customer" },
     ];
 
     await Promise.all(defaults.map((role) => this.rolesRepository.upsert(role)));

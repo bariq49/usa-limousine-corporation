@@ -1,0 +1,6 @@
+/// Monotonic counters for human-readable codes (BK-000001, HC-000001). One row per counter id.
+model Sequence {
+  id        String   @id
+  lastValue Int      @default(0)
+  updatedAt DateTime @updatedAt
+}

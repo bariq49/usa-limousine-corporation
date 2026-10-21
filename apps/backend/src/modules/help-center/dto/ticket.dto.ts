@@ -9,12 +9,7 @@ import {
   MaxLength,
   MinLength,
 } from "class-validator";
-import {
-  HelpTicketCategory,
-  HelpTicketOwnerType,
-  HelpTicketPriority,
-  HelpTicketStatus,
-} from "@prisma/client";
+import { HelpTicketCategory, HelpTicketPriority, HelpTicketStatus } from "@prisma/client";
 import { ApiFeatureQueryDto } from "../../../common/api-feature/api-feature-query.dto";
 
 export class BulkDeleteDto {
@@ -86,10 +81,6 @@ export class QueryDto extends ApiFeatureQueryDto {
   priority?: HelpTicketPriority;
 
   @IsOptional()
-  @IsEnum(HelpTicketOwnerType)
-  ownerType?: HelpTicketOwnerType;
-
-  @IsOptional()
   @IsString()
-  ownerId?: string;
+  customerId?: string;
 }

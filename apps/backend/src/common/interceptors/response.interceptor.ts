@@ -7,6 +7,7 @@ import {
 import type { Request } from "express";
 import { map, type Observable } from "rxjs";
 import type { ApiSuccessResponse } from "../types/api-response.types";
+import { decimalsToNumbers } from "../utils/money";
 
 @Injectable()
 export class ResponseInterceptor<T> implements NestInterceptor<T, ApiSuccessResponse<T>> {
@@ -16,7 +17,7 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, ApiSuccessResp
     return next.handle().pipe(
       map((data) => ({
         success: true as const,
-        data,
+        data: decimalsToNumbers(data) as T,
         meta: {
           timestamp: new Date().toISOString(),
           path: request.originalUrl || request.url,

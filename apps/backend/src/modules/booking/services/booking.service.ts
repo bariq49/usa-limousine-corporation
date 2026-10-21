@@ -7,9 +7,15 @@ import { requireUserId, toRequestContext } from "../../../common/utils/to-reques
 import { PrismaService } from "../../../infrastructure/database/prisma.service";
 import { SequenceService } from "../../../infrastructure/sequence/sequence.service";
 import { NotificationService } from "../../notification/services/notification.service";
-import type { CancelDto, CreateDto, QueryDto, UpdateDto } from "../dto/booking.dto";
+import type {
+  AnalyticsQueryDto,
+  CancelDto,
+  CreateDto,
+  QueryDto,
+  UpdateDto,
+} from "../dto/booking.dto";
 import { BookingRepository } from "../repositories/booking.repository";
-import type { UpdateData } from "../types/booking";
+import type { Analytics, UpdateData } from "../types/booking";
 
 @Injectable()
 export class BookingService {
@@ -27,8 +33,6 @@ export class BookingService {
       prefix: "BK",
       nextSequence: () => this.sequenceService.nextBooking(),
     });
-
-    // Booking + admin notifications commit together (transactional outbox).
     const created = await this.prisma.$transaction(async (tx) => {
       const booking = await this.bookingRepository.create(
         {
@@ -44,7 +48,7 @@ export class BookingService {
           flightDetails: body.flightDetails,
           meetAndGreet: body.meetAndGreet,
           extraServices: body.extraServices,
-          driverNotes: body.driverNotes ?? null,
+          notes: body.notes ?? null,
           luggage: body.luggage ?? [],
         },
         tx,
@@ -109,7 +113,7 @@ export class BookingService {
       flightDetails: body.flightDetails,
       meetAndGreet: body.meetAndGreet,
       extraServices: body.extraServices,
-      driverNotes: body.driverNotes ?? null,
+      notes: body.notes ?? null,
       luggage: body.luggage ?? [],
     });
 
@@ -132,6 +136,67 @@ export class BookingService {
 
   list(query: QueryDto) {
     return this.bookingRepository.findMany(query);
+  }
+
+  /** Platform-wide booking analytics for admins. */
+  analytics(query: AnalyticsQueryDto) {
+    return this.buildAnalytics(query.year ?? new Date().getUTCFullYear());
+  }
+
+  /** The signed-in customer's own booking analytics. */
+  analyticsForCustomer(query: AnalyticsQueryDto, request: Request) {
+    const userId = requireUserId(toRequestContext(request));
+    return this.buildAnalytics(query.year ?? new Date().getUTCFullYear(), userId);
+  }
+
+  async buildAnalytics(year: number, userId?: string): Promise<Analytics> {
+    const rows = await this.bookingRepository.analyticsRows(year, userId);
+    const months = () => Array<number>(12).fill(0);
+    const result: Analytics = {
+      year,
+      totalBookings: 0,
+      totalRevenue: 0,
+      completedBookings: 0,
+      confirmedBookings: 0,
+      pendingBookings: 0,
+      cancelledBookings: 0,
+      monthlyRevenue: months(),
+      monthlyBookings: {
+        completed: months(),
+        confirmed: months(),
+        pending: months(),
+        cancelled: months(),
+      },
+    };
+
+    for (const row of rows) {
+      const index = row.month - 1;
+      result.totalBookings += row.count;
+
+      if (row.status === BookingStatus.COMPLETED) {
+        result.completedBookings += row.count;
+        result.monthlyBookings.completed[index] =
+          (result.monthlyBookings.completed[index] ?? 0) + row.count;
+        result.totalRevenue += row.amount;
+        result.monthlyRevenue[index] = (result.monthlyRevenue[index] ?? 0) + row.amount;
+      } else if (row.status === BookingStatus.CONFIRMED) {
+        result.confirmedBookings += row.count;
+        result.monthlyBookings.confirmed[index] =
+          (result.monthlyBookings.confirmed[index] ?? 0) + row.count;
+      } else if (row.status === BookingStatus.PENDING) {
+        result.pendingBookings += row.count;
+        result.monthlyBookings.pending[index] =
+          (result.monthlyBookings.pending[index] ?? 0) + row.count;
+      } else if (row.status === BookingStatus.CANCELLED) {
+        result.cancelledBookings += row.count;
+        result.monthlyBookings.cancelled[index] =
+          (result.monthlyBookings.cancelled[index] ?? 0) + row.count;
+      }
+    }
+
+    result.totalRevenue = Math.round(result.totalRevenue * 100) / 100;
+    result.monthlyRevenue = result.monthlyRevenue.map((value) => Math.round(value * 100) / 100);
+    return result;
   }
 
   listForCustomer(query: QueryDto, request: Request) {
@@ -204,8 +269,8 @@ export class BookingService {
     if (body.extraServices !== undefined) {
       updateData.extraServices = body.extraServices;
     }
-    if (body.driverNotes !== undefined) {
-      updateData.driverNotes = body.driverNotes;
+    if (body.notes !== undefined) {
+      updateData.notes = body.notes;
     }
     if (body.luggage !== undefined) {
       updateData.luggage = body.luggage;

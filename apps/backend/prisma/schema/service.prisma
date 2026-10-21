@@ -9,7 +9,7 @@ model ExtraService {
   name        String
   image       String?
   description String?
-  price       Float
+  price       Decimal          @db.Decimal(12, 2)
   type        ExtraServiceType @default(EXTRA)
   maxQuantity Int              @default(1)
   isActive    Boolean          @default(true)
@@ -17,6 +17,8 @@ model ExtraService {
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
   deletedAt   DateTime?
+
+  bookingSelections BookingExtraService[]
 
   @@index([isActive])
   @@index([type])

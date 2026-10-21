@@ -26,7 +26,7 @@ export class CustomerProfileService {
     return {
       id: customer.id,
       type: customer.type,
-      isActive: customer.isActive,
+      isActive: user.isActive,
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,

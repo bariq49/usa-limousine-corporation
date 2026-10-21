@@ -7,6 +7,7 @@ import {
   confirmBooking,
   deleteBooking,
   getBooking,
+  getBookingAnalytics,
   getBookings,
 } from "../../lib/api/bookings";
 import type { Query } from "../../lib/types/bookings";
@@ -15,12 +16,20 @@ export const bookingKeys = {
   all: ["bookings"] as const,
   list: (params?: Query) => [...bookingKeys.all, "list", params] as const,
   detail: (id: string) => [...bookingKeys.all, "detail", id] as const,
+  analytics: (year: number) => ["bookings", "analytics", year] as const,
 };
 
 export const useBookings = (params?: Query) => {
   return useQuery({
     queryKey: bookingKeys.list(params),
     queryFn: () => getBookings(params),
+  });
+};
+
+export const useBookingAnalytics = (year: number) => {
+  return useQuery({
+    queryKey: bookingKeys.analytics(year),
+    queryFn: () => getBookingAnalytics(year),
   });
 };
 

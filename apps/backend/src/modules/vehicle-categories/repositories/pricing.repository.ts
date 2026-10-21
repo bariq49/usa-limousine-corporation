@@ -28,6 +28,28 @@ export class PricingRepository {
     });
   }
 
+  /** Active tiers of the category whose [min, max) range intersects the given one (null max = open-ended). */
+  findOverlapping(params: {
+    vehicleCategoryId: string;
+    minimumDistance: number;
+    maximumDistance: number | null;
+    excludeId?: string | undefined;
+  }) {
+    const where: Prisma.VehicleCategoryPricingWhereInput = {
+      vehicleCategoryId: params.vehicleCategoryId,
+      status: "ACTIVE",
+      OR: [{ maximumDistance: null }, { maximumDistance: { gt: params.minimumDistance } }],
+    };
+    if (params.maximumDistance !== null) {
+      where.minimumDistance = { lt: params.maximumDistance };
+    }
+    if (params.excludeId) {
+      where.id = { not: params.excludeId };
+    }
+
+    return this.prisma.vehicleCategoryPricing.findFirst({ where, select: { id: true } });
+  }
+
   findForDistance(vehicleCategoryId: string, distance: number) {
     return this.prisma.vehicleCategoryPricing.findFirst({
       where: {

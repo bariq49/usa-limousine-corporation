@@ -56,11 +56,6 @@ export class CustomerFcmTokenService {
           data: { customerId: customer.id, token, deviceId: null, platform },
         });
       }
-
-      await tx.customer.update({
-        where: { id: customer.id },
-        data: { fcmToken: token },
-      });
     });
 
     const deviceCount = await this.prisma.customerPushDevice.count({

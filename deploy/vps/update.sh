@@ -11,6 +11,11 @@ BRANCH="${DEPLOY_BRANCH:-main}"
 # Space-separated compose services, or "all" (default).
 DEPLOY_SERVICES="${DEPLOY_SERVICES:-all}"
 RECREATE_CADDY="${RECREATE_CADDY:-1}"
+# Backend start runs `prisma migrate deploy`, so back up Postgres first (outside the rsync target).
+BACKUP_BEFORE_DEPLOY="${BACKUP_BEFORE_DEPLOY:-1}"
+BACKUP_DIR="${BACKUP_DIR:-/opt/usa-limousine-corporation-backups}"
+BACKUP_KEEP="${BACKUP_KEEP:-10}"
+POSTGRES_CONTAINER="usa-limousine-corporation-postgres-1"
 
 ALL_APPS=(backend admin customer)
 
@@ -150,6 +155,24 @@ dump_service_logs() {
   fi
 }
 
+# gzip'd pg_dump; aborts the deploy (set -e + pipefail) if the dump fails.
+backup_database() {
+  if ! docker ps --format '{{.Names}}' | grep -qx "${POSTGRES_CONTAINER}"; then
+    echo "Postgres is not running yet (first deploy?) — skipping database backup."
+    return 0
+  fi
+
+  mkdir -p "${BACKUP_DIR}"
+  chmod 700 "${BACKUP_DIR}"
+  local file
+  file="${BACKUP_DIR}/db-$(date -u +%Y%m%dT%H%M%SZ).sql.gz"
+  docker exec "${POSTGRES_CONTAINER}" sh -c 'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" --no-owner --no-privileges' | gzip > "${file}"
+  echo "Database backup: ${file} ($(du -h "${file}" | cut -f1))"
+
+  # Keep the newest BACKUP_KEEP dumps.
+  ls -1t "${BACKUP_DIR}"/db-*.sql.gz | tail -n +"$((BACKUP_KEEP + 1))" | xargs -r rm --
+}
+
 resolve_services
 echo "Deploying services: ${SERVICES[*]}"
 
@@ -169,6 +192,10 @@ if [[ " ${SERVICES[*]} " == *" admin "* ]]; then
     echo "WARN: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY is missing in ${ADMIN_ENV} — admin maps will fail"
     echo "      Add it to apps/admin/.env.production on the VPS, then redeploy admin (deploy does not rsync .env files)."
   fi
+fi
+
+if [[ " ${SERVICES[*]} " == *" backend "* && "${BACKUP_BEFORE_DEPLOY}" == "1" ]]; then
+  backup_database
 fi
 
 cd "${ROOT}"
@@ -197,5 +224,5 @@ DEPLOY_SERVICES="${SERVICES[*]}" bash "${COMPOSE_DIR}/smoke.sh"
 echo "API health: $(curl -fsS http://127.0.0.1:3000/api/v1/health)"
 echo "Deployed: ${SERVICES[*]}"
 echo "Admin: https://admin.usalimocorp.com"
-echo "Customer: https://customer.usalimocorp.com"
+echo "Customer: https://login.usalimocorp.com"
 echo "Website: https://www.usalimocorp.com"

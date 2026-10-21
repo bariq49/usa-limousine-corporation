@@ -65,7 +65,7 @@ docs/
 | **API Base URL**           | `https://api.usalimocorp.com/api/v1`                        |
 | **WebSocket Gateway**      | `wss://api.usalimocorp.com` (shares port 3000 behind Caddy) |
 | **Admin Dashboard**        | `https://admin.usalimocorp.com`                             |
-| **Customer Portal**        | `https://customer.usalimocorp.com`                          |
+| **Customer Portal**        | `https://login.usalimocorp.com`                          |
 | **Hosting Infrastructure** | Hostinger VPS (`177.7.55.46`, `srv2067905.hstgr.cloud`)     |
 | **Primary Database**       | PostgreSQL 16 (`usa_limousine_corporation`)                 |
 | **Cache & Message Broker** | Redis 7 (`redis://localhost:6379`)                          |

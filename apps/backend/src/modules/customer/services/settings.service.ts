@@ -23,8 +23,7 @@ export class CustomerSettingsService {
 
     return {
       email: settings.email,
-      push: settings.push,
-      timezone: settings.timezone,
+      notification: settings.notification,
     };
   }
 
@@ -34,13 +33,11 @@ export class CustomerSettingsService {
 
     const current = await this.settingsRepository.getSettings(customer.id);
     const email = body.email !== undefined ? body.email : current.email;
-    const push = body.push !== undefined ? body.push : current.push;
-    const timezone = body.timezone !== undefined ? body.timezone : current.timezone;
+    const notification = body.notification !== undefined ? body.notification : current.notification;
 
     const settings = await this.settingsRepository.updateSettings(customer.id, {
       email,
-      push,
-      timezone,
+      notification,
     });
 
     await auditLog({
@@ -52,15 +49,13 @@ export class CustomerSettingsService {
       metadata: {
         customerId: customer.id,
         email: settings.email,
-        push: settings.push,
-        timezone: settings.timezone,
+        notification: settings.notification,
       },
     });
 
     return {
       email: settings.email,
-      push: settings.push,
-      timezone: settings.timezone,
+      notification: settings.notification,
     };
   }
 }
