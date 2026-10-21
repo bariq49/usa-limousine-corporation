@@ -30,7 +30,6 @@ enum HelpTicketEventType {
 model HelpTicket {
   id           String              @id @default(cuid())
   ticketNumber String              @unique
-  /// Name and email are read from customer.user (no copies).
   customerId   String
   subject      String
   description  String

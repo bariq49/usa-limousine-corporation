@@ -19,18 +19,11 @@ model Notification {
   body           String
   data           Json?
   idempotencyKey String?                   @unique
-  /**
-   * Send an FCM push when delivered (in-app + socket always happen).
-   */
   push           Boolean                   @default(true)
   readAt         DateTime?
-  /**
-   * Null until socket emit + push enqueue ran; the sweep job retries undelivered rows.
-   */
   deliveredAt    DateTime?
   createdAt      DateTime                  @default(now())
 
-  /// Every recipient type is a User today; deleting the user deletes their inbox.
   recipient User @relation(fields: [recipientId], references: [id], onDelete: Cascade)
 
   @@index([recipientType, recipientId, createdAt])

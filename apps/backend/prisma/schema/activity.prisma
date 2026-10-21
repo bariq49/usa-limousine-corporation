@@ -3,7 +3,6 @@ model Activity {
   id          String   @id @default(cuid())
   customerId  String
   type        String
-  /// User who performed the action (staff or the customer); null once that user is deleted.
   actorUserId String?
   data        Json?
   createdAt   DateTime @default(now())
