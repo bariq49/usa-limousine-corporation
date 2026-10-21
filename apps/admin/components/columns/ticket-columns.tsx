@@ -99,41 +99,12 @@ export const getColumns = (options?: ColumnOptions): ColumnDef<Ticket>[] => [
       const name = item.ownerName?.trim() || "—";
       const email = item.ownerEmail?.trim() || "—";
 
-      if (item.ownerType === "DRIVER") {
-        return (
-          <div className="flex flex-col">
-            <Link
-              href={`/drivers/profile/${item.ownerId}`}
-              className="text-sm font-medium text-default-900 hover:text-primary hover:underline"
-            >
-              {name}
-            </Link>
-            <span className="text-xs text-default-500">{email}</span>
-          </div>
-        );
-      }
-
       return (
         <div className="flex flex-col">
           <span className="text-sm font-medium text-default-900">{name}</span>
           <span className="text-xs text-default-500">{email}</span>
         </div>
       );
-    },
-  },
-  {
-    id: "Owner Type",
-    accessorKey: "ownerType",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Owner Type" />,
-    cell: ({ row }) => (
-      <span className="text-sm text-default-900">
-        {row.original.ownerType === "DRIVER" ? "Driver" : "Customer"}
-      </span>
-    ),
-    filterFn: (row, id, value: string[] | string) => {
-      if (!value || (Array.isArray(value) && value.length === 0)) return true;
-      const rowValue = row.getValue(id) as string;
-      return Array.isArray(value) ? value.includes(rowValue) : rowValue === value;
     },
   },
   {
@@ -204,15 +175,6 @@ export const getColumns = (options?: ColumnOptions): ColumnDef<Ticket>[] => [
 ];
 
 export const filter: DataTableFilterColumn[] = [
-  {
-    column: "Owner Type",
-    title: "Owner Type",
-    multiple: false,
-    options: [
-      { value: "DRIVER", label: "Driver" },
-      { value: "CUSTOMER", label: "Customer" },
-    ],
-  },
   {
     column: "Status",
     title: "Status",

@@ -119,54 +119,6 @@ export class EnvironmentVariables {
   @IsBoolean()
   REDIS_TLS_REJECT_UNAUTHORIZED?: boolean;
 
-  @ValidateIf((env: EnvironmentVariables) => env.NODE_ENV === NodeEnvironment.Production)
-  @IsString()
-  @IsNotEmpty()
-  STRIPE_SECRET_KEY_TEST?: string;
-
-  @ValidateIf((env: EnvironmentVariables) => env.NODE_ENV === NodeEnvironment.Production)
-  @IsString()
-  @IsNotEmpty()
-  STRIPE_WEBHOOK_SECRET_TEST?: string;
-
-  @IsOptional()
-  @IsString()
-  STRIPE_SECRET_KEY_LIVE?: string;
-
-  @IsOptional()
-  @IsString()
-  STRIPE_WEBHOOK_SECRET_LIVE?: string;
-
-  @IsOptional()
-  @IsString()
-  STRIPE_API_VERSION?: string;
-
-  @IsOptional()
-  @Transform(toOptionalInt)
-  @IsInt()
-  @Min(1)
-  @Max(120_000)
-  STRIPE_TIMEOUT_MS?: number;
-
-  @IsOptional()
-  @Transform(toOptionalInt)
-  @IsInt()
-  @Min(0)
-  @Max(10)
-  STRIPE_MAX_NETWORK_RETRIES?: number;
-
-  @IsOptional()
-  @IsString()
-  PAYMENT_CHECKOUT_SUCCESS_URL?: string;
-
-  @IsOptional()
-  @IsString()
-  PAYMENT_CHECKOUT_CANCEL_URL?: string;
-
-  @IsOptional()
-  @IsString()
-  DRIVER_APP_URL?: string;
-
   @IsOptional()
   @IsString()
   FIREBASE_PROJECT_ID?: string;
@@ -190,21 +142,6 @@ export class EnvironmentVariables {
   @IsOptional()
   @IsString()
   TWILIO_FROM_NUMBER?: string;
-
-  @IsOptional()
-  @IsString()
-  AGORA_APP_ID?: string;
-
-  @IsOptional()
-  @IsString()
-  AGORA_APP_CERTIFICATE?: string;
-
-  @IsOptional()
-  @Transform(toOptionalInt)
-  @IsInt()
-  @Min(60)
-  @Max(86_400)
-  AGORA_TOKEN_TTL_SECONDS?: number;
 
   @IsString()
   @IsNotEmpty()

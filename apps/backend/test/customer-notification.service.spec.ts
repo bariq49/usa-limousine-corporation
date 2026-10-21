@@ -10,14 +10,14 @@ const authRequest = {
 
 describe("CustomerNotificationService", () => {
   it("lists inbox for the authenticated customer (USER + userId)", async () => {
-    const list = jest.fn(async () => ({
+    const listWithUnread = jest.fn(async () => ({
       items: [{ id: "n1" }],
       total: 1,
       page: 1,
       limit: 20,
       totalPages: 1,
+      unreadCount: 1,
     }));
-    const countUnread = jest.fn(async () => 1);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -31,8 +31,7 @@ describe("CustomerNotificationService", () => {
         {
           provide: NotificationService,
           useValue: {
-            list,
-            countUnread,
+            listWithUnread,
           },
         },
       ],
@@ -41,7 +40,7 @@ describe("CustomerNotificationService", () => {
     const service = module.get(CustomerNotificationService);
     const result = await service.listNotifications({ page: 1, limit: 20 }, authRequest);
 
-    expect(list).toHaveBeenCalledWith(
+    expect(listWithUnread).toHaveBeenCalledWith(
       { page: 1, limit: 20 },
       { recipientType: RecipientType.USER, recipientId: "user-1" },
     );

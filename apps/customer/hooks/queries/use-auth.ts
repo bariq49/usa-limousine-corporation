@@ -3,6 +3,7 @@ import toast from "react-hot-toast";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { LoginSchema, RegisterSchema } from "@usa-limousine-corporation/ui/schemas";
 import {
+  changePassword,
   csrf,
   forgot,
   getMe,
@@ -11,6 +12,7 @@ import {
   register,
   resendOtp,
   resetPassword,
+  updateProfile,
   verify,
 } from "@/lib/api/auth";
 import { applyAuthSession, hasAccessToken, setCsrfToken } from "@/lib/auth/session";
@@ -73,6 +75,8 @@ export const useAuthRegister = () => {
   return useMutation({
     mutationFn: async (values: RegisterSchema) => {
       return register({
+        firstName: values.firstName,
+        lastName: values.lastName,
         email: values.email,
         password: values.password,
       });
@@ -140,6 +144,37 @@ export const useAuthResetPassword = () => {
     },
     onError: (error: unknown) => {
       toast.error(errorMessage(error, "Failed to reset password."));
+    },
+  });
+};
+
+export const useAuthChangePassword = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: changePassword,
+    onSuccess: (data) => {
+      queryClient.clear();
+      toast.success(data.message || "Password changed. Please log in again.");
+      window.location.assign("/auth/login");
+    },
+    onError: (error: unknown) => {
+      toast.error(errorMessage(error, "Failed to change password."));
+    },
+  });
+};
+
+export const useAuthUpdateProfile = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: updateProfile,
+    onSuccess: async () => {
+      toast.success("Profile updated successfully");
+      await queryClient.invalidateQueries({ queryKey: authQueryKeys.me });
+    },
+    onError: (error: unknown) => {
+      toast.error(errorMessage(error, "Failed to update profile."));
     },
   });
 };

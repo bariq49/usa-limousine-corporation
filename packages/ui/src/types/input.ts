@@ -5,6 +5,7 @@ export type InputType =
   | "email"
   | "number"
   | "tel"
+  | "phone"
   | "password"
   | "date"
   | "time"

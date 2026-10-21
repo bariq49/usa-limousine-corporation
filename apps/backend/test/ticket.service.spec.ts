@@ -5,6 +5,7 @@ import type { PrismaService } from "../src/infrastructure/database/prisma.servic
 import type { SequenceService } from "../src/infrastructure/sequence/sequence.service";
 import { TICKET_EVENT } from "../src/modules/help-center/constants/ticket.events";
 import type { TicketRepository } from "../src/modules/help-center/repositories/ticket.repository";
+import type { NotificationService } from "../src/modules/notification/services/notification.service";
 import { TicketService } from "../src/modules/help-center/services/ticket.service";
 
 describe("TicketService", () => {
@@ -17,7 +18,12 @@ describe("TicketService", () => {
     deleteMany: jest.fn(),
   };
   const sequenceService = {
-    allocate: jest.fn(),
+    nextHelpTicket: jest.fn(),
+  };
+  const tx = {
+    customer: {
+      findUnique: jest.fn(),
+    },
   };
   const prisma = {
     auditLog: {
@@ -27,9 +33,13 @@ describe("TicketService", () => {
       findUnique: jest.fn(),
       findFirst: jest.fn(),
     },
-    driver: {
-      findFirst: jest.fn(),
-    },
+    $transaction: jest.fn(async (fn: (client: typeof tx) => Promise<unknown>) => fn(tx)),
+  };
+  const staged = [{ id: "notification-1" }];
+  const notificationService = {
+    stage: jest.fn(async () => staged),
+    stageForAdmins: jest.fn(async () => staged),
+    deliverStaged: jest.fn(async () => undefined),
   };
   const events = {
     emit: jest.fn(),
@@ -44,17 +54,14 @@ describe("TicketService", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    prisma.driver.findFirst.mockResolvedValue({
-      firstName: "Test",
-      lastName: "Driver",
-      email: "driver@test.com",
-    });
     prisma.customer.findFirst.mockResolvedValue(null);
+    tx.customer.findUnique.mockResolvedValue({ userId: "customer-user-1" });
     service = new TicketService(
       tickets as unknown as TicketRepository,
       sequenceService as unknown as SequenceService,
       prisma as unknown as PrismaService,
       events as unknown as EventEmitter2,
+      notificationService as unknown as NotificationService,
     );
   });
 
@@ -62,8 +69,8 @@ describe("TicketService", () => {
     tickets.findById.mockResolvedValue({
       id: "ticket-1",
       status: HelpTicketStatus.CLOSED,
-      ownerType: HelpTicketOwnerType.DRIVER,
-      ownerId: "driver-1",
+      ownerType: HelpTicketOwnerType.CUSTOMER,
+      ownerId: "customer-1",
     });
 
     await expect(
@@ -78,8 +85,8 @@ describe("TicketService", () => {
     tickets.findById.mockResolvedValue({
       id: "ticket-1",
       status: HelpTicketStatus.OPEN,
-      ownerType: HelpTicketOwnerType.DRIVER,
-      ownerId: "driver-1",
+      ownerType: HelpTicketOwnerType.CUSTOMER,
+      ownerId: "customer-1",
     });
 
     await expect(
@@ -91,45 +98,51 @@ describe("TicketService", () => {
   });
 
   it("creates tickets with PENDING status via repository", async () => {
-    sequenceService.allocate.mockResolvedValue("HC-000001");
+    sequenceService.nextHelpTicket.mockResolvedValue(1);
     tickets.create.mockResolvedValue({
       id: "ticket-1",
       ticketNumber: "HC-000001",
       status: HelpTicketStatus.PENDING,
       category: HelpTicketCategory.OTHER,
       subject: "Wallet issue",
-      ownerType: HelpTicketOwnerType.DRIVER,
-      ownerId: "driver-1",
+      ownerType: HelpTicketOwnerType.CUSTOMER,
+      ownerId: "customer-1",
     });
 
     const result = await service.create(
       {
-        ownerType: HelpTicketOwnerType.DRIVER,
-        ownerId: "driver-1",
+        ownerType: HelpTicketOwnerType.CUSTOMER,
+        ownerId: "customer-1",
         subject: "Wallet issue",
         description: "My wallet balance looks incorrect after a trip.",
       },
       request,
     );
 
-    expect(sequenceService.allocate).toHaveBeenCalledWith({
-      counterId: "help-ticket",
-      prefix: "HC",
-    });
+    expect(sequenceService.nextHelpTicket).toHaveBeenCalledTimes(1);
     expect(tickets.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        ownerType: HelpTicketOwnerType.DRIVER,
-        ownerId: "driver-1",
+        ownerType: HelpTicketOwnerType.CUSTOMER,
+        ownerId: "customer-1",
         category: HelpTicketCategory.OTHER,
         ticketNumber: "HC-000001",
         actorUserId: "user-1",
       }),
+      tx,
     );
+    expect(notificationService.stageForAdmins).toHaveBeenCalledWith(
+      expect.objectContaining({
+        excludeUserId: "user-1",
+        idempotencyKey: "TICKET_CREATED:ticket-1",
+      }),
+      tx,
+    );
+    expect(notificationService.deliverStaged).toHaveBeenCalledWith(staged);
     expect(events.emit).toHaveBeenCalledWith(
       TICKET_EVENT.CREATED,
       expect.objectContaining({
-        ownerType: HelpTicketOwnerType.DRIVER,
-        ownerId: "driver-1",
+        ownerType: HelpTicketOwnerType.CUSTOMER,
+        ownerId: "customer-1",
         actorUserId: "user-1",
         ticketId: "ticket-1",
         ticketNumber: "HC-000001",
@@ -139,7 +152,7 @@ describe("TicketService", () => {
   });
 
   it("emits created event for customer tickets", async () => {
-    sequenceService.allocate.mockResolvedValue("HC-000002");
+    sequenceService.nextHelpTicket.mockResolvedValue(2);
     tickets.create.mockResolvedValue({
       id: "ticket-2",
       ticketNumber: "HC-000002",
@@ -174,8 +187,8 @@ describe("TicketService", () => {
     const resolved = {
       id: "ticket-1",
       status: HelpTicketStatus.RESOLVED,
-      ownerType: HelpTicketOwnerType.DRIVER,
-      ownerId: "driver-1",
+      ownerType: HelpTicketOwnerType.CUSTOMER,
+      ownerId: "customer-1",
       ticketNumber: "HC-000001",
       subject: "Wallet issue",
       description: "My wallet balance looks incorrect after a trip.",
@@ -189,8 +202,8 @@ describe("TicketService", () => {
     tickets.findById.mockResolvedValue({
       id: "ticket-1",
       status: HelpTicketStatus.IN_PROGRESS,
-      ownerType: HelpTicketOwnerType.DRIVER,
-      ownerId: "driver-1",
+      ownerType: HelpTicketOwnerType.CUSTOMER,
+      ownerId: "customer-1",
       ticketNumber: "HC-000001",
       subject: "Wallet issue",
     });
@@ -204,30 +217,43 @@ describe("TicketService", () => {
     expect(events.emit).toHaveBeenCalledWith(
       TICKET_EVENT.STATUS_UPDATED,
       expect.objectContaining({
-        ownerType: HelpTicketOwnerType.DRIVER,
-        ownerId: "driver-1",
+        ownerType: HelpTicketOwnerType.CUSTOMER,
+        ownerId: "customer-1",
         actorUserId: "admin-user",
         from: HelpTicketStatus.IN_PROGRESS,
         to: HelpTicketStatus.RESOLVED,
       }),
     );
+    expect(notificationService.stage).toHaveBeenCalledWith(
+      [
+        expect.objectContaining({
+          recipientId: "customer-user-1",
+          type: "TICKET_RESOLVED",
+          push: true,
+          idempotencyKey: `TICKET_STATUS:ticket-1:${resolved.updatedAt.getTime()}`,
+        }),
+      ],
+      tx,
+    );
+    expect(notificationService.deliverStaged).toHaveBeenCalledWith(staged);
   });
 
   it("emits status updated on non-resolved status changes", async () => {
     const updated = {
       id: "ticket-1",
       status: HelpTicketStatus.OPEN,
-      ownerType: HelpTicketOwnerType.DRIVER,
-      ownerId: "driver-1",
+      ownerType: HelpTicketOwnerType.CUSTOMER,
+      ownerId: "customer-1",
       ticketNumber: "HC-000001",
       subject: "Wallet issue",
+      updatedAt: new Date("2026-08-24T00:00:00.000Z"),
     };
 
     tickets.findById.mockResolvedValue({
       id: "ticket-1",
       status: HelpTicketStatus.PENDING,
-      ownerType: HelpTicketOwnerType.DRIVER,
-      ownerId: "driver-1",
+      ownerType: HelpTicketOwnerType.CUSTOMER,
+      ownerId: "customer-1",
       ticketNumber: "HC-000001",
       subject: "Wallet issue",
     });
@@ -252,8 +278,8 @@ describe("TicketService", () => {
       id: "ticket-1",
       ticketNumber: "HC-000001",
       status: HelpTicketStatus.CLOSED,
-      ownerType: HelpTicketOwnerType.DRIVER,
-      ownerId: "driver-1",
+      ownerType: HelpTicketOwnerType.CUSTOMER,
+      ownerId: "customer-1",
     });
     tickets.delete.mockResolvedValue({
       id: "ticket-1",
@@ -285,16 +311,16 @@ describe("TicketService", () => {
       .mockResolvedValueOnce({
         id: "ticket-1",
         status: HelpTicketStatus.OPEN,
-        ownerType: HelpTicketOwnerType.DRIVER,
-        ownerId: "driver-1",
+        ownerType: HelpTicketOwnerType.CUSTOMER,
+        ownerId: "customer-1",
         ticketNumber: "HC-000001",
         subject: "Wallet issue",
       })
       .mockResolvedValueOnce({
         id: "ticket-1",
         status: HelpTicketStatus.OPEN,
-        ownerType: HelpTicketOwnerType.DRIVER,
-        ownerId: "driver-1",
+        ownerType: HelpTicketOwnerType.CUSTOMER,
+        ownerId: "customer-1",
         ticketNumber: "HC-000001",
         subject: "Wallet issue",
         messages: [],
@@ -312,8 +338,8 @@ describe("TicketService", () => {
     expect(events.emit).toHaveBeenCalledWith(
       TICKET_EVENT.REPLIED,
       expect.objectContaining({
-        ownerType: HelpTicketOwnerType.DRIVER,
-        ownerId: "driver-1",
+        ownerType: HelpTicketOwnerType.CUSTOMER,
+        ownerId: "customer-1",
         actorUserId: "admin-user",
         ticketNumber: "HC-000001",
         messageId: "msg-1",

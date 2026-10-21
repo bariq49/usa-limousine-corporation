@@ -1,5 +1,6 @@
 import { Inject, Injectable, forwardRef } from "@nestjs/common";
 import { NotificationQueueService } from "../jobs/notification-queue.service";
+import { NotificationRepository } from "../repositories/notification.repository";
 import {
   type Deliver,
   type DeliverMany,
@@ -18,30 +19,34 @@ export class NotificationDeliveryService {
     private readonly queue: NotificationQueueService,
     @Inject(TokenResolverRegistry)
     private readonly pushTokens: TokenResolverRegistry,
+    @Inject(NotificationRepository)
+    private readonly repository: NotificationRepository,
   ) {}
 
+  /** Socket emit + push enqueue, then stamp `deliveredAt` so the sweep skips it. */
   async deliver(params: Deliver) {
-    const { notification, push = true } = params;
+    const { notification } = params;
     this.realtime.emitCreated(notification);
 
-    if (!push) {
-      return;
+    if (notification.push) {
+      await this.enqueuePush(notification);
     }
 
-    await this.enqueuePush(notification);
+    await this.repository.markDelivered([notification.id]);
   }
 
   async deliverMany(params: DeliverMany) {
-    const { notifications, push = true } = params;
+    const { notifications } = params;
+    if (notifications.length === 0) {
+      return;
+    }
+
     for (const notification of notifications) {
       this.realtime.emitCreated(notification);
     }
 
-    if (!push) {
-      return;
-    }
-
-    await this.enqueuePushes(notifications);
+    await this.enqueuePushes(notifications.filter((notification) => notification.push));
+    await this.repository.markDelivered(notifications.map((notification) => notification.id));
   }
 
   toFcmData(source: FcmSource): FcmData {

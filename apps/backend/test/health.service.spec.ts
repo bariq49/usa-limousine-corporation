@@ -5,9 +5,7 @@ import { EmailService } from "../src/infrastructure/email/email.service";
 import { QueueRegistry } from "../src/infrastructure/queue/queue-registry";
 import { RedisService } from "../src/infrastructure/redis/redis.service";
 import { StorageService } from "../src/infrastructure/storage/storage.service";
-import { StripeService } from "../src/infrastructure/stripe/stripe.service";
 import { FirebaseService } from "../src/infrastructure/firebase/firebase.service";
-import { AgoraService } from "../src/infrastructure/agora/agora.service";
 import { TwilioService } from "../src/infrastructure/twilio/twilio.service";
 import { WebsocketService } from "../src/infrastructure/websocket/websocket.service";
 import { HealthService } from "../src/modules/health/health.service";
@@ -50,20 +48,12 @@ describe("HealthService", () => {
           useValue: { isReady: () => false },
         },
         {
-          provide: StripeService,
-          useValue: { isConfigured: () => false },
-        },
-        {
           provide: FirebaseService,
           useValue: { isConfigured: () => false },
         },
         {
           provide: TwilioService,
           useValue: { isConfigured: () => false },
-        },
-        {
-          provide: AgoraService,
-          useValue: { isConfigured: () => false, healthCheck: () => false },
         },
       ],
     }).compile();
@@ -78,10 +68,8 @@ describe("HealthService", () => {
       storage: "not_configured",
       email: "not_configured",
       websocket: "down",
-      stripe: "not_configured",
       firebase: "not_configured",
       twilio: "not_configured",
-      agora: "not_configured",
     });
   });
 });

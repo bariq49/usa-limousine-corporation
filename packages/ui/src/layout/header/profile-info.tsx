@@ -18,6 +18,9 @@ import userAvatar from "../../../public/assets/avatar/user.png";
 
 export function ProfileInfo() {
   const { user, onLogout, isLoggingOut } = useUser();
+  const fullName =[user?.firstName, user?.lastName].filter(Boolean).join(" ").trim() || user?.name || "";
+  const displayName = fullName || user?.email || "User";
+  console.log("user", user);
 
   return (
     <DropdownMenu modal={false}>
@@ -30,10 +33,10 @@ export function ProfileInfo() {
           <Avatar className="h-9 w-9">
             <AvatarImage
               src={user?.avatar || userAvatar.src}
-              alt={user?.name || user?.email || "User"}
+              alt={displayName}
             />
             <AvatarFallback>
-              {((user?.name || user?.email)?.[0] ?? "?").toUpperCase()}
+              {(displayName[0] ?? "?").toUpperCase()}
             </AvatarFallback>
           </Avatar>
         </button>
@@ -43,19 +46,19 @@ export function ProfileInfo() {
           <Avatar className="h-9 w-9">
             <AvatarImage
               src={user?.avatar || userAvatar.src}
-              alt={user?.name || user?.email || "User"}
+              alt={displayName}
             />
             <AvatarFallback>
-              {((user?.name || user?.email)?.[0] ?? "?").toUpperCase()}
+              {(displayName[0] ?? "?").toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <div className="min-w-0">
             <div className="truncate text-sm font-medium text-default-800">
-              {user?.name || user?.email || "Account"}
+              {fullName || user?.email || "Account"}
             </div>
-            <p className="truncate text-xs text-default-600">
-              {user?.name && user?.email ? user.email : (user?.roles?.[0] ?? "No session")}
-            </p>
+            {fullName && user?.email ? (
+              <p className="truncate text-xs text-default-600">{user.email}</p>
+            ) : null}
           </div>
         </DropdownMenuLabel>
         <DropdownMenuGroup>

@@ -375,21 +375,10 @@ export default function HelpCenterTicketPage() {
                 </DetailRow>
                 <DetailRow icon={<User className="h-4 w-4 shrink-0 text-primary" />} label="Owner">
                   <div className="break-words">
-                    <div className="text-xs text-default-500">
-                      {ticket.ownerType === "DRIVER" ? "Driver" : "Customer"}
-                    </div>
-                    {ticket.ownerType === "DRIVER" ? (
-                      <Link
-                        href={`/drivers/profile/${ticket.ownerId}`}
-                        className="font-medium text-default-900 hover:text-primary hover:underline"
-                      >
-                        {ticket.ownerName?.trim() || "—"}
-                      </Link>
-                    ) : (
-                      <span className="font-medium text-default-900">
-                        {ticket.ownerName?.trim() || "—"}
-                      </span>
-                    )}
+                    <div className="text-xs text-default-500">Customer</div>
+                    <span className="font-medium text-default-900">
+                      {ticket.ownerName?.trim() || "—"}
+                    </span>
                     <div className="text-default-500">{ticket.ownerEmail?.trim() || "—"}</div>
                   </div>
                 </DetailRow>

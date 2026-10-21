@@ -17,7 +17,8 @@ export function RegisterForm() {
     resolver: zodResolver(registerSchema),
     mode: "all",
     defaultValues: {
-      name: "",
+      firstName: "",
+      lastName: "",
       email: "",
       password: "",
       terms: false,
@@ -41,7 +42,10 @@ export function RegisterForm() {
       </div>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="mt-5 xl:mt-7 space-y-4">
-          <Input name="name" label="Full Name" type="text" autoComplete="name" />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Input name="firstName" label="First Name" type="text" autoComplete="given-name" />
+            <Input name="lastName" label="Last Name" type="text" autoComplete="family-name" />
+          </div>
           <Input name="email" label="Email" type="email" autoComplete="email" />
           <Input
             name="password"

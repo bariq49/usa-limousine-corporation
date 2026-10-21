@@ -40,10 +40,8 @@ describe("HealthController (e2e)", () => {
     expect(dependencyStatuses).toContain(response.body.data.storage);
     expect(dependencyStatuses).toContain(response.body.data.email);
     expect(dependencyStatuses).toContain(response.body.data.websocket);
-    expect(dependencyStatuses).toContain(response.body.data.stripe);
     expect(dependencyStatuses).toContain(response.body.data.firebase);
     expect(dependencyStatuses).toContain(response.body.data.twilio);
-    expect(dependencyStatuses).toContain(response.body.data.agora);
     expect(response.body.meta.path).toBe(`/${API_PREFIX}/v${API_VERSION}/health`);
     expect(typeof response.body.meta.timestamp).toBe("string");
   });

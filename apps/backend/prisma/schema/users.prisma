@@ -19,14 +19,8 @@ model User {
   emailVerificationTokens EmailVerificationToken[]
   passwordResetTokens     PasswordResetToken[]
   auditLogs               AuditLog[]
-  drivers                 Driver[]
   customer                Customer?
   bookings                Booking[]
-  tripEvents         TripEvent[]
   helpTicketMessages HelpTicketMessage[]
   helpTicketEvents   HelpTicketEvent[]
-  payoutsCreated     Payout[]              @relation("PayoutCreatedBy")
-  chatParticipations ConversationParticipant[]
-  chatMessagesSent   ChatMessage[]         @relation("ChatMessageSender")
-  chatReceipts       ChatMessageReceipt[]
 }

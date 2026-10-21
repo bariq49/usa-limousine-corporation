@@ -19,7 +19,6 @@ model VehicleCategory {
   isActive       Boolean  @default(true)
 
   luggageCapacity VehicleCategoryLuggageCapacity[]
-  driverVehicles  DriverVehicle[]
   bookings        Booking[]
   pricing         VehicleCategoryPricing[]
 
@@ -41,7 +40,6 @@ model LuggageType {
   isActive    Boolean  @default(true)
 
   capacities              VehicleCategoryLuggageCapacity[]
-  driverVehicleCapacities DriverVehicleLuggageCapacity[]
   bookingSelections       BookingLuggage[]
 
   createdAt DateTime @default(now())

@@ -11,17 +11,10 @@ import { getAppEnv } from "../src/config/env";
 import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "../src/infrastructure/database/prisma.service";
 import { WebsocketService } from "../src/infrastructure/websocket/websocket.service";
-import { cleanupBookingAndTripTables } from "./helpers/booking-fixtures";
-import { cleanupPaymentTables, cleanupWalletTables } from "./helpers/cleanup-payment";
+import { cleanupBookingTables } from "./helpers/booking-fixtures";
 import { AuthEmailService } from "../src/modules/auth/services/auth-email.service";
 import { AuthEmailQueueService } from "../src/modules/auth/jobs/auth-email-queue.service";
-import { DriverEmailService } from "../src/modules/driver/services/driver-email.service";
-import { DriverEmailQueueService } from "../src/modules/driver/jobs/driver-email-queue.service";
-import {
-  authEmailServiceMock,
-  driverEmailServiceMock,
-  emailQueueLifecycleMock,
-} from "./helpers/email-mocks";
+import { authEmailServiceMock, emailQueueLifecycleMock } from "./helpers/email-mocks";
 
 const basePath = `/${API_PREFIX}/v${API_VERSION}`;
 
@@ -41,10 +34,6 @@ describe("Auth (e2e)", () => {
       .useValue(authEmailServiceMock)
       .overrideProvider(AuthEmailQueueService)
       .useValue(emailQueueLifecycleMock)
-      .overrideProvider(DriverEmailService)
-      .useValue(driverEmailServiceMock)
-      .overrideProvider(DriverEmailQueueService)
-      .useValue(emailQueueLifecycleMock)
       .compile();
 
     app = moduleFixture.createNestApplication({ bufferLogs: true });
@@ -60,12 +49,7 @@ describe("Auth (e2e)", () => {
     configService = app.get(ConfigService);
     cookieName = getAppEnv(configService).authCookie.name;
 
-    await cleanupWalletTables(prisma);
-    await cleanupPaymentTables(prisma);
-    await cleanupBookingAndTripTables(prisma);
-    await prisma.driverDocument.deleteMany();
-    await prisma.driverVehicle.deleteMany();
-    await prisma.driver.deleteMany();
+    await cleanupBookingTables(prisma);
     await prisma.auditLog.deleteMany();
     await prisma.session.deleteMany();
     await prisma.emailVerificationToken.deleteMany();
@@ -75,12 +59,7 @@ describe("Auth (e2e)", () => {
   });
 
   afterAll(async () => {
-    await cleanupWalletTables(prisma);
-    await cleanupPaymentTables(prisma);
-    await cleanupBookingAndTripTables(prisma);
-    await prisma.driverDocument.deleteMany();
-    await prisma.driverVehicle.deleteMany();
-    await prisma.driver.deleteMany();
+    await cleanupBookingTables(prisma);
     await prisma.auditLog.deleteMany();
     await prisma.session.deleteMany();
     await prisma.emailVerificationToken.deleteMany();

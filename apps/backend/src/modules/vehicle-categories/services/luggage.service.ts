@@ -64,14 +64,11 @@ export class LuggageService {
   }
 
   private async ensureNotInUse(ids: string[]) {
-    const [categoryUsages, driverUsages] = await Promise.all([
-      this.luggageRepository.countCategoryUsages(ids),
-      this.luggageRepository.countDriverUsages(ids),
-    ]);
+    const categoryUsages = await this.luggageRepository.countCategoryUsages(ids);
 
-    if (categoryUsages > 0 || driverUsages > 0) {
+    if (categoryUsages > 0) {
       throw new BadRequestException(
-        "Luggage cannot be deleted because it is assigned to vehicle categories or driver vehicles",
+        "Luggage cannot be deleted because it is assigned to vehicle categories",
       );
     }
   }

@@ -218,18 +218,11 @@ export class AuthService implements OnModuleInit {
       throw new UnauthorizedException("Session is invalid");
     }
 
-    const driver = await this.prisma.driver.findFirst({
-      where: { userId: user.id, deletedAt: null },
-      select: { avatarUrl: true, firstName: true, lastName: true, phone: true },
-      orderBy: { createdAt: "asc" },
-    });
-
-    const firstName = user.firstName || driver?.firstName || null;
-    const lastName = user.lastName || driver?.lastName || null;
+    const firstName = user.firstName || null;
+    const lastName = user.lastName || null;
     const name = [firstName, lastName].filter(Boolean).join(" ").trim() || null;
-    const phone = user.phone || driver?.phone || null;
-
-    const avatar = user.avatar || driver?.avatarUrl || null;
+    const phone = user.phone || null;
+    const avatar = user.avatar || null;
 
     return {
       id: user.id,
@@ -262,28 +255,6 @@ export class AuthService implements OnModuleInit {
       phone: body.phone,
       avatar: body.avatar,
     });
-
-    if (body.firstName !== undefined || body.lastName !== undefined) {
-      const driverData: { firstName?: string; lastName?: string } = {};
-      if (body.firstName !== undefined) {
-        driverData.firstName = body.firstName?.trim() || "";
-      }
-      if (body.lastName !== undefined) {
-        driverData.lastName = body.lastName?.trim() || "";
-      }
-
-      await this.prisma.driver.updateMany({
-        where: { userId, deletedAt: null },
-        data: driverData,
-      });
-    }
-
-    if (body.avatar !== undefined) {
-      await this.prisma.driver.updateMany({
-        where: { userId, deletedAt: null },
-        data: { avatarUrl: body.avatar?.trim() || null },
-      });
-    }
 
     const context = toRequestContext(request);
     await auditLog({

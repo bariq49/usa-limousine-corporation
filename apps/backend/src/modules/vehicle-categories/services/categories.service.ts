@@ -53,10 +53,10 @@ export class CategoriesService {
       throw new NotFoundException("Vehicle category not found");
     }
 
-    const linkedVehicles = await this.categoriesRepository.countDriverVehiclesByCategoryIds([id]);
-    if (linkedVehicles > 0) {
+    const linkedBookings = await this.categoriesRepository.countBookingsByCategoryIds([id]);
+    if (linkedBookings > 0) {
       throw new BadRequestException(
-        "Vehicle category cannot be deleted because it is assigned to one or more driver vehicles",
+        "Vehicle category cannot be deleted because it is used by one or more bookings",
       );
     }
 
@@ -70,10 +70,10 @@ export class CategoriesService {
       throw new BadRequestException("One or more vehicle categories were not found");
     }
 
-    const linkedVehicles = await this.categoriesRepository.countDriverVehiclesByCategoryIds(ids);
-    if (linkedVehicles > 0) {
+    const linkedBookings = await this.categoriesRepository.countBookingsByCategoryIds(ids);
+    if (linkedBookings > 0) {
       throw new BadRequestException(
-        "One or more vehicle categories cannot be deleted because they are assigned to driver vehicles",
+        "One or more vehicle categories cannot be deleted because they are used by bookings",
       );
     }
 

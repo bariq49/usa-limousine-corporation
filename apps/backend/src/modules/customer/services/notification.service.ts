@@ -2,7 +2,7 @@ import { Inject, Injectable } from "@nestjs/common";
 import type { Request } from "express";
 import { NotificationService } from "../../notification/services/notification.service";
 import { RecipientType } from "../../notification/types/notification";
-import type { BulkDeleteDto, QueryDto } from "../dto/notification.dto";
+import type { BulkDeleteDto, QueryDto } from "../../notification/dto/notification.dto";
 import { CustomerRepository } from "../repositories/customer.repository";
 import { requireCustomer } from "../utils/require-customer";
 
@@ -20,19 +20,7 @@ export class CustomerNotificationService {
       recipientId: customer.userId,
     };
 
-    const result = await this.notifications.list(query, recipient);
-    const unreadCount = await this.notifications.countUnread(recipient);
-
-    return {
-      items: result.items,
-      total: result.total,
-      page: result.page,
-      limit: result.limit,
-      totalPages: result.totalPages,
-      hasNextPage: result.hasNextPage,
-      hasPrevPage: result.hasPrevPage,
-      unreadCount,
-    };
+    return this.notifications.listWithUnread(query, recipient);
   }
 
   async markNotificationRead(id: string, request: Request) {

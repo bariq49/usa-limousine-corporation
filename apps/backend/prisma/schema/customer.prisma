@@ -8,8 +8,6 @@ model Customer {
   id                    String       @id @default(cuid())
   userId                String       @unique
   type                  CustomerType @default(NORMAL)
-  stripeCustomerId      String?      @unique
-  stripePaymentMethodId String?
   fcmToken              String?
   isActive              Boolean      @default(true)
   createdAt             DateTime     @default(now())
@@ -19,7 +17,6 @@ model Customer {
   user     User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   settings CustomerSettings?
   pushDevices CustomerPushDevice[]
-  reviews  DriverReview[]
 
   @@index([type])
   @@index([deletedAt])

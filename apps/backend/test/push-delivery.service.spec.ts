@@ -104,4 +104,27 @@ describe("PushDeliveryService", () => {
 
     expect(error).toHaveBeenCalled();
   });
+
+  it("returns transiently failed tokens for retry and clears only permanent ones", async () => {
+    sendEachForMulticast.mockResolvedValue({
+      successCount: 1,
+      failureCount: 2,
+      responses: [
+        { success: true },
+        { success: false, errorCode: "messaging/unavailable" },
+        { success: false, errorCode: "messaging/registration-token-not-registered" },
+      ],
+    });
+
+    const service = await createService();
+    const result = await service.deliver({
+      tokens: ["token-ok", "token-busy", "token-gone"],
+      title: "Test",
+      body: "Body",
+      data: { type: "TEST" },
+    });
+
+    expect(result.retryTokens).toEqual(["token-busy"]);
+    expect(invalidateAll).toHaveBeenCalledWith(["token-gone"]);
+  });
 });

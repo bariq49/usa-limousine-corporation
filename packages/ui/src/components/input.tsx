@@ -17,6 +17,7 @@ import {
 } from "./command";
 import { DatePicker } from "./date-picker";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "./form";
+import { PhoneInput } from "./phone-input";
 import { Popover, PopoverContent, PopoverTrigger } from "./popover";
 import { RadioGroup, RadioGroupItem } from "./radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./select";
@@ -356,6 +357,18 @@ export function Input(props: InputProps) {
           />
         );
 
+      case "phone":
+        return (
+          <PhoneInput
+            value={field.value}
+            onChange={field.onChange}
+            onBlur={field.onBlur}
+            name={field.name}
+            disabled={disabled}
+            hasError={hasError}
+            className={inputClassName}
+          />
+        );
       case "upload":
         return (
           <Upload
@@ -421,7 +434,8 @@ export function Input(props: InputProps) {
         const isMultiselectEmpty =
           type === "multiselect" && (!Array.isArray(field.value) || field.value.length === 0);
         const treatAsEmpty = isEmptyValue || isMultiselectEmpty;
-        const alwaysFloated = type === "select" || type === "multiselect" || type === "upload";
+        const alwaysFloated =
+          type === "select" || type === "multiselect" || type === "upload" || type === "phone";
         const isDateOrTime = type === "date" || type === "time";
         const pickerLabelFloated =
           "group-has-[[data-picker-open]]:top-2 group-has-[[data-picker-open]]:-translate-y-5 group-has-[[data-picker-open]]:scale-75 group-has-[[data-picker-open]]:bg-card group-has-[[data-picker-open]]:px-2 group-has-[[data-picker-filled]]:top-2 group-has-[[data-picker-filled]]:-translate-y-5 group-has-[[data-picker-filled]]:scale-75 group-has-[[data-picker-filled]]:bg-card group-has-[[data-picker-filled]]:px-2 group-focus-within:top-2 group-focus-within:-translate-y-5 group-focus-within:scale-75 group-focus-within:bg-card group-focus-within:px-2";

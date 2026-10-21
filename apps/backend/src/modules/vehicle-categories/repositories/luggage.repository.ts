@@ -191,10 +191,4 @@ export class LuggageRepository {
       where: { luggageTypeId: { in: ids } },
     });
   }
-
-  countDriverUsages(ids: string[]) {
-    return this.prisma.driverVehicleLuggageCapacity.count({
-      where: { luggageTypeId: { in: ids } },
-    });
-  }
 }

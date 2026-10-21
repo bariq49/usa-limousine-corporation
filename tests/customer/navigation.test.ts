@@ -6,6 +6,6 @@ describe("customer navigation", () => {
     const hrefs = navigation.flatMap((section) =>
       section.groups.flatMap((group) => group.items.map((item) => item.href)),
     );
-    expect(hrefs.sort()).toEqual(["/dashboard", "/profile"]);
+    expect(hrefs.sort()).toEqual(["/dashboard", "/profile-setting"]);
   });
 });

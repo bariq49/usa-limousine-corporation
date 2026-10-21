@@ -18,11 +18,43 @@ export type Create = {
   idempotencyKey?: string;
 };
 
+/** One notification fanned out to every active super admin. */
+export type NotifyAdmins = {
+  type: NotificationType;
+  title: string;
+  body: string;
+  data: Prisma.InputJsonValue;
+  /** Skip the admin who caused the event. */
+  excludeUserId?: string | null;
+  /** Per-admin keys are `${idempotencyKey}:${adminId}`, so a replayed event never duplicates. */
+  idempotencyKey: string;
+};
+
+/** Prisma client for the caller's transaction, or the root client. */
+export type Client = Prisma.TransactionClient;
+
+export type CursorPage = {
+  items: Notification[];
+  nextCursor: string | null;
+  hasNextPage: boolean;
+};
+
+export type ReadEvent = Recipient & {
+  /** Null means every notification of the recipient was marked read. */
+  ids: string[] | null;
+};
+
+export type RemovedEvent = Recipient & {
+  ids: string[];
+};
+
 export type CreateMany = {
   inputs: Create[];
 };
 
 export type Query = {
+  /** Keyset pagination: pass "" for the first page, then the previous `nextCursor`. */
+  cursor?: string;
   page?: number;
   limit?: number;
   unreadOnly?: boolean;
@@ -69,12 +101,10 @@ export type FcmSource = {
 
 export type Deliver = {
   notification: Notification;
-  push?: boolean;
 };
 
 export type DeliverMany = {
   notifications: Notification[];
-  push?: boolean;
 };
 
 export type Push = {
@@ -82,4 +112,11 @@ export type Push = {
   title: string;
   body: string;
   data: FcmData;
+  /** 1 on the first send; transient token failures are re-queued with attempt + 1. */
+  attempt?: number;
+};
+
+export type PushResult = {
+  /** Tokens that failed with a transient FCM error and are worth retrying. */
+  retryTokens: string[];
 };

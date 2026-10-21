@@ -1,4 +1,5 @@
 import type {
+  ChangePasswordSchema,
   ForgotSchema,
   LoginSchema,
   RegisterSchema,
@@ -16,7 +17,9 @@ export const login = (payload: LoginSchema) => {
   return http.post<AuthTokens>(API_ROUTES.AUTH_LOGIN, payload);
 };
 
-export const register = (payload: Pick<RegisterSchema, "email" | "password">) => {
+export const register = (
+  payload: Pick<RegisterSchema, "firstName" | "lastName" | "email" | "password">,
+) => {
   return http.post<MessageResponse>(API_ROUTES.AUTH_REGISTER, payload);
 };
 
@@ -66,4 +69,26 @@ export const logoutAll = async () => {
   } finally {
     clearAuthSession();
   }
+};
+
+export const changePassword = async (payload: ChangePasswordSchema) => {
+  try {
+    return await http.post<MessageResponse>(API_ROUTES.AUTH_CHANGE_PASSWORD, {
+      currentPassword: payload.currentPassword,
+      newPassword: payload.newPassword,
+    });
+  } finally {
+    clearAuthSession();
+  }
+};
+
+export interface UpdateProfilePayload {
+  firstName?: string | undefined;
+  lastName?: string | undefined;
+  phone?: string | undefined;
+  avatar?: string | undefined;
+}
+
+export const updateProfile = (payload: UpdateProfilePayload) => {
+  return http.patch<CurrentUser>(API_ROUTES.AUTH_PROFILE, payload);
 };

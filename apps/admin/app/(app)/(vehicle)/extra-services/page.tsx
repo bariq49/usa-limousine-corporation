@@ -87,7 +87,7 @@ export default function ServicesPage() {
       <Breadcrumbs
         items={[
           { label: "Home", href: "/analytics" },
-          { label: "Vehicle", href: "/vehicles" },
+          { label: "Vehicle", href: "/categories" },
           { label: "Extra Services" },
         ]}
       />

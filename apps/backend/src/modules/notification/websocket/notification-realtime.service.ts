@@ -3,6 +3,7 @@ import type { Notification } from "@prisma/client";
 import { WebsocketService } from "../../../infrastructure/websocket/websocket.service";
 import type { Payload } from "../../../infrastructure/websocket/types/websocket.types";
 import { ChannelRegistry } from "../services/recipient-channel.registry";
+import type { ReadEvent, RemovedEvent } from "../types/notification";
 
 @Injectable()
 export class NotificationRealtimeService {
@@ -25,6 +26,32 @@ export class NotificationRealtimeService {
       data: notification.data,
       createdAt: notification.createdAt.toISOString(),
       readAt: notification.readAt?.toISOString() ?? null,
+    });
+  }
+
+  /** Keeps the badge in sync on every tab/device of the recipient. */
+  emitRead(event: ReadEvent, unreadCount: number): void {
+    const channel = this.channels.get(event.recipientType);
+    if (!channel) {
+      return;
+    }
+
+    this.broadcast(channel.room(event.recipientId), channel.readEvent, {
+      ids: event.ids,
+      readAt: new Date().toISOString(),
+      unreadCount,
+    });
+  }
+
+  emitRemoved(event: RemovedEvent, unreadCount: number): void {
+    const channel = this.channels.get(event.recipientType);
+    if (!channel) {
+      return;
+    }
+
+    this.broadcast(channel.room(event.recipientId), channel.removedEvent, {
+      ids: event.ids,
+      unreadCount,
     });
   }
 

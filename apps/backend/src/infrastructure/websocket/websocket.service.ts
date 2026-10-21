@@ -1,5 +1,8 @@
-import { Injectable, type OnModuleDestroy } from "@nestjs/common";
+import { Inject, Injectable, type OnModuleDestroy } from "@nestjs/common";
+import { Emitter } from "@socket.io/redis-emitter";
+import type Redis from "ioredis";
 import type { Server, Socket } from "socket.io";
+import { RedisService } from "../redis/redis.service";
 import { sessionRoom, userRoom } from "./constants/rooms";
 import type { Broadcast, BroadcastToRoom, RoomMembership } from "./types/websocket.types";
 
@@ -8,9 +11,14 @@ const SESSION_REVOKED_EVENT = "auth:session_revoked";
 @Injectable()
 export class WebsocketService implements OnModuleDestroy {
   private server: Server | null = null;
+  /** Used where no Socket.IO server runs (worker): publishes through the Redis adapter channel. */
+  private emitter: Emitter | null = null;
+  private emitterClient: Redis | null = null;
+
+  constructor(@Inject(RedisService) private readonly redis: RedisService) {}
 
   isReady() {
-    return this.server !== null;
+    return this.server !== null || this.redis.isConfigured();
   }
 
   attachServer(server: Server) {
@@ -25,12 +33,20 @@ export class WebsocketService implements OnModuleDestroy {
 
   broadcast(params: Broadcast) {
     const { event, payload } = params;
-    this.requireServer().emit(event, payload);
+    if (this.server) {
+      this.server.emit(event, payload);
+      return;
+    }
+    this.requireEmitter().emit(event, payload);
   }
 
   broadcastToRoom(params: BroadcastToRoom) {
     const { room, event, payload } = params;
-    this.requireServer().to(room).emit(event, payload);
+    if (this.server) {
+      this.server.to(room).emit(event, payload);
+      return;
+    }
+    this.requireEmitter().to(room).emit(event, payload);
   }
 
   async setRoomMembership(params: RoomMembership) {
@@ -93,6 +109,12 @@ export class WebsocketService implements OnModuleDestroy {
   }
 
   async onModuleDestroy() {
+    if (this.emitterClient) {
+      await this.emitterClient.quit().catch(() => undefined);
+      this.emitterClient = null;
+      this.emitter = null;
+    }
+
     if (this.server && typeof this.server.close === "function") {
       await new Promise<void>((resolve) => {
         this.server?.close(() => resolve());
@@ -112,11 +134,12 @@ export class WebsocketService implements OnModuleDestroy {
     void server.in(room).disconnectSockets(true);
   }
 
-  private requireServer() {
-    if (!this.server) {
-      throw new Error("WebSocket server is not available");
+  private requireEmitter() {
+    if (!this.emitter) {
+      this.emitterClient = this.redis.createClient();
+      this.emitter = new Emitter(this.emitterClient);
     }
 
-    return this.server;
+    return this.emitter;
   }
 }

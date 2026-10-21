@@ -10,7 +10,6 @@ const runtime = globalThis as unknown as {
 
 const DEFAULT_ROLES: Array<{ key: RoleKey; name: string }> = [
   { key: RoleKey.SUPER_ADMIN, name: "Super Admin" },
-  { key: RoleKey.DRIVER, name: "Driver" },
   { key: RoleKey.CUSTOMER, name: "Customer" },
   { key: RoleKey.BUSINESS_CUSTOMER, name: "Business Customer" },
   { key: RoleKey.VIP_CUSTOMER, name: "VIP Customer" },

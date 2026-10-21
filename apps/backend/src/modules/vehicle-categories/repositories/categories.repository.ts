@@ -176,8 +176,8 @@ export class CategoriesRepository {
     });
   }
 
-  countDriverVehiclesByCategoryIds(ids: string[]) {
-    return this.prisma.driverVehicle.count({
+  countBookingsByCategoryIds(ids: string[]) {
+    return this.prisma.booking.count({
       where: { vehicleCategoryId: { in: ids } },
     });
   }

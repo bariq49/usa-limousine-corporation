@@ -20,7 +20,9 @@ export const navigation: MenuSection[] = [
     groups: [
       {
         id: "me",
-        items: [{ id: "profile", label: "Profile", href: "/profile", icon: "profile" }],
+        items: [
+          { id: "profile-setting", label: "Profile Settings", href: "/profile-setting", icon: "profile" },
+        ],
       },
     ],
   },

@@ -13,6 +13,9 @@ export interface UserSummary {
   roles: RoleKey[];
   avatar?: string | null;
   sessionId?: string;
+  isActive?: boolean;
+  createdAt?: string;
+  memberSince?: string;
 }
 
 export interface UserContextValue {

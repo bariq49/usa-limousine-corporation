@@ -9,19 +9,13 @@ const API_ROUTES = {
   AUTH_PROFILE: "/auth/profile",
   UPLOADS: "/uploads",
 
-  SETTINGS: "/admin/settings",
-  DRIVERS: "/admin/drivers",
-  DELETE_REQUESTS: "/admin/drivers/delete-requests",
   VEHICLE_CATEGORIES: "/admin/vehicle-categories",
   VEHICLE_CATEGORY_PRICING: "/admin/vehicle-category-pricing",
-  VEHICLES: "/admin/vehicles",
   LUGGAGE: "/admin/luggage",
   BOOKINGS: "/admin/bookings",
   EXTRA_SERVICES: "/admin/extra-services",
-  PLANS: "/admin/plans",
-  PAYOUTS: "/admin/payouts",
-  PAYMENTS: "/admin/payments",
   TICKETS: "/admin/tickets",
+  NOTIFICATIONS: "/notifications",
 } as const;
 
 export default API_ROUTES;

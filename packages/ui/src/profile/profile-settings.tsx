@@ -21,6 +21,7 @@ export interface ProfileSettingsProps {
   isUpdating?: boolean | undefined;
   isChangingPassword?: boolean | undefined;
   isUploading?: boolean | undefined;
+  showRole?: boolean | undefined;
 }
 
 export function ProfileSettings({
@@ -30,13 +31,18 @@ export function ProfileSettings({
   isUpdating,
   isChangingPassword,
   isUploading,
+  showRole = true,
 }: ProfileSettingsProps = {}) {
   return (
     <div className="space-y-6">
       <ProfileSettingsHeader onUploadAvatar={onUploadAvatar} isUploading={isUploading} />
       <div className="grid grid-cols-12 items-stretch gap-6">
         <div className="col-span-12 flex lg:col-span-4">
-          <ProfileCard onUploadAvatar={onUploadAvatar} isUploading={isUploading} />
+          <ProfileCard
+            onUploadAvatar={onUploadAvatar}
+            isUploading={isUploading}
+            showRole={showRole}
+          />
         </div>
         <div className="col-span-12 lg:col-span-8">
           <Card className="flex h-full flex-col shadow-xs">

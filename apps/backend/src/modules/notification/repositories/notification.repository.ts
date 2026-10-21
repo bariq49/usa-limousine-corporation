@@ -1,5 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
-import type { Notification, Prisma } from "@prisma/client";
+import { type Notification, type Prisma, RoleKey } from "@prisma/client";
 import { APIFeature } from "../../../common/api-feature";
 import { PrismaService } from "../../../infrastructure/database/prisma.service";
 import {
@@ -7,8 +7,10 @@ import {
   MAX_NOTIFICATION_LIMIT,
 } from "../constants/notification.constants";
 import type {
+  Client,
   Create,
   CreateMany,
+  CursorPage,
   Id,
   MarkRead,
   Query,
@@ -20,13 +22,28 @@ import type {
 export class NotificationRepository {
   constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
-  create(input: Create): Promise<Notification> {
+  findAdminUserIds(excludeUserId?: string | null, client: Client = this.prisma) {
+    const where: Prisma.UserWhereInput = {
+      isActive: true,
+      roles: { some: { role: { key: RoleKey.SUPER_ADMIN } } },
+    };
+    if (excludeUserId) {
+      where.id = { not: excludeUserId };
+    }
+
+    return client.user
+      .findMany({ where, select: { id: true } })
+      .then((rows) => rows.map((row) => row.id));
+  }
+
+  create(input: Create, client: Client = this.prisma): Promise<Notification> {
     const data: Prisma.NotificationCreateInput = {
       recipientType: input.recipientType,
       recipientId: input.recipientId,
       type: input.type,
       title: input.title,
       body: input.body,
+      push: input.push !== false,
     };
     if (input.data !== undefined) {
       data.data = input.data;
@@ -35,7 +52,7 @@ export class NotificationRepository {
       data.idempotencyKey = input.idempotencyKey;
     }
 
-    return this.prisma.notification.create({ data });
+    return client.notification.create({ data });
   }
 
   findByIdempotencyKey(idempotencyKey: string): Promise<Notification | null> {
@@ -63,13 +80,18 @@ export class NotificationRepository {
     });
   }
 
-  createManyAndReturn({ inputs }: CreateMany): Promise<Notification[]> {
+  /** Rows whose idempotency key already exists are skipped and not returned. */
+  createManyAndReturn(
+    { inputs }: CreateMany,
+    client: Client = this.prisma,
+  ): Promise<Notification[]> {
     if (inputs.length === 0) {
       return Promise.resolve([]);
     }
 
-    return this.prisma.notification.createManyAndReturn({
+    return client.notification.createManyAndReturn({
       data: inputs.map((input) => this.toCreateManyRow(input)),
+      skipDuplicates: true,
     });
   }
 
@@ -80,6 +102,7 @@ export class NotificationRepository {
       type: input.type,
       title: input.title,
       body: input.body,
+      push: input.push !== false,
     };
     if (input.data !== undefined) {
       row.data = input.data;
@@ -142,6 +165,55 @@ export class NotificationRepository {
       }));
   }
 
+  /** Keyset page ordered newest first; no total count, so it stays fast for large inboxes. */
+  async listByCursor(query: Query, recipient: Recipient): Promise<CursorPage> {
+    const requested = Number(query.limit) || DEFAULT_NOTIFICATION_LIMIT;
+    const limit = Math.min(Math.max(requested, 1), MAX_NOTIFICATION_LIMIT);
+
+    const where: Prisma.NotificationWhereInput = {
+      recipientType: recipient.recipientType,
+      recipientId: recipient.recipientId,
+    };
+    if (query.unreadOnly) {
+      where.readAt = null;
+    }
+    if (query.type) {
+      where.type = query.type;
+    }
+    if (query.cursor) {
+      const anchor = await this.prisma.notification.findFirst({
+        where: {
+          id: query.cursor,
+          recipientType: recipient.recipientType,
+          recipientId: recipient.recipientId,
+        },
+        select: { id: true, createdAt: true },
+      });
+      if (anchor) {
+        where.OR = [
+          { createdAt: { lt: anchor.createdAt } },
+          { createdAt: anchor.createdAt, id: { lt: anchor.id } },
+        ];
+      }
+    }
+
+    const rows = await this.prisma.notification.findMany({
+      where,
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      take: limit + 1,
+    });
+
+    const hasNextPage = rows.length > limit;
+    const items = hasNextPage ? rows.slice(0, limit) : rows;
+    const last = items[items.length - 1];
+
+    return {
+      items,
+      hasNextPage,
+      nextCursor: hasNextPage && last ? last.id : null,
+    };
+  }
+
   findOwned(params: MarkRead): Promise<Notification | null> {
     const { id, recipientType, recipientId } = params;
     return this.prisma.notification.findFirst({
@@ -196,6 +268,36 @@ export class NotificationRepository {
         id: { in: ids },
         recipientType,
         recipientId,
+      },
+    });
+  }
+
+  markDelivered(ids: string[]) {
+    if (ids.length === 0) {
+      return Promise.resolve({ count: 0 });
+    }
+
+    return this.prisma.notification.updateMany({
+      where: { id: { in: ids }, deliveredAt: null },
+      data: { deliveredAt: new Date() },
+    });
+  }
+
+  findUndelivered(createdBefore: Date, take: number): Promise<Notification[]> {
+    return this.prisma.notification.findMany({
+      where: { deliveredAt: null, createdAt: { lt: createdBefore } },
+      orderBy: { createdAt: "asc" },
+      take,
+    });
+  }
+
+  deleteExpired(readBefore: Date, unreadBefore: Date) {
+    return this.prisma.notification.deleteMany({
+      where: {
+        OR: [
+          { readAt: { not: null }, createdAt: { lt: readBefore } },
+          { readAt: null, createdAt: { lt: unreadBefore } },
+        ],
       },
     });
   }

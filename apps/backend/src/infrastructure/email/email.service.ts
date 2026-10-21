@@ -3,14 +3,8 @@ import { ConfigService } from "@nestjs/config";
 import { AppLogger } from "../../common/logger/app.logger";
 import { getEmailConfig } from "./email.config";
 import { NodemailerEmailProvider } from "./providers/nodemailer.provider";
-import { adminApplicationReceived, applicationReceived } from "./templates/application-received";
-import { applicationStatus } from "./templates/application-status";
-import { credentials } from "./templates/credentials";
 import { passwordReset } from "./templates/password-reset";
 import { verification } from "./templates/verification";
-import type { AdminApplicationReceived, ApplicationReceived } from "./types/application-received";
-import type { ApplicationStatus } from "./types/application-status";
-import type { Credentials } from "./types/credentials";
 import type { SendMailOptions } from "./types/mail";
 import type { PasswordReset } from "./types/password-reset";
 import type { Verification } from "./types/verification";
@@ -84,44 +78,6 @@ export class EmailService {
       to: params.to,
       subject: "Reset your USA Limousine Corporation password",
       html: passwordReset(params),
-    });
-  }
-
-  async sendDriverApplicationStatusEmail(params: ApplicationStatus) {
-    const subjects = {
-      UNDER_REVIEW: "Your USA Limousine Corporation driver application is under review",
-      APPROVED: "Your USA Limousine Corporation driver application is approved",
-      REJECTED: "Your USA Limousine Corporation driver application was rejected",
-    } as const;
-
-    await this.send({
-      to: params.to,
-      subject: subjects[params.status],
-      html: applicationStatus(params),
-    });
-  }
-
-  async sendDriverCredentialsEmail(params: Credentials) {
-    await this.send({
-      to: params.to,
-      subject: "Your USA Limousine Corporation driver login credentials",
-      html: credentials(params),
-    });
-  }
-
-  async sendDriverApplicationReceivedEmail(params: ApplicationReceived) {
-    await this.send({
-      to: params.to,
-      subject: "We received your USA Limousine Corporation driver application",
-      html: applicationReceived(params),
-    });
-  }
-
-  async sendAdminNewDriverApplicationEmail(params: AdminApplicationReceived) {
-    await this.send({
-      to: params.to,
-      subject: `New driver application ${params.applicationNumber}`,
-      html: adminApplicationReceived(params),
     });
   }
 }

@@ -13,7 +13,7 @@ export type TicketCategory =
   | "FLAT_TIRE"
   | "OTHER";
 
-export type OwnerType = "DRIVER" | "CUSTOMER";
+export type OwnerType = "CUSTOMER";
 
 export type Author = {
   id: string;

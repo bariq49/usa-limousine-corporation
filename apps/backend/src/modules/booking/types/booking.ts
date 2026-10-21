@@ -1,4 +1,4 @@
-import type { BookingStatus, BookingType, NotificationType, Prisma } from "@prisma/client";
+import type { BookingStatus, BookingType } from "@prisma/client";
 
 export type LocationInput = {
   address: string;
@@ -64,8 +64,6 @@ export type CreateData = {
   bookingType: BookingType;
   status: BookingStatus;
   confirmedAt?: Date | undefined;
-  offerSessionExpiresAt?: Date | undefined;
-  matchingRadius?: number | undefined;
   pricing: PricingInput;
   address: AddressInput;
   passenger: PassengerInput;
@@ -104,52 +102,4 @@ export type StatusUpdate = {
   completedAt?: Date;
   cancelledAt?: Date;
   cancellationReason?: string;
-};
-
-export type AvailableParams = {
-  bookingId: string;
-  /** Skip FCM/inbox for these drivers (e.g. already quoted). */
-  excludeDriverIds?: string[];
-  title?: string;
-  body?: string;
-};
-
-export type TakenParams = {
-  bookingId: string;
-  tripId?: string | null;
-  excludeDriverId?: string;
-  title?: string;
-  body?: string;
-};
-
-export type NotifyDrivers = {
-  type: NotificationType;
-  title: string;
-  body: string;
-  data: Prisma.InputJsonValue;
-  vehicleCategoryId: string;
-  /** When set with BOOKING_AVAILABLE, records DriverRequestEvent impressions. */
-  bookingId?: string;
-  excludeDriverId?: string;
-  excludeDriverIds?: string[];
-};
-
-export type OfferReceivedParams = {
-  userId: string;
-  bookingId: string;
-  bookingNumber: string;
-  offerId: string;
-  quotedPrice: number;
-  driverId: string;
-  etaMinutes?: number | null;
-  distance?: number | null;
-};
-
-export type OfferAcceptedParams = {
-  bookingId: string;
-  bookingNumber: string;
-  offerId: string;
-  driverId: string;
-  quotedPrice: number;
-  vehicleCategoryId: string;
 };

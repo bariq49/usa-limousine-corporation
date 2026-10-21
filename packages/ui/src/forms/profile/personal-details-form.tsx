@@ -60,7 +60,7 @@ export function PersonalDetailsForm({ onSubmit, isSubmitting }: PersonalDetailsF
             <Input name="lastName" label="Last Name" />
           </div>
           <div className="col-span-12 md:col-span-6">
-            <Input name="phone" label="Phone Number" type="tel" />
+            <Input name="phone" label="Phone Number" type="phone" />
           </div>
           <div className="col-span-12 md:col-span-6">
             <Input name="email" label="Email Address" type="email" readOnly />

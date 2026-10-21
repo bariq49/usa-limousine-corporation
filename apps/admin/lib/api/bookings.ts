@@ -14,6 +14,10 @@ export const confirmBooking = (id: string) => {
   return http.post<Item>(`${API_ROUTES.BOOKINGS}/${id}/confirm`);
 };
 
+export const completeBooking = (id: string) => {
+  return http.post<Item>(`${API_ROUTES.BOOKINGS}/${id}/complete`);
+};
+
 export const cancelBooking = (id: string, cancellationReason?: string) => {
   return http.post<Item>(`${API_ROUTES.BOOKINGS}/${id}/cancel`, { cancellationReason });
 };

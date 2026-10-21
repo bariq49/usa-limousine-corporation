@@ -12,17 +12,12 @@ describe("admin navigation", () => {
       "/categories",
       "/completed-bookings",
       "/confirmed-bookings",
-      "/delete-requests",
-      "/drivers",
       "/extra-services",
       "/help-center",
       "/pending-bookings",
-      "/platform-settings",
       "/pricing",
       "/profile-setting",
-      "/special-luggage",
       "/standard-luggage",
-      "/vehicles",
     ]);
   });
 });

@@ -2,7 +2,7 @@ import { Inject, Injectable } from "@nestjs/common";
 import { AppLogger } from "../../../common/logger/app.logger";
 import { isPermanentFcmTokenError } from "../../../infrastructure/firebase/fcm-token-errors";
 import { FirebaseService } from "../../../infrastructure/firebase/firebase.service";
-import type { Push } from "../types/notification";
+import type { Push, PushResult } from "../types/notification";
 import { TokenResolverRegistry } from "./push-token-resolver.registry";
 
 @Injectable()
@@ -13,17 +13,20 @@ export class PushDeliveryService {
     @Inject(AppLogger) private readonly logger: AppLogger,
   ) {}
 
-  async deliver(payload: Push) {
+  /** Sends one multicast; returns tokens that failed transiently so the queue can retry them. */
+  async deliver(payload: Push): Promise<PushResult> {
+    const result: PushResult = { retryTokens: [] };
+
     if (!this.firebase.isConfigured()) {
       this.logger.warn("Firebase not configured; skipped push delivery", PushDeliveryService.name);
-      return;
+      return result;
     }
 
     if (payload.tokens.length === 0) {
-      return;
+      return result;
     }
 
-    const result = await this.firebase.sendEachForMulticast({
+    const response = await this.firebase.sendEachForMulticast({
       tokens: payload.tokens,
       notification: {
         title: payload.title,
@@ -53,25 +56,33 @@ export class PushDeliveryService {
       },
     });
 
-    if (result.failureCount === 0) {
+    if (response.failureCount === 0) {
       this.logger.log(
-        `push.delivered tokens=${payload.tokens.length} success=${result.successCount}`,
+        `push.delivered tokens=${payload.tokens.length} success=${response.successCount}`,
         PushDeliveryService.name,
       );
     } else {
       this.logger.warn(
-        `push.partial_failure tokens=${payload.tokens.length} success=${result.successCount} failure=${result.failureCount}`,
+        `push.partial_failure tokens=${payload.tokens.length} success=${response.successCount} failure=${response.failureCount}`,
         PushDeliveryService.name,
       );
     }
 
-    const invalidTokens = payload.tokens.filter((_token, index) => {
-      const response = result.responses[index];
-      return response !== undefined && isPermanentFcmTokenError(response.errorCode);
+    const invalidTokens: string[] = [];
+    payload.tokens.forEach((token, index) => {
+      const sent = response.responses[index];
+      if (!sent || sent.success) {
+        return;
+      }
+      if (isPermanentFcmTokenError(sent.errorCode)) {
+        invalidTokens.push(token);
+      } else {
+        result.retryTokens.push(token);
+      }
     });
 
     if (invalidTokens.length === 0) {
-      return;
+      return result;
     }
 
     try {
@@ -87,5 +98,7 @@ export class PushDeliveryService {
         PushDeliveryService.name,
       );
     }
+
+    return result;
   }
 }

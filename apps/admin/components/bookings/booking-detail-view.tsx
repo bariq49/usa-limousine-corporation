@@ -24,7 +24,11 @@ import { BookingRouteMap } from "@/components/bookings/booking-route-map";
 import { BookingVehicleDetails } from "@/components/bookings/booking-vehicle-details";
 import { DetailItem } from "@/components/bookings/detail-item";
 import { getLuggageIcon } from "@/components/columns/luggage-columns";
-import { useCancelBooking, useConfirmBooking } from "@/hooks/queries/use-bookings";
+import {
+  useCancelBooking,
+  useCompleteBooking,
+  useConfirmBooking,
+} from "@/hooks/queries/use-bookings";
 import { formatDate, formatTime } from "@usa-limousine-corporation/ui/utils/date";
 import { formatDistance } from "@usa-limousine-corporation/ui/utils/distance";
 import { formatDuration } from "@usa-limousine-corporation/ui/utils/duration";
@@ -90,10 +94,14 @@ export function BookingDetailView(props: Props) {
   const router = useRouter();
   const confirmMutation = useConfirmBooking();
   const cancelMutation = useCancelBooking();
+  const completeMutation = useCompleteBooking();
+  const isMutating =
+    confirmMutation.isPending || cancelMutation.isPending || completeMutation.isPending;
 
   const isHourly = booking.bookingType === "HOURLY";
   const canConfirm = booking.status === "PENDING";
   const canCancel = booking.status === "PENDING" || booking.status === "CONFIRMED";
+  const canComplete = booking.status === "CONFIRMED";
   const luggageItems = (booking.luggage ?? []).filter((item) => item.quantity > 0);
   const childSeats = (booking.extraServices ?? []).filter((item) => /seat/i.test(item.name || ""));
   const otherExtras = (booking.extraServices ?? []).filter(
@@ -138,11 +146,23 @@ export function BookingDetailView(props: Props) {
               type="button"
               size="sm"
               className="h-10 px-3 sm:px-4"
-              disabled={confirmMutation.isPending || cancelMutation.isPending}
+              disabled={isMutating}
               isLoading={confirmMutation.isPending}
               onClick={() => confirmMutation.mutate(booking.id)}
             >
               Confirm
+            </Button>
+          ) : null}
+          {canComplete ? (
+            <Button
+              type="button"
+              size="sm"
+              className="h-10 px-3 sm:px-4"
+              disabled={isMutating}
+              isLoading={completeMutation.isPending}
+              onClick={() => completeMutation.mutate(booking.id)}
+            >
+              Complete
             </Button>
           ) : null}
           {canCancel ? (
@@ -151,7 +171,7 @@ export function BookingDetailView(props: Props) {
               size="sm"
               variant="outline"
               className="h-10 px-3 sm:px-4"
-              disabled={confirmMutation.isPending || cancelMutation.isPending}
+              disabled={isMutating}
               isLoading={cancelMutation.isPending}
               onClick={() => cancelMutation.mutate({ id: booking.id })}
             >
@@ -300,7 +320,7 @@ export function BookingDetailView(props: Props) {
               {booking.driverNotes ? (
                 <section className="rounded-md bg-default-100 p-4">
                   <h3 className="font-bold text-default-900">
-                    Driver Notes & Special Instructions
+                    Notes & Special Instructions
                   </h3>
                   <p className="mt-2 text-sm leading-relaxed text-default-700">
                     {booking.driverNotes}

@@ -7,8 +7,6 @@ import { QueueRegistry, type QueueMetric } from "../../infrastructure/queue/queu
 import { RedisService } from "../../infrastructure/redis/redis.service";
 import { StorageService } from "../../infrastructure/storage/storage.service";
 import { FirebaseService } from "../../infrastructure/firebase/firebase.service";
-import { StripeService } from "../../infrastructure/stripe/stripe.service";
-import { AgoraService } from "../../infrastructure/agora/agora.service";
 import { TwilioService } from "../../infrastructure/twilio/twilio.service";
 import { WebsocketService } from "../../infrastructure/websocket/websocket.service";
 import type { DependencyStatus, HealthStatus } from "./health.types";
@@ -25,26 +23,23 @@ export class HealthService {
     @Inject(StorageService) private readonly storage: StorageService,
     @Inject(EmailService) private readonly email: EmailService,
     @Inject(WebsocketService) private readonly websocket: WebsocketService,
-    @Inject(StripeService) private readonly stripe: StripeService,
     @Inject(FirebaseService) private readonly firebase: FirebaseService,
     @Inject(TwilioService) private readonly twilio: TwilioService,
-    @Inject(AgoraService) private readonly agora: AgoraService,
   ) {}
 
   async getHealth(): Promise<HealthStatus> {
-    const [database, redis, queue, storage, email, websocket, stripe, firebase, twilio, agora] =
-      await Promise.all([
+    const [database, redis, queue, storage, email, websocket, firebase, twilio] = await Promise.all(
+      [
         this.checkDatabase(),
         this.checkRedis(),
         this.checkQueue(),
         this.checkStorage(),
         this.checkEmail(),
         this.checkWebsocket(),
-        this.checkStripe(),
         this.checkFirebase(),
         this.checkTwilio(),
-        this.checkAgora(),
-      ]);
+      ],
+    );
 
     const requiredStatuses = [database, redis, queue, storage, email, websocket];
     const requiredDown = requiredStatuses.some((status) => status === "down");
@@ -58,10 +53,8 @@ export class HealthService {
       storage,
       email,
       websocket,
-      stripe,
       firebase,
       twilio,
-      agora,
     };
   }
 
@@ -134,19 +127,6 @@ export class HealthService {
     return this.websocket.isReady() ? "up" : "down";
   }
 
-  private async checkStripe(): Promise<DependencyStatus> {
-    if (!this.stripe.isConfigured()) {
-      return "not_configured";
-    }
-
-    try {
-      const ok = await this.withTimeout(this.stripe.healthCheck());
-      return ok ? "up" : "down";
-    } catch {
-      return "down";
-    }
-  }
-
   private async checkFirebase(): Promise<DependencyStatus> {
     if (!this.firebase.isConfigured()) {
       return "not_configured";
@@ -168,18 +148,6 @@ export class HealthService {
     try {
       const ok = await this.withTimeout(this.twilio.healthCheck());
       return ok ? "up" : "down";
-    } catch {
-      return "down";
-    }
-  }
-
-  private async checkAgora(): Promise<DependencyStatus> {
-    if (!this.agora.isConfigured()) {
-      return "not_configured";
-    }
-
-    try {
-      return this.agora.healthCheck() ? "up" : "down";
     } catch {
       return "down";
     }

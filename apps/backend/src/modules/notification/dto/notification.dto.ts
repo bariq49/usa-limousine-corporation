@@ -8,6 +8,7 @@ import {
   IsEnum,
   IsOptional,
   IsString,
+  MaxLength,
 } from "class-validator";
 import { ApiFeatureQueryDto } from "../../../common/api-feature/api-feature-query.dto";
 
@@ -20,6 +21,12 @@ export class BulkDeleteDto {
 }
 
 export class QueryDto extends ApiFeatureQueryDto {
+  /** Keyset pagination: "" for the first page, then the previous response's `nextCursor`. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(64)
+  cursor?: string;
+
   @IsOptional()
   @Transform(({ value }) => {
     if (value === true || value === "true" || value === "1") {

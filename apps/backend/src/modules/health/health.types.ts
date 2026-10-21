@@ -8,8 +8,6 @@ export interface HealthStatus {
   storage: DependencyStatus;
   email: DependencyStatus;
   websocket: DependencyStatus;
-  stripe: DependencyStatus;
   firebase: DependencyStatus;
   twilio: DependencyStatus;
-  agora: DependencyStatus;
 }

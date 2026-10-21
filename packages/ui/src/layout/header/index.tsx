@@ -6,6 +6,7 @@ import { useMediaQuery } from "../../hooks/use-media-query";
 import { ProfileInfo } from "./profile-info";
 import { VerticalHeader } from "./vertical-header";
 import { FullScreenToggle } from "./full-screen";
+import { NotificationBell } from "./notification-bell";
 
 export interface HeaderProps {
   onLogout?: () => void;
@@ -28,6 +29,7 @@ export function Header() {
           <VerticalHeader />
           <div className="nav-tools flex max-w-[calc(100%-2.5rem)] shrink items-center justify-end gap-0.5 sm:gap-1.5">
             {isDesktop ? <FullScreenToggle /> : null}
+            <NotificationBell />
             <ProfileInfo />
           </div>
         </div>

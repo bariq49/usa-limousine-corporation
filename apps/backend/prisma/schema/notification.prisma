@@ -1,37 +1,13 @@
 enum NotificationRecipientType {
-  DRIVER
   USER
 }
 
 enum NotificationType {
-  BOOKING_AVAILABLE
-  BOOKING_UNAVAILABLE
-  OFFER_RECEIVED
-  OFFER_ACCEPTED
-  TRIP_ACCEPTED
-  TRIP_STATUS_UPDATED
-  TRIP_COMPLETED
-  TRIP_CANCELLED
-  CHAT_MESSAGE
   TICKET_STATUS_UPDATED
   TICKET_REPLY
   TICKET_RESOLVED
-  WALLET_CREDITED
-  APPLICATION_UNDER_REVIEW
-  APPLICATION_APPROVED
-  SUBSCRIPTION_ACTIVATED
-  SUBSCRIPTION_TRIAL_ENDING
-  SUBSCRIPTION_PAYMENT_FAILED
-  SUBSCRIPTION_PAST_DUE
-  SUBSCRIPTION_EXPIRED
-  SUBSCRIPTION_PLAN_CHANGED
-  SUBSCRIPTION_CANCEL_SCHEDULED
-  SUBSCRIPTION_RESUMED
-  PAYOUT_SUBMITTED
-  PAYOUT_APPROVED
-  PAYOUT_PAID
-  PAYOUT_REJECTED
-  PAYOUT_CANCELLED
+  TICKET_CREATED
+  BOOKING_CREATED
 }
 
 model Notification {
@@ -43,9 +19,15 @@ model Notification {
   body            String
   data            Json?
   idempotencyKey  String?                   @unique
+  /** Send an FCM push when delivered (in-app + socket always happen). */
+  push            Boolean                   @default(true)
   readAt          DateTime?
+  /** Null until socket emit + push enqueue ran; the sweep job retries undelivered rows. */
+  deliveredAt     DateTime?
   createdAt       DateTime                  @default(now())
 
   @@index([recipientType, recipientId, createdAt])
   @@index([recipientType, recipientId, readAt])
+  @@index([deliveredAt, createdAt])
+  @@index([readAt, createdAt])
 }

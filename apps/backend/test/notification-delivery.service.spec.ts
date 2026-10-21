@@ -2,6 +2,7 @@ import { NotificationRecipientType, NotificationType } from "@prisma/client";
 import { Test } from "@nestjs/testing";
 import type { TestingModule } from "@nestjs/testing";
 import { NotificationQueueService } from "../src/modules/notification/jobs/notification-queue.service";
+import { NotificationRepository } from "../src/modules/notification/repositories/notification.repository";
 import { NotificationDeliveryService } from "../src/modules/notification/services/notification-delivery.service";
 import { TokenResolverRegistry } from "../src/modules/notification/services/push-token-resolver.registry";
 import { NotificationRealtimeService } from "../src/modules/notification/websocket/notification-realtime.service";
@@ -12,11 +13,27 @@ const customerNotification = {
   id: "n1",
   recipientType: NotificationRecipientType.USER,
   recipientId: "user-1",
-  type: NotificationType.TRIP_COMPLETED,
+  type: NotificationType.BOOKING_CREATED,
   title: "Trip completed",
   body: "Your trip is complete",
   data: { type: "TRIP_COMPLETED" },
+  push: true,
   readAt: null,
+  deliveredAt: null,
+  createdAt: new Date(),
+};
+
+const silentNotification = {
+  id: "n2",
+  recipientType: NotificationRecipientType.USER,
+  recipientId: "user-1",
+  type: NotificationType.BOOKING_CREATED,
+  title: "New booking",
+  body: "Booking BK-1 was created.",
+  data: null,
+  push: false,
+  readAt: null,
+  deliveredAt: null,
   createdAt: new Date(),
 };
 
@@ -38,6 +55,12 @@ function customerResolver(tokens: string[]): TokenResolver {
 }
 
 describe("NotificationDeliveryService", () => {
+  const markDelivered = jest.fn(async () => ({ count: 1 }));
+
+  beforeEach(() => {
+    markDelivered.mockClear();
+  });
+
   it("enqueues FCM when a resolver returns tokens", async () => {
     const enqueuePush = jest.fn(async () => undefined);
     const emitCreated = jest.fn();
@@ -51,13 +74,15 @@ describe("NotificationDeliveryService", () => {
         { provide: NotificationRealtimeService, useValue: { emitCreated } },
         { provide: NotificationQueueService, useValue: { enqueuePush } },
         { provide: TokenResolverRegistry, useValue: registry },
+        { provide: NotificationRepository, useValue: { markDelivered } },
       ],
     }).compile();
 
     const service = module.get(NotificationDeliveryService);
-    await service.deliver({ notification: customerNotification as never, push: true });
+    await service.deliver({ notification: customerNotification as never });
 
     expect(resolver.resolveToken).toHaveBeenCalledWith("user-1");
+    expect(markDelivered).toHaveBeenCalledWith(["n1"]);
     expect(enqueuePush).toHaveBeenCalledWith(
       expect.objectContaining({
         tokens: ["tok-a", "tok-b"],
@@ -78,11 +103,12 @@ describe("NotificationDeliveryService", () => {
         { provide: NotificationRealtimeService, useValue: { emitCreated } },
         { provide: NotificationQueueService, useValue: { enqueuePush } },
         { provide: TokenResolverRegistry, useValue: registry },
+        { provide: NotificationRepository, useValue: { markDelivered } },
       ],
     }).compile();
 
     const service = module.get(NotificationDeliveryService);
-    await service.deliver({ notification: customerNotification as never, push: true });
+    await service.deliver({ notification: customerNotification as never });
 
     expect(emitCreated).toHaveBeenCalled();
     expect(enqueuePush).not.toHaveBeenCalled();
@@ -95,6 +121,7 @@ describe("NotificationDeliveryService", () => {
         { provide: NotificationRealtimeService, useValue: { emitCreated: jest.fn() } },
         { provide: NotificationQueueService, useValue: { enqueuePush: jest.fn() } },
         { provide: TokenResolverRegistry, useValue: new TokenResolverRegistry() },
+        { provide: NotificationRepository, useValue: { markDelivered: jest.fn() } },
       ],
     }).compile();
 
@@ -129,7 +156,7 @@ describe("NotificationDeliveryService", () => {
     expect(data["payload"]).toContain("conversationId");
   });
 
-  it("skips FCM entirely when push flag is false (inbox WS still emitted)", async () => {
+  it("skips FCM entirely when the stored push flag is false (inbox WS still emitted)", async () => {
     const enqueuePush = jest.fn(async () => undefined);
     const emitCreated = jest.fn();
     const registry = new TokenResolverRegistry();
@@ -142,14 +169,43 @@ describe("NotificationDeliveryService", () => {
         { provide: NotificationRealtimeService, useValue: { emitCreated } },
         { provide: NotificationQueueService, useValue: { enqueuePush } },
         { provide: TokenResolverRegistry, useValue: registry },
+        { provide: NotificationRepository, useValue: { markDelivered } },
       ],
     }).compile();
 
     const service = module.get(NotificationDeliveryService);
-    await service.deliver({ notification: customerNotification as never, push: false });
+    await service.deliver({ notification: silentNotification as never });
 
     expect(emitCreated).toHaveBeenCalled();
     expect(resolver.resolveToken).not.toHaveBeenCalled();
     expect(enqueuePush).not.toHaveBeenCalled();
+    expect(markDelivered).toHaveBeenCalledWith(["n2"]);
+  });
+
+  it("deliverMany emits every row, pushes only push rows, and marks all delivered", async () => {
+    const enqueuePush = jest.fn(async () => undefined);
+    const emitCreated = jest.fn();
+    const registry = new TokenResolverRegistry();
+    const resolver = customerResolver(["tok-customer"]);
+    registry.register(resolver);
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        NotificationDeliveryService,
+        { provide: NotificationRealtimeService, useValue: { emitCreated } },
+        { provide: NotificationQueueService, useValue: { enqueuePush } },
+        { provide: TokenResolverRegistry, useValue: registry },
+        { provide: NotificationRepository, useValue: { markDelivered } },
+      ],
+    }).compile();
+
+    const service = module.get(NotificationDeliveryService);
+    await service.deliverMany({
+      notifications: [customerNotification, silentNotification] as never,
+    });
+
+    expect(emitCreated).toHaveBeenCalledTimes(2);
+    expect(enqueuePush).toHaveBeenCalledTimes(1);
+    expect(markDelivered).toHaveBeenCalledWith(["n1", "n2"]);
   });
 });

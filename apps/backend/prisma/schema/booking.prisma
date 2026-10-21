@@ -1,8 +1,6 @@
 enum BookingStatus {
   DRAFT
   PENDING
-  SEEKING_OFFERS
-  AWAITING_PAYMENT
   CONFIRMED
   COMPLETED
   CANCELLED
@@ -13,15 +11,6 @@ enum BookingType {
   RETURN
   HOURLY
   CREW_RIDE
-}
-
-enum BookingOfferStatus {
-  PENDING
-  ACCEPTED
-  DECLINED_BY_CUSTOMER
-  WITHDRAWN
-  SUPERSEDED
-  EXPIRED
 }
 
 model BookingSequence {
@@ -49,10 +38,6 @@ model Booking {
   completedAt          DateTime?
   cancelledAt          DateTime?
   cancellationReason   String?
-  offerSessionExpiresAt DateTime?
-  /** Matching radius in km (same unit convention as address.distance). */
-  matchingRadius     Float?
-  acceptedOfferId      String?       @unique
   createdAt            DateTime      @default(now())
   updatedAt            DateTime      @updatedAt
   deletedAt            DateTime?
@@ -60,43 +45,11 @@ model Booking {
   user            User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
   vehicleCategory VehicleCategory @relation(fields: [vehicleCategoryId], references: [id], onDelete: Restrict)
   luggage         BookingLuggage[]
-  trip            Trip?
-  declines        DriverBookingDecline[]
-  requestEvents   DriverRequestEvent[]
-  offers          BookingOffer[]  @relation("BookingOffers")
-  acceptedOffer   BookingOffer?   @relation("AcceptedOffer", fields: [acceptedOfferId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([vehicleCategoryId])
   @@index([status])
   @@index([bookingType])
-  @@index([deletedAt])
-  @@index([status, offerSessionExpiresAt])
-}
-
-model BookingOffer {
-  id             String             @id @default(cuid())
-  bookingId      String
-  driverId       String
-  vehicleId      String
-  quotedPrice    Float
-  etaMinutes     Int?
-  distance       Float?
-  fairPriceDelta Float?
-  status         BookingOfferStatus @default(PENDING)
-  expiresAt      DateTime
-  createdAt      DateTime           @default(now())
-  updatedAt      DateTime           @updatedAt
-  deletedAt      DateTime?
-
-  booking         Booking       @relation("BookingOffers", fields: [bookingId], references: [id], onDelete: Cascade)
-  driver          Driver        @relation(fields: [driverId], references: [id], onDelete: Restrict)
-  vehicle         DriverVehicle @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
-  acceptedForBooking Booking?   @relation("AcceptedOffer")
-
-  @@index([bookingId, status])
-  @@index([driverId, status])
-  @@index([expiresAt])
   @@index([deletedAt])
 }
 

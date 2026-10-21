@@ -51,6 +51,11 @@ export class BookingController {
     return this.bookingService.confirm(id, request);
   }
 
+  @Post(":id/complete")
+  complete(@Param("id") id: string, @Req() request: Request) {
+    return this.bookingService.complete(id, request);
+  }
+
   @Post(":id/cancel")
   cancel(@Param("id") id: string, @Body() body: CancelDto, @Req() request: Request) {
     return this.bookingService.cancel(id, body, request);

@@ -2,34 +2,51 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { LayoutLoader } from "@usa-limousine-corporation/ui/layout/layout-loader";
+import { UserProvider } from "@usa-limousine-corporation/ui/providers/user-context";
+import { getMe } from "@/lib/api/auth";
+import type { CurrentUser } from "@/lib/api/types";
 import { bootstrapAuthSession } from "@/lib/auth/bootstrap";
-import { hasAccessToken } from "@/lib/auth/session";
-
-async function ensureAuthSession(): Promise<boolean> {
-  return hasAccessToken() || (await bootstrapAuthSession());
-}
+import { clearAuthSession, hasAccessToken } from "@/lib/auth/session";
+import { useAuthLogout } from "@/hooks/queries/use-auth";
+import { RealtimeProvider } from "./realtime-provider";
 
 export function AuthGuard({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [allowed, setAllowed] = useState(false);
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
+  const { mutate: logout, isPending: isLoggingOut } = useAuthLogout();
 
   useEffect(() => {
     let cancelled = false;
 
     void (async () => {
-      const ok = await ensureAuthSession();
+      const hasToken = hasAccessToken() || (await bootstrapAuthSession());
       if (cancelled) {
         return;
       }
 
-      if (!ok) {
+      if (!hasToken) {
         const callback = encodeURIComponent(`${pathname}${window.location.search}`);
         router.replace(`/auth/login?callbackUrl=${callback}`);
         return;
       }
 
-      setAllowed(true);
+      try {
+        const user = await getMe();
+        if (cancelled) {
+          return;
+        }
+
+        setCurrentUser(user);
+      } catch {
+        if (cancelled) {
+          return;
+        }
+        clearAuthSession();
+        const callback = encodeURIComponent(`${pathname}${window.location.search}`);
+        router.replace(`/auth/login?callbackUrl=${callback}`);
+      }
     })();
 
     return () => {
@@ -37,9 +54,18 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     };
   }, [pathname, router]);
 
-  if (!allowed) {
-    return null;
+  if (!currentUser) {
+    return <LayoutLoader />;
   }
 
-  return children;
+  return (
+    <UserProvider
+      user={currentUser}
+      onLogout={() => logout()}
+      isLoggingOut={isLoggingOut}
+      onUpdateUser={(updated) => setCurrentUser((prev) => (prev ? { ...prev, ...updated } : null))}
+    >
+      <RealtimeProvider>{children}</RealtimeProvider>
+    </UserProvider>
+  );
 }

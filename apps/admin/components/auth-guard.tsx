@@ -11,6 +11,7 @@ import { isAdminUser } from "@/lib/auth/roles";
 import { clearAuthSession, hasAccessToken } from "@/lib/auth/session";
 import type { CurrentUser } from "@/lib/types/auth";
 import { useAuthLogout } from "@/hooks/queries/use-auth";
+import { RealtimeProvider } from "./realtime-provider";
 
 export function AuthGuard({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -73,7 +74,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
       isLoggingOut={isLoggingOut}
       onUpdateUser={(updated) => setCurrentUser((prev) => (prev ? { ...prev, ...updated } : null))}
     >
-      {children}
+      <RealtimeProvider>{children}</RealtimeProvider>
     </UserProvider>
   );
 }

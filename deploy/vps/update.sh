@@ -162,10 +162,6 @@ if [[ " ${SERVICES[*]} " == *" backend "* ]]; then
     echo "WARN: TWILIO_ACCOUNT_SID is missing in ${BACKEND_ENV} — SMS will show not_configured on /health"
     echo "      Add TWILIO_* to apps/backend/.env.production on the VPS (deploy does not rsync .env files)."
   fi
-  if ! grep -q '^AGORA_APP_ID=.' "${BACKEND_ENV}"; then
-    echo "WARN: AGORA_APP_ID is missing in ${BACKEND_ENV} — trip audio calls will be unavailable"
-    echo "      Add AGORA_* to apps/backend/.env.production on the VPS (deploy does not rsync .env files)."
-  fi
 fi
 
 if [[ " ${SERVICES[*]} " == *" admin "* ]]; then

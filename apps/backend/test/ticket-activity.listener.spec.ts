@@ -15,10 +15,10 @@ describe("TicketActivityListener", () => {
     listener = new TicketActivityListener(activities as unknown as ActivityService);
   });
 
-  it("records activity for driver ticket created", async () => {
+  it("records activity for customer ticket created", async () => {
     await listener.onCreated({
-      ownerType: HelpTicketOwnerType.DRIVER,
-      ownerId: "driver-1",
+      ownerType: HelpTicketOwnerType.CUSTOMER,
+      ownerId: "customer-1",
       actorUserId: "user-1",
       ticketId: "ticket-1",
       ticketNumber: "HC-000001",
@@ -29,8 +29,8 @@ describe("TicketActivityListener", () => {
 
     expect(activities.record).toHaveBeenCalledWith(
       expect.objectContaining({
-        ownerType: "DRIVER",
-        ownerId: "driver-1",
+        ownerType: "CUSTOMER",
+        ownerId: "customer-1",
         type: "TICKET_CREATED",
         actorType: "USER",
         actorId: "user-1",
@@ -61,8 +61,8 @@ describe("TicketActivityListener", () => {
 
   it("records reply activity", async () => {
     await listener.onReplied({
-      ownerType: HelpTicketOwnerType.DRIVER,
-      ownerId: "driver-1",
+      ownerType: HelpTicketOwnerType.CUSTOMER,
+      ownerId: "customer-1",
       actorUserId: "admin-1",
       ticketId: "ticket-1",
       ticketNumber: "HC-000001",

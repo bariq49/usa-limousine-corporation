@@ -32,7 +32,6 @@ enum HelpTicketEventType {
 }
 
 enum HelpTicketOwnerType {
-  DRIVER
   CUSTOMER
 }
 

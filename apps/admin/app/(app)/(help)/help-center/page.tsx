@@ -89,7 +89,7 @@ export default function HelpCenterPage() {
           <div className="mb-5">
             <h2 className="text-lg font-bold text-default-900">Help Center</h2>
             <p className="text-xs text-default-500 mt-1">
-              Review driver and customer support tickets. Open a ticket to reply or update status.
+              Review customer support tickets. Open a ticket to reply or update status.
             </p>
           </div>
 

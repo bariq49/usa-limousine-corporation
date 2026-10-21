@@ -12,16 +12,17 @@ import {
   Req,
   UseGuards,
 } from "@nestjs/common";
+import { ThrottlerGuard } from "@nestjs/throttler";
 import { RoleKey } from "@prisma/client";
 import type { Request } from "express";
 import { Roles } from "../../auth/decorators/roles.decorator";
 import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../../auth/guards/roles.guard";
-import { BulkDeleteDto, QueryDto } from "../dto/notification.dto";
+import { BulkDeleteDto, QueryDto } from "../../notification/dto/notification.dto";
 import { CustomerNotificationService } from "../services/notification.service";
 
 @Controller("customers")
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(ThrottlerGuard, JwtAuthGuard, RolesGuard)
 @Roles(RoleKey.CUSTOMER)
 export class CustomerNotificationController {
   constructor(

@@ -88,4 +88,9 @@ export async function seedBookingFixtures(prisma: PrismaService): Promise<Bookin
   };
 }
 
-export { cleanupBookingAndTripTables } from "./cleanup-payment";
+export async function cleanupBookingTables(prisma: PrismaService): Promise<void> {
+  await prisma.notification.deleteMany();
+  await prisma.bookingLuggage.deleteMany();
+  await prisma.booking.deleteMany();
+  await prisma.bookingSequence.deleteMany();
+}

@@ -15,7 +15,6 @@ import {
   CalendarCross,
   ShieldCheck,
   Tag,
-  Trash,
   Support,
 } from "@usa-limousine-corporation/ui/svg";
 import { APP_CONFIG } from "./app";
@@ -80,31 +79,6 @@ export const navigation: MenuSection[] = [
     ],
   },
   {
-    id: "driver",
-    label: "Driver",
-    icon: User,
-    submenu: true,
-    groups: [
-      {
-        id: "driver-group",
-        items: [
-          {
-            id: "drivers",
-            label: "Drivers",
-            href: "/drivers",
-            icon: Blog,
-          },
-          {
-            id: "delete-requests",
-            label: "Delete Requests",
-            href: "/delete-requests",
-            icon: Trash,
-          },
-        ],
-      },
-    ],
-  },
-  {
     id: "vehicle",
     label: "Vehicle",
     icon: Car,
@@ -113,12 +87,6 @@ export const navigation: MenuSection[] = [
       {
         id: "vehicle-group",
         items: [
-          {
-            id: "vehicles",
-            label: "Vehicles",
-            href: "/vehicles",
-            icon: Car,
-          },
           {
             id: "vehicle-categories",
             label: "Categories",
@@ -180,12 +148,6 @@ export const navigation: MenuSection[] = [
             label: "Profile Settings",
             href: "/profile-setting",
             icon: User,
-          },
-          {
-            id: "platform-settings",
-            label: "Platform Settings",
-            href: "/platform-settings",
-            icon: Device,
           },
         ],
       },

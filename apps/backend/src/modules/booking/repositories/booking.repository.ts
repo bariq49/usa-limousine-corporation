@@ -1,5 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { BookingStatus, DriverPresenceStatus, type Prisma } from "@prisma/client";
+import type { BookingStatus, Prisma } from "@prisma/client";
 import { APIFeature } from "../../../common/api-feature";
 import { PrismaService } from "../../../infrastructure/database/prisma.service";
 import type { QueryDto } from "../dto/booking.dto";
@@ -9,8 +9,12 @@ import type { CreateData, StatusUpdate, UpdateData, UpdateStatusData } from "../
 export class BookingRepository {
   constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
-  findMany(query: QueryDto) {
+  /** All bookings, or only one customer's when `userId` is given. */
+  findMany(query: QueryDto, userId?: string) {
     const initialFilter: Prisma.BookingWhereInput = { deletedAt: null };
+    if (userId) {
+      initialFilter.userId = userId;
+    }
 
     const feature = new APIFeature(query, {
       initialFilter,
@@ -88,77 +92,36 @@ export class BookingRepository {
     });
   }
 
-  create(data: CreateData) {
-    return this.prisma.$transaction(async (tx) => {
-      return tx.booking.create({
-        data: {
-          userId: data.userId ?? null,
-          vehicleCategoryId: data.vehicleCategoryId,
-          bookingNumber: data.bookingNumber,
-          bookingType: data.bookingType,
-          status: data.status,
-          pricing: data.pricing,
-          address: data.address,
-          passenger: data.passenger,
-          bookingTime: data.bookingTime,
-          flightDetails: data.flightDetails as Prisma.InputJsonValue,
-          meetAndGreet: data.meetAndGreet as Prisma.InputJsonValue,
-          extraServices: data.extraServices as Prisma.InputJsonValue,
-          driverNotes: data.driverNotes ?? null,
-          confirmedAt: data.confirmedAt ?? null,
-          offerSessionExpiresAt: data.offerSessionExpiresAt ?? null,
-          matchingRadius: data.matchingRadius ?? null,
-          luggage: {
-            create: data.luggage.map((item) => ({
-              luggageTypeId: item.luggageTypeId,
-              quantity: item.quantity,
-            })),
-          },
+  create(data: CreateData, client: Prisma.TransactionClient = this.prisma) {
+    return client.booking.create({
+      data: {
+        userId: data.userId ?? null,
+        vehicleCategoryId: data.vehicleCategoryId,
+        bookingNumber: data.bookingNumber,
+        bookingType: data.bookingType,
+        status: data.status,
+        pricing: data.pricing,
+        address: data.address,
+        passenger: data.passenger,
+        bookingTime: data.bookingTime,
+        flightDetails: data.flightDetails as Prisma.InputJsonValue,
+        meetAndGreet: data.meetAndGreet as Prisma.InputJsonValue,
+        extraServices: data.extraServices as Prisma.InputJsonValue,
+        driverNotes: data.driverNotes ?? null,
+        confirmedAt: data.confirmedAt ?? null,
+        luggage: {
+          create: data.luggage.map((item) => ({
+            luggageTypeId: item.luggageTypeId,
+            quantity: item.quantity,
+          })),
         },
-      });
-    });
-  }
-
-  updateMatchingRadius(id: string, matchingRadius: number) {
-    return this.prisma.booking.update({
-      where: { id },
-      data: { matchingRadius },
-    });
-  }
-
-  updateOfferSession(
-    id: string,
-    data: {
-      status?: BookingStatus;
-      acceptedOfferId?: string | null;
-      offerSessionExpiresAt?: Date | null;
-      confirmedAt?: Date;
-      cancelledAt?: Date;
-      cancellationReason?: string;
-    },
-  ) {
-    return this.prisma.booking.update({
-      where: { id },
-      data,
+      },
     });
   }
 
   findOwnedByUser(id: string, userId: string) {
     return this.prisma.booking.findFirst({
       where: { id, userId, deletedAt: null },
-    });
-  }
-
-  findCurrentForUser(userId: string) {
-    return this.prisma.booking.findFirst({
-      where: {
-        userId,
-        deletedAt: null,
-        status: {
-          in: [BookingStatus.SEEKING_OFFERS, BookingStatus.AWAITING_PAYMENT],
-        },
-      },
-      orderBy: { createdAt: "desc" },
       include: {
         vehicleCategory: {
           select: {
@@ -180,59 +143,7 @@ export class BookingRepository {
             },
           },
         },
-        acceptedOffer: {
-          select: {
-            id: true,
-            driverId: true,
-            vehicleId: true,
-            quotedPrice: true,
-            status: true,
-            etaMinutes: true,
-            distance: true,
-          },
-        },
       },
-    });
-  }
-
-  updatePricing(id: string, pricing: Prisma.InputJsonValue) {
-    return this.prisma.booking.update({
-      where: { id },
-      data: { pricing },
-    });
-  }
-
-  listOnlineDriverIdsForCategory(vehicleCategoryId: string) {
-    return this.prisma.driver
-      .findMany({
-        where: {
-          deletedAt: null,
-          presenceStatus: DriverPresenceStatus.ONLINE,
-          vehicle: {
-            deletedAt: null,
-            vehicleCategoryId,
-          },
-        },
-        select: { id: true },
-        take: 200,
-      })
-      .then((rows) => rows.map((r) => r.id));
-  }
-
-  findStaleSeeking(cutoff: Date) {
-    return this.prisma.booking.findMany({
-      where: {
-        deletedAt: null,
-        status: BookingStatus.SEEKING_OFFERS,
-        offerSessionExpiresAt: { lt: cutoff },
-      },
-      select: {
-        id: true,
-        bookingNumber: true,
-        vehicleCategoryId: true,
-      },
-      take: 100,
-      orderBy: { offerSessionExpiresAt: "asc" },
     });
   }
 

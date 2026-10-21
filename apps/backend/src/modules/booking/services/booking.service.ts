@@ -1,15 +1,15 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from "@nestjs/common";
-import { BookingStatus, BookingType } from "@prisma/client";
+import { BookingStatus, BookingType, NotificationType } from "@prisma/client";
 import type { Request } from "express";
 import { auditLog } from "../../../common/utils/audit-log";
 import { allocateCode } from "../../../common/utils/allocate-sequence-code";
 import { requireUserId, toRequestContext } from "../../../common/utils/to-request-context";
 import { PrismaService } from "../../../infrastructure/database/prisma.service";
 import { SequenceService } from "../../../infrastructure/sequence/sequence.service";
+import { NotificationService } from "../../notification/services/notification.service";
 import type { CancelDto, CreateDto, QueryDto, UpdateDto } from "../dto/booking.dto";
 import { BookingRepository } from "../repositories/booking.repository";
 import type { UpdateData } from "../types/booking";
-import { OfferService } from "./offer.service";
 
 @Injectable()
 export class BookingService {
@@ -17,7 +17,7 @@ export class BookingService {
     @Inject(BookingRepository) private readonly bookingRepository: BookingRepository,
     @Inject(SequenceService) private readonly sequenceService: SequenceService,
     @Inject(PrismaService) private readonly prisma: PrismaService,
-    @Inject(OfferService) private readonly offerService: OfferService,
+    @Inject(NotificationService) private readonly notificationService: NotificationService,
   ) {}
 
   async create(body: CreateDto, request: Request) {
@@ -28,22 +28,48 @@ export class BookingService {
       nextSequence: () => this.sequenceService.nextBooking(),
     });
 
-    const booking = await this.bookingRepository.create({
-      userId,
-      vehicleCategoryId: body.vehicleCategoryId,
-      bookingNumber,
-      bookingType: body.bookingType ?? BookingType.ONE_WAY,
-      status: BookingStatus.SEEKING_OFFERS,
-      pricing: body.pricing,
-      address: body.address,
-      passenger: body.passenger,
-      bookingTime: body.bookingTime,
-      flightDetails: body.flightDetails,
-      meetAndGreet: body.meetAndGreet,
-      extraServices: body.extraServices,
-      driverNotes: body.driverNotes ?? null,
-      luggage: body.luggage ?? [],
+    // Booking + admin notifications commit together (transactional outbox).
+    const created = await this.prisma.$transaction(async (tx) => {
+      const booking = await this.bookingRepository.create(
+        {
+          userId,
+          vehicleCategoryId: body.vehicleCategoryId,
+          bookingNumber,
+          bookingType: body.bookingType ?? BookingType.ONE_WAY,
+          status: BookingStatus.PENDING,
+          pricing: body.pricing,
+          address: body.address,
+          passenger: body.passenger,
+          bookingTime: body.bookingTime,
+          flightDetails: body.flightDetails,
+          meetAndGreet: body.meetAndGreet,
+          extraServices: body.extraServices,
+          driverNotes: body.driverNotes ?? null,
+          luggage: body.luggage ?? [],
+        },
+        tx,
+      );
+
+      const notifications = await this.notificationService.stageForAdmins(
+        {
+          type: NotificationType.BOOKING_CREATED,
+          title: "New booking",
+          body: `Booking ${booking.bookingNumber} was created.`,
+          data: {
+            type: "BOOKING_CREATED",
+            bookingId: booking.id,
+            bookingNumber: booking.bookingNumber,
+          },
+          excludeUserId: userId,
+          idempotencyKey: `BOOKING_CREATED:${booking.id}`,
+        },
+        tx,
+      );
+
+      return { booking, notifications };
     });
+    const booking = created.booking;
+    await this.notificationService.deliverStaged(created.notifications);
 
     await auditLog({
       prisma: this.prisma,
@@ -58,21 +84,7 @@ export class BookingService {
       },
     });
 
-    const seeking = await this.offerService.startSeeking(booking.id, request);
-
-    return {
-      id: booking.id,
-      bookingNumber: booking.bookingNumber,
-      bookingType: booking.bookingType,
-      status: BookingStatus.SEEKING_OFFERS,
-      pricing: booking.pricing,
-      address: booking.address,
-      passenger: booking.passenger,
-      bookingTime: booking.bookingTime,
-      offerSessionExpiresAt: seeking.offerSessionExpiresAt,
-      matchingRadius: seeking.matchingRadius,
-      createdAt: booking.createdAt,
-    };
+    return (await this.bookingRepository.findOwnedByUser(booking.id, userId)) ?? booking;
   }
 
   async createManual(body: CreateDto, request: Request) {
@@ -120,6 +132,26 @@ export class BookingService {
 
   list(query: QueryDto) {
     return this.bookingRepository.findMany(query);
+  }
+
+  listForCustomer(query: QueryDto, request: Request) {
+    const userId = requireUserId(toRequestContext(request));
+    return this.bookingRepository.findMany(query, userId);
+  }
+
+  async getForCustomer(id: string, request: Request) {
+    const userId = requireUserId(toRequestContext(request));
+    const booking = await this.bookingRepository.findOwnedByUser(id, userId);
+    if (!booking) {
+      throw new NotFoundException("Booking not found");
+    }
+
+    return booking;
+  }
+
+  async cancelForCustomer(id: string, body: CancelDto, request: Request) {
+    await this.getForCustomer(id, request);
+    return this.cancel(id, body, request);
   }
 
   async getOne(id: string) {
@@ -202,11 +234,7 @@ export class BookingService {
     }
 
     if (booking.status !== BookingStatus.CONFIRMED) {
-      if (
-        booking.status !== BookingStatus.DRAFT &&
-        booking.status !== BookingStatus.PENDING &&
-        booking.status !== BookingStatus.SEEKING_OFFERS
-      ) {
+      if (booking.status !== BookingStatus.DRAFT && booking.status !== BookingStatus.PENDING) {
         throw new BadRequestException(
           `Cannot transition booking from ${booking.status} to ${BookingStatus.CONFIRMED}`,
         );
@@ -229,32 +257,32 @@ export class BookingService {
     return updated;
   }
 
-  async onPaid(bookingId: string) {
-    const booking = await this.bookingRepository.findById(bookingId);
+  async complete(id: string, request: Request) {
+    const context = toRequestContext(request);
+
+    const booking = await this.bookingRepository.findById(id);
     if (!booking) {
-      return;
+      throw new NotFoundException("Booking not found");
     }
 
-    if (booking.status !== BookingStatus.DRAFT && booking.status !== BookingStatus.PENDING) {
-      return;
+    if (booking.status !== BookingStatus.CONFIRMED) {
+      throw new BadRequestException("Only confirmed bookings can be completed");
     }
 
-    await this.bookingRepository.updateStatus(bookingId, BookingStatus.CONFIRMED, {
-      confirmedAt: new Date(),
+    const updated = await this.bookingRepository.updateStatus(id, BookingStatus.COMPLETED, {
+      completedAt: new Date(),
     });
-  }
 
-  async onPaymentFailed(bookingId: string) {
-    const booking = await this.bookingRepository.findById(bookingId);
-    if (!booking) {
-      return;
-    }
+    await auditLog({
+      prisma: this.prisma,
+      event: "booking.completed",
+      result: "success",
+      context,
+      userId: context.userId,
+      metadata: { bookingId: updated.id, bookingNumber: updated.bookingNumber },
+    });
 
-    if (booking.status !== BookingStatus.PENDING) {
-      return;
-    }
-
-    await this.bookingRepository.updateStatus(bookingId, BookingStatus.DRAFT);
+    return updated;
   }
 
   async cancel(id: string, body: CancelDto, request: Request) {
@@ -268,8 +296,6 @@ export class BookingService {
     if (
       booking.status !== BookingStatus.DRAFT &&
       booking.status !== BookingStatus.PENDING &&
-      booking.status !== BookingStatus.SEEKING_OFFERS &&
-      booking.status !== BookingStatus.AWAITING_PAYMENT &&
       booking.status !== BookingStatus.CONFIRMED
     ) {
       throw new BadRequestException("This booking cannot be cancelled");

@@ -3,6 +3,7 @@ import toast from "react-hot-toast";
 import {
   bulkDeleteBookings,
   cancelBooking,
+  completeBooking,
   confirmBooking,
   deleteBooking,
   getBooking,
@@ -42,6 +43,21 @@ export const useConfirmBooking = () => {
     },
     onError: (error: Error) => {
       toast.error(error.message || "Failed to confirm booking");
+    },
+  });
+};
+
+export const useCompleteBooking = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => completeBooking(id),
+    onSuccess: () => {
+      toast.success("Booking marked as completed");
+      return queryClient.invalidateQueries({ queryKey: bookingKeys.all });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to complete booking");
     },
   });
 };

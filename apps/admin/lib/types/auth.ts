@@ -20,6 +20,7 @@ export type CurrentUser = {
   isEmailVerified: boolean;
   isActive: boolean;
   createdAt: string;
+  memberSince?: string;
   sessionId: string;
   avatar: string | null;
 };

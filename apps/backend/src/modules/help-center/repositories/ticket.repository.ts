@@ -82,128 +82,125 @@ export class TicketRepository {
     });
   }
 
-  create(data: CreateData) {
-    return this.prisma.$transaction(async (tx) => {
-      const ticket = await tx.helpTicket.create({
-        data: {
-          ticketNumber: data.ticketNumber,
-          ownerType: data.ownerType,
-          ownerId: data.ownerId,
-          ownerName: data.ownerName,
-          ownerEmail: data.ownerEmail,
-          subject: data.subject,
-          description: data.description,
-          attachment: data.attachment,
-          category: data.category,
-          status: HelpTicketStatus.PENDING,
-          priority: data.priority,
-        },
-      });
+  /** Runs on the caller's transaction so related writes (e.g. notifications) commit together. */
+  async create(data: CreateData, tx: Prisma.TransactionClient) {
+    const ticket = await tx.helpTicket.create({
+      data: {
+        ticketNumber: data.ticketNumber,
+        ownerType: data.ownerType,
+        ownerId: data.ownerId,
+        ownerName: data.ownerName,
+        ownerEmail: data.ownerEmail,
+        subject: data.subject,
+        description: data.description,
+        attachment: data.attachment,
+        category: data.category,
+        status: HelpTicketStatus.PENDING,
+        priority: data.priority,
+      },
+    });
 
-      await tx.helpTicketMessage.create({
-        data: {
-          ticketId: ticket.id,
-          authorUserId: data.actorUserId,
-          body: data.description,
-        },
-      });
+    await tx.helpTicketMessage.create({
+      data: {
+        ticketId: ticket.id,
+        authorUserId: data.actorUserId,
+        body: data.description,
+      },
+    });
 
-      await tx.helpTicketEvent.create({
-        data: {
-          ticketId: ticket.id,
-          event: HelpTicketEventType.CREATED,
-          actorUserId: data.actorUserId,
-          newStatus: HelpTicketStatus.PENDING,
-        },
-      });
+    await tx.helpTicketEvent.create({
+      data: {
+        ticketId: ticket.id,
+        event: HelpTicketEventType.CREATED,
+        actorUserId: data.actorUserId,
+        newStatus: HelpTicketStatus.PENDING,
+      },
+    });
 
-      return tx.helpTicket.findUniqueOrThrow({
-        where: { id: ticket.id },
-        include: ticketInclude,
-      });
+    return tx.helpTicket.findUniqueOrThrow({
+      where: { id: ticket.id },
+      include: ticketInclude,
     });
   }
 
-  addMessage(data: MessageData) {
-    return this.prisma.$transaction(async (tx) => {
-      const message = await tx.helpTicketMessage.create({
-        data: {
-          ticketId: data.ticketId,
-          authorUserId: data.authorUserId,
-          body: data.body,
-        },
-        include: {
-          author: {
-            select: {
-              id: true,
-              email: true,
-            },
+  /** Runs on the caller's transaction so related writes (e.g. notifications) commit together. */
+  async addMessage(data: MessageData, tx: Prisma.TransactionClient) {
+    const message = await tx.helpTicketMessage.create({
+      data: {
+        ticketId: data.ticketId,
+        authorUserId: data.authorUserId,
+        body: data.body,
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            email: true,
           },
         },
-      });
-
-      await tx.helpTicketEvent.create({
-        data: {
-          ticketId: data.ticketId,
-          event: HelpTicketEventType.MESSAGE_ADDED,
-          actorUserId: data.authorUserId,
-        },
-      });
-
-      return message;
+      },
     });
+
+    await tx.helpTicketEvent.create({
+      data: {
+        ticketId: data.ticketId,
+        event: HelpTicketEventType.MESSAGE_ADDED,
+        actorUserId: data.authorUserId,
+      },
+    });
+
+    return message;
   }
 
-  updateStatus(data: StatusData) {
-    return this.prisma.$transaction(async (tx) => {
-      const current = await tx.helpTicket.findUniqueOrThrow({
-        where: { id: data.ticketId },
-      });
+  /** Runs on the caller's transaction so related writes (e.g. notifications) commit together. */
+  async updateStatus(data: StatusData, tx: Prisma.TransactionClient) {
+    const current = await tx.helpTicket.findUniqueOrThrow({
+      where: { id: data.ticketId },
+    });
 
-      const updateData: {
-        status: HelpTicketStatus;
-        resolvedAt?: Date | null;
-        closedAt?: Date | null;
-      } = { status: data.status };
+    const updateData: {
+      status: HelpTicketStatus;
+      resolvedAt?: Date | null;
+      closedAt?: Date | null;
+    } = { status: data.status };
 
-      if (data.status === HelpTicketStatus.RESOLVED) {
-        updateData.resolvedAt = new Date();
-        updateData.closedAt = null;
-      }
+    if (data.status === HelpTicketStatus.RESOLVED) {
+      updateData.resolvedAt = new Date();
+      updateData.closedAt = null;
+    }
 
-      if (data.status === HelpTicketStatus.CLOSED) {
-        updateData.closedAt = new Date();
-      }
+    if (data.status === HelpTicketStatus.CLOSED) {
+      updateData.closedAt = new Date();
+    }
 
-      if (
-        data.status === HelpTicketStatus.OPEN ||
-        data.status === HelpTicketStatus.IN_PROGRESS ||
-        data.status === HelpTicketStatus.PENDING
-      ) {
-        updateData.resolvedAt = null;
-        updateData.closedAt = null;
-      }
+    if (
+      data.status === HelpTicketStatus.OPEN ||
+      data.status === HelpTicketStatus.IN_PROGRESS ||
+      data.status === HelpTicketStatus.PENDING
+    ) {
+      updateData.resolvedAt = null;
+      updateData.closedAt = null;
+    }
 
-      const ticket = await tx.helpTicket.update({
-        where: { id: data.ticketId },
-        data: updateData,
-      });
+    const ticket = await tx.helpTicket.update({
+      where: { id: data.ticketId },
+      data: updateData,
+    });
 
-      await tx.helpTicketEvent.create({
-        data: {
-          ticketId: ticket.id,
-          event: HelpTicketEventType.STATUS_CHANGED,
-          actorUserId: data.actorUserId,
-          previousStatus: current.status,
-          newStatus: data.status,
-          note: data.note ?? null,
-        },
-      });
+    await tx.helpTicketEvent.create({
+      data: {
+        ticketId: ticket.id,
+        event: HelpTicketEventType.STATUS_CHANGED,
+        actorUserId: data.actorUserId,
+        previousStatus: current.status,
+        newStatus: data.status,
+        note: data.note ?? null,
+      },
+    });
 
-      return tx.helpTicket.findUniqueOrThrow({
-        where: { id: ticket.id },
-        include: ticketInclude,
-      });
+    return tx.helpTicket.findUniqueOrThrow({
+      where: { id: ticket.id },
+      include: ticketInclude,
     });
   }
 

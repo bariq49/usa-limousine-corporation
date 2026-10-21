@@ -8,21 +8,13 @@ import { API_PREFIX, API_VERSION } from "../src/config/api.constants";
 import { PrismaService } from "../src/infrastructure/database/prisma.service";
 import { AuthEmailService } from "../src/modules/auth/services/auth-email.service";
 import { AuthEmailQueueService } from "../src/modules/auth/jobs/auth-email-queue.service";
-import { DriverEmailService } from "../src/modules/driver/services/driver-email.service";
-import { DriverEmailQueueService } from "../src/modules/driver/jobs/driver-email-queue.service";
 import {
   buildBookingPayload,
-  cleanupBookingAndTripTables,
+  cleanupBookingTables,
   seedBookingFixtures,
 } from "./helpers/booking-fixtures";
-import { cleanupPaymentTables, cleanupWalletTables } from "./helpers/cleanup-payment";
-import {
-  authEmailServiceMock,
-  driverEmailServiceMock,
-  emailQueueLifecycleMock,
-} from "./helpers/email-mocks";
+import { authEmailServiceMock, emailQueueLifecycleMock } from "./helpers/email-mocks";
 import { registerAndVerifyEmail } from "./helpers/register-and-verify";
-import { stripeCheckoutMock } from "./helpers/stripe-mock";
 
 const basePath = `/${API_PREFIX}/v${API_VERSION}`;
 
@@ -38,12 +30,6 @@ describe("Booking (e2e)", () => {
       .useValue(authEmailServiceMock)
       .overrideProvider(AuthEmailQueueService)
       .useValue(emailQueueLifecycleMock)
-      .overrideProvider(DriverEmailService)
-      .useValue(driverEmailServiceMock)
-      .overrideProvider(DriverEmailQueueService)
-      .useValue(emailQueueLifecycleMock)
-      .overrideProvider(stripeCheckoutMock.provide)
-      .useValue(stripeCheckoutMock.useValue)
       .compile();
 
     app = moduleFixture.createNestApplication();
@@ -54,12 +40,7 @@ describe("Booking (e2e)", () => {
   });
 
   beforeEach(async () => {
-    await cleanupWalletTables(prisma);
-    await cleanupPaymentTables(prisma);
-    await cleanupBookingAndTripTables(prisma);
-    await prisma.driverDocument.deleteMany();
-    await prisma.driverVehicle.deleteMany();
-    await prisma.driver.deleteMany();
+    await cleanupBookingTables(prisma);
     await prisma.auditLog.deleteMany();
     await prisma.session.deleteMany();
     await prisma.userRole.deleteMany();
@@ -67,12 +48,7 @@ describe("Booking (e2e)", () => {
   });
 
   afterAll(async () => {
-    await cleanupWalletTables(prisma);
-    await cleanupPaymentTables(prisma);
-    await cleanupBookingAndTripTables(prisma);
-    await prisma.driverDocument.deleteMany();
-    await prisma.driverVehicle.deleteMany();
-    await prisma.driver.deleteMany();
+    await cleanupBookingTables(prisma);
     await prisma.auditLog.deleteMany();
     await prisma.session.deleteMany();
     await prisma.userRole.deleteMany();
@@ -96,7 +72,7 @@ describe("Booking (e2e)", () => {
     await prisma.userRole.create({ data: { userId: user.id, roleId: role.id } });
   }
 
-  it("creates a seeking booking as a logged-in customer", async () => {
+  it("creates a pending booking as a logged-in customer", async () => {
     const stamp = Date.now();
     const email = `customer-booking-${stamp}@example.com`;
     const fixtures = await seedBookingFixtures(prisma);
@@ -111,26 +87,27 @@ describe("Booking (e2e)", () => {
       .send(buildBookingPayload(fixtures, { passengerEmail: email }))
       .expect(201);
 
-    expect(created.body.data.status).toBe(BookingStatus.SEEKING_OFFERS);
+    expect(created.body.data.status).toBe(BookingStatus.PENDING);
     expect(created.body.data.bookingNumber).toMatch(/^BK-/);
-    expect(created.body.data.offerSessionExpiresAt).toBeTruthy();
-    expect(created.body.data.checkoutUrl).toBeUndefined();
 
     const booking = await prisma.booking.findUnique({
       where: { id: created.body.data.id },
     });
     expect(booking?.userId).toBe(user.id);
-    expect(booking?.status).toBe(BookingStatus.SEEKING_OFFERS);
+    expect(booking?.status).toBe(BookingStatus.PENDING);
 
-    const payment = await prisma.payment.findUnique({
-      where: {
-        purpose_referenceId: {
-          purpose: "BOOKING",
-          referenceId: created.body.data.id,
-        },
-      },
-    });
-    expect(payment).toBeNull();
+    const mine = await request(app.getHttpServer())
+      .get(`${basePath}/customers/bookings`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .expect(200);
+    expect(mine.body.data.data).toHaveLength(1);
+
+    const cancelled = await request(app.getHttpServer())
+      .post(`${basePath}/customers/bookings/${created.body.data.id}/cancel`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ cancellationReason: "No longer needed" })
+      .expect(201);
+    expect(cancelled.body.data.status).toBe(BookingStatus.CANCELLED);
   });
 
   it("creates, lists, confirms, and cancels a booking", async () => {
@@ -148,7 +125,7 @@ describe("Booking (e2e)", () => {
       .send(buildBookingPayload(fixtures, { passengerEmail: email }))
       .expect(201);
 
-    expect(created.body.data.status).toBe(BookingStatus.SEEKING_OFFERS);
+    expect(created.body.data.status).toBe(BookingStatus.PENDING);
     expect(created.body.data.bookingNumber).toMatch(/^BK-/);
 
     const bookingId = created.body.data.id as string;

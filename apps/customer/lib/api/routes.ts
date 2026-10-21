@@ -11,6 +11,11 @@ const API_ROUTES = {
   AUTH_FORGOT: "/auth/forgot-password",
   AUTH_RESET: "/auth/reset-password",
   AUTH_CHANGE_PASSWORD: "/auth/change-password",
+  AUTH_PROFILE: "/auth/profile",
+  UPLOADS: "/uploads",
+  SESSIONS_ME: "/sessions/me",
+  SESSIONS: "/sessions",
+  NOTIFICATIONS: "/customers/notifications",
 } as const;
 
 export default API_ROUTES;
