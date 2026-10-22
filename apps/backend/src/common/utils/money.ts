@@ -26,7 +26,11 @@ export function decimalsToNumbers(value: unknown): unknown {
   if (Array.isArray(value)) {
     return value.map((item) => decimalsToNumbers(item));
   }
-  if (value !== null && typeof value === "object" && Object.getPrototypeOf(value) === Object.prototype) {
+  if (
+    value !== null &&
+    typeof value === "object" &&
+    Object.getPrototypeOf(value) === Object.prototype
+  ) {
     const plain: Record<string, unknown> = {};
     for (const [key, item] of Object.entries(value)) {
       plain[key] = decimalsToNumbers(item);

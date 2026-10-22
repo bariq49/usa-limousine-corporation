@@ -2,18 +2,20 @@ export type TicketStatus = "PENDING" | "OPEN" | "IN_PROGRESS" | "RESOLVED" | "CL
 
 export type TicketPriority = "LOW" | "MEDIUM" | "HIGH";
 
-export type TicketCategory =
-  | "ACCOUNT"
-  | "PAYMENTS"
-  | "TRIPS"
-  | "VEHICLE"
-  | "DOCUMENTS"
-  | "APP"
-  | "PASSENGER_NO_SHOW"
-  | "FLAT_TIRE"
-  | "OTHER";
+export type TicketCategory = "ACCOUNT" | "BOOKING" | "PAYMENTS" | "APP" | "OTHER";
 
-export type OwnerType = "CUSTOMER";
+/** Ticket owner; name/email/phone are read live from the customer's user. */
+export type TicketCustomer = {
+  id: string;
+  type: string;
+  user: {
+    id: string;
+    firstName?: string | null;
+    lastName?: string | null;
+    email: string;
+    phone?: string | null;
+  };
+};
 
 export type Author = {
   id: string;
@@ -23,33 +25,31 @@ export type Author = {
 export type Message = {
   id: string;
   ticketId: string;
-  authorUserId: string;
+  authorUserId: string | null;
   body: string;
   createdAt: string;
-  author?: Author;
+  author?: Author | null;
 };
 
 export type Event = {
   id: string;
   ticketId: string;
   event: string;
-  actorUserId: string;
+  actorUserId: string | null;
   previousStatus?: TicketStatus | null;
   newStatus?: TicketStatus | null;
   previousPriority?: TicketPriority | null;
   newPriority?: TicketPriority | null;
   note?: string | null;
   createdAt: string;
-  actor?: Author;
+  actor?: Author | null;
 };
 
 export type Ticket = {
   id: string;
   ticketNumber: string;
-  ownerType: OwnerType;
-  ownerId: string;
-  ownerName?: string | null;
-  ownerEmail?: string | null;
+  customerId: string;
+  customer?: TicketCustomer | null;
   subject: string;
   description: string;
   attachment?: string | null;
@@ -72,7 +72,7 @@ export type Query = {
   status?: TicketStatus | undefined;
   category?: TicketCategory | undefined;
   priority?: TicketPriority | undefined;
-  ownerType?: OwnerType | undefined;
+  customerId?: string | undefined;
   sortBy?: string | undefined;
   sortOrder?: "asc" | "desc" | undefined;
 };

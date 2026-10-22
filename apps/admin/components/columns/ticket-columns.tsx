@@ -20,6 +20,7 @@ import {
   formatCategory,
   priorityBadgeColor,
   statusBadgeColor,
+  ticketOwner,
 } from "@/lib/utils/ticket-labels";
 
 export type ColumnOptions = {
@@ -92,12 +93,14 @@ export const getColumns = (options?: ColumnOptions): ColumnDef<Ticket>[] => [
   },
   {
     id: "Owner",
-    accessorFn: (row) => `${row.ownerName ?? ""} ${row.ownerEmail ?? ""}`,
+    accessorFn: (row) => {
+      const owner = ticketOwner(row);
+      return `${owner.name} ${owner.email}`;
+    },
     header: ({ column }) => <DataTableColumnHeader column={column} title="Owner" />,
     cell: ({ row }) => {
       const item = row.original;
-      const name = item.ownerName?.trim() || "—";
-      const email = item.ownerEmail?.trim() || "—";
+      const { name, email } = ticketOwner(item);
 
       return (
         <div className="flex flex-col">

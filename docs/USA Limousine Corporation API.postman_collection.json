@@ -38,9 +38,7 @@
                       "if (json.data.sessionId) {",
                       "  pm.collectionVariables.set('super_admin_session_id', json.data.sessionId);",
                       "}",
-                      "",
                       "console.log('Saved super_admin_access_token (' + json.data.accessToken.slice(0, 24) + '...)');",
-                      "",
                       "// Drop httpOnly refresh cookie so Bearer refresh does not require CSRF in Postman.",
                       "const jar = pm.cookies.jar();",
                       "const base = pm.collectionVariables.get('base_url') || '';",
@@ -297,10 +295,8 @@
                       "setId('golf_bag_luggage_type_id', 'Golf Bag');",
                       "setId('ski_luggage_type_id', 'Ski');",
                       "setId('wheelchair_luggage_type_id', 'Wheelchair');",
-                      "const standard = rows.find((item) => item.isSpecial === false) ?? rows.find((item) => !item.isSpecial);",
-                      "const special = rows.find((item) => item.isSpecial === true);",
-                      "if (standard?.id) pm.collectionVariables.set('standard_luggage_type_id', standard.id);",
-                      "if (special?.id) pm.collectionVariables.set('special_luggage_type_id', special.id);"
+                      "const standard = rows[0];",
+                      "if (standard?.id) pm.collectionVariables.set('luggage_type_id', standard.id);"
                     ]
                   }
                 }
@@ -314,7 +310,7 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{base_url}}/admin/luggage?page=1&limit=20&sortBy=createdAt&sortOrder=desc",
+                  "raw": "{{base_url}}/admin/luggage?page=1&limit=20&sortBy=createdAt&sortOrder=desc&isActive=true&q=suitcase",
                   "host": [
                     "{{base_url}}"
                   ],
@@ -338,11 +334,6 @@
                     {
                       "key": "sortOrder",
                       "value": "desc"
-                    },
-                    {
-                      "key": "isSpecial",
-                      "value": "false",
-                      "disabled": true
                     },
                     {
                       "key": "isActive",
@@ -382,7 +373,7 @@
                   "variable": [
                     {
                       "key": "id",
-                      "value": "{{standard_luggage_type_id}}"
+                      "value": "{{luggage_type_id}}"
                     }
                   ]
                 }
@@ -397,8 +388,7 @@
                       "const json = pm.response.json();",
                       "const d = json.data ?? json;",
                       "if (d?.id) {",
-                      "  if (d.isSpecial) pm.collectionVariables.set('special_luggage_type_id', d.id);",
-                      "  else pm.collectionVariables.set('standard_luggage_type_id', d.id);",
+                      "  pm.collectionVariables.set('luggage_type_id', d.id);",
                       "}"
                     ]
                   }
@@ -476,7 +466,7 @@
                   "variable": [
                     {
                       "key": "id",
-                      "value": "{{standard_luggage_type_id}}"
+                      "value": "{{luggage_type_id}}"
                     }
                   ]
                 }
@@ -517,7 +507,7 @@
                   "variable": [
                     {
                       "key": "id",
-                      "value": "{{standard_luggage_type_id}}"
+                      "value": "{{luggage_type_id}}"
                     }
                   ]
                 }
@@ -551,7 +541,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"ids\": [\n    \"{{standard_luggage_type_id}}\",\n    \"{{special_luggage_type_id}}\"\n  ]\n}",
+                  "raw": "{\n  \"ids\": [\n    \"{{luggage_type_id}}\",\n    \"{{luggage_type_id}}\"\n  ]\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -708,7 +698,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"name\": \"Business Class\",\n  \"description\": \"Premium business-class vehicle\",\n  \"image\": \"{{vehicle_category_image_url}}\",\n  \"passengerCount\": 4,\n  \"standardLuggageCapacity\": [\n    {\n      \"luggageTypeId\": \"{{standard_luggage_type_id}}\",\n      \"quantity\": 2\n    }\n  ],\n  \"specialLuggageCapacity\": [\n    {\n      \"luggageTypeId\": \"{{special_luggage_type_id}}\",\n      \"quantity\": 1\n    }\n  ]\n}"
+                  "raw": "{\n  \"name\": \"Business Class\",\n  \"description\": \"Premium business-class vehicle\",\n  \"image\": \"{{vehicle_category_image_url}}\",\n  \"passengerCount\": 4,\n  \"standardLuggageCapacity\": [\n    {\n      \"luggageTypeId\": \"{{luggage_type_id}}\",\n      \"quantity\": 2\n    }\n  ],\n  \"specialLuggageCapacity\": [\n    {\n      \"luggageTypeId\": \"{{luggage_type_id}}\",\n      \"quantity\": 1\n    }\n  ]\n}"
                 },
                 "url": "{{base_url}}/admin/vehicle-categories"
               },
@@ -730,7 +720,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"name\": \"Business Class XL\",\n  \"passengerCount\": 6,\n  \"isActive\": true,\n  \"image\": \"{{vehicle_category_image_url}}\",\n  \"standardLuggageCapacity\": [\n    {\n      \"luggageTypeId\": \"{{standard_luggage_type_id}}\",\n      \"quantity\": 3\n    }\n  ],\n  \"specialLuggageCapacity\": [\n    {\n      \"luggageTypeId\": \"{{special_luggage_type_id}}\",\n      \"quantity\": 1\n    }\n  ]\n}"
+                  "raw": "{\n  \"name\": \"Business Class XL\",\n  \"passengerCount\": 6,\n  \"isActive\": true,\n  \"image\": \"{{vehicle_category_image_url}}\",\n  \"standardLuggageCapacity\": [\n    {\n      \"luggageTypeId\": \"{{luggage_type_id}}\",\n      \"quantity\": 3\n    }\n  ],\n  \"specialLuggageCapacity\": [\n    {\n      \"luggageTypeId\": \"{{luggage_type_id}}\",\n      \"quantity\": 1\n    }\n  ]\n}"
                 },
                 "url": "{{base_url}}/admin/vehicle-categories/{{vehicle_category_id}}"
               },
@@ -1569,7 +1559,7 @@
                     }
                   ]
                 },
-                "description": "All tickets. Optional: status, category, priority, ownerType, ownerId, q/search."
+                "description": "All tickets. Optional: status, category, priority, customerId, q/search (ticket number, subject, customer name or email)."
               },
               "response": []
             },
@@ -1792,7 +1782,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n    \"vehicleCategoryId\": \"{{vehicle_category_id}}\",\n    \"bookingType\": \"CREW_RIDE\",\n    \"address\": {\n        \"pickup\": {\n            \"address\": \"Schiphol Airport, Arrivals Hall 3, Evert van de Beekstraat 202, 1118 CP Schiphol, Netherlands\",\n            \"latitude\": 52.3081,\n            \"longitude\": 4.7642\n        },\n        \"dropoff\": {\n            \"address\": \"Dam Square, Royal Palace Amsterdam, Nieuwezijds Voorburgwal 147, 1012 RJ Amsterdam, Netherlands\",\n            \"latitude\": 52.3486,\n            \"longitude\": 4.8395\n        },\n        \"stops\": [],\n        \"distance\": 12.8,\n        \"duration\": 25\n    },\n    \"passenger\": {\n        \"passengerCount\": 4,\n        \"name\": \"KLM Crew Desk\",\n        \"phone\": \"+31612345678\",\n        \"email\": \"crew@example.com\"\n    },\n    \"bookingTime\": {\n        \"pickupDate\": \"2026-08-25\",\n        \"pickupTime\": \"06:15\"\n    },\n    \"flightDetails\": {\n        \"flightName\": \"KLM Royal Dutch Airlines\",\n        \"flightNumber\": \"KL-601\"\n    },\n    \"meetAndGreet\": {\n        \"enabled\": true,\n        \"instructions\": \"Crew meeting point gate 4, name board: KLM Crew\"\n    },\n    \"driverNotes\": \"Please wait near the exit gate 3 with passenger name board. The passenger will be wearing a red jacket and has special luggage requirements. Please assist with loading the luggage carefully. Flight is expected to be slightly delayed so please track it via the flight number provided.\",\n    \"pricing\": {\n        \"basePrice\": 95,\n        \"airportPickupPrice\": 0,\n        \"stopsPrice\": 0,\n        \"extraServicesPrice\": 15,\n        \"total\": 110\n    },\n    \"luggage\": [\n        {\n            \"luggageTypeId\": \"{{standard_luggage_type_id}}\",\n            \"quantity\": 2\n        },\n        {\n            \"luggageTypeId\": \"{{special_luggage_type_id}}\",\n            \"quantity\": 1\n        }\n    ],\n    \"extraServices\": [\n        {\n            \"extraServiceId\": \"{{baby_seat_id}}\",\n            \"quantity\": 1,\n            \"price\": 10\n        },\n        {\n            \"extraServiceId\": \"{{booster_seat_id}}\",\n            \"quantity\": 1,\n            \"price\": 5\n        }\n    ]\n}"
+                  "raw": "{\n  \"vehicleCategoryId\": \"{{vehicle_category_id}}\",\n  \"bookingType\": \"CREW_RIDE\",\n  \"address\": {\n    \"pickup\": {\n      \"address\": \"Schiphol Airport, Arrivals Hall 3, Evert van de Beekstraat 202, 1118 CP Schiphol, Netherlands\",\n      \"latitude\": 52.3081,\n      \"longitude\": 4.7642\n    },\n    \"dropoff\": {\n      \"address\": \"Dam Square, Royal Palace Amsterdam, Nieuwezijds Voorburgwal 147, 1012 RJ Amsterdam, Netherlands\",\n      \"latitude\": 52.3486,\n      \"longitude\": 4.8395\n    },\n    \"stops\": [],\n    \"distance\": 12.8,\n    \"duration\": 25\n  },\n  \"passenger\": {\n    \"passengerCount\": 4,\n    \"name\": \"KLM Crew Desk\",\n    \"phone\": \"+31612345678\",\n    \"email\": \"crew@example.com\"\n  },\n  \"bookingTime\": {\n    \"pickupDate\": \"2026-08-25\",\n    \"pickupTime\": \"06:15\"\n  },\n  \"flightDetails\": {\n    \"flightName\": \"KLM Royal Dutch Airlines\",\n    \"flightNumber\": \"KL-601\"\n  },\n  \"meetAndGreet\": {\n    \"enabled\": true,\n    \"instructions\": \"Crew meeting point gate 4, name board: KLM Crew\"\n  },\n  \"pricing\": {\n    \"basePrice\": 95,\n    \"airportPickupPrice\": 0,\n    \"stopsPrice\": 0,\n    \"extraServicesPrice\": 15,\n    \"total\": 110\n  },\n  \"luggage\": [\n    {\n            \"luggageTypeId\": \"{{luggage_type_id}}\",\n            \"quantity\": 2\n        }\n  ],\n  \"extraServices\": [\n    {\n      \"extraServiceId\": \"{{baby_seat_id}}\",\n      \"quantity\": 1\n    },\n    {\n      \"extraServiceId\": \"{{booster_seat_id}}\",\n      \"quantity\": 1\n    }\n  ],\n  \"notes\": \"Please wait near the exit gate 3 with passenger name board. The passenger will be wearing a red jacket and has special luggage requirements. Please assist with loading the luggage carefully. Flight is expected to be slightly delayed so please track it via the flight number provided.\"\n}"
                 },
                 "url": "{{base_url}}/admin/bookings",
                 "description": "POST `/admin/bookings` (super admin). Creates a CONFIRMED booking on behalf of a customer (no customer account linked)."
@@ -1905,7 +1895,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n    \"passenger\": {\n        \"passengerCount\": 2,\n        \"name\": \"Jane Doe\",\n        \"phone\": \"+31612345678\",\n        \"email\": \"jane@example.com\",\n        \"specialInstructions\": \"Meet at arrivals hall\"\n    },\n    \"flightDetails\": {\n        \"flightName\": \"Air France\",\n        \"flightNumber\": \"AF-1124\"\n    },\n    \"meetAndGreet\": {\n        \"enabled\": true,\n        \"instructions\": \"Meet at arrivals exit B with name board: Jane Doe\"\n    },\n    \"extraServices\": [\n        {\n            \"extraServiceId\": \"{{booster_seat_id}}\",\n            \"quantity\": 2,\n            \"price\": 5\n        }\n    ],\n    \"driverNotes\": \"Updated driver instructions: meet at arrivals exit B\",\n    \"pricing\": {\n        \"basePrice\": 60,\n        \"airportPickupPrice\": 0,\n        \"stopsPrice\": 0,\n        \"extraServicesPrice\": 0,\n        \"total\": 60\n    }\n}"
+                  "raw": "{\n  \"passenger\": {\n    \"passengerCount\": 2,\n    \"name\": \"Jane Doe\",\n    \"phone\": \"+31612345678\",\n    \"email\": \"jane@example.com\",\n    \"specialInstructions\": \"Meet at arrivals hall\"\n  },\n  \"flightDetails\": {\n    \"flightName\": \"Air France\",\n    \"flightNumber\": \"AF-1124\"\n  },\n  \"meetAndGreet\": {\n    \"enabled\": true,\n    \"instructions\": \"Meet at arrivals exit B with name board: Jane Doe\"\n  },\n  \"extraServices\": [\n    {\n      \"extraServiceId\": \"{{booster_seat_id}}\",\n      \"quantity\": 2\n    }\n  ],\n  \"pricing\": {\n    \"basePrice\": 60,\n    \"airportPickupPrice\": 0,\n    \"stopsPrice\": 0,\n    \"extraServicesPrice\": 0,\n    \"total\": 60\n  },\n  \"notes\": \"Updated driver instructions: meet at arrivals exit B\"\n}"
                 },
                 "url": "{{base_url}}/admin/bookings/{{booking_id}}",
                 "description": "Only DRAFT bookings can be updated."
@@ -3068,7 +3058,7 @@
                     ],
                     "body": {
                       "mode": "raw",
-                      "raw": "{\n    \"vehicleCategoryId\": \"{{vehicle_category_id}}\",\n    \"bookingType\": \"ONE_WAY\",\n    \"address\": {\n        \"pickup\": {\n            \"address\": \"Schiphol Airport, Arrivals Hall 3, Evert van de Beekstraat 202, 1118 CP Schiphol, Netherlands\",\n            \"latitude\": 52.3105,\n            \"longitude\": 4.7683\n        },\n        \"dropoff\": {\n            \"address\": \"Dam Square, Royal Palace Amsterdam, Nieuwezijds Voorburgwal 147, 1012 RJ Amsterdam, Netherlands\",\n            \"latitude\": 52.3731,\n            \"longitude\": 4.8932\n        },\n        \"stops\": [\n            {\n                \"address\": \"Amsterdam RAI Exhibition Centre, Europaplein 24, 1078 GZ Amsterdam, Netherlands\",\n                \"latitude\": 52.3412,\n                \"longitude\": 4.8884\n            }\n        ],\n        \"distance\": 24.2,\n        \"duration\": 45\n    },\n    \"passenger\": {\n        \"passengerCount\": 2,\n        \"name\": \"bariq bilal\",\n        \"phone\": \"+31612345678\",\n        \"email\": \"bariqbilal239@gmail.com\"\n    },\n    \"bookingTime\": {\n        \"pickupDate\": \"2026-08-25\",\n        \"pickupTime\": \"14:30\"\n    },\n    \"flightDetails\": {\n        \"flightName\": \"Emirates\",\n        \"flightNumber\": \"EK-147\"\n    },\n    \"meetAndGreet\": {\n        \"enabled\": true,\n        \"instructions\": \"Please wait at arrivals meeting point with name board: bariq bilal\"\n    },\n    \"extraServices\": [\n        {\n            \"extraServiceId\": \"{{baby_seat_id}}\",\n            \"quantity\": 1,\n            \"price\": {{baby_seat_price}}\n        },\n        {\n            \"extraServiceId\": \"{{booster_seat_id}}\",\n            \"quantity\": 1,\n            \"price\": {{booster_seat_price}}\n        }\n    ],\n    \"driverNotes\": \"Please wait near the exit gate 3 with passenger name board. The passenger will be wearing a red jacket and has special luggage requirements. Please assist with loading the luggage carefully. Flight is expected to be slightly delayed so please track it via the flight number provided.\",\n    \"pricing\": {\n        \"basePrice\": 47.5,\n        \"airportPickupPrice\": 15,\n        \"stopsPrice\": 10,\n        \"extraServicesPrice\": 15,\n        \"total\": 87.5\n    },\n    \"luggage\": [\n        {\n            \"luggageTypeId\": \"{{standard_luggage_type_id}}\",\n            \"quantity\": 2\n        },\n        {\n            \"luggageTypeId\": \"{{special_luggage_type_id}}\",\n            \"quantity\": 1\n        }\n    ]\n}"
+                      "raw": "{\n    \"vehicleCategoryId\": \"{{vehicle_category_id}}\",\n    \"bookingType\": \"ONE_WAY\",\n    \"address\": {\n        \"pickup\": {\n            \"address\": \"Schiphol Airport, Arrivals Hall 3, Evert van de Beekstraat 202, 1118 CP Schiphol, Netherlands\",\n            \"latitude\": 52.3105,\n            \"longitude\": 4.7683\n        },\n        \"dropoff\": {\n            \"address\": \"Dam Square, Royal Palace Amsterdam, Nieuwezijds Voorburgwal 147, 1012 RJ Amsterdam, Netherlands\",\n            \"latitude\": 52.3731,\n            \"longitude\": 4.8932\n        },\n        \"stops\": [\n            {\n                \"address\": \"Amsterdam RAI Exhibition Centre, Europaplein 24, 1078 GZ Amsterdam, Netherlands\",\n                \"latitude\": 52.3412,\n                \"longitude\": 4.8884\n            }\n        ],\n        \"distance\": 24.2,\n        \"duration\": 45\n    },\n    \"passenger\": {\n        \"passengerCount\": 2,\n        \"name\": \"bariq bilal\",\n        \"phone\": \"+31612345678\",\n        \"email\": \"bariqbilal239@gmail.com\"\n    },\n    \"bookingTime\": {\n        \"pickupDate\": \"2026-08-25\",\n        \"pickupTime\": \"14:30\"\n    },\n    \"flightDetails\": {\n        \"flightName\": \"Emirates\",\n        \"flightNumber\": \"EK-147\"\n    },\n    \"meetAndGreet\": {\n        \"enabled\": true,\n        \"instructions\": \"Please wait at arrivals meeting point with name board: bariq bilal\"\n    },\n    \"extraServices\": [\n        {\n            \"extraServiceId\": \"{{baby_seat_id}}\",\n            \"quantity\": 1,\n            \"price\": {{baby_seat_price}}\n        },\n        {\n            \"extraServiceId\": \"{{booster_seat_id}}\",\n            \"quantity\": 1,\n            \"price\": {{booster_seat_price}}\n        }\n    ],\n    \"notes\": \"Please wait near the exit gate 3 with passenger name board. The passenger will be wearing a red jacket and has special luggage requirements. Please assist with loading the luggage carefully. Flight is expected to be slightly delayed so please track it via the flight number provided.\",\n    \"pricing\": {\n        \"basePrice\": 47.5,\n        \"airportPickupPrice\": 15,\n        \"stopsPrice\": 10,\n        \"extraServicesPrice\": 15,\n        \"total\": 87.5\n    },\n    \"luggage\": [\n        {\n            \"luggageTypeId\": \"{{luggage_type_id}}\",\n            \"quantity\": 2\n        }\n    ]\n}"
                     },
                     "url": "{{base_url}}/customers/bookings",
                     "description": "POST `/customers/bookings` (One Way). Creates a PENDING booking for the logged-in customer and notifies admins (dashboard bell, live). Saves `booking_id`."
@@ -3108,7 +3098,7 @@
                     ],
                     "body": {
                       "mode": "raw",
-                      "raw": "{\n    \"vehicleCategoryId\": \"{{vehicle_category_id}}\",\n    \"bookingType\": \"HOURLY\",\n    \"address\": {\n        \"pickup\": {\n            \"address\": \"Schiphol Airport, Arrivals Hall 3, Evert van de Beekstraat 202, 1118 CP Schiphol, Netherlands\",\n            \"latitude\": 52.3373,\n            \"longitude\": 4.8972\n        },\n        \"dropoff\": {\n            \"address\": \"Dam Square, Royal Palace Amsterdam, Nieuwezijds Voorburgwal 147, 1012 RJ Amsterdam, Netherlands\",\n            \"latitude\": 52.3373,\n            \"longitude\": 4.8972\n        },\n        \"stops\": [],\n        \"distance\": 0,\n        \"duration\": 180\n    },\n    \"passenger\": {\n        \"passengerCount\": 3,\n        \"name\": \"bariq bilal\",\n        \"phone\": \"+31612345678\",\n        \"email\": \"bariqbilal239@gmail.com\"\n    },\n    \"bookingTime\": {\n        \"pickupDate\": \"2026-08-25\",\n        \"pickupTime\": \"09:00\"\n    },\n    \"flightDetails\": {\n        \"flightName\": \"KLM Royal Dutch Airlines\",\n        \"flightNumber\": \"KL-1021\"\n    },\n    \"meetAndGreet\": {\n        \"enabled\": false\n    },\n    \"driverNotes\": \"Please wait near the exit gate 3 with passenger name board. The passenger will be wearing a red jacket and has special luggage requirements. Please assist with loading the luggage carefully. Flight is expected to be slightly delayed so please track it via the flight number provided.\",\n    \"pricing\": {\n        \"basePrice\": 210,\n        \"airportPickupPrice\": 0,\n        \"stopsPrice\": 0,\n        \"extraServicesPrice\": 15,\n        \"total\": 225\n    },\n    \"luggage\": [\n        {\n            \"luggageTypeId\": \"{{standard_luggage_type_id}}\",\n            \"quantity\": 2\n        },\n        {\n            \"luggageTypeId\": \"{{special_luggage_type_id}}\",\n            \"quantity\": 1\n        }\n    ],\n    \"extraServices\": [\n        {\n            \"extraServiceId\": \"{{baby_seat_id}}\",\n            \"quantity\": 1,\n            \"price\": {{baby_seat_price}}\n        },\n        {\n            \"extraServiceId\": \"{{booster_seat_id}}\",\n            \"quantity\": 1,\n            \"price\": {{booster_seat_price}}\n        }\n    ]\n}"
+                      "raw": "{\n    \"vehicleCategoryId\": \"{{vehicle_category_id}}\",\n    \"bookingType\": \"HOURLY\",\n    \"address\": {\n        \"pickup\": {\n            \"address\": \"Schiphol Airport, Arrivals Hall 3, Evert van de Beekstraat 202, 1118 CP Schiphol, Netherlands\",\n            \"latitude\": 52.3373,\n            \"longitude\": 4.8972\n        },\n        \"dropoff\": {\n            \"address\": \"Dam Square, Royal Palace Amsterdam, Nieuwezijds Voorburgwal 147, 1012 RJ Amsterdam, Netherlands\",\n            \"latitude\": 52.3373,\n            \"longitude\": 4.8972\n        },\n        \"stops\": [],\n        \"distance\": 0,\n        \"duration\": 180\n    },\n    \"passenger\": {\n        \"passengerCount\": 3,\n        \"name\": \"bariq bilal\",\n        \"phone\": \"+31612345678\",\n        \"email\": \"bariqbilal239@gmail.com\"\n    },\n    \"bookingTime\": {\n        \"pickupDate\": \"2026-08-25\",\n        \"pickupTime\": \"09:00\"\n    },\n    \"flightDetails\": {\n        \"flightName\": \"KLM Royal Dutch Airlines\",\n        \"flightNumber\": \"KL-1021\"\n    },\n    \"meetAndGreet\": {\n        \"enabled\": false\n    },\n    \"notes\": \"Please wait near the exit gate 3 with passenger name board. The passenger will be wearing a red jacket and has special luggage requirements. Please assist with loading the luggage carefully. Flight is expected to be slightly delayed so please track it via the flight number provided.\",\n    \"pricing\": {\n        \"basePrice\": 210,\n        \"airportPickupPrice\": 0,\n        \"stopsPrice\": 0,\n        \"extraServicesPrice\": 15,\n        \"total\": 225\n    },\n    \"luggage\": [\n        {\n            \"luggageTypeId\": \"{{luggage_type_id}}\",\n            \"quantity\": 2\n        }\n    ],\n    \"extraServices\": [\n        {\n            \"extraServiceId\": \"{{baby_seat_id}}\",\n            \"quantity\": 1,\n            \"price\": {{baby_seat_price}}\n        },\n        {\n            \"extraServiceId\": \"{{booster_seat_id}}\",\n            \"quantity\": 1,\n            \"price\": {{booster_seat_price}}\n        }\n    ]\n}"
                     },
                     "url": "{{base_url}}/customers/bookings",
                     "description": "POST `/customers/bookings` (Hourly). Creates a PENDING booking for the logged-in customer and notifies admins (dashboard bell, live). Saves `booking_id`."
@@ -3148,7 +3138,7 @@
                     ],
                     "body": {
                       "mode": "raw",
-                      "raw": "{\n    \"vehicleCategoryId\": \"{{vehicle_category_id}}\",\n    \"bookingType\": \"RETURN\",\n    \"address\": {\n        \"pickup\": {\n            \"address\": \"Schiphol Airport, Arrivals Hall 3, Evert van de Beekstraat 202, 1118 CP Schiphol, Netherlands\",\n            \"latitude\": 52.3105,\n            \"longitude\": 4.7683\n        },\n        \"dropoff\": {\n            \"address\": \"Dam Square, Royal Palace Amsterdam, Nieuwezijds Voorburgwal 147, 1012 RJ Amsterdam, Netherlands\",\n            \"latitude\": 52.3731,\n            \"longitude\": 4.8932\n        },\n        \"stops\": [],\n        \"distance\": 24.2,\n        \"duration\": 45\n    },\n    \"passenger\": {\n        \"passengerCount\": 2,\n        \"name\": \"bariq bilal\",\n        \"phone\": \"+31612345678\",\n        \"email\": \"bariqbilal239@gmail.com\"\n    },\n    \"bookingTime\": {\n        \"pickupDate\": \"2026-08-25\",\n        \"pickupTime\": \"14:30\",\n        \"returnDate\": \"2026-08-28\",\n        \"returnTime\": \"11:00\"\n    },\n    \"flightDetails\": {\n        \"flightName\": \"Delta Air Lines\",\n        \"flightNumber\": \"DL-134\"\n    },\n    \"meetAndGreet\": {\n        \"enabled\": true,\n        \"instructions\": \"Arrival meeting point with name board: bariq bilal\"\n    },\n    \"extraServices\": [\n        {\n            \"extraServiceId\": \"{{baby_seat_id}}\",\n            \"quantity\": 1,\n            \"price\": {{baby_seat_price}}\n        },\n        {\n            \"extraServiceId\": \"{{booster_seat_id}}\",\n            \"quantity\": 1,\n            \"price\": {{booster_seat_price}}\n        }\n    ],\n    \"driverNotes\": \"Please wait near the exit gate 3 with passenger name board. The passenger will be wearing a red jacket and has special luggage requirements. Please assist with loading the luggage carefully. Flight is expected to be slightly delayed so please track it via the flight number provided.\",\n    \"pricing\": {\n        \"basePrice\": 135,\n        \"airportPickupPrice\": 0,\n        \"stopsPrice\": 0,\n        \"extraServicesPrice\": 15,\n        \"total\": 150\n    },\n    \"luggage\": [\n        {\n            \"luggageTypeId\": \"{{standard_luggage_type_id}}\",\n            \"quantity\": 2\n        },\n        {\n            \"luggageTypeId\": \"{{special_luggage_type_id}}\",\n            \"quantity\": 1\n        }\n    ]\n}"
+                      "raw": "{\n    \"vehicleCategoryId\": \"{{vehicle_category_id}}\",\n    \"bookingType\": \"RETURN\",\n    \"address\": {\n        \"pickup\": {\n            \"address\": \"Schiphol Airport, Arrivals Hall 3, Evert van de Beekstraat 202, 1118 CP Schiphol, Netherlands\",\n            \"latitude\": 52.3105,\n            \"longitude\": 4.7683\n        },\n        \"dropoff\": {\n            \"address\": \"Dam Square, Royal Palace Amsterdam, Nieuwezijds Voorburgwal 147, 1012 RJ Amsterdam, Netherlands\",\n            \"latitude\": 52.3731,\n            \"longitude\": 4.8932\n        },\n        \"stops\": [],\n        \"distance\": 24.2,\n        \"duration\": 45\n    },\n    \"passenger\": {\n        \"passengerCount\": 2,\n        \"name\": \"bariq bilal\",\n        \"phone\": \"+31612345678\",\n        \"email\": \"bariqbilal239@gmail.com\"\n    },\n    \"bookingTime\": {\n        \"pickupDate\": \"2026-08-25\",\n        \"pickupTime\": \"14:30\",\n        \"returnDate\": \"2026-08-28\",\n        \"returnTime\": \"11:00\"\n    },\n    \"flightDetails\": {\n        \"flightName\": \"Delta Air Lines\",\n        \"flightNumber\": \"DL-134\"\n    },\n    \"meetAndGreet\": {\n        \"enabled\": true,\n        \"instructions\": \"Arrival meeting point with name board: bariq bilal\"\n    },\n    \"extraServices\": [\n        {\n            \"extraServiceId\": \"{{baby_seat_id}}\",\n            \"quantity\": 1,\n            \"price\": {{baby_seat_price}}\n        },\n        {\n            \"extraServiceId\": \"{{booster_seat_id}}\",\n            \"quantity\": 1,\n            \"price\": {{booster_seat_price}}\n        }\n    ],\n    \"notes\": \"Please wait near the exit gate 3 with passenger name board. The passenger will be wearing a red jacket and has special luggage requirements. Please assist with loading the luggage carefully. Flight is expected to be slightly delayed so please track it via the flight number provided.\",\n    \"pricing\": {\n        \"basePrice\": 135,\n        \"airportPickupPrice\": 0,\n        \"stopsPrice\": 0,\n        \"extraServicesPrice\": 15,\n        \"total\": 150\n    },\n    \"luggage\": [\n        {\n            \"luggageTypeId\": \"{{luggage_type_id}}\",\n            \"quantity\": 2\n        }\n    ]\n}"
                     },
                     "url": "{{base_url}}/customers/bookings",
                     "description": "POST `/customers/bookings` (Return). Creates a PENDING booking for the logged-in customer and notifies admins (dashboard bell, live). Saves `booking_id`."
@@ -3188,7 +3178,7 @@
                     ],
                     "body": {
                       "mode": "raw",
-                      "raw": "{\n    \"vehicleCategoryId\": \"{{vehicle_category_id}}\",\n    \"bookingType\": \"CREW_RIDE\",\n    \"address\": {\n        \"pickup\": {\n            \"address\": \"Schiphol Airport, Arrivals Hall 3, Evert van de Beekstraat 202, 1118 CP Schiphol, Netherlands\",\n            \"latitude\": 52.3081,\n            \"longitude\": 4.7642\n        },\n        \"dropoff\": {\n            \"address\": \"Dam Square, Royal Palace Amsterdam, Nieuwezijds Voorburgwal 147, 1012 RJ Amsterdam, Netherlands\",\n            \"latitude\": 52.3486,\n            \"longitude\": 4.8395\n        },\n        \"stops\": [],\n        \"distance\": 12.8,\n        \"duration\": 25\n    },\n    \"passenger\": {\n        \"passengerCount\": 4,\n        \"name\": \"KLM Crew Desk\",\n        \"phone\": \"+31612345678\",\n        \"email\": \"crew@example.com\"\n    },\n    \"bookingTime\": {\n        \"pickupDate\": \"2026-08-25\",\n        \"pickupTime\": \"06:15\"\n    },\n    \"flightDetails\": {\n        \"flightName\": \"KLM Royal Dutch Airlines\",\n        \"flightNumber\": \"KL-601\"\n    },\n    \"meetAndGreet\": {\n        \"enabled\": true,\n        \"instructions\": \"Crew meeting point gate 4, name board: KLM Crew\"\n    },\n    \"driverNotes\": \"Please wait near the exit gate 3 with passenger name board. The passenger will be wearing a red jacket and has special luggage requirements. Please assist with loading the luggage carefully. Flight is expected to be slightly delayed so please track it via the flight number provided.\",\n    \"pricing\": {\n        \"basePrice\": 95,\n        \"airportPickupPrice\": 0,\n        \"stopsPrice\": 0,\n        \"extraServicesPrice\": 15,\n        \"total\": 110\n    },\n    \"luggage\": [\n        {\n            \"luggageTypeId\": \"{{standard_luggage_type_id}}\",\n            \"quantity\": 2\n        },\n        {\n            \"luggageTypeId\": \"{{special_luggage_type_id}}\",\n            \"quantity\": 1\n        }\n    ],\n    \"extraServices\": [\n        {\n            \"extraServiceId\": \"{{baby_seat_id}}\",\n            \"quantity\": 1,\n            \"price\": {{baby_seat_price}}\n        },\n        {\n            \"extraServiceId\": \"{{booster_seat_id}}\",\n            \"quantity\": 1,\n            \"price\": {{booster_seat_price}}\n        }\n    ]\n}"
+                      "raw": "{\n    \"vehicleCategoryId\": \"{{vehicle_category_id}}\",\n    \"bookingType\": \"CREW_RIDE\",\n    \"address\": {\n        \"pickup\": {\n            \"address\": \"Schiphol Airport, Arrivals Hall 3, Evert van de Beekstraat 202, 1118 CP Schiphol, Netherlands\",\n            \"latitude\": 52.3081,\n            \"longitude\": 4.7642\n        },\n        \"dropoff\": {\n            \"address\": \"Dam Square, Royal Palace Amsterdam, Nieuwezijds Voorburgwal 147, 1012 RJ Amsterdam, Netherlands\",\n            \"latitude\": 52.3486,\n            \"longitude\": 4.8395\n        },\n        \"stops\": [],\n        \"distance\": 12.8,\n        \"duration\": 25\n    },\n    \"passenger\": {\n        \"passengerCount\": 4,\n        \"name\": \"KLM Crew Desk\",\n        \"phone\": \"+31612345678\",\n        \"email\": \"crew@example.com\"\n    },\n    \"bookingTime\": {\n        \"pickupDate\": \"2026-08-25\",\n        \"pickupTime\": \"06:15\"\n    },\n    \"flightDetails\": {\n        \"flightName\": \"KLM Royal Dutch Airlines\",\n        \"flightNumber\": \"KL-601\"\n    },\n    \"meetAndGreet\": {\n        \"enabled\": true,\n        \"instructions\": \"Crew meeting point gate 4, name board: KLM Crew\"\n    },\n    \"notes\": \"Please wait near the exit gate 3 with passenger name board. The passenger will be wearing a red jacket and has special luggage requirements. Please assist with loading the luggage carefully. Flight is expected to be slightly delayed so please track it via the flight number provided.\",\n    \"pricing\": {\n        \"basePrice\": 95,\n        \"airportPickupPrice\": 0,\n        \"stopsPrice\": 0,\n        \"extraServicesPrice\": 15,\n        \"total\": 110\n    },\n    \"luggage\": [\n        {\n            \"luggageTypeId\": \"{{luggage_type_id}}\",\n            \"quantity\": 2\n        }\n    ],\n    \"extraServices\": [\n        {\n            \"extraServiceId\": \"{{baby_seat_id}}\",\n            \"quantity\": 1,\n            \"price\": {{baby_seat_price}}\n        },\n        {\n            \"extraServiceId\": \"{{booster_seat_id}}\",\n            \"quantity\": 1,\n            \"price\": {{booster_seat_price}}\n        }\n    ]\n}"
                     },
                     "url": "{{base_url}}/customers/bookings",
                     "description": "POST `/customers/bookings` (Crew Ride). Creates a PENDING booking for the logged-in customer and notifies admins (dashboard bell, live). Saves `booking_id`."
@@ -3913,7 +3903,7 @@
     },
     {
       "name": "Public",
-      "description": "Public APIs — no authentication required. Use these to browse the catalogue and create bookings.\n\n**Flow:**\n1. Vehicle Categories → List (sets vehicle_category_id)\n2. Luggage → List (sets standard/special_luggage_type_id)\n3. Extra Services → List (sets baby_seat_id, booster_seat_id, …)\n4. Bookings → choose booking type to create & start checkout",
+      "description": "Public APIs — no authentication required. Use these to browse the catalogue and create bookings.\n\n**Flow:**\n1. Vehicle Categories → List (sets vehicle_category_id)\n2. Luggage → List (sets standard/luggage_type_id)\n3. Extra Services → List (sets baby_seat_id, booster_seat_id, …)\n4. Bookings → choose booking type to create & start checkout",
       "item": [
         {
           "name": "Vehicle Categories",
@@ -4054,10 +4044,8 @@
                       "setId('golf_bag_luggage_type_id', 'Golf Bag');",
                       "setId('ski_luggage_type_id', 'Ski');",
                       "setId('wheelchair_luggage_type_id', 'Wheelchair');",
-                      "const standard = rows.find((item) => item.isSpecial === false) ?? rows.find((item) => !item.isSpecial);",
-                      "const special = rows.find((item) => item.isSpecial === true);",
-                      "if (standard?.id) pm.collectionVariables.set('standard_luggage_type_id', standard.id);",
-                      "if (special?.id) pm.collectionVariables.set('special_luggage_type_id', special.id);"
+                      "const standard = rows[0];",
+                      "if (standard?.id) pm.collectionVariables.set('luggage_type_id', standard.id);"
                     ]
                   }
                 }
@@ -4069,7 +4057,7 @@
                 "method": "GET",
                 "header": [],
                 "url": {
-                  "raw": "{{base_url}}/public/luggage?page=1&limit=20&sortBy=name&sortOrder=asc",
+                  "raw": "{{base_url}}/public/luggage?page=1&limit=20&sortBy=name&sortOrder=asc&isActive=true&q=suitcase",
                   "host": [
                     "{{base_url}}"
                   ],
@@ -4093,11 +4081,6 @@
                     {
                       "key": "sortOrder",
                       "value": "asc"
-                    },
-                    {
-                      "key": "isSpecial",
-                      "value": "false",
-                      "disabled": true
                     },
                     {
                       "key": "isActive",
@@ -4209,14 +4192,6 @@
     },
     {
       "key": "vehicle_category_id",
-      "value": ""
-    },
-    {
-      "key": "standard_luggage_type_id",
-      "value": ""
-    },
-    {
-      "key": "special_luggage_type_id",
       "value": ""
     },
     {

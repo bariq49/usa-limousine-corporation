@@ -28,19 +28,19 @@ enum HelpTicketEventType {
 }
 
 model HelpTicket {
-  id           String              @id @default(cuid())
-  ticketNumber String              @unique
+  id           String             @id @default(cuid())
+  ticketNumber String             @unique
   customerId   String
   subject      String
   description  String
   attachment   String?
-  category     HelpTicketCategory  @default(OTHER)
-  status       HelpTicketStatus    @default(PENDING)
-  priority     HelpTicketPriority  @default(MEDIUM)
+  category     HelpTicketCategory @default(OTHER)
+  status       HelpTicketStatus   @default(PENDING)
+  priority     HelpTicketPriority @default(MEDIUM)
   resolvedAt   DateTime?
   closedAt     DateTime?
-  createdAt    DateTime            @default(now())
-  updatedAt    DateTime            @updatedAt
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
   deletedAt    DateTime?
 
   customer Customer            @relation(fields: [customerId], references: [id], onDelete: Cascade)
@@ -58,12 +58,13 @@ model HelpTicket {
 model HelpTicketMessage {
   id           String   @id @default(cuid())
   ticketId     String
-  authorUserId String
+  /// Null once the author account is deleted (message is kept).
+  authorUserId String?
   body         String
   createdAt    DateTime @default(now())
 
   ticket HelpTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  author User       @relation(fields: [authorUserId], references: [id], onDelete: Restrict)
+  author User?      @relation(fields: [authorUserId], references: [id], onDelete: SetNull)
 
   @@index([ticketId])
   @@index([createdAt])
@@ -73,7 +74,8 @@ model HelpTicketEvent {
   id               String              @id @default(cuid())
   ticketId         String
   event            HelpTicketEventType
-  actorUserId      String
+  /// Null once the actor account is deleted (event is kept).
+  actorUserId      String?
   previousStatus   HelpTicketStatus?
   newStatus        HelpTicketStatus?
   previousPriority HelpTicketPriority?
@@ -82,7 +84,7 @@ model HelpTicketEvent {
   createdAt        DateTime            @default(now())
 
   ticket HelpTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  actor  User       @relation(fields: [actorUserId], references: [id], onDelete: Restrict)
+  actor  User?      @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
 
   @@index([ticketId])
   @@index([createdAt])

@@ -44,6 +44,7 @@ import {
   nextStatuses,
   priorityBadgeColor,
   statusBadgeColor,
+  ticketOwner,
 } from "@/lib/utils/ticket-labels";
 
 type StatusForm = {
@@ -376,10 +377,8 @@ export default function HelpCenterTicketPage() {
                 <DetailRow icon={<User className="h-4 w-4 shrink-0 text-primary" />} label="Owner">
                   <div className="break-words">
                     <div className="text-xs text-default-500">Customer</div>
-                    <span className="font-medium text-default-900">
-                      {ticket.ownerName?.trim() || "—"}
-                    </span>
-                    <div className="text-default-500">{ticket.ownerEmail?.trim() || "—"}</div>
+                    <span className="font-medium text-default-900">{ticketOwner(ticket).name}</span>
+                    <div className="text-default-500">{ticketOwner(ticket).email}</div>
                   </div>
                 </DetailRow>
                 <DetailRow

@@ -25,12 +25,7 @@ type LuggageModalProps = {
   onSuccess?: () => void;
 };
 
-export function LuggageModal({
-  open,
-  onOpenChange,
-  initialData,
-  onSuccess,
-}: LuggageModalProps) {
+export function LuggageModal({ open, onOpenChange, initialData, onSuccess }: LuggageModalProps) {
   const isEditing = Boolean(initialData);
 
   const createMutation = useCreateLuggage();

@@ -47,5 +47,4 @@ export class UpdateDto {
   @ValidateNested({ each: true })
   @Type(() => StandardLuggageCapacityDto)
   standardLuggageCapacity?: StandardLuggageCapacityDto[];
-
 }

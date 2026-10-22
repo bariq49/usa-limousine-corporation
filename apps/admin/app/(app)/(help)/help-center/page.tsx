@@ -9,13 +9,7 @@ import {
   type ColumnFiltersState,
 } from "@usa-limousine-corporation/ui/data-table/data-table";
 import { useBulkDeleteTickets, useDeleteTicket, useTickets } from "@/hooks/queries/use-tickets";
-import type {
-  OwnerType,
-  Ticket,
-  TicketCategory,
-  TicketPriority,
-  TicketStatus,
-} from "@/lib/types/tickets";
+import type { Ticket, TicketCategory, TicketPriority, TicketStatus } from "@/lib/types/tickets";
 import { getColumns, filter } from "@/components/columns/ticket-columns";
 
 function filterValue<T extends string>(
@@ -37,7 +31,6 @@ export default function HelpCenterPage() {
   const [search, setSearch] = useState("");
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
-  const ownerType = filterValue<OwnerType>(columnFilters, "Owner Type");
   const status = filterValue<TicketStatus>(columnFilters, "Status");
   const priority = filterValue<TicketPriority>(columnFilters, "Priority");
   const category = filterValue<TicketCategory>(columnFilters, "Category");
@@ -46,7 +39,6 @@ export default function HelpCenterPage() {
     page,
     limit: pageSize,
     search: search || undefined,
-    ownerType,
     status,
     priority,
     category,

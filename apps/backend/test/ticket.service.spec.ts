@@ -1,6 +1,6 @@
 import { BadRequestException } from "@nestjs/common";
 import type { EventEmitter2 } from "@nestjs/event-emitter";
-import { HelpTicketCategory, HelpTicketOwnerType, HelpTicketStatus } from "@prisma/client";
+import { HelpTicketCategory, HelpTicketStatus } from "@prisma/client";
 import type { PrismaService } from "../src/infrastructure/database/prisma.service";
 import type { SequenceService } from "../src/infrastructure/sequence/sequence.service";
 import { TICKET_EVENT } from "../src/modules/help-center/constants/ticket.events";
@@ -69,8 +69,7 @@ describe("TicketService", () => {
     tickets.findById.mockResolvedValue({
       id: "ticket-1",
       status: HelpTicketStatus.CLOSED,
-      ownerType: HelpTicketOwnerType.CUSTOMER,
-      ownerId: "customer-1",
+      customerId: "customer-1",
     });
 
     await expect(
@@ -85,8 +84,7 @@ describe("TicketService", () => {
     tickets.findById.mockResolvedValue({
       id: "ticket-1",
       status: HelpTicketStatus.OPEN,
-      ownerType: HelpTicketOwnerType.CUSTOMER,
-      ownerId: "customer-1",
+      customerId: "customer-1",
     });
 
     await expect(
@@ -105,14 +103,12 @@ describe("TicketService", () => {
       status: HelpTicketStatus.PENDING,
       category: HelpTicketCategory.OTHER,
       subject: "Wallet issue",
-      ownerType: HelpTicketOwnerType.CUSTOMER,
-      ownerId: "customer-1",
+      customerId: "customer-1",
     });
 
     const result = await service.create(
       {
-        ownerType: HelpTicketOwnerType.CUSTOMER,
-        ownerId: "customer-1",
+        customerId: "customer-1",
         subject: "Wallet issue",
         description: "My wallet balance looks incorrect after a trip.",
       },
@@ -122,8 +118,7 @@ describe("TicketService", () => {
     expect(sequenceService.nextHelpTicket).toHaveBeenCalledTimes(1);
     expect(tickets.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        ownerType: HelpTicketOwnerType.CUSTOMER,
-        ownerId: "customer-1",
+        customerId: "customer-1",
         category: HelpTicketCategory.OTHER,
         ticketNumber: "HC-000001",
         actorUserId: "user-1",
@@ -141,8 +136,7 @@ describe("TicketService", () => {
     expect(events.emit).toHaveBeenCalledWith(
       TICKET_EVENT.CREATED,
       expect.objectContaining({
-        ownerType: HelpTicketOwnerType.CUSTOMER,
-        ownerId: "customer-1",
+        customerId: "customer-1",
         actorUserId: "user-1",
         ticketId: "ticket-1",
         ticketNumber: "HC-000001",
@@ -159,14 +153,12 @@ describe("TicketService", () => {
       status: HelpTicketStatus.PENDING,
       category: HelpTicketCategory.OTHER,
       subject: "Billing question",
-      ownerType: HelpTicketOwnerType.CUSTOMER,
-      ownerId: "customer-1",
+      customerId: "customer-1",
     });
 
     await service.create(
       {
-        ownerType: HelpTicketOwnerType.CUSTOMER,
-        ownerId: "customer-1",
+        customerId: "customer-1",
         subject: "Billing question",
         description: "I was charged twice.",
       },
@@ -176,8 +168,7 @@ describe("TicketService", () => {
     expect(events.emit).toHaveBeenCalledWith(
       TICKET_EVENT.CREATED,
       expect.objectContaining({
-        ownerType: HelpTicketOwnerType.CUSTOMER,
-        ownerId: "customer-1",
+        customerId: "customer-1",
         ticketId: "ticket-2",
       }),
     );
@@ -187,8 +178,7 @@ describe("TicketService", () => {
     const resolved = {
       id: "ticket-1",
       status: HelpTicketStatus.RESOLVED,
-      ownerType: HelpTicketOwnerType.CUSTOMER,
-      ownerId: "customer-1",
+      customerId: "customer-1",
       ticketNumber: "HC-000001",
       subject: "Wallet issue",
       description: "My wallet balance looks incorrect after a trip.",
@@ -202,8 +192,7 @@ describe("TicketService", () => {
     tickets.findById.mockResolvedValue({
       id: "ticket-1",
       status: HelpTicketStatus.IN_PROGRESS,
-      ownerType: HelpTicketOwnerType.CUSTOMER,
-      ownerId: "customer-1",
+      customerId: "customer-1",
       ticketNumber: "HC-000001",
       subject: "Wallet issue",
     });
@@ -217,8 +206,7 @@ describe("TicketService", () => {
     expect(events.emit).toHaveBeenCalledWith(
       TICKET_EVENT.STATUS_UPDATED,
       expect.objectContaining({
-        ownerType: HelpTicketOwnerType.CUSTOMER,
-        ownerId: "customer-1",
+        customerId: "customer-1",
         actorUserId: "admin-user",
         from: HelpTicketStatus.IN_PROGRESS,
         to: HelpTicketStatus.RESOLVED,
@@ -246,8 +234,7 @@ describe("TicketService", () => {
     tickets.findById.mockResolvedValue({
       id: "ticket-1",
       status: HelpTicketStatus.IN_PROGRESS,
-      ownerType: HelpTicketOwnerType.CUSTOMER,
-      ownerId: "customer-1",
+      customerId: "customer-1",
       ticketNumber: "HC-000001",
       subject: "Wallet issue",
     });
@@ -270,8 +257,7 @@ describe("TicketService", () => {
     const updated = {
       id: "ticket-1",
       status: HelpTicketStatus.OPEN,
-      ownerType: HelpTicketOwnerType.CUSTOMER,
-      ownerId: "customer-1",
+      customerId: "customer-1",
       ticketNumber: "HC-000001",
       subject: "Wallet issue",
       updatedAt: new Date("2026-08-24T00:00:00.000Z"),
@@ -280,8 +266,7 @@ describe("TicketService", () => {
     tickets.findById.mockResolvedValue({
       id: "ticket-1",
       status: HelpTicketStatus.PENDING,
-      ownerType: HelpTicketOwnerType.CUSTOMER,
-      ownerId: "customer-1",
+      customerId: "customer-1",
       ticketNumber: "HC-000001",
       subject: "Wallet issue",
     });
@@ -306,8 +291,7 @@ describe("TicketService", () => {
       id: "ticket-1",
       ticketNumber: "HC-000001",
       status: HelpTicketStatus.CLOSED,
-      ownerType: HelpTicketOwnerType.CUSTOMER,
-      ownerId: "customer-1",
+      customerId: "customer-1",
     });
     tickets.delete.mockResolvedValue({
       id: "ticket-1",
@@ -339,16 +323,14 @@ describe("TicketService", () => {
       .mockResolvedValueOnce({
         id: "ticket-1",
         status: HelpTicketStatus.OPEN,
-        ownerType: HelpTicketOwnerType.CUSTOMER,
-        ownerId: "customer-1",
+        customerId: "customer-1",
         ticketNumber: "HC-000001",
         subject: "Wallet issue",
       })
       .mockResolvedValueOnce({
         id: "ticket-1",
         status: HelpTicketStatus.OPEN,
-        ownerType: HelpTicketOwnerType.CUSTOMER,
-        ownerId: "customer-1",
+        customerId: "customer-1",
         ticketNumber: "HC-000001",
         subject: "Wallet issue",
         messages: [],
@@ -366,8 +348,7 @@ describe("TicketService", () => {
     expect(events.emit).toHaveBeenCalledWith(
       TICKET_EVENT.REPLIED,
       expect.objectContaining({
-        ownerType: HelpTicketOwnerType.CUSTOMER,
-        ownerId: "customer-1",
+        customerId: "customer-1",
         actorUserId: "admin-user",
         ticketNumber: "HC-000001",
         messageId: "msg-1",

@@ -175,6 +175,7 @@ describe("Booking (e2e)", () => {
         bookingNumber: `BK-DRAFT-${stamp}`,
         bookingType: BookingType.ONE_WAY,
         status: BookingStatus.DRAFT,
+        totalPrice: 40,
         pricing: { total: 40 },
         address: {
           pickup: { address: "A" },

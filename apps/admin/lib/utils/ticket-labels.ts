@@ -1,4 +1,4 @@
-import type { TicketCategory, TicketPriority, TicketStatus } from "@/lib/types/tickets";
+import type { TicketCategory, TicketPriority, TicketStatus, Ticket } from "@/lib/types/tickets";
 
 export const STATUS_LABELS: Record<TicketStatus, string> = {
   PENDING: "Pending",
@@ -29,13 +29,9 @@ export const PRIORITY_OPTIONS = (Object.keys(PRIORITY_LABELS) as TicketPriority[
 
 export const CATEGORY_LABELS: Record<TicketCategory, string> = {
   ACCOUNT: "Account",
+  BOOKING: "Booking",
   PAYMENTS: "Payments",
-  TRIPS: "Trips",
-  VEHICLE: "Vehicle",
-  DOCUMENTS: "Documents",
   APP: "App",
-  PASSENGER_NO_SHOW: "Passenger no-show",
-  FLAT_TIRE: "Flat tire",
   OTHER: "Other",
 };
 
@@ -112,4 +108,11 @@ export function priorityBadgeColor(priority: TicketPriority) {
     default:
       return "secondary" as const;
   }
+}
+
+/** Owner display name and email, from the linked customer account. */
+export function ticketOwner(ticket: Pick<Ticket, "customer">) {
+  const user = ticket.customer?.user;
+  const name = [user?.firstName, user?.lastName].filter(Boolean).join(" ").trim();
+  return { name: name || "—", email: user?.email || "—" };
 }

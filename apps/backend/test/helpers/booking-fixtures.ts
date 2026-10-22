@@ -46,8 +46,6 @@ export function buildBookingPayload(
       basePrice: 55.55,
       total: 55.55,
     },
-    successUrl: "http://localhost:3001/booking/success",
-    cancelUrl: "http://localhost:3001/booking/cancel",
     ...(params.luggageTypeId
       ? {
           luggage: [{ luggageTypeId: params.luggageTypeId, quantity: 1 }],
@@ -92,5 +90,6 @@ export async function cleanupBookingTables(prisma: PrismaService): Promise<void>
   await prisma.notification.deleteMany();
   await prisma.bookingLuggage.deleteMany();
   await prisma.booking.deleteMany();
-  await prisma.bookingSequence.deleteMany();
+  await prisma.bookingExtraService.deleteMany();
+  await prisma.sequence.deleteMany();
 }

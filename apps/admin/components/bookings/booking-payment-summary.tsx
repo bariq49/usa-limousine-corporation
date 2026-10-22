@@ -4,7 +4,7 @@ import { formatPrice } from "@usa-limousine-corporation/ui/utils/price";
 import type { ExtraServiceItem, Item, Pricing } from "@/lib/types/bookings";
 
 type Props = {
-  booking: Pick<Item, "pricing" | "extraServices" | "luggage">;
+  booking: Pick<Item, "pricing" | "totalPrice" | "extraServices" | "luggage">;
 };
 
 function row(label: string, amount: number) {
@@ -22,16 +22,11 @@ function serviceRows(services: ExtraServiceItem[] | null | undefined) {
   return (services ?? [])
     .filter((item) => item.quantity > 0)
     .map((item) => {
-      const amount = Number(item.price ?? 0) * item.quantity;
-      const label =
-        item.quantity > 1
-          ? `${item.name || "Extra service"} ×${item.quantity}`
-          : item.name || "Extra service";
+      const amount = item.unitPrice * item.quantity;
+      const name = item.extraService?.name || "Extra service";
+      const label = item.quantity > 1 ? `${name} ×${item.quantity}` : name;
       return (
-        <div
-          key={`${item.extraServiceId}-${item.name}`}
-          className="flex items-center justify-between gap-4"
-        >
+        <div key={item.id} className="flex items-center justify-between gap-4">
           <span className="text-default-600">{label}</span>
           <span className="font-semibold text-default-900">{formatPrice({ price: amount })}</span>
         </div>
@@ -42,7 +37,7 @@ function serviceRows(services: ExtraServiceItem[] | null | undefined) {
 export function BookingPaymentSummary(props: Props) {
   const pricing = (props.booking.pricing ?? {}) as Pricing;
   const luggage = (props.booking.luggage ?? []).filter(
-    (item) => item.quantity > 0 && item.luggageType?.isSpecial,
+    (item) => item.quantity > 0 && item.unitPrice > 0,
   );
 
   return (
@@ -54,7 +49,7 @@ export function BookingPaymentSummary(props: Props) {
         {row("Airport Pickup", Number(pricing.airportPickupPrice ?? 0))}
         {serviceRows(props.booking.extraServices)}
         {luggage.map((item) => {
-          const amount = Number(item.luggageType?.price ?? 0) * item.quantity;
+          const amount = item.unitPrice * item.quantity;
           const label =
             item.quantity > 1
               ? `${item.luggageType?.name || "Luggage"} ×${item.quantity}`
@@ -74,7 +69,7 @@ export function BookingPaymentSummary(props: Props) {
         <div className="mt-1 flex items-center justify-between gap-4 border-t border-border pt-3">
           <span className="text-base font-bold text-default-900">Total</span>
           <span className="text-lg font-bold text-default-900">
-            {formatPrice({ price: pricing.total })}
+            {formatPrice({ price: props.booking.totalPrice })}
           </span>
         </div>
       </div>

@@ -54,22 +54,21 @@ export type MeetAndGreet = {
   signName?: string | undefined;
 };
 
+/** Extra service on a booking; `unitPrice` is the price charged at booking time. */
 export type ExtraServiceItem = {
+  id: string;
   extraServiceId: string;
   quantity: number;
-  price?: number | undefined;
-  name?: string | undefined;
+  unitPrice: number;
+  extraService?: { id: string; name: string; type: string } | null;
 };
 
+/** Luggage on a booking; `unitPrice` is the price charged at booking time. */
 export type BookingLuggageItem = {
   id: string;
   quantity: number;
-  luggageType?: {
-    id: string;
-    name: string;
-    isSpecial?: boolean | undefined;
-    price?: number | string | null | undefined;
-  } | null;
+  unitPrice: number;
+  luggageType?: { id: string; name: string } | null;
 };
 
 export type Item = {
@@ -79,6 +78,8 @@ export type Item = {
   bookingNumber: string;
   status: BookingStatus;
   bookingType: BookingType;
+  totalPrice: number;
+  currency: string;
   pricing: Pricing;
   address: Address;
   passenger: Passenger;
@@ -86,7 +87,7 @@ export type Item = {
   flightDetails?: FlightDetails | null | undefined;
   meetAndGreet?: MeetAndGreet | null | undefined;
   extraServices?: ExtraServiceItem[] | null | undefined;
-  driverNotes?: string | null | undefined;
+  notes?: string | null | undefined;
   confirmedAt?: string | null | undefined;
   completedAt?: string | null | undefined;
   cancelledAt?: string | null | undefined;

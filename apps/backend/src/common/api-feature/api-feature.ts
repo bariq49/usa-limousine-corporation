@@ -126,10 +126,10 @@ export class APIFeature {
     const orConditions = searchFields.map((field) =>
       field
         .split(".")
-        .reduceRight<Record<string, unknown>>(
-          (inner, key) => ({ [key]: inner }),
-          { contains: term, mode: "insensitive" },
-        ),
+        .reduceRight<Record<string, unknown>>((inner, key) => ({ [key]: inner }), {
+          contains: term,
+          mode: "insensitive",
+        }),
     );
 
     const existingOr = this.where["OR"];

@@ -79,12 +79,7 @@ export function VehicleCategoryForm(props: Props) {
       })),
       { shouldValidate: false },
     );
-  }, [
-    existingCapacities,
-    form,
-    loadingStandard,
-    standardData?.data,
-  ]);
+  }, [existingCapacities, form, loadingStandard, standardData?.data]);
 
   const isPending = pending || upload.isPending;
   const standardError =

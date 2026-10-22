@@ -2,12 +2,7 @@ import type { ComponentType } from "react";
 
 export const RoleKey = {
   SUPER_ADMIN: "SUPER_ADMIN",
-  EMPLOYEE: "EMPLOYEE",
-  AGENCY_OWNER: "AGENCY_OWNER",
-  AGENCY_STAFF: "AGENCY_STAFF",
   CUSTOMER: "CUSTOMER",
-  BUSINESS_CUSTOMER: "BUSINESS_CUSTOMER",
-  VIP_CUSTOMER: "VIP_CUSTOMER",
 } as const;
 
 export type RoleKey = (typeof RoleKey)[keyof typeof RoleKey];

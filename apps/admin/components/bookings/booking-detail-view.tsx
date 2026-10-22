@@ -103,9 +103,11 @@ export function BookingDetailView(props: Props) {
   const canCancel = booking.status === "PENDING" || booking.status === "CONFIRMED";
   const canComplete = booking.status === "CONFIRMED";
   const luggageItems = (booking.luggage ?? []).filter((item) => item.quantity > 0);
-  const childSeats = (booking.extraServices ?? []).filter((item) => /seat/i.test(item.name || ""));
+  const childSeats = (booking.extraServices ?? []).filter(
+    (item) => item.extraService?.type === "CHILD_SEAT",
+  );
   const otherExtras = (booking.extraServices ?? []).filter(
-    (item) => !/seat/i.test(item.name || ""),
+    (item) => item.extraService?.type !== "CHILD_SEAT",
   );
   const meetAndGreet = booking.meetAndGreet;
   const flight = booking.flightDetails;
@@ -272,9 +274,9 @@ export function BookingDetailView(props: Props) {
                   {childSeats.map((item) => (
                     <DetailItem
                       key={`seat-${item.extraServiceId}`}
-                      icon={preferenceIcon(getSeatIcon(item.name))}
+                      icon={preferenceIcon(getSeatIcon(item.extraService?.name))}
                     >
-                      {item.name || "Child seat"}: {item.quantity}
+                      {item.extraService?.name || "Child seat"}: {item.quantity}
                     </DetailItem>
                   ))}
                   {luggageItems.map((item) => {
@@ -286,10 +288,10 @@ export function BookingDetailView(props: Props) {
                     );
                   })}
                   {otherExtras
-                    .filter((item) => !/meet/i.test(item.name || ""))
+                    .filter((item) => item.extraService?.type !== "MEET_AND_GREET")
                     .map((item) => (
                       <DetailItem key={`extra-${item.extraServiceId}`} icon={preferenceIcon(Tag)}>
-                        {item.name || "Extra"}: {item.quantity}
+                        {item.extraService?.name || "Extra"}: {item.quantity}
                       </DetailItem>
                     ))}
                   {flight?.flightName ? (
@@ -317,14 +319,10 @@ export function BookingDetailView(props: Props) {
             </div>
 
             <div className="flex flex-col gap-4 lg:col-span-2">
-              {booking.driverNotes ? (
+              {booking.notes ? (
                 <section className="rounded-md bg-default-100 p-4">
-                  <h3 className="font-bold text-default-900">
-                    Notes & Special Instructions
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-default-700">
-                    {booking.driverNotes}
-                  </p>
+                  <h3 className="font-bold text-default-900">Notes & Special Instructions</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-default-700">{booking.notes}</p>
                 </section>
               ) : null}
 
