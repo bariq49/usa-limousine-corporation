@@ -139,8 +139,9 @@ export class BookingService {
   }
 
   /** Platform-wide booking analytics for admins. */
+  /** Platform-wide, or one customer's when `userId` is given (admin). */
   analytics(query: AnalyticsQueryDto) {
-    return this.buildAnalytics(query.year ?? new Date().getUTCFullYear());
+    return this.buildAnalytics(query.year ?? new Date().getUTCFullYear(), query.userId);
   }
 
   /** The signed-in customer's own booking analytics. */

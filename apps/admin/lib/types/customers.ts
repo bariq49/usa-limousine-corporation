@@ -1,6 +1,3 @@
-import type { BookingStatus, BookingType } from "./bookings";
-import type { TicketCategory, TicketStatus } from "./tickets";
-
 export type CustomerType = "NORMAL" | "VIP" | "CORPORATE";
 
 export type CustomerUser = {
@@ -28,25 +25,6 @@ export type Customer = {
 
 export type CustomerDetail = Customer & {
   settings?: { email: boolean; notification: boolean } | null;
-  user: CustomerUser & {
-    bookings: {
-      id: string;
-      bookingNumber: string;
-      status: BookingStatus;
-      bookingType: BookingType;
-      totalPrice: number;
-      currency: string;
-      createdAt: string;
-    }[];
-  };
-  helpTickets: {
-    id: string;
-    ticketNumber: string;
-    subject: string;
-    status: TicketStatus;
-    category: TicketCategory;
-    createdAt: string;
-  }[];
 };
 
 export type CustomerQuery = {

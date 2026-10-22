@@ -6,7 +6,7 @@ import { Card, CardContent } from "@usa-limousine-corporation/ui/components/card
 import { DataTable } from "@usa-limousine-corporation/ui/data-table/data-table";
 import { useBookings, useDeleteBooking, useBulkDeleteBookings } from "@/hooks/queries/use-bookings";
 import type { Item } from "@/lib/types/bookings";
-import { getColumns } from "@/components/columns/booking-columns";
+import { getColumns } from "@usa-limousine-corporation/ui/bookings/booking-columns";
 
 export default function BookingsPage() {
   const [page, setPage] = useState(1);

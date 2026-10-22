@@ -1,4 +1,4 @@
-import { Skeleton } from "@usa-limousine-corporation/ui/components/skeleton";
+import { Skeleton } from "../components/skeleton";
 
 export function BookingDetailSkeleton() {
   return (

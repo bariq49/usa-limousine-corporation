@@ -332,6 +332,11 @@ export class QueryDto extends ApiFeatureQueryDto {
   @IsOptional()
   @IsEnum(BookingType)
   bookingType?: BookingType;
+
+  /** Admin only: one customer's bookings (by user id). Ignored on the customer endpoint. */
+  @IsOptional()
+  @IsString()
+  userId?: string;
 }
 
 export class AnalyticsQueryDto {
@@ -342,4 +347,9 @@ export class AnalyticsQueryDto {
   @Min(2000)
   @Max(2100)
   year?: number;
+
+  /** Admin only: stats for one customer (by user id). Ignored on the customer endpoint. */
+  @IsOptional()
+  @IsString()
+  userId?: string;
 }

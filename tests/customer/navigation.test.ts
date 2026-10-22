@@ -6,6 +6,15 @@ describe("customer navigation", () => {
     const hrefs = navigation.flatMap((section) =>
       section.groups.flatMap((group) => group.items.map((item) => item.href)),
     );
-    expect(hrefs.sort()).toEqual(["/dashboard", "/help-center", "/profile-setting"]);
+    expect(hrefs.sort()).toEqual([
+      "/bookings",
+      "/cancelled-bookings",
+      "/completed-bookings",
+      "/confirmed-bookings",
+      "/dashboard",
+      "/help-center",
+      "/pending-bookings",
+      "/profile-setting",
+    ]);
   });
 });

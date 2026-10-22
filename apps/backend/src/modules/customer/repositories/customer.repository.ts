@@ -85,7 +85,7 @@ export class CustomerRepository {
     });
   }
 
-  /** Admin detail with settings and the latest bookings and tickets. */
+  /** Admin detail with settings and counts (bookings/tickets load as paginated lists). */
   findById(id: string) {
     return this.prisma.customer.findFirst({
       where: { id, deletedAt: null },
@@ -102,37 +102,10 @@ export class CustomerRepository {
             isActive: true,
             createdAt: true,
             _count: { select: { bookings: true } },
-            bookings: {
-              where: { deletedAt: null },
-              orderBy: { createdAt: "desc" },
-              take: 10,
-              select: {
-                id: true,
-                bookingNumber: true,
-                status: true,
-                bookingType: true,
-                totalPrice: true,
-                currency: true,
-                createdAt: true,
-              },
-            },
           },
         },
         settings: { select: { email: true, notification: true } },
         _count: { select: { helpTickets: true } },
-        helpTickets: {
-          where: { deletedAt: null },
-          orderBy: { createdAt: "desc" },
-          take: 10,
-          select: {
-            id: true,
-            ticketNumber: true,
-            subject: true,
-            status: true,
-            category: true,
-            createdAt: true,
-          },
-        },
       },
     });
   }

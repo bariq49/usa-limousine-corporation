@@ -39,7 +39,9 @@ export class BookingRepository {
 
     const feature = new APIFeature(query, {
       initialFilter,
-      filterFields: ["status", "bookingType"],
+      // Customers are pinned to their own userId; only admins may filter by it.
+      filterFields: userId ? ["status", "bookingType"] : ["status", "bookingType", "userId"],
+      excludeQueryKeys: userId ? ["userId"] : [],
       search: {
         searchFields: ["bookingNumber"],
       },

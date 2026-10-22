@@ -1,7 +1,7 @@
 "use client";
 
-import { formatPrice } from "@usa-limousine-corporation/ui/utils/price";
-import type { ExtraServiceItem, Item, Pricing } from "@/lib/types/bookings";
+import { formatPrice } from "../utils/price";
+import type { ExtraServiceItem, Item, Pricing } from "./types";
 
 type Props = {
   booking: Pick<Item, "pricing" | "totalPrice" | "extraServices" | "luggage">;

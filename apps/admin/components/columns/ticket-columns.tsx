@@ -161,16 +161,18 @@ export const getColumns = (options?: ColumnOptions): ColumnDef<Ticket>[] => [
           >
             <Eye className="h-4 w-4" />
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            color="destructive"
-            className="h-8 w-8 text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition-colors"
-            onClick={() => options?.onDelete?.(item)}
-            title="Delete ticket"
-          >
-            <Trash className="h-4 w-4" />
-          </Button>
+          {options?.onDelete ? (
+            <Button
+              variant="ghost"
+              size="icon"
+              color="destructive"
+              className="h-8 w-8 text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition-colors"
+              onClick={() => options?.onDelete?.(item)}
+              title="Delete ticket"
+            >
+              <Trash className="h-4 w-4" />
+            </Button>
+          ) : null}
         </div>
       );
     },

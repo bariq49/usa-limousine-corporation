@@ -20,6 +20,7 @@
     "./constants": "./src/constants/index.ts",
     "./charts/*": "./src/charts/*.tsx",
     "./dashboard/*": "./src/dashboard/*.tsx",
+    "./bookings/*": "./src/bookings/*.tsx",
     "./store": "./src/store/index.ts",
     "./config/themes": "./src/config/themes.ts"
   },
@@ -69,6 +70,7 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@types/google.maps": "^3.66.6",
     "@types/react": "^19.0.12",
     "@types/react-dom": "^19.0.4",
     "next": "^15.2.4",

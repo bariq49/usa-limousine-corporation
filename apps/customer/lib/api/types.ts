@@ -119,6 +119,18 @@ export type TicketMessage = {
   author?: { id: string; email: string } | null;
 };
 
+export type TicketEvent = {
+  id: string;
+  event: string;
+  actorUserId: string | null;
+  previousStatus?: TicketStatus | null;
+  newStatus?: TicketStatus | null;
+  previousPriority?: TicketPriority | null;
+  newPriority?: TicketPriority | null;
+  note?: string | null;
+  createdAt: string;
+};
+
 export type Ticket = {
   id: string;
   ticketNumber: string;
@@ -133,6 +145,7 @@ export type Ticket = {
   createdAt: string;
   updatedAt: string;
   messages?: TicketMessage[];
+  events?: TicketEvent[];
 };
 
 export type TicketList = {
@@ -157,5 +170,7 @@ export type TicketQuery = {
   page?: number | undefined;
   limit?: number | undefined;
   status?: TicketStatus | undefined;
+  priority?: TicketPriority | undefined;
+  category?: TicketCategory | undefined;
   search?: string | undefined;
 };

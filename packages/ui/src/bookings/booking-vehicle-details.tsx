@@ -1,8 +1,8 @@
 "use client";
 
-import { Car, UserList } from "@usa-limousine-corporation/ui/svg";
-import { DetailItem } from "@/components/bookings/detail-item";
-import type { Item } from "@/lib/types/bookings";
+import { Car, UserList } from "../svg";
+import { DetailItem } from "./detail-item";
+import type { Item } from "./types";
 
 type Props = {
   vehicleCategory?: Item["vehicleCategory"] | undefined;

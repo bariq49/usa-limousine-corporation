@@ -21,7 +21,6 @@ model Booking {
   status             BookingStatus @default(DRAFT)
   bookingType        BookingType   @default(ONE_WAY)
   totalPrice         Decimal       @db.Decimal(12, 2)
-  currency           String        @default("USD") @db.VarChar(3)
   pricing            Json
   address            Json
   passenger          Json

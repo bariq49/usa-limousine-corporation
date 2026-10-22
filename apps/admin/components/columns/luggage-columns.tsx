@@ -9,21 +9,8 @@ import { DataTableColumnHeader } from "@usa-limousine-corporation/ui/data-table/
 import { Checkbox } from "@usa-limousine-corporation/ui/components/checkbox";
 import { Badge } from "@usa-limousine-corporation/ui/components/badge";
 import { Button } from "@usa-limousine-corporation/ui/components/button";
-import {
-  Bicycle,
-  CabinBag,
-  GolfBag,
-  LargeCase,
-  Luggage,
-  MediumCase,
-  Ski,
-  Stroller,
-  Water,
-  Wheelchair,
-  WinterSport,
-  Trash,
-  Pencil,
-} from "@usa-limousine-corporation/ui/svg";
+import { Trash, Pencil } from "@usa-limousine-corporation/ui/svg";
+import { getLuggageIcon } from "@usa-limousine-corporation/ui/bookings/luggage-icon";
 import {
   Tooltip,
   TooltipContent,
@@ -33,20 +20,7 @@ import { formatDate } from "@usa-limousine-corporation/ui/utils/date";
 import { formatPrice } from "@usa-limousine-corporation/ui/utils/price";
 import type { Item } from "@/lib/types/luggage";
 
-export function getLuggageIcon(name?: string) {
-  const key = (name || "").toLowerCase();
-  if (key.includes("large")) return LargeCase;
-  if (key.includes("medium")) return MediumCase;
-  if (key.includes("cabin") || key.includes("hand") || key.includes("carry")) return CabinBag;
-  if (key.includes("bicycle") || key.includes("bike")) return Bicycle;
-  if (key.includes("stroller") || key.includes("baby")) return Stroller;
-  if (key.includes("ski")) return Ski;
-  if (key.includes("winter") || key.includes("snow")) return WinterSport;
-  if (key.includes("golf")) return GolfBag;
-  if (key.includes("wheelchair") || key.includes("accessible")) return Wheelchair;
-  if (key.includes("water")) return Water;
-  return Luggage;
-}
+export { getLuggageIcon };
 
 export type LuggageColumnOptions = {
   onDelete?: (item: Item) => void;

@@ -10,6 +10,8 @@ export const getTickets = (params?: TicketQuery) => {
       page: params?.page,
       limit: params?.limit,
       status: params?.status,
+      priority: params?.priority,
+      category: params?.category,
       search: params?.search,
     },
   });

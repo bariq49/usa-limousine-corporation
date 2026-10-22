@@ -1,4 +1,4 @@
-import type { TicketCategory, TicketStatus } from "@/lib/api/types";
+import type { TicketCategory, TicketPriority, TicketStatus } from "@/lib/api/types";
 
 export const STATUS_LABELS: Record<TicketStatus, string> = {
   PENDING: "Pending",
@@ -34,3 +34,15 @@ export const CATEGORY_LABELS = Object.fromEntries(
 export function canReply(status: TicketStatus) {
   return status !== "RESOLVED" && status !== "CLOSED";
 }
+
+export const PRIORITY_LABELS: Record<TicketPriority, string> = {
+  LOW: "Low",
+  MEDIUM: "Medium",
+  HIGH: "High",
+};
+
+export const PRIORITY_COLORS: Record<TicketPriority, "secondary" | "warning" | "destructive"> = {
+  LOW: "secondary",
+  MEDIUM: "warning",
+  HIGH: "destructive",
+};

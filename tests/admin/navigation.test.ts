@@ -8,6 +8,7 @@ describe("admin navigation", () => {
     );
     expect(hrefs.sort()).toEqual([
       "/analytics",
+      "/bookings",
       "/cancelled-bookings",
       "/categories",
       "/completed-bookings",

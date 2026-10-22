@@ -5,13 +5,14 @@ import { useParams } from "next/navigation";
 import { Breadcrumbs } from "@usa-limousine-corporation/ui/layout/breadcrumbs";
 import { Button } from "@usa-limousine-corporation/ui/components/button";
 import { Card, CardContent } from "@usa-limousine-corporation/ui/components/card";
-import { BookingDetailView } from "@/components/bookings/booking-detail-view";
-import { BookingDetailSkeleton } from "@/components/skeletons/booking-detail-skeleton";
+import { BookingDetailView } from "@usa-limousine-corporation/ui/bookings/booking-detail-view";
+import { BookingDetailSkeleton } from "@usa-limousine-corporation/ui/bookings/booking-detail-skeleton";
+import { BookingAdminActions } from "@/components/bookings-admin-actions";
 import { useBooking } from "@/hooks/queries/use-bookings";
 
 const crumbs = [
   { label: "Home", href: "/analytics" },
-  { label: "Booking", href: "/pending-bookings" },
+  { label: "Bookings", href: "/bookings" },
   { label: "Detail" },
 ];
 
@@ -39,7 +40,7 @@ export default function BookingDetailPage() {
               This booking may have been removed or the link is invalid.
             </p>
             <Button asChild size="sm" variant="outline">
-              <Link href="/pending-bookings">Back to bookings</Link>
+              <Link href="/bookings">Back to bookings</Link>
             </Button>
           </CardContent>
         </Card>
@@ -50,7 +51,7 @@ export default function BookingDetailPage() {
   return (
     <div className="space-y-4">
       <Breadcrumbs items={crumbs} />
-      <BookingDetailView booking={booking} />
+      <BookingDetailView booking={booking} actions={<BookingAdminActions booking={booking} />} />
     </div>
   );
 }

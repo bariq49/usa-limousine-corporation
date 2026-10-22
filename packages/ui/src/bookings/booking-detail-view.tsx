@@ -1,10 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import type { ComponentType, SVGProps } from "react";
+import type { ComponentType, ReactNode, SVGProps } from "react";
 import { ArrowLeft, CheckCircle2, Clock, XCircle } from "lucide-react";
-import { Badge } from "@usa-limousine-corporation/ui/components/badge";
-import { Button } from "@usa-limousine-corporation/ui/components/button";
+import { Badge } from "../components/badge";
+import { Button } from "../components/button";
 import {
   Calendar,
   CalendarCheck,
@@ -16,30 +16,25 @@ import {
   UserList,
   UserPlus,
   UserSign,
-} from "@usa-limousine-corporation/ui/svg";
-import { BookingCustomerDetails } from "@/components/bookings/booking-customer-details";
-import { BookingLocationDetails } from "@/components/bookings/booking-location-details";
-import { BookingPaymentSummary } from "@/components/bookings/booking-payment-summary";
-import { BookingRouteMap } from "@/components/bookings/booking-route-map";
-import { BookingVehicleDetails } from "@/components/bookings/booking-vehicle-details";
-import { DetailItem } from "@/components/bookings/detail-item";
-import { getLuggageIcon } from "@/components/columns/luggage-columns";
-import {
-  useCancelBooking,
-  useCompleteBooking,
-  useConfirmBooking,
-} from "@/hooks/queries/use-bookings";
-import { formatDate, formatTime } from "@usa-limousine-corporation/ui/utils/date";
-import { formatDistance } from "@usa-limousine-corporation/ui/utils/distance";
-import { formatDuration } from "@usa-limousine-corporation/ui/utils/duration";
-import type { Item } from "@/lib/types/bookings";
+} from "../svg";
+import { BookingCustomerDetails } from "./booking-customer-details";
+import { BookingLocationDetails } from "./booking-location-details";
+import { BookingPaymentSummary } from "./booking-payment-summary";
+import { BookingRouteMap } from "./booking-route-map";
+import { BookingVehicleDetails } from "./booking-vehicle-details";
+import { DetailItem } from "./detail-item";
+import { getLuggageIcon } from "./luggage-icon";
+import { formatDate, formatTime } from "../utils/date";
+import { formatDistance } from "../utils/distance";
+import { formatDuration } from "../utils/duration";
+import type { Item } from "./types";
 import {
   BOOKING_STATUS_DESCRIPTIONS,
   BOOKING_STATUS_HEADINGS,
   BOOKING_STATUS_LABELS,
   BOOKING_TYPE_LABELS,
   bookingStatusBadgeColor,
-} from "@/lib/utils/booking-labels";
+} from "./labels";
 
 type SvgIcon = ComponentType<SVGProps<SVGSVGElement>>;
 
@@ -87,21 +82,15 @@ function BookingStatusIcon({ status }: { status: Item["status"] }) {
 
 type Props = {
   booking: Item;
+  /** Buttons shown next to the header (e.g. Confirm / Complete / Cancel). */
+  actions?: ReactNode;
 };
 
 export function BookingDetailView(props: Props) {
   const { booking } = props;
   const router = useRouter();
-  const confirmMutation = useConfirmBooking();
-  const cancelMutation = useCancelBooking();
-  const completeMutation = useCompleteBooking();
-  const isMutating =
-    confirmMutation.isPending || cancelMutation.isPending || completeMutation.isPending;
 
   const isHourly = booking.bookingType === "HOURLY";
-  const canConfirm = booking.status === "PENDING";
-  const canCancel = booking.status === "PENDING" || booking.status === "CONFIRMED";
-  const canComplete = booking.status === "CONFIRMED";
   const luggageItems = (booking.luggage ?? []).filter((item) => item.quantity > 0);
   const childSeats = (booking.extraServices ?? []).filter(
     (item) => item.extraService?.type === "CHILD_SEAT",
@@ -142,45 +131,9 @@ export function BookingDetailView(props: Props) {
           </Badge>
         </div>
 
-        <div className="flex shrink-0 items-center gap-2">
-          {canConfirm ? (
-            <Button
-              type="button"
-              size="sm"
-              className="h-10 px-3 sm:px-4"
-              disabled={isMutating}
-              isLoading={confirmMutation.isPending}
-              onClick={() => confirmMutation.mutate(booking.id)}
-            >
-              Confirm
-            </Button>
-          ) : null}
-          {canComplete ? (
-            <Button
-              type="button"
-              size="sm"
-              className="h-10 px-3 sm:px-4"
-              disabled={isMutating}
-              isLoading={completeMutation.isPending}
-              onClick={() => completeMutation.mutate(booking.id)}
-            >
-              Complete
-            </Button>
-          ) : null}
-          {canCancel ? (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className="h-10 px-3 sm:px-4"
-              disabled={isMutating}
-              isLoading={cancelMutation.isPending}
-              onClick={() => cancelMutation.mutate({ id: booking.id })}
-            >
-              Cancel
-            </Button>
-          ) : null}
-        </div>
+        {props.actions ? (
+          <div className="flex shrink-0 items-center gap-2">{props.actions}</div>
+        ) : null}
       </div>
 
       <div className="overflow-hidden rounded-md border border-border bg-card">

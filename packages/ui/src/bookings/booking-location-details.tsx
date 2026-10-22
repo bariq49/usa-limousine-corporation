@@ -1,7 +1,7 @@
 "use client";
 
 import { Clock } from "lucide-react";
-import { Calendar, Location } from "@usa-limousine-corporation/ui/svg";
+import { Calendar, Location } from "../svg";
 
 type Props = {
   pickupLocation?: string | undefined;

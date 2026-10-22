@@ -1,7 +1,12 @@
-import { useQuery } from "@tanstack/react-query";
-import { getBookingAnalytics } from "@/lib/api/bookings";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
+import type { Query } from "@usa-limousine-corporation/ui/bookings/types";
+import { cancelBooking, getBooking, getBookingAnalytics, getBookings } from "@/lib/api/bookings";
 
 export const bookingQueryKeys = {
+  all: ["bookings"] as const,
+  list: (params?: Query) => ["bookings", "list", params] as const,
+  detail: (id: string) => ["bookings", "detail", id] as const,
   analytics: (year: number) => ["bookings", "analytics", year] as const,
 };
 
@@ -9,5 +14,35 @@ export const useBookingAnalytics = (year: number) => {
   return useQuery({
     queryKey: bookingQueryKeys.analytics(year),
     queryFn: () => getBookingAnalytics(year),
+  });
+};
+
+export const useBookings = (params?: Query) => {
+  return useQuery({
+    queryKey: bookingQueryKeys.list(params),
+    queryFn: () => getBookings(params),
+  });
+};
+
+export const useBooking = (id: string) => {
+  return useQuery({
+    queryKey: bookingQueryKeys.detail(id),
+    queryFn: () => getBooking(id),
+    enabled: Boolean(id),
+  });
+};
+
+export const useCancelBooking = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason?: string }) => cancelBooking(id, reason),
+    onSuccess: () => {
+      toast.success("Booking cancelled");
+      return queryClient.invalidateQueries({ queryKey: bookingQueryKeys.all });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to cancel booking");
+    },
   });
 };

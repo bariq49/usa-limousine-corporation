@@ -1,8 +1,8 @@
 "use client";
 
-import { Mail, Phone, User } from "@usa-limousine-corporation/ui/svg";
-import { DetailItem } from "@/components/bookings/detail-item";
-import type { Passenger } from "@/lib/types/bookings";
+import { Mail, Phone, User } from "../svg";
+import { DetailItem } from "./detail-item";
+import type { Passenger } from "./types";
 
 type Props = {
   passenger?: Passenger | null | undefined;

@@ -57,6 +57,12 @@ export const navigation: MenuSection[] = [
         id: "booking-group",
         items: [
           {
+            id: "all-bookings",
+            label: "All Bookings",
+            href: "/bookings",
+            icon: Calendar,
+          },
+          {
             id: "pending-bookings",
             label: "Pending Bookings",
             href: "/pending-bookings",

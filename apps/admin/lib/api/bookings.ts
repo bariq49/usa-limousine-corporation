@@ -7,8 +7,10 @@ export const getBookings = (params?: Query) => {
   return http.get<ListResponse>(API_ROUTES.BOOKINGS, { params });
 };
 
-export const getBookingAnalytics = (year: number) => {
-  return http.get<BookingAnalytics>(`${API_ROUTES.BOOKINGS}/analytics`, { params: { year } });
+export const getBookingAnalytics = (year: number, userId?: string) => {
+  return http.get<BookingAnalytics>(`${API_ROUTES.BOOKINGS}/analytics`, {
+    params: { year, userId },
+  });
 };
 
 export const getBooking = (id: string) => {

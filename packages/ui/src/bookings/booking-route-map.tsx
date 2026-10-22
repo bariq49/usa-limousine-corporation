@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { loadGoogleMaps } from "@/lib/google-maps-loader";
+import { loadGoogleMaps } from "./google-maps-loader";
 
 const ROUTE_COLOR = "#FC7C1E";
 const CALLOUT_ACCENT = "#FC7C1E";

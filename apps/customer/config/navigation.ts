@@ -1,5 +1,16 @@
 import type { MenuSection } from "@usa-limousine-corporation/ui/types/navigation";
-import { Dashboard, Device, Graph, Support, User } from "@usa-limousine-corporation/ui/svg";
+import {
+  Calendar,
+  CalendarCheck,
+  CalendarCheck2,
+  CalendarClock,
+  CalendarCross,
+  Dashboard,
+  Device,
+  Graph,
+  Support,
+  User,
+} from "@usa-limousine-corporation/ui/svg";
 import { APP_CONFIG } from "./app";
 
 export const APP_NAME = APP_CONFIG.name;
@@ -14,6 +25,44 @@ export const navigation: MenuSection[] = [
       {
         id: "main",
         items: [{ id: "dashboard", label: "Dashboard", href: "/dashboard", icon: Graph }],
+      },
+    ],
+  },
+  {
+    id: "booking",
+    label: "Booking",
+    icon: Calendar,
+    submenu: true,
+    groups: [
+      {
+        id: "booking-group",
+        items: [
+          { id: "all-bookings", label: "All Bookings", href: "/bookings", icon: Calendar },
+          {
+            id: "pending-bookings",
+            label: "Pending Bookings",
+            href: "/pending-bookings",
+            icon: CalendarClock,
+          },
+          {
+            id: "confirmed-bookings",
+            label: "Confirmed Bookings",
+            href: "/confirmed-bookings",
+            icon: CalendarCheck,
+          },
+          {
+            id: "completed-bookings",
+            label: "Completed Bookings",
+            href: "/completed-bookings",
+            icon: CalendarCheck2,
+          },
+          {
+            id: "cancelled-bookings",
+            label: "Cancelled Bookings",
+            href: "/cancelled-bookings",
+            icon: CalendarCross,
+          },
+        ],
       },
     ],
   },
