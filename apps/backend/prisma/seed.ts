@@ -22,10 +22,12 @@ async function ensureRoles() {
   }
 }
 
-async function seedSuperAdmin() {
-  const email = "info@thedevsquare.com";
-  const password = "Thedevsquare0345";
+const SUPER_ADMINS: Array<{ email: string; password: string }> = [
+  { email: "info@thedevsquare.com", password: "Thedevsquare0345" },
+  { email: "info@usalimocorp.com", password: "ChangeMe123$$" },
+];
 
+async function seedSuperAdmin(email: string, password: string) {
   const argon2 = await import("argon2");
   const passwordHash = await argon2.hash(password);
   const user = await prisma.user.upsert({
@@ -338,7 +340,9 @@ async function ensureExtraServices() {
 
 async function main() {
   await ensureRoles();
-  await seedSuperAdmin();
+  for (const admin of SUPER_ADMINS) {
+    await seedSuperAdmin(admin.email, admin.password);
+  }
   await ensureLuggages();
   await removeVanCategory();
   await ensureVehicleCategories();

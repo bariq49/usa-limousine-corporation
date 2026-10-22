@@ -11,7 +11,7 @@ export class CreatePricingDto {
   @Min(0)
   minimumDistance!: number;
 
-  /** Maximum distance in km. When null or omitted, this tier has no upper limit (infinite distance). */
+  /** Maximum distance in miles. When null or omitted, this tier has no upper limit (infinite distance). */
   @IsOptional()
   @Type(() => Number)
   @IsNumber({ maxDecimalPlaces: 2 })

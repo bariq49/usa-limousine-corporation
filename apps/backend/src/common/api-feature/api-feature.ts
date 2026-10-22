@@ -124,12 +124,10 @@ export class APIFeature {
 
     // Dotted fields search relations, e.g. "customer.user.email".
     const orConditions = searchFields.map((field) =>
-      field
-        .split(".")
-        .reduceRight<Record<string, unknown>>((inner, key) => ({ [key]: inner }), {
-          contains: term,
-          mode: "insensitive",
-        }),
+      field.split(".").reduceRight<Record<string, unknown>>((inner, key) => ({ [key]: inner }), {
+        contains: term,
+        mode: "insensitive",
+      }),
     );
 
     const existingOr = this.where["OR"];

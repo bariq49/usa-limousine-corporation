@@ -54,6 +54,7 @@ export class AddressDto {
   @ArrayMaxSize(10)
   stops?: LocationDto[];
 
+  /** Trip distance in miles. */
   @IsNumber()
   @Min(0)
   distance!: number;

@@ -1,4 +1,4 @@
-/** Great-circle distance between two WGS84 points (haversine). */
+/** Great-circle distance in miles between two WGS84 points (haversine). */
 export function distance(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const toRad = (deg: number) => (deg * Math.PI) / 180;
   const dLat = toRad(lat2 - lat1);
@@ -6,5 +6,5 @@ export function distance(lat1: number, lng1: number, lat2: number, lng2: number)
   const a =
     Math.sin(dLat / 2) ** 2 +
     Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
-  return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return 3958.8 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }

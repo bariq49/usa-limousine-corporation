@@ -1,6 +1,8 @@
 import { BadRequestException, Inject, Injectable } from "@nestjs/common";
 import { type BookingStatus, Prisma } from "@prisma/client";
 import { APIFeature } from "../../../common/api-feature";
+import { wallClock } from "../../../common/utils/day-bounds";
+import { APP_TIMEZONE } from "../../../common/utils/format-time";
 import { PrismaService } from "../../../infrastructure/database/prisma.service";
 import type { QueryDto } from "../dto/booking.dto";
 import type {
@@ -179,15 +181,20 @@ export class BookingRepository {
     });
   }
 
-  /** Count + `pricing.total` per (month, status) for one year; one customer's when `userId` is set. */
+  /**
+   * Count + `totalPrice` per (month, status) for one calendar year in APP_TIMEZONE (US Eastern);
+   * one customer's when `userId` is set.
+   */
   analyticsRows(year: number, userId?: string): Promise<AnalyticsRow[]> {
-    const from = new Date(Date.UTC(year, 0, 1));
-    const to = new Date(Date.UTC(year + 1, 0, 1));
+    const from =
+      wallClock(APP_TIMEZONE, `${year}-01-01`, "00:00") ?? new Date(Date.UTC(year, 0, 1));
+    const to =
+      wallClock(APP_TIMEZONE, `${year + 1}-01-01`, "00:00") ?? new Date(Date.UTC(year + 1, 0, 1));
     const byUser = userId ? Prisma.sql`AND "userId" = ${userId}` : Prisma.empty;
 
     return this.prisma.$queryRaw<AnalyticsRow[]>`
       SELECT
-        EXTRACT(MONTH FROM "createdAt")::int AS month,
+        EXTRACT(MONTH FROM ("createdAt" AT TIME ZONE 'UTC' AT TIME ZONE ${APP_TIMEZONE}))::int AS month,
         "status" AS status,
         COUNT(*)::int AS count,
         COALESCE(SUM("totalPrice"), 0)::float8 AS amount

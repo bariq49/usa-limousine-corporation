@@ -1,8 +1,8 @@
 /** App-wide display defaults for USA Limousine Corporation. */
-export const APP_TIMEZONE = "Europe/Amsterdam";
+export const APP_TIMEZONE = "America/New_York";
 export const APP_LOCALE = "en-US";
-export const APP_CURRENCY = "€";
-export const APP_DISTANCE_UNIT = "km";
+export const APP_CURRENCY = "$";
+export const APP_DISTANCE_UNIT = "mile";
 
 /** formatDate — e.g. "Oct 15, 2026" */
 export const DATE_FORMAT: Intl.DateTimeFormatOptions = {

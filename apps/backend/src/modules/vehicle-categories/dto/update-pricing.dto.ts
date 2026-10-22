@@ -13,7 +13,7 @@ export class UpdatePricingDto {
   @Min(0)
   minimumDistance?: number;
 
-  /** Maximum distance in km. Pass null to remove upper limit (infinite distance). */
+  /** Maximum distance in miles. Pass null to remove upper limit (infinite distance). */
   @IsOptional()
   @Type(() => Number)
   @IsNumber({ maxDecimalPlaces: 2 })
