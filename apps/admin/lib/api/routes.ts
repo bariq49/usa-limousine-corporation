@@ -15,6 +15,7 @@ const API_ROUTES = {
   BOOKINGS: "/admin/bookings",
   EXTRA_SERVICES: "/admin/extra-services",
   TICKETS: "/admin/tickets",
+  CUSTOMERS: "/admin/customers",
   NOTIFICATIONS: "/notifications",
 } as const;
 

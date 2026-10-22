@@ -106,3 +106,56 @@ export type UpdateCustomerSettings = {
   email?: boolean | undefined;
   notification?: boolean | undefined;
 };
+
+export type TicketStatus = "PENDING" | "OPEN" | "IN_PROGRESS" | "RESOLVED" | "CLOSED";
+export type TicketPriority = "LOW" | "MEDIUM" | "HIGH";
+export type TicketCategory = "ACCOUNT" | "BOOKING" | "PAYMENTS" | "APP" | "OTHER";
+
+export type TicketMessage = {
+  id: string;
+  body: string;
+  createdAt: string;
+  authorUserId: string | null;
+  author?: { id: string; email: string } | null;
+};
+
+export type Ticket = {
+  id: string;
+  ticketNumber: string;
+  subject: string;
+  description: string;
+  attachment?: string | null;
+  category: TicketCategory;
+  status: TicketStatus;
+  priority: TicketPriority;
+  resolvedAt?: string | null;
+  closedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  messages?: TicketMessage[];
+};
+
+export type TicketList = {
+  data: Ticket[];
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+};
+
+export type CreateTicket = {
+  subject: string;
+  description: string;
+  category?: TicketCategory | undefined;
+  priority?: TicketPriority | undefined;
+  attachment?: string | undefined;
+};
+
+export type TicketQuery = {
+  page?: number | undefined;
+  limit?: number | undefined;
+  status?: TicketStatus | undefined;
+  search?: string | undefined;
+};

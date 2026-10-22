@@ -18,6 +18,7 @@ const API_ROUTES = {
   NOTIFICATIONS: "/customers/notifications",
   BOOKINGS: "/customers/bookings",
   SETTINGS: "/customers/settings",
+  TICKETS: "/customers/tickets",
 } as const;
 
 export default API_ROUTES;

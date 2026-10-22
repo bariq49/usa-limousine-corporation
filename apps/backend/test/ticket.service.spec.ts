@@ -65,6 +65,42 @@ describe("TicketService", () => {
     );
   });
 
+  it("customer reply stores the message and notifies admins in one transaction", async () => {
+    tickets.findById.mockResolvedValue({
+      id: "ticket-1",
+      status: HelpTicketStatus.OPEN,
+      customerId: "customer-1",
+      ticketNumber: "HC-000001",
+      subject: "Wallet issue",
+    });
+    tickets.addMessage.mockResolvedValue({ id: "msg-9" });
+
+    await service.customerReply("ticket-1", { body: "Any update?" }, request);
+
+    expect(tickets.addMessage).toHaveBeenCalledWith(
+      { ticketId: "ticket-1", authorUserId: "user-1", body: "Any update?" },
+      tx,
+    );
+    expect(notificationService.stageForAdmins).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "TICKET_REPLY",
+        excludeUserId: "user-1",
+        idempotencyKey: "TICKET_CUSTOMER_REPLY:msg-9",
+      }),
+      tx,
+    );
+    expect(notificationService.deliverStaged).toHaveBeenCalledWith(staged);
+  });
+
+  it("customer cannot reply to a closed ticket", async () => {
+    tickets.findById.mockResolvedValue({ id: "ticket-1", status: HelpTicketStatus.CLOSED });
+
+    await expect(
+      service.customerReply("ticket-1", { body: "Hello" }, request),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(tickets.addMessage).not.toHaveBeenCalled();
+  });
+
   it("rejects transitions from closed tickets", async () => {
     tickets.findById.mockResolvedValue({
       id: "ticket-1",

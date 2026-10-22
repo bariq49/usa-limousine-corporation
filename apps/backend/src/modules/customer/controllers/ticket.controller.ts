@@ -4,7 +4,7 @@ import type { Request } from "express";
 import { Roles } from "../../auth/decorators/roles.decorator";
 import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../../auth/guards/roles.guard";
-import { CreateDto, QueryDto } from "../../help-center/dto/ticket.dto";
+import { CreateDto, QueryDto, ReplyDto } from "../../help-center/dto/ticket.dto";
 import { CustomerTicketService } from "../services/ticket.service";
 
 @Controller("customers/tickets")
@@ -26,5 +26,10 @@ export class CustomerTicketController {
   @Get(":id")
   getOne(@Param("id") id: string, @Req() request: Request) {
     return this.tickets.getOne(id, request);
+  }
+
+  @Post(":id/messages")
+  reply(@Param("id") id: string, @Body() body: ReplyDto, @Req() request: Request) {
+    return this.tickets.reply(id, body, request);
   }
 }

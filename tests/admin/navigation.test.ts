@@ -12,6 +12,7 @@ describe("admin navigation", () => {
       "/categories",
       "/completed-bookings",
       "/confirmed-bookings",
+      "/customers",
       "/extra-services",
       "/help-center",
       "/pending-bookings",

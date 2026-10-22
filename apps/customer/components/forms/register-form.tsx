@@ -47,13 +47,13 @@ export function RegisterForm() {
             <Input name="lastName" label="Last Name" type="text" autoComplete="family-name" />
           </div>
           <Input name="email" label="Email" type="email" autoComplete="email" />
+          <Input name="password" label="Password" type="password" autoComplete="new-password" />
           <Input
-            name="password"
-            label="Password"
-            type="password"
-            autoComplete="new-password"
+            name="terms"
+            type="checkbox"
+            label="You accept our Terms & Conditions"
+            checkboxSize="md"
           />
-          <Input name="terms" type="checkbox" label="You accept our Terms & Conditions" checkboxSize="md" />
           <Button type="submit" className="w-full" disabled={isLoading} isLoading={isLoading}>
             Create an Account
           </Button>

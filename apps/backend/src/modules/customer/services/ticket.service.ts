@@ -1,6 +1,6 @@
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import type { Request } from "express";
-import type { CreateDto, QueryDto } from "../../help-center/dto/ticket.dto";
+import type { CreateDto, QueryDto, ReplyDto } from "../../help-center/dto/ticket.dto";
 import { TicketService } from "../../help-center/services/ticket.service";
 import { CustomerRepository } from "../repositories/customer.repository";
 import { requireCustomer } from "../utils/require-customer";
@@ -41,5 +41,10 @@ export class CustomerTicketService {
       throw new NotFoundException("Help ticket not found");
     }
     return ticket;
+  }
+
+  async reply(id: string, body: ReplyDto, request: Request) {
+    await this.getOne(id, request);
+    return this.tickets.customerReply(id, body, request);
   }
 }

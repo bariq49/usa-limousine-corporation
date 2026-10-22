@@ -21,6 +21,7 @@ function notificationHref(item: NotificationItem): string | null {
 
   switch (item.type) {
     case "TICKET_CREATED":
+    case "TICKET_REPLY":
       return id("ticketId") ? `/help-center/${id("ticketId")}` : "/help-center";
     case "BOOKING_CREATED":
       return id("bookingId") ? `/bookings/${id("bookingId")}` : "/pending-bookings";

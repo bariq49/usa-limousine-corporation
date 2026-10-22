@@ -8,7 +8,6 @@ import {
   Luggage,
   Device,
   User,
-  Blog,
   Graph,
   CalendarClock,
   CalendarCheck2,
@@ -16,6 +15,7 @@ import {
   ShieldCheck,
   Tag,
   Support,
+  UserList,
 } from "@usa-limousine-corporation/ui/svg";
 import { APP_CONFIG } from "./app";
 
@@ -36,6 +36,12 @@ export const navigation: MenuSection[] = [
             label: "Analytics",
             href: "/analytics",
             icon: Graph,
+          },
+          {
+            id: "help-center",
+            label: "Help Center",
+            href: "/help-center",
+            icon: Support,
           },
         ],
       },
@@ -116,19 +122,19 @@ export const navigation: MenuSection[] = [
     ],
   },
   {
-    id: "help-center",
-    label: "Help Center",
-    icon: Support,
+    id: "customer",
+    label: "Customer",
+    icon: User,
     submenu: true,
     groups: [
       {
-        id: "help-center-group",
+        id: "customer-group",
         items: [
           {
-            id: "tickets",
-            label: "Tickets",
-            href: "/help-center",
-            icon: Blog,
+            id: "customers",
+            label: "Customers",
+            href: "/customers",
+            icon: UserList,
           },
         ],
       },

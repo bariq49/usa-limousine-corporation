@@ -202,6 +202,70 @@ export class TicketService {
     return this.getOne(id);
   }
 
+  /** Customer reply on their own ticket; admins get a live notification in the same transaction. */
+  async customerReply(id: string, body: ReplyDto, request: Request) {
+    const context = toRequestContext(request);
+    const actorUserId = requireUserId(context);
+    const ticket = await this.getOne(id);
+
+    if (ticket.status === HelpTicketStatus.RESOLVED || ticket.status === HelpTicketStatus.CLOSED) {
+      throw new BadRequestException(`Cannot reply to a ${ticket.status.toLowerCase()} ticket`);
+    }
+
+    const replied = await this.prisma.$transaction(async (tx) => {
+      const message = await this.tickets.addMessage(
+        { ticketId: ticket.id, authorUserId: actorUserId, body: body.body },
+        tx,
+      );
+
+      const notifications = await this.notificationService.stageForAdmins(
+        {
+          type: NotificationType.TICKET_REPLY,
+          title: "Customer replied",
+          body: `${ticket.ticketNumber}: ${body.body.slice(0, 120)}`,
+          data: {
+            type: "TICKET_REPLY",
+            ticketId: ticket.id,
+            ticketNumber: ticket.ticketNumber,
+            messageId: message.id,
+          },
+          excludeUserId: actorUserId,
+          idempotencyKey: `TICKET_CUSTOMER_REPLY:${message.id}`,
+        },
+        tx,
+      );
+
+      const payload: Reply = {
+        customerId: ticket.customerId,
+        actorUserId,
+        ticketId: ticket.id,
+        ticketNumber: ticket.ticketNumber,
+        subject: ticket.subject,
+        messageId: message.id,
+      };
+
+      return { message, payload, notifications };
+    });
+    await this.notificationService.deliverStaged(replied.notifications);
+
+    await auditLog({
+      prisma: this.prisma,
+      event: TICKET_EVENT.REPLIED,
+      result: "success",
+      context,
+      userId: context.userId,
+      metadata: {
+        ticketId: ticket.id,
+        messageId: replied.message.id,
+        role: "customer",
+      },
+    });
+
+    this.events.emit(TICKET_EVENT.REPLIED, replied.payload);
+
+    return this.getOne(id);
+  }
+
   async updateStatus(id: string, body: StatusDto, request: Request) {
     const context = toRequestContext(request);
     const actorUserId = requireUserId(context);
