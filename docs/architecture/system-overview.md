@@ -10,7 +10,7 @@ The USA Limousine Corporation platform is an enterprise-scale, multi-tenant SaaS
 graph TD
     subgraph Clients["Client Layer"]
         AdminWeb["Admin Dashboard (Next.js 15)<br/>admin.usalimocorp.com"]
-        CustomerWeb["Customer Portal (Next.js 15)<br/>login.usalimocorp.com"]
+        CustomerWeb["Customer Portal (Next.js 15)<br/>customer.usalimocorp.com"]
         MobileDriver["Driver Mobile App<br/>(React Native / Flutter)"]
     end
 

@@ -115,7 +115,7 @@ When a session is revoked, active WebSocket connections for that session receive
 1. **Automated TLS Encryption:** All ingress traffic is terminated by Caddy with modern TLS 1.3 ciphers and automatic certificates via Let's Encrypt.
 2. **CORS Allowlisting:**
    - Production forbids wildcard (`*`) origins.
-   - Allowed origins are explicitly enumerated: `https://www.usalimocorp.com`, `https://admin.usalimocorp.com`, `https://login.usalimocorp.com`.
+   - Allowed origins are explicitly enumerated: `https://www.usalimocorp.com`, `https://admin.usalimocorp.com`, `https://customer.usalimocorp.com`.
 3. **HTTP Security Headers (Helmet):**
    - Content Security Policy (CSP)
    - HTTP Strict Transport Security (HSTS) with `max-age=31536000; includeSubDomains`

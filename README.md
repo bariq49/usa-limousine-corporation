@@ -52,7 +52,7 @@ USA Limousine Corporation is an enterprise transportation SaaS platform connecti
 graph TD
     subgraph Clients["Client Layer"]
         AdminWeb["Admin Dashboard (Next.js 15)<br/>admin.usalimocorp.com (:3001)"]
-        CustomerWeb["Customer Portal (Next.js 15)<br/>login.usalimocorp.com (:3002)"]
+        CustomerWeb["Customer Portal (Next.js 15)<br/>customer.usalimocorp.com (:3002)"]
         MobileDriver["Driver Mobile App<br/>(React Native / Flutter)"]
     end
 
@@ -231,7 +231,7 @@ pnpm dev
 | **Backend API**     | NestJS Core Gateway      | [http://localhost:3000](http://localhost:3000)                   | `https://api.usalimocorp.com/api/v1` |
 | **API Swagger**     | Interactive OpenAPI Docs | [http://localhost:3000/api/docs](http://localhost:3000/api/docs) | _Disabled in production_             |
 | **Admin Portal**    | Super Admin Dashboard    | [http://localhost:3001](http://localhost:3001)                   | `https://admin.usalimocorp.com`      |
-| **Customer Portal** | Customer Web Portal      | [http://localhost:3002](http://localhost:3002)                   | `https://login.usalimocorp.com`   |
+| **Customer Portal** | Customer Web Portal      | [http://localhost:3002](http://localhost:3002)                   | `https://customer.usalimocorp.com`   |
 
 ---
 

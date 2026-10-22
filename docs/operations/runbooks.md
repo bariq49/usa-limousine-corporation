@@ -23,7 +23,7 @@ This guide documents operational procedures, CI/CD automation, server administra
 | `www`       |  A   | `177.7.55.46` | Marketing / main portal (`https://www.usalimocorp.com`)    |
 | `api`       |  A   | `177.7.55.46` | Core REST API & WebSockets (`https://api.usalimocorp.com`) |
 | `admin`     |  A   | `177.7.55.46` | Super Admin Dashboard (`https://admin.usalimocorp.com`)    |
-| `login`     |  A   | `177.7.55.46` | Customer Web Portal (`https://login.usalimocorp.com`)   |
+| `customer`  |  A   | `177.7.55.46` | Customer Web Portal (`https://customer.usalimocorp.com`)   |
 
 ---
 

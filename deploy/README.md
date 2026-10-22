@@ -14,7 +14,8 @@ Stack on one VPS with Docker Compose: **Postgres, Redis, Nest API, Admin, Custom
 | --- | --- |
 | `https://api.usalimocorp.com/api/v1` | REST API (WebSocket on `https://api.usalimocorp.com`) |
 | `https://admin.usalimocorp.com` | Admin dashboard |
-| `https://login.usalimocorp.com`, `https://www.usalimocorp.com`, `https://usalimocorp.com` | Customer dashboard |
+| `https://customer.usalimocorp.com` | Customer dashboard |
+| `https://usalimocorp.com`, `https://www.usalimocorp.com` | Marketing website (hosted on Vercel, not this VPS) |
 
 ## How a deploy works
 
@@ -47,11 +48,9 @@ Manual run: **Actions → Deploy → Run workflow** and pick `auto`, `all`, `bac
 | --- | --- | --- | --- |
 | A | `api` | `177.7.55.46` | 300 |
 | A | `admin` | `177.7.55.46` | 300 |
-| A | `login` | `177.7.55.46` | 300 |
-| A | `@` | `177.7.55.46` | 300 |
-| A | `www` | `177.7.55.46` | 300 |
+| A | `customer` | `177.7.55.46` | 300 |
 
-Caddy requests HTTPS certificates automatically once these resolve.
+Caddy requests HTTPS certificates automatically once these resolve. `@` and `www` stay on Vercel (marketing site).
 
 ### 2. SSH key for GitHub Actions
 
