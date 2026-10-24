@@ -1,5 +1,5 @@
 import { BadRequestException, Inject, Injectable } from "@nestjs/common";
-import { BookingStatus, type BookingType, type PaymentMode, Prisma } from "@prisma/client";
+import { BookingStatus, type BookingType, type PaymentMode, Prisma, RoleKey } from "@prisma/client";
 import { APIFeature } from "../../../common/api-feature";
 import { wallClock } from "../../../common/utils/day-bounds";
 import { APP_TIMEZONE } from "../../../common/utils/format-time";
@@ -160,6 +160,19 @@ export class BookingRepository {
       where: { id },
       data: { squareOrderId: link.orderId, squarePaymentLinkId: link.id, paymentMode: mode },
     });
+  }
+
+  async findCustomerIdByEmail(email: string) {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        email: { equals: email.trim(), mode: "insensitive" },
+        isEmailVerified: true,
+        isActive: true,
+        roles: { some: { role: { key: RoleKey.CUSTOMER } } },
+      },
+      select: { id: true },
+    });
+    return user?.id ?? null;
   }
 
   findByOrderId(orderId: string) {

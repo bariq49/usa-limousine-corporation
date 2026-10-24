@@ -30,9 +30,11 @@ function setup(
     order?: typeof paidOrder;
     recorded?: boolean;
     createLink?: jest.Mock;
+    customerId?: string | null;
   } = {},
 ) {
   const bookingRepository = {
+    findCustomerIdByEmail: jest.fn(async () => options.customerId ?? null),
     create: jest.fn(async () => ({ id: "book-1", bookingNumber: "BK-1" })),
     attachPaymentLink: jest.fn(async () => undefined),
     delete: jest.fn(async () => undefined),
@@ -136,6 +138,17 @@ describe("PaymentService.startCheckout", () => {
       orderId: ORDER_ID,
       bookingNumber: "BK-000001",
     });
+  });
+
+  it("files the booking under the rider's account when their email has one", async () => {
+    const { service, bookingRepository } = setup({ customerId: "user-7" });
+
+    await service.startCheckout(body, request);
+
+    expect(bookingRepository.findCustomerIdByEmail).toHaveBeenCalledWith("ada@example.com");
+    expect(bookingRepository.create).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: "user-7" }),
+    );
   });
 
   it("removes the booking when Square cannot open a checkout page", async () => {

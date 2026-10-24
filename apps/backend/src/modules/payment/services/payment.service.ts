@@ -83,7 +83,7 @@ export class PaymentService implements OnModuleInit, OnModuleDestroy {
       nextSequence: () => this.sequenceService.nextBooking(),
     });
     const booking = await this.bookingRepository.create({
-      userId: null,
+      userId: await this.bookingRepository.findCustomerIdByEmail(body.passenger.email),
       vehicleCategoryId: body.vehicleCategoryId,
       bookingNumber,
       bookingType,

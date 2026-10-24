@@ -1,5 +1,6 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { PrismaService } from "../../infrastructure/database/prisma.service";
+import { linkGuestBookings } from "../booking/utils/link-guest-bookings";
 import type {
   Create,
   FindByEmail,
@@ -43,6 +44,7 @@ export class UsersService {
       where: { id: userId },
       data: { isEmailVerified: true },
     });
+    await linkGuestBookings(this.prisma, userId);
   }
 
   async updatePassword(params: UpdatePassword) {
