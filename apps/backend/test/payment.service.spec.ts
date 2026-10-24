@@ -127,7 +127,7 @@ describe("PaymentService.startCheckout", () => {
     expect(square.createPaymentLink).toHaveBeenCalledWith(
       expect.objectContaining({
         amount: 110,
-        customerPhone: "+17322898928",
+        customerEmail: expect.any(String),
         redirectUrl: "https://demo.usalimocorp.com/book-ride/payment-success",
       }),
     );

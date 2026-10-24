@@ -7,7 +7,7 @@ import {
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { PaymentMode } from "@prisma/client";
-import { SquareClient, SquareEnvironment, WebhooksHelper } from "square";
+import { SquareClient, SquareEnvironment, SquareError, WebhooksHelper } from "square";
 import type { OrderResult, PaymentLink, PaymentLinkInput } from "./types/square";
 
 @Injectable()
@@ -31,26 +31,46 @@ export class SquareService {
       throw new BadRequestException("The booking total is too low to pay online");
     }
 
-    const { paymentLink } = await this.client(input.mode).checkout.paymentLinks.create({
-      idempotencyKey: randomUUID(),
-      description: `USA Limousine · ${input.bookingNumber}`,
-      paymentNote: input.bookingNumber,
-      quickPay: {
-        name: `${input.description} · ${input.bookingNumber}`,
-        priceMoney: { amount: BigInt(amountInCents), currency: "USD" },
-        locationId: this.setting("LOCATION_ID", input.mode) as string,
-      },
-      checkoutOptions: {
-        redirectUrl: input.redirectUrl,
-        askForShippingAddress: false,
-        allowTipping: false,
-        acceptedPaymentMethods: { applePay: true, googlePay: true },
-      },
-      prePopulatedData: {
-        buyerEmail: input.customerEmail,
-        buyerPhoneNumber: input.customerPhone,
-      },
-    });
+    const paymentLinks = this.client(input.mode).checkout.paymentLinks;
+    const paymentLink = await paymentLinks
+      .create({
+        idempotencyKey: randomUUID(),
+        description: `USA Limousine · ${input.bookingNumber}`,
+        paymentNote: input.bookingNumber,
+        quickPay: {
+          name: `${input.description} · ${input.bookingNumber}`,
+          priceMoney: { amount: BigInt(amountInCents), currency: "USD" },
+          locationId: this.setting("LOCATION_ID", input.mode) as string,
+        },
+        checkoutOptions: {
+          redirectUrl: input.redirectUrl,
+          askForShippingAddress: false,
+          allowTipping: false,
+          acceptedPaymentMethods: { applePay: true, googlePay: true },
+        },
+        prePopulatedData: { buyerEmail: input.customerEmail },
+      })
+      .then(async ({ paymentLink: created }) => {
+        if (!created?.id || !created.orderId) return created;
+        const { paymentLink: updated } = await paymentLinks.update({
+          id: created.id,
+          paymentLink: {
+            version: created.version,
+            checkoutOptions: {
+              redirectUrl: `${input.redirectUrl}?orderId=${encodeURIComponent(created.orderId)}`,
+            },
+          },
+        });
+        return updated;
+      })
+      .catch((error: unknown) => {
+        if (error instanceof SquareError) {
+          throw new ServiceUnavailableException(
+            "We could not start the payment. Please try again.",
+          );
+        }
+        throw error;
+      });
 
     if (!paymentLink?.id || !paymentLink.orderId || !paymentLink.url) {
       throw new ServiceUnavailableException("Square did not return a checkout page");

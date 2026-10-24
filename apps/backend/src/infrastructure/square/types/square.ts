@@ -6,7 +6,6 @@ export type PaymentLinkInput = {
   amount: number;
   description: string;
   customerEmail: string;
-  customerPhone: string;
   redirectUrl: string;
 };
 

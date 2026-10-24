@@ -107,7 +107,6 @@ export class PaymentService implements OnModuleInit, OnModuleDestroy {
         amount: pricing.total,
         description: TRIP_LABELS[bookingType],
         customerEmail: body.passenger.email,
-        customerPhone: body.passenger.phone,
         redirectUrl: `${websiteUrl}/book-ride/payment-success`,
       });
       await this.bookingRepository.attachPaymentLink(booking.id, link, paymentMode);
