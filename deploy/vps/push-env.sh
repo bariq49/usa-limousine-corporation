@@ -13,7 +13,7 @@ if [[ -n "${SSH_KEY:-}" ]]; then
   SSH_OPTS=(-i "${SSH_KEY}")
 fi
 
-FILES=(apps/backend/.env.production apps/admin/.env.production apps/customer/.env.production)
+FILES=(apps/backend/.env.production apps/admin/.env.production apps/customer/.env.production apps/website/.env.production)
 
 for file in "${FILES[@]}"; do
   if [[ ! -f "${ROOT}/${file}" ]]; then
@@ -23,7 +23,7 @@ for file in "${FILES[@]}"; do
 done
 
 ssh "${SSH_OPTS[@]}" "${VPS_USER}@${VPS_HOST}" \
-  "mkdir -p ${INSTALL_DIR}/apps/backend ${INSTALL_DIR}/apps/admin ${INSTALL_DIR}/apps/customer"
+  "mkdir -p ${INSTALL_DIR}/apps/backend ${INSTALL_DIR}/apps/admin ${INSTALL_DIR}/apps/customer ${INSTALL_DIR}/apps/website"
 
 for file in "${FILES[@]}"; do
   scp "${SSH_OPTS[@]}" "${ROOT}/${file}" "${VPS_USER}@${VPS_HOST}:${INSTALL_DIR}/${file}"

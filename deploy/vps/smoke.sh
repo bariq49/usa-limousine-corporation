@@ -21,7 +21,7 @@ should_check() {
     if [[ "${token}" == "${service}" ]]; then
       return 0
     fi
-    if [[ "${token}" == "dashboards" && "${service}" != "backend" ]]; then
+    if [[ "${token}" == "dashboards" && ( "${service}" == "admin" || "${service}" == "customer" ) ]]; then
       return 0
     fi
   done
@@ -41,6 +41,10 @@ fi
 if should_check customer; then
   from_caddy http://customer:3002/auth/login
   checked+=("customer")
+fi
+if should_check website; then
+  from_caddy http://website:3003/
+  checked+=("website")
 fi
 
 echo "Smoke OK: ${checked[*]}"

@@ -13,6 +13,7 @@ on:
           - dashboards
           - admin
           - customer
+          - website
         default: auto
   push:
     branches: [main]
@@ -32,6 +33,7 @@ jobs:
       backend: ${{ steps.targets.outputs.backend }}
       admin: ${{ steps.targets.outputs.admin }}
       customer: ${{ steps.targets.outputs.customer }}
+      website: ${{ steps.targets.outputs.website }}
       any: ${{ steps.targets.outputs.any }}
       deploy_services: ${{ steps.targets.outputs.deploy_services }}
       ci_backend: ${{ steps.targets.outputs.ci_backend }}
@@ -57,6 +59,9 @@ jobs:
             customer:
               - 'apps/customer/**'
               - 'deploy/vps/Dockerfile.customer'
+            website:
+              - 'apps/website/**'
+              - 'deploy/vps/Dockerfile.website'
             ui:
               - 'packages/ui/**'
             shared:
@@ -84,6 +89,7 @@ jobs:
           F_BACKEND: ${{ steps.filter.outputs.backend }}
           F_ADMIN: ${{ steps.filter.outputs.admin }}
           F_CUSTOMER: ${{ steps.filter.outputs.customer }}
+          F_WEBSITE: ${{ steps.filter.outputs.website }}
           F_UI: ${{ steps.filter.outputs.ui }}
           F_SHARED: ${{ steps.filter.outputs.shared }}
           F_INFRA: ${{ steps.filter.outputs.deploy_infra }}
@@ -93,6 +99,7 @@ jobs:
           backend=false
           admin=false
           customer=false
+          website=false
 
           force_all=false
           case "${SCOPE}" in
@@ -100,6 +107,7 @@ jobs:
             backend) backend=true ;;
             admin) admin=true ;;
             customer) customer=true ;;
+            website) website=true ;;
             dashboards)
               admin=true
               customer=true
@@ -112,9 +120,11 @@ jobs:
                 if [[ "${F_UI}" == "true" ]]; then
                   admin=true
                   customer=true
+                  website=true
                 else
                   [[ "${F_ADMIN}" == "true" ]] && admin=true
                   [[ "${F_CUSTOMER}" == "true" ]] && customer=true
+                  [[ "${F_WEBSITE}" == "true" ]] && website=true
                 fi
               fi
               ;;
@@ -128,12 +138,14 @@ jobs:
             backend=true
             admin=true
             customer=true
+            website=true
           fi
 
           services=()
           [[ "${backend}" == "true" ]] && services+=(backend)
           [[ "${admin}" == "true" ]] && services+=(admin)
           [[ "${customer}" == "true" ]] && services+=(customer)
+          [[ "${website}" == "true" ]] && services+=(website)
 
           any=false
           [[ "${#services[@]}" -gt 0 ]] && any=true
@@ -164,6 +176,7 @@ jobs:
             echo "backend=${backend}"
             echo "admin=${admin}"
             echo "customer=${customer}"
+            echo "website=${website}"
             echo "any=${any}"
             echo "deploy_services=${deploy_services}"
             echo "ci_backend=${ci_backend}"
@@ -220,6 +233,8 @@ jobs:
             --filter "P apps/admin/.env.*" \
             --filter "P apps/customer/.env" \
             --filter "P apps/customer/.env.*" \
+            --filter "P apps/website/.env" \
+            --filter "P apps/website/.env.*" \
             --exclude-from=deploy/vps/rsync.exclude \
             ./ "${VPS_USER}@${VPS_HOST}:/opt/usa-limousine-corporation/"
 

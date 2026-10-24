@@ -9,3 +9,7 @@ admin.usalimocorp.com {
 customer.usalimocorp.com {
 	reverse_proxy customer:3002
 }
+
+demo.usalimocorp.com {
+	reverse_proxy website:3003
+}

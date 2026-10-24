@@ -6,6 +6,7 @@ COMPOSE_DIR="${ROOT}/deploy/vps"
 BACKEND_ENV="${ROOT}/apps/backend/.env.production"
 ADMIN_ENV="${ROOT}/apps/admin/.env.production"
 CUSTOMER_ENV="${ROOT}/apps/customer/.env.production"
+WEBSITE_ENV="${ROOT}/apps/website/.env.production"
 SKIP_GIT_PULL="${SKIP_GIT_PULL:-1}"
 BRANCH="${DEPLOY_BRANCH:-main}"
 # Space-separated compose services, or "all" (default).
@@ -17,12 +18,12 @@ BACKUP_DIR="${BACKUP_DIR:-/opt/usa-limousine-corporation-backups}"
 BACKUP_KEEP="${BACKUP_KEEP:-10}"
 POSTGRES_CONTAINER="usa-limousine-corporation-postgres-1"
 
-ALL_APPS=(backend admin customer)
+ALL_APPS=(backend admin customer website)
 
 # Compose file references every app env_file; all must exist even for a partial deploy.
 require_env_files() {
   local env_file
-  for env_file in "${BACKEND_ENV}" "${ADMIN_ENV}" "${CUSTOMER_ENV}"; do
+  for env_file in "${BACKEND_ENV}" "${ADMIN_ENV}" "${CUSTOMER_ENV}" "${WEBSITE_ENV}"; do
     if [[ ! -f "${env_file}" ]]; then
       echo "Missing ${env_file}"
       echo "Create it locally (see sibling .env / .env.example), or on the VPS at /opt/usa-limousine-corporation/..."
@@ -41,7 +42,7 @@ if [[ "${SKIP_GIT_PULL}" != "1" && -d "${ROOT}/.git" ]]; then
 fi
 
 compose() {
-  docker compose --env-file "${BACKEND_ENV}" --env-file "${ADMIN_ENV}" --env-file "${CUSTOMER_ENV}" "$@"
+  docker compose --env-file "${BACKEND_ENV}" --env-file "${ADMIN_ENV}" --env-file "${CUSTOMER_ENV}" --env-file "${WEBSITE_ENV}" "$@"
 }
 
 resolve_services() {
@@ -54,7 +55,7 @@ resolve_services() {
 
   for token in ${DEPLOY_SERVICES}; do
     case "${token}" in
-      backend | admin | customer)
+      backend | admin | customer | website)
         SERVICES+=("${token}")
         ;;
       dashboards)
@@ -225,3 +226,4 @@ echo "API health: $(curl -fsS http://127.0.0.1:3000/api/v1/health)"
 echo "Deployed: ${SERVICES[*]}"
 echo "Admin: https://admin.usalimocorp.com"
 echo "Customer: https://customer.usalimocorp.com"
+echo "Website: https://demo.usalimocorp.com"
