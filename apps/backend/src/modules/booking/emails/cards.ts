@@ -23,20 +23,17 @@ const TRIP_TYPE_LABELS: Record<BookingType, string> = {
   ONE_WAY: "One Way",
   RETURN: "Return",
   HOURLY: "By the Hour",
-  CREW_RIDE: "Crew Ride",
 };
 
 const formatPrice = (amount: number) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
 
-/** "2026-10-24" → "10/24/2026". */
-const formatDate = (date: string) => {
+export const formatDate = (date: string) => {
   const [year, month, day] = date.split("-");
   return year && month && day ? `${month}/${day}/${year}` : date;
 };
 
-/** "14:30" → "2:30 PM". */
-const formatTime = (time: string) => {
+export const formatTime = (time: string) => {
   const [hours, minutes] = time.split(":").map(Number);
   if (!Number.isInteger(hours) || !Number.isInteger(minutes)) return time;
   const period = (hours as number) >= 12 ? "PM" : "AM";
@@ -48,7 +45,6 @@ const formatHours = (minutes: number) => {
   return `${hours} ${hours === 1 ? "hr" : "hrs"}`;
 };
 
-/** Icons are served by the public website, so images in emails come from our own domain. */
 const icon = (siteUrl: string, name: IconName, size = 20) =>
   `<img src="${escapeHtml(siteUrl)}/assets/email-icons/${name}.png" width="${size}" height="${size}" alt="" style="display:block;border:0;outline:none;" />`;
 
@@ -74,7 +70,6 @@ const routeStop = (label: string, value: string, note?: string) => `
   ${note ? `<p style="margin:4px 0 0;font-size:13px;line-height:1.4;color:${EMAIL_BRAND.muted};">${escapeHtml(note)}</p>` : ""}
 `;
 
-/** Pickup, stops and drop-off joined by a gold line; hourly trips show the hired time instead. */
 export const routeCard = (booking: BookingEmail, siteUrl: string) => {
   const isHourly = booking.bookingType === BookingType.HOURLY;
   const points = [
@@ -199,7 +194,6 @@ const priceRow = (label: string, amount: number, options?: { discount?: boolean 
   </tr>`;
 };
 
-/** Every non-zero line of the stored price, then the total. */
 export const paymentSummaryCard = (booking: BookingEmail) => {
   const { pricing } = booking;
   const rates = pricing.rates;

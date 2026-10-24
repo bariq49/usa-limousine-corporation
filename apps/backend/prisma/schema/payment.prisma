@@ -1,0 +1,28 @@
+enum PaymentStatus {
+  PAID
+  CANCELLED
+}
+
+model Payment {
+  id                    String        @id @default(cuid())
+  bookingId             String        @unique
+  status                PaymentStatus
+  mode                  PaymentMode
+  amount                Decimal       @db.Decimal(12, 2)
+  currency              String        @default("usd")
+  transactionId         String?       @unique
+  stripePaymentIntentId String?
+  stripeSessionId       String        @unique
+  cardBrand             String?
+  cardLast4             String?
+  customerName          String
+  customerEmail         String
+  customerPhone         String
+  paidAt                DateTime?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
+}

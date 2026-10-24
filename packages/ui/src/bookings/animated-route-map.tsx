@@ -22,7 +22,7 @@ export interface AnimatedRouteMapProps {
 }
 
 // --- Constants & Styles ---
-const SECONDARY_COLOR_FALLBACK = "#C9A84C";
+const BRAND_GOLD = "#C9A84C";
 const DEFAULT_CAR_MARKER = "/assets/images/map-car-marker.png";
 const NEW_YORK = { lat: 40.7128, lng: -74.006 };
 
@@ -75,14 +75,6 @@ const MAP_STYLES: google.maps.MapTypeStyle[] = [
   { featureType: "water", elementType: "geometry", stylers: [{ color: "#aad3ea" }] },
   { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#4b7fa3" }] },
 ];
-
-const getSecondaryColor = () => {
-  if (typeof window === "undefined") return SECONDARY_COLOR_FALLBACK;
-  return (
-    getComputedStyle(document.documentElement).getPropertyValue("--color-secondary").trim() ||
-    SECONDARY_COLOR_FALLBACK
-  );
-};
 
 // --- SVG path data from @/components/svg/duel-tone ---
 const PLANE_SVG_PATH = `M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5Z`;
@@ -543,7 +535,7 @@ export function AnimatedRouteMap({
 
       cleanupPreviousOverlays();
 
-      const secondaryColor = getSecondaryColor();
+      const secondaryColor = BRAND_GOLD;
 
       const map = new google.maps.Map(mapRef.current, {
         center: NEW_YORK,

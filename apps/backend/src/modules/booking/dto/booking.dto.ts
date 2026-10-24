@@ -63,6 +63,11 @@ export class AddressDto {
   @IsNumber()
   @Min(0)
   duration!: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  travelDuration?: number;
 }
 
 export class PassengerDto {

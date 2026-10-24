@@ -4,7 +4,7 @@ import { formatPrice } from "../utils/price";
 import type { ExtraServiceItem, Item, Pricing } from "./types";
 
 type Props = {
-  booking: Pick<Item, "pricing" | "totalPrice" | "extraServices" | "luggage">;
+  booking: Pick<Item, "pricing" | "totalPrice" | "extraServices" | "luggage" | "bookingType">;
 };
 
 function row(label: string, amount: number, discount = false) {
@@ -12,8 +12,8 @@ function row(label: string, amount: number, discount = false) {
 
   return (
     <div className="flex items-center justify-between gap-4">
-      <span className="text-default-600">{label}</span>
-      <span className={discount ? "font-semibold text-success" : "font-semibold text-default-900"}>
+      <span className={discount ? "text-destructive" : "text-default-600"}>{label}</span>
+      <span className={discount ? "font-semibold text-destructive" : "font-semibold text-default-900"}>
         {discount ? "- " : ""}
         {formatPrice({ price: amount })}
       </span>
@@ -39,6 +39,12 @@ function serviceRows(services: ExtraServiceItem[] | null | undefined) {
 
 export function BookingPaymentSummary(props: Props) {
   const pricing = (props.booking.pricing ?? {}) as Pricing;
+  const rates = pricing.rates;
+  const rate = (value: number | undefined) => (rates && value != null ? ` (${value}%)` : "");
+  const discountRate =
+    rates && props.booking.bookingType === "RETURN"
+      ? ` (${rates.oneWayDiscountRate}% / ${rates.returnDiscountRate}%)`
+      : rate(rates?.oneWayDiscountRate);
   const luggage = (props.booking.luggage ?? []).filter(
     (item) => item.quantity > 0 && item.unitPrice > 0,
   );
@@ -48,11 +54,14 @@ export function BookingPaymentSummary(props: Props) {
       <h3 className="text-base font-bold text-default-900 sm:text-lg">Payment Summary</h3>
       <div className="mt-3 space-y-2.5 text-sm sm:mt-4">
         {row("Base Price", Number(pricing.basePrice ?? 0))}
-        {row("Fuel Surcharge", Number(pricing.fuelSurchargePrice ?? 0))}
-        {row("Gratuity", Number(pricing.gratuityPrice ?? 0))}
-        {row("Tax", Number(pricing.taxPrice ?? 0))}
-        {row("Transaction Fee", Number(pricing.transactionFeePrice ?? 0))}
-        {row("Discount", Number(pricing.discountPrice ?? 0), true)}
+        {row(`Fuel Surcharge${rate(rates?.fuelSurchargeRate)}`, Number(pricing.fuelSurchargePrice ?? 0))}
+        {row(`Gratuity${rate(rates?.gratuityRate)}`, Number(pricing.gratuityPrice ?? 0))}
+        {row(`Tax${rate(rates?.taxRate)}`, Number(pricing.taxPrice ?? 0))}
+        {row(
+          `Transaction Fee${rate(rates?.transactionFeeRate)}`,
+          Number(pricing.transactionFeePrice ?? 0),
+        )}
+        {row(`Discount${discountRate}`, Number(pricing.discountPrice ?? 0), true)}
         {row("Additional Stops", Number(pricing.stopsPrice ?? 0))}
         {row("Airport Pickup", Number(pricing.airportPickupPrice ?? 0))}
         {row("Meet & Greet", Number(pricing.meetAndGreetPrice ?? 0))}

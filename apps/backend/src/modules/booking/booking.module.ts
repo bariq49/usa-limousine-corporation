@@ -24,6 +24,6 @@ import { BookingService } from "./services/booking.service";
   ],
   controllers: [CustomerBookingController, BookingController],
   providers: [BookingRepository, BookingEmailService, BookingService],
-  exports: [BookingService, BookingRepository],
+  exports: [BookingService, BookingRepository, BookingEmailService],
 })
 export class BookingModule {}

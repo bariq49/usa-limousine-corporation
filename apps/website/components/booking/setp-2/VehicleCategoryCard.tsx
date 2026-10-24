@@ -13,7 +13,7 @@ import { useState } from "react";
 import { Stepper } from "@usa-limousine-corporation/ui/components/stepper";
 import { resolveVehicleCategoryPrice } from "@/store/use-booking-store";
 import { MAX_VEHICLES } from "@/constants/booking-constants";
-import { Marquee } from "@/components/animations";
+import { Marquee } from "@usa-limousine-corporation/ui/components/marquee";
 import type { VehicleCategory } from "@/types/booking.types";
 
 interface VehicleCategoryCardProps {

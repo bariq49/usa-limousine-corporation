@@ -89,34 +89,90 @@ Unset optional services report `not_configured` in health and do not block start
 
 | Variable                       | Purpose                                                     |
 | ------------------------------ | ----------------------------------------------------------- |
-| `DEFAULT_ADMIN_EMAIL`          | Admin inbox for new driver application emails               |
+| `DEFAULT_ADMIN_EMAIL`          | Admin inbox for new and paid booking emails                 |
 | `STRIPE_SECRET_KEY_TEST`       | Stripe test secret (`sk_test_…`; optional outside prod)     |
 | `STRIPE_WEBHOOK_SECRET_TEST`   | Stripe test webhook signing secret                          |
 | `STRIPE_SECRET_KEY_LIVE`       | Stripe live secret (`sk_live_…`; needed for LIVE mode)      |
 | `STRIPE_WEBHOOK_SECRET_LIVE`   | Stripe live webhook signing secret                          |
-| `STRIPE_API_VERSION`           | Optional Stripe API version                                 |
-| `STRIPE_TIMEOUT_MS`            | Optional Stripe request timeout                             |
-| `STRIPE_MAX_NETWORK_RETRIES`   | Optional Stripe network retries                             |
-| `PAYMENT_CHECKOUT_SUCCESS_URL` | Default Stripe Checkout success URL                         |
-| `PAYMENT_CHECKOUT_CANCEL_URL`  | Default Stripe Checkout cancel URL                          |
-| `DRIVER_APP_URL`               | Driver app base URL (subscription success/cancel redirects) |
+| `WEBSITE_URL`                  | Public website; Stripe redirects and email images use it    |
+| `CUSTOMER_APP_URL`             | Customer portal; booking emails link to it                  |
+| `GOOGLE_REVIEW_URL`            | Google review link in the ride completed email              |
 | `FIREBASE_PROJECT_ID`          | Firebase project id (FCM push; optional until configured)   |
 | `FIREBASE_CLIENT_EMAIL`        | Firebase service account email                              |
 | `FIREBASE_PRIVATE_KEY`         | Firebase service account private key (`\n` escaped OK)      |
 | `TWILIO_ACCOUNT_SID`           | Twilio account SID (SMS; optional until configured)         |
 | `TWILIO_AUTH_TOKEN`            | Twilio auth token                                           |
 | `TWILIO_SENDER_ID`             | SMS sender name, max 11 characters (e.g. `USALimoCorp`)     |
-| `AGORA_APP_ID`                 | Agora App ID (trip audio RTC tokens; optional until set)    |
-| `AGORA_APP_CERTIFICATE`        | Agora App Certificate                                       |
-| `AGORA_TOKEN_TTL_SECONDS`      | Agora token TTL (default `3600`)                            |
 
-Local Stripe webhook (dev):
+See [Payments (Stripe)](#payments-stripe) for running Stripe locally.
 
-```bash
-stripe listen --forward-to http://localhost:3000/api/v1/payments/webhooks/stripe
-```
+## Payments (Stripe)
 
-Webhook endpoint path: `http://localhost:3000/api/v1/payments/webhooks/stripe`
+Riders pay on Stripe Checkout as guests. The website calls `POST /public/bookings/checkout`, which
+saves the booking as `PENDING` (priced on the server) and returns the Stripe page. Stripe's webhook
+then records a `Payment` (`PAID` or `CANCELLED`) and moves the booking to `CONFIRMED` or
+`CANCELLED`. A paid booking emails the rider and `DEFAULT_ADMIN_EMAIL` and texts the rider.
+
+The **Live Payment Mode** switch in admin **Platform settings** chooses which keys are used: off uses
+the `_TEST` keys, on uses the `_LIVE` keys.
+
+### Run it locally
+
+1. Install the [Stripe CLI](https://docs.stripe.com/stripe-cli) and sign in once:
+
+   ```bash
+   stripe login
+   ```
+
+2. Copy your **test** secret key from [Developers → API keys](https://dashboard.stripe.com/test/apikeys)
+   into `apps/backend/.env`:
+
+   ```env
+   STRIPE_SECRET_KEY_TEST=sk_test_...
+   WEBSITE_URL=http://localhost:3003
+   ```
+
+3. Forward Stripe events to the local API (keep this terminal open):
+
+   ```bash
+   stripe listen --forward-to http://localhost:3000/api/v1/payments/stripe/webhook
+   ```
+
+   It prints a signing secret (`whsec_...`). Put it in `apps/backend/.env` and restart the backend:
+
+   ```env
+   STRIPE_WEBHOOK_SECRET_TEST=whsec_...
+   ```
+
+4. Start the apps (`pnpm dev` from the repository root) and make sure **Live Payment Mode** is off.
+5. Book a ride on the website and pay with a [test card](https://docs.stripe.com/testing):
+   `4242 4242 4242 4242`, any future expiry, any CVC and ZIP.
+
+You should see `checkout.session.completed` in the `stripe listen` terminal, the booking become
+`CONFIRMED` with a `PAID` payment, and the confirmation emails and SMS go out.
+
+Useful test cases:
+
+| Case | How |
+| --- | --- |
+| Declined card | `4000 0000 0000 0002` |
+| Leave checkout | Click **←** on the Stripe page; you land on `/book-ride/payment-cancel` |
+| Checkout expires | `stripe trigger checkout.session.expired` sends a sample event (real bookings expire after 30 minutes) |
+
+### Production
+
+1. In [Developers → Webhooks](https://dashboard.stripe.com/webhooks), add an endpoint
+   `https://<api-domain>/api/v1/payments/stripe/webhook` with these events:
+   - `checkout.session.completed`
+   - `checkout.session.expired`
+   - `checkout.session.async_payment_succeeded`
+   - `checkout.session.async_payment_failed`
+2. Put the keys in `apps/backend/.env.production`: `STRIPE_SECRET_KEY_LIVE` and the endpoint's
+   signing secret as `STRIPE_WEBHOOK_SECRET_LIVE` (and the `_TEST` pair for a test-mode endpoint).
+3. Copy the env file to the server with `deploy/vps/push-env.sh`, deploy, then turn on **Live
+   Payment Mode**.
+
+While the active mode has no keys, checkout answers "Online payment is not available right now".
 
 ## Infrastructure
 

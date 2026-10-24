@@ -53,7 +53,7 @@ export class BookingService {
    * platform settings, so the total never comes from the client. Hourly hire is quoted on
    * request, so customers can only book one-way and return trips.
    */
-  private async priceCustomerBooking(body: CreateDto): Promise<BookingPricing> {
+  async priceForCustomer(body: CreateDto): Promise<BookingPricing> {
     const bookingType = body.bookingType ?? BookingType.ONE_WAY;
     if (bookingType !== BookingType.ONE_WAY && bookingType !== BookingType.RETURN) {
       throw new BadRequestException("Hourly hire is quoted on request; please contact us");
@@ -143,7 +143,7 @@ export class BookingService {
   async create(body: CreateDto, request: Request) {
     const context = toRequestContext(request);
     const userId = requireUserId(context);
-    const pricing = await this.priceCustomerBooking(body);
+    const pricing = await this.priceForCustomer(body);
     const bookingNumber = await allocateCode({
       prefix: "BK",
       nextSequence: () => this.sequenceService.nextBooking(),

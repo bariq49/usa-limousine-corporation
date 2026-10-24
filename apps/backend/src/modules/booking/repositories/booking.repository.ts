@@ -16,6 +16,18 @@ import type {
   UpdateStatusData,
 } from "../types/booking";
 
+const paymentSelect = {
+  select: {
+    status: true,
+    transactionId: true,
+    amount: true,
+    currency: true,
+    cardBrand: true,
+    cardLast4: true,
+    paidAt: true,
+  },
+} as const;
+
 /** Line items with names; `unitPrice` is the price charged, not today's catalog price. */
 const itemsInclude = {
   luggage: {
@@ -142,7 +154,19 @@ export class BookingRepository {
         },
         luggage: itemsInclude.luggage,
         extraServices: itemsInclude.extraServices,
+        payment: paymentSelect,
       },
+    });
+  }
+
+  attachCheckoutSession(id: string, sessionId: string) {
+    return this.prisma.booking.update({ where: { id }, data: { stripeSessionId: sessionId } });
+  }
+
+  findByCheckoutSession(sessionId: string) {
+    return this.prisma.booking.findFirst({
+      where: { stripeSessionId: sessionId, deletedAt: null },
+      select: { id: true, status: true, bookingNumber: true, passenger: true },
     });
   }
 
@@ -279,6 +303,7 @@ export class BookingRepository {
         },
         luggage: itemsInclude.luggage,
         extraServices: itemsInclude.extraServices,
+        payment: paymentSelect,
       },
     });
   }

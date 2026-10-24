@@ -142,10 +142,9 @@ export interface Step3FormValues {
 
 export type BookingType = "ONE_WAY" | "RETURN" | "HOURLY";
 
-/** Booking request in the backend's create shape; the customer portal submits it after sign-in. */
+/** Booking request in the backend's create shape, sent to start Stripe Checkout. */
 export interface BookingDraft {
     vehicleCategoryId: string;
-    vehicleCategoryName: string;
     vehicleCount: number;
     bookingType: BookingType;
     address: {
@@ -154,6 +153,7 @@ export interface BookingDraft {
         stops?: { address: string }[];
         distance: number;
         duration: number;
+        travelDuration?: number;
     };
     passenger: {
         passengerCount: number;
@@ -178,3 +178,15 @@ export interface BookingDraft {
         total: number;
     };
 }
+
+export type CheckoutStart = {
+    url: string;
+    sessionId: string;
+    bookingNumber: string;
+};
+
+/** Stripe Checkout the rider was sent to, kept so the cancel page can show and resume it. */
+export type CheckoutSession = {
+    sessionId: string;
+    url: string;
+};

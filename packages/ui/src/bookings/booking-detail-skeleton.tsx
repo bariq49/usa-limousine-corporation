@@ -5,7 +5,7 @@ export function BookingDetailSkeleton() {
     <div className="space-y-4 md:space-y-5">
       <div className="flex flex-wrap items-center gap-2 sm:gap-3">
         <Skeleton className="h-10 w-[88px] shrink-0 rounded-md" />
-        <div className="flex h-10 min-w-0 flex-1 items-center justify-between gap-2 rounded-md border border-border border-r-2 border-r-primary bg-card px-3 sm:px-4">
+        <div className="flex h-10 min-w-0 flex-1 items-center justify-between gap-2 rounded-md border border-border bg-card px-3 sm:px-4">
           <div className="flex min-w-0 items-center gap-2.5">
             <Skeleton className="h-5 w-5 shrink-0 rounded" />
             <Skeleton className="h-4 w-40 sm:w-56" />

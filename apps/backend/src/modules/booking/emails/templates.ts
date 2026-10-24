@@ -4,13 +4,14 @@ import { emailButton, emailLayout, emailParagraph } from "./layout";
 import type { BookingEmail, EmailContext } from "./types";
 
 const viewBookingButton = (booking: BookingEmail, context: EmailContext) =>
-  emailButton(`${context.portalUrl}/bookings/${booking.id}`, "View booking");
+  booking.hasAccount
+    ? emailButton(`${context.portalUrl}/bookings/${booking.id}`, "View booking")
+    : "";
 
 const helpLine = emailParagraph("Need help? Reply to this email and our team will assist you.", {
   muted: true,
 });
 
-/** To the customer when the booking is placed and waiting for our confirmation. */
 export const bookingReceived = (booking: BookingEmail, context: EmailContext) =>
   emailLayout({
     siteUrl: context.siteUrl,
@@ -29,8 +30,7 @@ export const bookingReceived = (booking: BookingEmail, context: EmailContext) =>
     `,
   });
 
-/** To the admin inbox for every new customer booking. */
-export const newBookingAdmin = (booking: BookingEmail, context: EmailContext) =>
+export const newBookingAdmin = (booking: BookingEmail, context: EmailContext, paid = false) =>
   emailLayout({
     siteUrl: context.siteUrl,
     title: booking.vehicle.name,
@@ -40,13 +40,15 @@ export const newBookingAdmin = (booking: BookingEmail, context: EmailContext) =>
     body: `
       ${emailParagraph(`New booking request · ${escapeHtml(booking.bookingNumber)}.`, { strong: true })}
       ${emailParagraph(
-        `${escapeHtml(booking.passenger.name)} has requested a ride. Review and confirm it from the admin dashboard.`,
+        paid
+          ? `${escapeHtml(booking.passenger.name)} has booked and paid online. The booking is confirmed.`
+          : `${escapeHtml(booking.passenger.name)} has requested a ride. Review and confirm it from the admin dashboard.`,
       )}
       ${bookingSummary(booking, context.siteUrl)}
     `,
   });
 
-export const bookingConfirmed = (booking: BookingEmail, context: EmailContext) =>
+export const bookingConfirmed = (booking: BookingEmail, context: EmailContext, paid = false) =>
   emailLayout({
     siteUrl: context.siteUrl,
     title: booking.vehicle.name,
@@ -55,7 +57,11 @@ export const bookingConfirmed = (booking: BookingEmail, context: EmailContext) =
     headerImage: booking.vehicle.image,
     body: `
       ${emailParagraph(`Good news, ${escapeHtml(booking.passenger.name)}.`, { strong: true })}
-      ${emailParagraph("Your booking is confirmed and your chauffeur is reserved. Your ride details are below.")}
+      ${emailParagraph(
+        paid
+          ? "We have received your payment. Your booking is confirmed and your chauffeur is reserved. Your ride details and receipt are below."
+          : "Your booking is confirmed and your chauffeur is reserved. Your ride details are below.",
+      )}
       ${viewBookingButton(booking, context)}
       ${bookingSummary(booking, context.siteUrl)}
       ${helpLine}

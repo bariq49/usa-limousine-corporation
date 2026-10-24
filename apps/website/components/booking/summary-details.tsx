@@ -3,9 +3,8 @@
 import { useMemo, useState } from "react";
 import { useBookingStore, usePricing } from "@/store/use-booking-store";
 import { PriceRow } from "@usa-limousine-corporation/ui/bookings/price-row";
-import { TripRouteDetails } from "@usa-limousine-corporation/ui/bookings/trip-route-details";
+import { BookingLocationDetails } from "@usa-limousine-corporation/ui/bookings/booking-location-details";
 import {
-  parseAddress,
   calculateArrivalTime,
   formatDate,
   formatPrice,
@@ -38,16 +37,8 @@ function SummaryDetails({ className }: Props = {}) {
   const selectedCategory = step2?.vehicleCategory;
   const vehicleCount = step2?.vehicleCount ?? 1;
 
-  const pickup = useMemo(() => parseAddress(step1?.pickupAddress || ""), [step1?.pickupAddress]);
-  const delivery = useMemo(
-    () => parseAddress(step1?.deliveryAddress || ""),
-    [step1?.deliveryAddress],
-  );
   const stops = useMemo(
-    () =>
-      (step1?.stops ?? [])
-        .filter((stop) => Boolean(stop.address?.trim()))
-        .map((s) => parseAddress(s.address)),
+    () => (step1?.stops ?? []).map((stop) => stop.address.trim()).filter(Boolean),
     [step1?.stops],
   );
 
@@ -109,18 +100,30 @@ function SummaryDetails({ className }: Props = {}) {
             </button>
           </div>
 
-          <TripRouteDetails
-            pickup={pickup}
-            delivery={delivery}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-gray-600">Trip Type</span>
+              <span className="text-sm text-gray-500">
+                {isHourly ? "By the Hour" : returnEnabled ? "Return" : "One Way"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-gray-600">Date</span>
+              <span className="text-sm text-gray-500">{formattedPickupDate}</span>
+            </div>
+          </div>
+
+          <BookingLocationDetails
+            pickupLocation={step1?.pickupAddress}
+            dropoffLocation={step1?.deliveryAddress}
             stops={stops}
-            showTripMeta
-            tripType={isHourly ? "By the Hour" : step3?.returnEnabled ? "Return" : "One Way"}
-            dateValue={formattedPickupDate}
+            isHourly={isHourly}
+            durationLabel={hireDuration}
             pickupTime={hasPickupTime ? formatTime(pickupTime) : undefined}
-            deliveryTime={hasPickupTime && deliveryTime !== "—" ? (deliveryTime ?? undefined) : undefined}
-            hireDuration={hireDuration}
-            estDistance={estDistance}
-            estDuration={estDuration}
+            dropoffTime={hasPickupTime && deliveryTime !== "—" ? deliveryTime : undefined}
+            note={[estDuration, estDistance].filter(Boolean).map((value) => `~ ${value}`).join(" · ")}
+            variant="plain"
+            className="border-t border-gray-100 pt-3"
           />
 
           {selectedCategory ? (

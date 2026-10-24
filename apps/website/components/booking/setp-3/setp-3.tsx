@@ -27,7 +27,7 @@ const PASSENGER_FORM_ID = "passenger-details-form";
 function Step3() {
   const hasHydrated = useHasHydrated();
   const { step1, step3, bookingSettings, setStep3Data } = useBookingStore();
-  const { mutateAsync: placeOrder, isPending } = usePlaceOrder();
+  const { mutate: placeOrder, isPending } = usePlaceOrder();
   const totalPrice = useTotalPrice();
 
   const showReturnTrip = step1?.tripType !== TRIP_TYPES.HOURLY;
@@ -115,7 +115,7 @@ function Step3() {
     return () => subscription.unsubscribe();
   }, [form, setStep3Data, showReturnTrip, step1?.isAirportSelected]);
 
-  const handleSubmit = async (values: Step3FormValues) => {
+  const handleSubmit = (values: Step3FormValues) => {
     const pickupValidation = validateBookingTime({
       date: values.pickupDate,
       time: values.pickupTime,
@@ -129,7 +129,7 @@ function Step3() {
       return;
     }
 
-    await placeOrder();
+    placeOrder();
   };
 
   if (!hasHydrated) return null;

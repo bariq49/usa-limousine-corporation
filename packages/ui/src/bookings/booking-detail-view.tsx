@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { ComponentType, ReactNode, SVGProps } from "react";
-import { ArrowLeft, CheckCircle2, Clock, XCircle } from "lucide-react";
+import { ArrowLeft, BadgeCheck, BadgeX, Clock } from "lucide-react";
 import { Badge } from "../components/badge";
 import { Button } from "../components/button";
 import {
@@ -19,8 +20,10 @@ import {
 } from "../svg";
 import { BookingCustomerDetails } from "./booking-customer-details";
 import { BookingLocationDetails } from "./booking-location-details";
+import { BookingPaymentDetails } from "./booking-payment-details";
 import { BookingPaymentSummary } from "./booking-payment-summary";
-import { BookingRouteMap } from "./booking-route-map";
+import { cn } from "../utils/cn";
+import { AnimatedRouteMap } from "./animated-route-map";
 import { BookingVehicleDetails } from "./booking-vehicle-details";
 import { DetailItem } from "./detail-item";
 import { getLuggageIcon } from "./luggage-icon";
@@ -49,41 +52,28 @@ function getSeatIcon(name?: string): SvgIcon {
 }
 
 function BookingStatusIcon({ status }: { status: Item["status"] }) {
+  const className = "h-10 w-10 text-white drop-shadow-md sm:h-14 sm:w-14";
   if (status === "CANCELLED") {
-    return (
-      <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-destructive/10 sm:h-16 sm:w-16">
-        <XCircle className="h-8 w-8 text-destructive sm:h-9 sm:w-9" strokeWidth={1.75} />
-      </div>
-    );
+    return <BadgeX className={`${className} fill-destructive`} />;
   }
-
-  if (status === "PENDING") {
-    return (
-      <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-warning/10 sm:h-16 sm:w-16">
-        <Clock className="h-8 w-8 text-warning sm:h-9 sm:w-9" strokeWidth={1.75} />
-      </div>
-    );
+  if (status === "PENDING" || status === "DRAFT") {
+    return <Clock className="h-10 w-10 text-warning sm:h-14 sm:w-14" strokeWidth={1.75} />;
   }
+  return <BadgeCheck className={`${className} fill-default-900`} />;
+}
 
-  if (status === "COMPLETED") {
-    return (
-      <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/10 sm:h-16 sm:w-16">
-        <CheckCircle2 className="h-8 w-8 text-emerald-600 sm:h-9 sm:w-9" strokeWidth={1.75} />
-      </div>
-    );
-  }
-
-  return (
-    <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 sm:h-16 sm:w-16">
-      <CheckCircle2 className="h-8 w-8 text-primary sm:h-9 sm:w-9" strokeWidth={1.75} />
-    </div>
-  );
+function addMinutes(time: string, minutes: number) {
+  const [hours = 0, mins = 0] = time.split(":").map(Number);
+  const total = (((hours * 60 + mins + Math.round(minutes)) % 1440) + 1440) % 1440;
+  return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
 }
 
 type Props = {
   booking: Item;
-  /** Buttons shown next to the header (e.g. Confirm / Complete / Cancel). */
   actions?: ReactNode;
+  backHref?: string;
+  heading?: { title: string; description: string };
+  mapStickyClassName?: string;
 };
 
 export function BookingDetailView(props: Props) {
@@ -100,26 +90,43 @@ export function BookingDetailView(props: Props) {
   );
   const meetAndGreet = booking.meetAndGreet;
   const flight = booking.flightDetails;
+  const title = `Booking Details - ${booking.bookingNumber}`;
+  const pickupTime = booking.bookingTime?.pickupTime;
+  const travelMinutes =
+    booking.address?.travelDuration ?? (isHourly ? undefined : booking.address?.duration);
+  const arrivalTime =
+    !isHourly && pickupTime && travelMinutes != null ? addMinutes(pickupTime, travelMinutes) : null;
+  const showMap = !isHourly && Boolean(booking.address?.dropoff?.address);
 
   return (
     <div className="space-y-4 md:space-y-5">
       <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          className="h-10 shrink-0 gap-1.5 px-3"
-          onClick={() => router.back()}
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back
-        </Button>
+        {props.backHref ? (
+          <Button asChild size="sm" variant="outline" className="h-10 shrink-0 gap-1.5 px-3">
+            <Link href={props.backHref}>
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </Link>
+          </Button>
+        ) : (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="h-10 shrink-0 gap-1.5 px-3"
+            onClick={() => router.back()}
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </Button>
+        )}
 
-        <div className="flex h-10 min-w-0 flex-1 items-center justify-between gap-2 rounded-md border border-border border-r-2 border-r-primary bg-card px-3 sm:px-4">
+        <div className="flex h-10 min-w-0 flex-1 items-center justify-between gap-2 rounded-md border border-border bg-card px-3 sm:px-4">
           <div className="flex min-w-0 items-center gap-2 sm:gap-2.5">
             <CalendarCheck className="h-5 w-5 shrink-0 text-primary" />
             <h1 className="truncate text-sm font-semibold text-default-900 sm:text-base">
-              Booking Details - {booking.bookingNumber}
+              <span className="sm:hidden">{booking.bookingNumber}</span>
+              <span className="hidden sm:inline">{title}</span>
             </h1>
           </div>
           <Badge
@@ -136,31 +143,43 @@ export function BookingDetailView(props: Props) {
         ) : null}
       </div>
 
-      <div className="overflow-hidden rounded-md border border-border bg-card">
-        {!isHourly ? (
-          <BookingRouteMap
-            pickupAddress={booking.address?.pickup?.address}
-            dropoffAddress={booking.address?.dropoff?.address}
-            pickupTimeLabel={
-              booking.bookingTime?.pickupTime
-                ? formatTime({ date: booking.bookingTime.pickupTime })
-                : undefined
-            }
-            durationMinutes={booking.address?.duration}
-            className="w-full"
+      <div className="max-sm:-mx-4 lg:overflow-hidden lg:rounded-md lg:border lg:border-border lg:bg-card">
+        {showMap && booking.address?.dropoff ? (
+          <AnimatedRouteMap
+            pickupAddress={booking.address.pickup.address}
+            deliveryAddress={booking.address.dropoff.address}
+            stops={booking.address.stops}
+            pickupTime={pickupTime}
+            travelDuration={travelMinutes ?? undefined}
+            bottomInset={40}
+            wrapperClassName={cn(
+              "max-lg:sticky max-lg:z-0 sm:max-lg:overflow-hidden sm:max-lg:rounded-md",
+              props.mapStickyClassName ?? "max-lg:top-14",
+            )}
+            className="h-80 sm:h-96 lg:h-112 xl:rounded-none xl:border-0"
           />
         ) : null}
 
-        <section className="px-3 pb-6 pt-6 sm:px-6 sm:pb-8 sm:pt-8 md:px-8">
+        <section
+          className={cn(
+            "relative z-10 bg-card px-4 pb-6 pt-6 sm:rounded-md sm:px-6 sm:pb-8 sm:pt-8 md:px-8 lg:rounded-none",
+            showMap && "max-lg:-mt-10 max-lg:rounded-t-2xl max-lg:pt-3 max-lg:shadow-lg sm:max-lg:pt-3",
+          )}
+        >
+          {showMap ? (
+            <div className="mb-5 flex justify-center lg:hidden">
+              <div className="h-1.5 w-12 rounded-full bg-default-300" />
+            </div>
+          ) : null}
           <div className="grid w-full items-start gap-5 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1.45fr)] lg:gap-5">
             <div className="flex h-full w-full flex-col justify-between text-left">
               <div>
                 <BookingStatusIcon status={booking.status} />
                 <h2 className="mt-4 text-2xl font-bold text-default-900 sm:mt-6 sm:text-3xl">
-                  {BOOKING_STATUS_HEADINGS[booking.status]}
+                  {props.heading?.title ?? BOOKING_STATUS_HEADINGS[booking.status]}
                 </h2>
                 <p className="mt-2 text-sm leading-relaxed text-default-600 sm:mt-3 sm:text-base">
-                  {BOOKING_STATUS_DESCRIPTIONS[booking.status]}
+                  {props.heading?.description ?? BOOKING_STATUS_DESCRIPTIONS[booking.status]}
                 </p>
                 {booking.status === "CANCELLED" && booking.cancellationReason ? (
                   <p className="mt-2 text-sm text-destructive">
@@ -175,6 +194,7 @@ export function BookingDetailView(props: Props) {
                   vehicleCategory={booking.vehicleCategory}
                   vehicleCount={booking.vehicleCount}
                 />
+                <BookingPaymentDetails payment={booking.payment} />
               </div>
             </div>
 
@@ -182,8 +202,11 @@ export function BookingDetailView(props: Props) {
               <BookingLocationDetails
                 pickupLocation={booking.address?.pickup?.address}
                 dropoffLocation={booking.address?.dropoff?.address}
+                stops={(booking.address?.stops ?? []).map((stop) => stop.address)}
                 isHourly={isHourly}
                 durationLabel={formatDuration({ minutes: booking.address?.duration })}
+                pickupTime={pickupTime ? formatTime({ date: pickupTime }) : undefined}
+                dropoffTime={arrivalTime ? formatTime({ date: arrivalTime }) : undefined}
               />
 
               <section className="flex flex-1 flex-col rounded-md bg-default-100 p-4">
@@ -253,9 +276,9 @@ export function BookingDetailView(props: Props) {
                       Airline: {flight.flightName}
                     </DetailItem>
                   ) : null}
-                  {flight?.flightNumber || booking.passenger?.flightNumber ? (
+                  {flight?.flightNumber ? (
                     <DetailItem icon={preferenceIcon(Globe)}>
-                      Flight Number: {flight?.flightNumber || booking.passenger?.flightNumber}
+                      Flight Number: {flight.flightNumber}
                     </DetailItem>
                   ) : null}
                   {meetAndGreet?.enabled != null ? (
@@ -277,24 +300,6 @@ export function BookingDetailView(props: Props) {
                 <section className="rounded-md bg-default-100 p-4">
                   <h3 className="font-bold text-default-900">Notes & Special Instructions</h3>
                   <p className="mt-2 text-sm leading-relaxed text-default-700">{booking.notes}</p>
-                </section>
-              ) : null}
-
-              {booking.passenger?.specialInstructions ? (
-                <section className="rounded-md bg-default-100 p-4">
-                  <h3 className="font-bold text-default-900">Passenger Instructions</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-default-700">
-                    {booking.passenger.specialInstructions}
-                  </p>
-                </section>
-              ) : null}
-
-              {meetAndGreet?.instructions ? (
-                <section className="rounded-md bg-default-100 p-4">
-                  <h3 className="font-bold text-default-900">Meet & Greet Instructions</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-default-700">
-                    {meetAndGreet.instructions}
-                  </p>
                 </section>
               ) : null}
 

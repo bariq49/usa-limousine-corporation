@@ -11,6 +11,7 @@ import type { BookingEmail, EmailContext } from "../src/modules/booking/emails/t
 const booking: BookingEmail = {
   id: "book-1",
   bookingNumber: "BK-1001",
+  hasAccount: true,
   bookingType: BookingType.RETURN,
   vehicleCount: 2,
   vehicle: { name: "Sedan", description: "Executive sedan", image: null, passengerCount: 4 },
@@ -67,6 +68,13 @@ describe("booking email templates", () => {
     expect(html).toContain("$235.00");
     expect(html).toContain("https://customer.usalimocorp.com/bookings/book-1");
     expect(html).toContain("https://www.usalimocorp.com/assets/email-icons/mapPin.png");
+  });
+
+  it("leaves the portal link out of guest booking emails", () => {
+    const html = bookingConfirmed(Object.assign({}, booking, { hasAccount: false }), context, true);
+
+    expect(html).toContain("We have received your payment");
+    expect(html).not.toContain("/bookings/book-1");
   });
 
   it("escapes customer-entered text", () => {

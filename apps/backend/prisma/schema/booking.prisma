@@ -10,7 +10,6 @@ enum BookingType {
   ONE_WAY
   RETURN
   HOURLY
-  CREW_RIDE
 }
 
 model Booking {
@@ -22,6 +21,7 @@ model Booking {
   bookingType        BookingType   @default(ONE_WAY)
   vehicleCount       Int           @default(1)
   totalPrice         Decimal       @db.Decimal(12, 2)
+  stripeSessionId    String?       @unique
   pricing            Json
   address            Json
   passenger          Json
@@ -41,6 +41,7 @@ model Booking {
   vehicleCategory VehicleCategory       @relation(fields: [vehicleCategoryId], references: [id], onDelete: Restrict)
   luggage         BookingLuggage[]
   extraServices   BookingExtraService[]
+  payment         Payment?
 
   @@index([userId, createdAt])
   @@index([deletedAt, createdAt])

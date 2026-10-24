@@ -12,7 +12,6 @@ pnpm --filter @usa-limousine-corporation/website dev
 | --- | --- | --- |
 | `NEXT_PUBLIC_API_BASE_URL` | `https://api.usalimocorp.com/api/v1` | Backend API (public catalog endpoints) |
 | `NEXT_PUBLIC_APP_URL` | `https://www.usalimocorp.com` | Canonical site URL for SEO, robots and sitemap |
-| `NEXT_PUBLIC_CUSTOMER_PORTAL_URL` | `https://customer.usalimocorp.com` | Where riders sign in and confirm bookings |
 | `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | | Places autocomplete and route distance |
 | `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` | | Optional Search Console token |
 | `NEXT_PUBLIC_GTM_ID` | `GTM-XXXXXXX` | Optional Google Tag Manager container |
@@ -25,9 +24,13 @@ pnpm --filter @usa-limousine-corporation/website dev
    fee breakdown); luggage from `GET /public/luggage`; child seats from `GET /public/extra-services`;
    stop, meet & greet fees and booking notice from `GET /public/settings`.
    Hourly hire is offered as a quote request.
-3. Passenger details → the draft is sent to `${NEXT_PUBLIC_CUSTOMER_PORTAL_URL}/book`, where the
-   rider signs in or signs up and confirms. The portal creates a `PENDING` booking with
-   `POST /customers/bookings`.
+3. Passenger details → `POST /public/bookings/checkout` saves the booking as `PENDING` (priced on
+   the server) and returns a Stripe Checkout page. No sign-in is needed.
+4. Stripe's webhook (`POST /payments/stripe/webhook`) marks the booking paid and `CONFIRMED` and
+   emails the rider. Stripe returns them to `/book-ride/payment-success`, which shows the full
+   booking from `GET /public/bookings/checkout/:sessionId` and waits for the webhook. Leaving
+   checkout lands on `/book-ride/payment-cancel`, which shows the booking with a button back to the
+   still-open checkout page; unpaid bookings are cancelled when it expires after 30 minutes.
 
 Blog, reviews, contact and newsletter have no backend yet. They show static content, and the
 forms open the visitor's email app.

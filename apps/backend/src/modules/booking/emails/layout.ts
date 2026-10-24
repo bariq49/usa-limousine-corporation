@@ -15,12 +15,10 @@ export const EMAIL_BRAND = {
 } as const;
 
 export type EmailLayout = {
-  /** Public website; the logo and contact link point at it. */
   siteUrl: string;
   title: string;
   subtitle?: string | undefined;
   preheader?: string | undefined;
-  /** Vehicle photo behind the title; a plain dark header when missing. */
   headerImage?: string | null | undefined;
   body: string;
 };

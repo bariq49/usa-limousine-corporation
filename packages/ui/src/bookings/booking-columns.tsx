@@ -35,7 +35,6 @@ const typeLabelMap: Record<BookingType, string> = {
   ONE_WAY: "One Way",
   RETURN: "Return",
   HOURLY: "Hourly",
-  CREW_RIDE: "Crew Ride",
 };
 
 export const getColumns = (options?: BookingColumnOptions): ColumnDef<Item>[] => {

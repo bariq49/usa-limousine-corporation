@@ -4,6 +4,7 @@ export const API_ROUTES = {
     LUGGAGE: `/public/luggage`,
     EXTRA_SERVICES: `/public/extra-services`,
     SETTINGS: `/public/settings`,
+    CHECKOUT: `/public/bookings/checkout`,
 } as const;
 
 // Public site routes

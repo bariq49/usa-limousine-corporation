@@ -1,13 +1,10 @@
 import { useMutation } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 import type { BookingDraft } from "@/types/booking.types";
 import { useBookingStore, calculatePricing } from "@/store/use-booking-store";
 import { TRIP_TYPES } from "@/constants/booking-constants";
-import { getCustomerPortalUrl } from "@/lib/api/base-url";
+import { startCheckout } from "@/lib/api/checkout";
 
-/**
- * Builds the booking draft from the store and hands it to the customer portal, where the
- * rider signs in and confirms. The server re-prices the booking, so only totals are sent.
- */
 export const usePlaceOrder = () => {
     return useMutation({
         mutationFn: async () => {
@@ -41,7 +38,6 @@ export const usePlaceOrder = () => {
 
             const draft: BookingDraft = {
                 vehicleCategoryId: step2.vehicleCategory.id,
-                vehicleCategoryName: step2.vehicleCategory.name,
                 vehicleCount: step2.vehicleCount,
                 bookingType: isHourly ? "HOURLY" : returnEnabled ? "RETURN" : "ONE_WAY",
                 address: {
@@ -50,6 +46,7 @@ export const usePlaceOrder = () => {
                     stops: step1.stops,
                     distance: step1.distance ?? 0,
                     duration: isHourly ? (step1.duration ?? 0) * 60 : (step1.travelDuration ?? 0),
+                    travelDuration: step1.travelDuration,
                 },
                 passenger: {
                     passengerCount: step2.passengers,
@@ -90,11 +87,13 @@ export const usePlaceOrder = () => {
                 },
             };
 
-            const url = new URL("/book", getCustomerPortalUrl());
-            url.searchParams.set("draft", JSON.stringify(draft));
-            window.location.assign(url.toString());
-
-            return draft;
+            const checkout = await startCheckout(draft);
+            useBookingStore.getState().setCheckout({ sessionId: checkout.sessionId, url: checkout.url });
+            window.location.assign(checkout.url);
+            return checkout;
+        },
+        onError: (error: { message?: string }) => {
+            toast.error(error.message || "We could not start the payment. Please try again.");
         },
     });
 };

@@ -1,6 +1,6 @@
 export type BookingStatus = "DRAFT" | "PENDING" | "CONFIRMED" | "COMPLETED" | "CANCELLED";
 
-export type BookingType = "ONE_WAY" | "RETURN" | "HOURLY" | "CREW_RIDE";
+export type BookingType = "ONE_WAY" | "RETURN" | "HOURLY";
 
 export type Location = {
   address: string;
@@ -14,6 +14,7 @@ export type Address = {
   stops?: Location[] | undefined;
   distance?: number | undefined;
   duration?: number | undefined;
+  travelDuration?: number | null | undefined;
 };
 
 export type Passenger = {
@@ -22,9 +23,6 @@ export type Passenger = {
   ccEmail?: string | undefined;
   phone?: string | undefined;
   passengerCount?: number | undefined;
-  specialInstructions?: string | undefined;
-  flightNumber?: string | undefined;
-  trainNumber?: string | undefined;
 };
 
 export type BookingTime = {
@@ -49,6 +47,16 @@ export type Pricing = {
   extraServicesPrice?: number | undefined;
   subtotal?: number | undefined;
   currency?: string | undefined;
+  rates?: PricingRates | undefined;
+};
+
+export type PricingRates = {
+  fuelSurchargeRate: number;
+  gratuityRate: number;
+  taxRate: number;
+  transactionFeeRate: number;
+  oneWayDiscountRate: number;
+  returnDiscountRate: number;
 };
 
 export type FlightDetails = {
@@ -59,7 +67,6 @@ export type FlightDetails = {
 export type MeetAndGreet = {
   enabled?: boolean | undefined;
   returnEnabled?: boolean | undefined;
-  instructions?: string | undefined;
   signName?: string | undefined;
 };
 
@@ -80,6 +87,16 @@ export type BookingLuggageItem = {
   luggageType?: { id: string; name: string } | null;
 };
 
+export type Payment = {
+  status: "PAID" | "CANCELLED";
+  transactionId?: string | null | undefined;
+  amount: number | string;
+  currency?: string | undefined;
+  cardBrand?: string | null | undefined;
+  cardLast4?: string | null | undefined;
+  paidAt?: string | null | undefined;
+};
+
 export type Item = {
   id: string;
   userId?: string | null | undefined;
@@ -96,6 +113,7 @@ export type Item = {
   flightDetails?: FlightDetails | null | undefined;
   meetAndGreet?: MeetAndGreet | null | undefined;
   extraServices?: ExtraServiceItem[] | null | undefined;
+  payment?: Payment | null | undefined;
   notes?: string | null | undefined;
   confirmedAt?: string | null | undefined;
   completedAt?: string | null | undefined;

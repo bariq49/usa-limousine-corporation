@@ -8,6 +8,7 @@ import type {
     BookingStep2PersistedData,
     BookingStep3PersistedData,
     BookingSettings,
+    CheckoutSession,
 } from '@/types/booking.types';
 import { PASSENGER_TITLES } from '@/constants/booking-constants';
 
@@ -27,12 +28,16 @@ interface BookingState {
     step2: BookingStep2PersistedData | null;
     step3: BookingStep3PersistedData | null;
     bookingSettings: BookingSettings | null;
+    checkout: CheckoutSession | null;
 
     // actions
     setStep1Data: (data: BookingStep1PersistedData) => void;
     setStep2Data: (data: Partial<BookingStep2PersistedData> | null) => void;
     setStep3Data: (data: Partial<BookingStep3PersistedData> | null) => void;
     setBookingSettings: (settings: BookingSettings) => void;
+    setCheckout: (checkout: CheckoutSession) => void;
+    /** Clears the trip once it has been booked and paid. */
+    resetBooking: () => void;
 }
 
 // =============== STORE ===============
@@ -49,6 +54,7 @@ export const useBookingStore = create<BookingState>()(
             step2: null,
             step3: null,
             bookingSettings: null,
+            checkout: null,
 
             setStep1Data: (data) =>
                 set({
@@ -126,6 +132,16 @@ export const useBookingStore = create<BookingState>()(
                 set({
                     bookingSettings: settings,
                 }),
+
+            setCheckout: (checkout) => set({ checkout }),
+
+            resetBooking: () =>
+                set({
+                    step1: null,
+                    step2: null,
+                    step3: null,
+                    checkout: null,
+                }),
         }),
         {
             name: 'usa-limousine-booking-storage',
@@ -138,6 +154,7 @@ export const useBookingStore = create<BookingState>()(
                 step2: null,
                 step3: null,
                 bookingSettings: null,
+                checkout: null,
             }) as unknown as BookingState,
 
             partialize: (state) => ({
@@ -145,6 +162,7 @@ export const useBookingStore = create<BookingState>()(
                 step2: state.step2,
                 step3: state.step3,
                 bookingSettings: state.bookingSettings,
+                checkout: state.checkout,
             }),
         }
     )

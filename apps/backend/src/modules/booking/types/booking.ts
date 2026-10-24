@@ -13,6 +13,7 @@ export type AddressInput = {
   stops?: LocationInput[];
   distance: number;
   duration: number;
+  travelDuration?: number | null;
 };
 
 export type PassengerInput = {
@@ -21,9 +22,6 @@ export type PassengerInput = {
   phone: string;
   email: string;
   ccEmail?: string | null;
-  specialInstructions?: string | null;
-  flightNumber?: string | null;
-  trainNumber?: string | null;
 };
 
 export type TimeInput = {
@@ -45,7 +43,6 @@ export type FlightDetailsInput = {
 export type MeetAndGreetInput = {
   enabled?: boolean | undefined;
   returnEnabled?: boolean | undefined;
-  instructions?: string | undefined;
   signName?: string | undefined;
 };
 

@@ -8,6 +8,7 @@ import { LoggerModule } from "./common/logger/logger.module";
 import { AppConfigModule } from "./config/config.module";
 import { DatabaseModule } from "./infrastructure/database/database.module";
 import { EmailModule } from "./infrastructure/email/email.module";
+import { StripeModule } from "./infrastructure/stripe/stripe.module";
 import { QueueRegistryModule } from "./infrastructure/queue/queue-registry";
 import { RedisModule } from "./infrastructure/redis/redis.module";
 import { StorageModule } from "./infrastructure/storage/storage.module";
@@ -19,6 +20,7 @@ import { AuthModule } from "./modules/auth/auth.module";
 import { HelpCenterModule } from "./modules/help-center/help-center.module";
 import { HealthModule } from "./modules/health/health.module";
 import { BookingModule } from "./modules/booking/booking.module";
+import { PaymentModule } from "./modules/payment/payment.module";
 import { VehicleCategoryModule } from "./modules/vehicle-categories/vehicle-category.module";
 import { RolesModule } from "./modules/roles/roles.module";
 import { SessionsModule } from "./modules/sessions/sessions.module";
@@ -42,6 +44,7 @@ import { PlatformSettingsModule } from "./modules/platform-settings/platform-set
     StorageModule,
     FirebaseModule,
     TwilioModule,
+    StripeModule,
     EmailModule,
     ThrottlerModule.forRootAsync({
       inject: [ConfigService],
@@ -63,6 +66,7 @@ import { PlatformSettingsModule } from "./modules/platform-settings/platform-set
     ActivityModule,
     NotificationModule,
     BookingModule,
+    PaymentModule,
     HelpCenterModule,
     VehicleCategoryModule,
     ExtraServiceModule,
