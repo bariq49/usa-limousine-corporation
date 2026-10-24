@@ -91,7 +91,7 @@ function setup(
     emails as never,
     sms as never,
     {
-      get: (key: string) => (key === "WEBSITE_URL" ? "https://www.usalimocorp.com/" : undefined),
+      get: (key: string) => (key === "WEBSITE_URL" ? "https://demo.usalimocorp.com/" : undefined),
     } as never,
     { error: jest.fn() } as never,
   );
@@ -125,7 +125,7 @@ describe("PaymentService.startCheckout", () => {
       expect.objectContaining({
         amount: 110,
         customerPhone: "+17322898928",
-        redirectUrl: "https://www.usalimocorp.com/book-ride/payment-success",
+        redirectUrl: "https://demo.usalimocorp.com/book-ride/payment-success",
       }),
     );
     expect(bookingRepository.attachPaymentLink).toHaveBeenCalledWith(

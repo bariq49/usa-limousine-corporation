@@ -18,7 +18,7 @@ const robotoSlab = Roboto_Slab({
   subsets: ["latin"],
 });
 
-const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.usalimocorp.com';
+const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://demo.usalimocorp.com';
 /** Analytics are optional; nothing loads unless these are set. */
 const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID;
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;

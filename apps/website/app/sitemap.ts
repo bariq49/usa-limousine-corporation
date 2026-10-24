@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next';
 
 export const revalidate = 300;
 
-const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.usalimocorp.com';
+const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://demo.usalimocorp.com';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const routes = [

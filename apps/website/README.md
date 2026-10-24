@@ -11,7 +11,7 @@ pnpm --filter @usa-limousine-corporation/website dev
 | Variable | Example | Purpose |
 | --- | --- | --- |
 | `NEXT_PUBLIC_API_BASE_URL` | `https://api.usalimocorp.com/api/v1` | Backend API (public catalog endpoints) |
-| `NEXT_PUBLIC_APP_URL` | `https://www.usalimocorp.com` | Canonical site URL for SEO, robots and sitemap |
+| `NEXT_PUBLIC_APP_URL` | `https://demo.usalimocorp.com` | Canonical site URL for SEO, robots and sitemap |
 | `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | | Places autocomplete and route distance |
 | `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` | | Optional Search Console token |
 | `NEXT_PUBLIC_GTM_ID` | `GTM-XXXXXXX` | Optional Google Tag Manager container |

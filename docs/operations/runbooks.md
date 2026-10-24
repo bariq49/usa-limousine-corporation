@@ -21,6 +21,7 @@ This guide documents operational procedures, CI/CD automation, server administra
 | :---------- | :--: | :-----------: | :--------------------------------------------------------- |
 | `@`         |  A   | `177.7.55.46` | Apex domain (`https://usalimocorp.com`)                    |
 | `www`       |  A   | `177.7.55.46` | Marketing / main portal (`https://www.usalimocorp.com`)    |
+| `demo`      | CNAME | Vercel       | Public website (`https://demo.usalimocorp.com`)            |
 | `api`       |  A   | `177.7.55.46` | Core REST API & WebSockets (`https://api.usalimocorp.com`) |
 | `admin`     |  A   | `177.7.55.46` | Super Admin Dashboard (`https://admin.usalimocorp.com`)    |
 | `customer`  |  A   | `177.7.55.46` | Customer Web Portal (`https://customer.usalimocorp.com`)   |
@@ -207,5 +208,5 @@ Caddy automatically provisions and renews TLS certificates via Let's Encrypt.
   ```
 - **Checking Certificate Status:**
   ```bash
-  curl -vI https://www.usalimocorp.com 2>&1 | grep -i "server certificate"
+  curl -vI https://api.usalimocorp.com 2>&1 | grep -i "server certificate"
   ```

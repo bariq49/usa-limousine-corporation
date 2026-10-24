@@ -28,7 +28,7 @@ import { PlatformSettingsService } from "../../platform-settings/services/platfo
 import { PaymentRepository } from "../repositories/payment.repository";
 import type { CheckoutBooking, SquareWebhookEvent } from "../types/payment";
 
-const DEFAULT_WEBSITE_URL = "https://www.usalimocorp.com";
+const DEFAULT_WEBSITE_URL = "https://demo.usalimocorp.com";
 const CHECKOUT_TTL_MS = 30 * 60 * 1000;
 const SWEEP_INTERVAL_MS = 5 * 60 * 1000;
 

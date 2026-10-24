@@ -61,7 +61,7 @@ docs/
 
 | Dimension                  | Specification                                               |
 | :------------------------- | :---------------------------------------------------------- |
-| **Production Domain**      | `https://www.usalimocorp.com` / `https://usalimocorp.com`   |
+| **Production Domain**      | `https://demo.usalimocorp.com`                              |
 | **API Base URL**           | `https://api.usalimocorp.com/api/v1`                        |
 | **WebSocket Gateway**      | `wss://api.usalimocorp.com` (shares port 3000 behind Caddy) |
 | **Admin Dashboard**        | `https://admin.usalimocorp.com`                             |

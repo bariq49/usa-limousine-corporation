@@ -232,7 +232,7 @@ pnpm dev
 | **API Swagger**     | Interactive OpenAPI Docs | [http://localhost:3000/api/docs](http://localhost:3000/api/docs) | _Disabled in production_             |
 | **Admin Portal**    | Super Admin Dashboard    | [http://localhost:3001](http://localhost:3001)                   | `https://admin.usalimocorp.com`      |
 | **Customer Portal** | Customer Web Portal      | [http://localhost:3002](http://localhost:3002)                   | `https://customer.usalimocorp.com`   |
-| **Website**         | Public Booking & Site    | [http://localhost:3003](http://localhost:3003)                   | `https://usalimocorp.com`            |
+| **Website**         | Public Booking & Site    | [http://localhost:3003](http://localhost:3003)                   | `https://demo.usalimocorp.com`       |
 
 ---
 

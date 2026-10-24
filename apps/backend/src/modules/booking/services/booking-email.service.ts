@@ -15,7 +15,7 @@ import type { BookingEmail, ContactPreferences, EmailContext } from "../emails/t
 import { toBookingEmail } from "../emails/view";
 import { BookingRepository } from "../repositories/booking.repository";
 
-const DEFAULT_WEBSITE_URL = "https://www.usalimocorp.com";
+const DEFAULT_WEBSITE_URL = "https://demo.usalimocorp.com";
 
 @Injectable()
 export class BookingEmailService {

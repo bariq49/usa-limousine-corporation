@@ -15,7 +15,7 @@ Stack on one VPS with Docker Compose: **Postgres, Redis, Nest API, Admin, Custom
 | `https://api.usalimocorp.com/api/v1` | REST API (WebSocket on `https://api.usalimocorp.com`) |
 | `https://admin.usalimocorp.com` | Admin dashboard |
 | `https://customer.usalimocorp.com` | Customer dashboard |
-| `https://usalimocorp.com`, `https://www.usalimocorp.com` | Marketing website (hosted on Vercel, not this VPS) |
+| `https://demo.usalimocorp.com` | Marketing website (hosted on Vercel, not this VPS) |
 
 ## How a deploy works
 

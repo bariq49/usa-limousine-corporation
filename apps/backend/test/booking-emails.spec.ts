@@ -47,7 +47,7 @@ const booking: BookingEmail = {
 };
 
 const context: EmailContext = {
-  siteUrl: "https://www.usalimocorp.com",
+  siteUrl: "https://demo.usalimocorp.com",
   portalUrl: "https://customer.usalimocorp.com",
   reviewUrl: "https://g.page/r/example/review",
 };
@@ -67,7 +67,7 @@ describe("booking email templates", () => {
     expect(html).toContain("CC: assistant@example.com");
     expect(html).toContain("$235.00");
     expect(html).toContain("https://customer.usalimocorp.com/bookings/book-1");
-    expect(html).toContain("https://www.usalimocorp.com/assets/email-icons/mapPin.png");
+    expect(html).toContain("https://demo.usalimocorp.com/assets/email-icons/mapPin.png");
   });
 
   it("leaves the portal link out of guest booking emails", () => {
