@@ -299,7 +299,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Dummy gitignored env files
         run: |
-          for app in backend admin customer; do
+          for app in backend admin customer website; do
             mkdir -p "apps/${app}"
             touch "apps/${app}/.env.production"
           done
