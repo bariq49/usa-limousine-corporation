@@ -8,11 +8,13 @@ describe("customer navigation", () => {
     );
     expect(hrefs.sort()).toEqual([
       "/bookings",
+      "/calendar",
       "/cancelled-bookings",
       "/completed-bookings",
       "/confirmed-bookings",
       "/dashboard",
       "/help-center",
+      "/notifications",
       "/pending-bookings",
       "/profile-setting",
     ]);

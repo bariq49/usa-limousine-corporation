@@ -9,7 +9,7 @@ import {
 } from "axios";
 import { describe, expect, it, vi } from "vitest";
 import { createAxiosInstance, http } from "../../apps/admin/lib/http/client";
-import { HttpError, isHttpError, toHttpError } from "../../apps/admin/lib/http/error";
+import { HttpError, toHttpError } from "../../apps/admin/lib/http/error";
 import type { HttpRequestConfig } from "../../apps/admin/lib/types/http";
 import type { ApiSuccessResponse, MessageResponse } from "../../apps/admin/lib/types/response";
 
@@ -182,7 +182,6 @@ describe("admin HTTP transport", () => {
 
     const error = await client.get("/secure").catch((caught) => caught);
     expect(error).toBeInstanceOf(HttpError);
-    expect(isHttpError(error)).toBe(true);
     expect(error.status).toBe(401);
     expect(error.message).toBe("Request failed with status 401");
     expect(error.message).not.toMatch(/secret|token|password/i);

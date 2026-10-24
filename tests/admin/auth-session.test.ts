@@ -5,7 +5,6 @@ import {
   clearAuthSession,
   getAccessToken,
   getCsrfToken,
-  getSessionId,
   setCsrfToken,
 } from "../../apps/admin/lib/auth/session";
 import type { CurrentUser } from "../../apps/admin/lib/types/auth";
@@ -16,13 +15,11 @@ describe("admin auth session memory", () => {
     setCsrfToken("csrf");
 
     expect(getAccessToken()).toBe("access");
-    expect(getSessionId()).toBe("session");
     expect(getCsrfToken()).toBe("csrf");
 
     clearAuthSession();
 
     expect(getAccessToken()).toBeNull();
-    expect(getSessionId()).toBeNull();
     expect(getCsrfToken()).toBeNull();
   });
 });

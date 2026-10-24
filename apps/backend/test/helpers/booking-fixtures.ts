@@ -37,7 +37,7 @@ export function buildBookingPayload(
       email: options?.passengerEmail ?? "john@example.com",
     },
     bookingTime: {
-      pickupDate: "2026-08-25",
+      pickupDate: `${new Date().getFullYear() + 1}-08-25`,
       pickupTime: "14:30",
       returnDate: null,
       returnTime: null,
@@ -77,6 +77,15 @@ export async function seedBookingFixtures(prisma: PrismaService): Promise<Bookin
       categoryId: category.id,
       luggageTypeId: luggageType.id,
       quantity: 2,
+    },
+  });
+
+  await prisma.vehicleCategoryPricing.create({
+    data: {
+      vehicleCategoryId: category.id,
+      minimumDistance: 0,
+      pricingType: "FIXED",
+      basePrice: 55.55,
     },
   });
 
