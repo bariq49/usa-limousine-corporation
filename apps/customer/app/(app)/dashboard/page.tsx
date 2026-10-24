@@ -7,7 +7,9 @@ import {
 } from "@usa-limousine-corporation/ui/dashboard/booking-overview";
 import { PageHeader } from "@usa-limousine-corporation/ui/layout/page-header";
 import { useUser } from "@usa-limousine-corporation/ui/providers/user-context";
-import { useBookingAnalytics } from "@/hooks/queries/use-bookings";
+import { BookingCalendar } from "@usa-limousine-corporation/ui/bookings/booking-calendar";
+import type { CalendarQuery } from "@usa-limousine-corporation/ui/bookings/types";
+import { useBookingAnalytics, useBookingCalendar } from "@/hooks/queries/use-bookings";
 
 const CURRENT_YEAR = new Date().getFullYear();
 const YEARS = [CURRENT_YEAR, CURRENT_YEAR - 1, CURRENT_YEAR - 2];
@@ -16,6 +18,8 @@ const EMPTY_MONTHS = Array<number>(12).fill(0);
 export default function DashboardPage() {
   const { user } = useUser();
   const [year, setYear] = useState(CURRENT_YEAR);
+  const [calendarQuery, setCalendarQuery] = useState<CalendarQuery | null>(null);
+  const calendar = useBookingCalendar(calendarQuery);
   const { data, isLoading } = useBookingAnalytics(year);
   const name = user?.firstName?.trim() || user?.name?.trim() || "there";
 
@@ -82,6 +86,13 @@ export default function DashboardPage() {
         years={YEARS}
         onYearChange={setYear}
         isLoading={isLoading}
+      />
+
+      <BookingCalendar
+        events={calendar.data}
+        isFetching={calendar.isFetching}
+        onQueryChange={setCalendarQuery}
+        basePath="/bookings"
       />
     </div>
   );

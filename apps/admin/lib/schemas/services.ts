@@ -12,4 +12,3 @@ export const serviceSchema = z.object({
 });
 
 export type Schema = z.infer<typeof serviceSchema>;
-export type ServiceSchema = Schema;

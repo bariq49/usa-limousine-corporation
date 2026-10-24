@@ -48,11 +48,6 @@ export class BookingService {
     @Inject(BookingEmailService) private readonly bookingEmails: BookingEmailService,
   ) {}
 
-  /**
-   * Checks a customer booking and prices it on the server from the distance pricing and
-   * platform settings, so the total never comes from the client. Hourly hire is quoted on
-   * request, so customers can only book one-way and return trips.
-   */
   async priceForCustomer(body: CreateDto): Promise<BookingPricing> {
     const bookingType = body.bookingType ?? BookingType.ONE_WAY;
     if (bookingType !== BookingType.ONE_WAY && bookingType !== BookingType.RETURN) {
@@ -305,8 +300,6 @@ export class BookingService {
     return this.bookingRepository.findMany(query);
   }
 
-  /** Platform-wide booking analytics for admins. */
-  /** Platform-wide, or one customer's when `userId` is given (admin). */
   analytics(query: AnalyticsQueryDto) {
     return this.buildAnalytics(query.year ?? new Date().getUTCFullYear(), query.userId);
   }

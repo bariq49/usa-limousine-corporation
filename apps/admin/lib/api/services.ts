@@ -6,10 +6,6 @@ export const getServices = (params?: Query) => {
   return http.get<ListResponse>(API_ROUTES.EXTRA_SERVICES, { params });
 };
 
-export const getServiceItem = (id: string) => {
-  return http.get<Item>(`${API_ROUTES.EXTRA_SERVICES}/${id}`);
-};
-
 export const createService = (payload: CreatePayload) => {
   return http.post<Item>(API_ROUTES.EXTRA_SERVICES, payload);
 };

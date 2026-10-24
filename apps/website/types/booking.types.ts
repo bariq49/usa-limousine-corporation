@@ -142,7 +142,7 @@ export interface Step3FormValues {
 
 export type BookingType = "ONE_WAY" | "RETURN" | "HOURLY";
 
-/** Booking request in the backend's create shape, sent to start Stripe Checkout. */
+/** Booking request in the backend's create shape, sent to start Square checkout. */
 export interface BookingDraft {
     vehicleCategoryId: string;
     vehicleCount: number;
@@ -181,12 +181,12 @@ export interface BookingDraft {
 
 export type CheckoutStart = {
     url: string;
-    sessionId: string;
+    orderId: string;
     bookingNumber: string;
 };
 
-/** Stripe Checkout the rider was sent to, kept so the cancel page can show and resume it. */
+/** Square checkout the rider was sent to, kept so the cancel page can show and resume it. */
 export type CheckoutSession = {
-    sessionId: string;
+    orderId: string;
     url: string;
 };

@@ -6,10 +6,6 @@ export const getLuggage = (params?: Query) => {
   return http.get<ListResponse>(API_ROUTES.LUGGAGE, { params });
 };
 
-export const getLuggageItem = (id: string) => {
-  return http.get<Item>(`${API_ROUTES.LUGGAGE}/${id}`);
-};
-
 export const createLuggage = (payload: CreatePayload) => {
   return http.post<Item>(API_ROUTES.LUGGAGE, payload);
 };

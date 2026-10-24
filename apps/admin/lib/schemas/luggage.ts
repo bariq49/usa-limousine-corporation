@@ -13,4 +13,3 @@ export const luggageSchema = z.object({
 });
 
 export type Schema = z.infer<typeof luggageSchema>;
-export type LuggageSchema = Schema;

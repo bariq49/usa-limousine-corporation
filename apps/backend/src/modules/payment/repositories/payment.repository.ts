@@ -2,14 +2,14 @@ import { randomInt } from "node:crypto";
 import { Inject, Injectable } from "@nestjs/common";
 import { BookingStatus, type PaymentMode, PaymentStatus, Prisma } from "@prisma/client";
 import { PrismaService } from "../../../infrastructure/database/prisma.service";
-import type { CheckoutResult } from "../../../infrastructure/stripe/types/stripe";
+import type { OrderResult } from "../../../infrastructure/square/types/square";
 import type { CheckoutBooking } from "../types/payment";
 
 @Injectable()
 export class PaymentRepository {
   constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
-  recordPaid(booking: CheckoutBooking, result: CheckoutResult, mode: PaymentMode) {
+  recordPaid(booking: CheckoutBooking, result: OrderResult, mode: PaymentMode) {
     const now = new Date();
     return this.record(
       {
@@ -19,8 +19,8 @@ export class PaymentRepository {
         amount: result.amount,
         currency: result.currency,
         transactionId: transactionId(),
-        stripePaymentIntentId: result.transactionId,
-        stripeSessionId: result.sessionId,
+        squarePaymentId: result.paymentId,
+        squareOrderId: result.orderId,
         cardBrand: result.cardBrand,
         cardLast4: result.cardLast4,
         customerName: booking.passenger.name,
@@ -32,7 +32,7 @@ export class PaymentRepository {
     );
   }
 
-  recordCancelled(booking: CheckoutBooking, result: CheckoutResult, mode: PaymentMode) {
+  recordCancelled(booking: CheckoutBooking, result: OrderResult, mode: PaymentMode) {
     return this.record(
       {
         bookingId: booking.id,
@@ -40,7 +40,7 @@ export class PaymentRepository {
         mode,
         amount: result.amount,
         currency: result.currency,
-        stripeSessionId: result.sessionId,
+        squareOrderId: result.orderId,
         customerName: booking.passenger.name,
         customerEmail: booking.passenger.email,
         customerPhone: booking.passenger.phone,

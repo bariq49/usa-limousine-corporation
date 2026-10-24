@@ -25,7 +25,7 @@ This folder splits the Prisma data model by domain so the schema can scale witho
 - `schema/trip.prisma`
   Owns driver trip execution lifecycle (`Trip`, `TripEvent`) linked to Booking, Driver, and DriverVehicle; Nest module at `modules/trip/`.
 - `schema/payment.prisma`
-  Owns payments, attempts, refunds, events, webhook idempotency, provider customer mappings, and Stripe payment state.
+  Owns the `Payment` record: one per booking, with the Square order and payment ids, card details and status.
 - `schema/notification.prisma`
   Owns in-app notification inbox rows for drivers and users (`Notification`, recipient/type enums); Nest module at `modules/notification/`.
 - `schema/wallets.prisma`

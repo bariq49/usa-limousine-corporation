@@ -88,7 +88,7 @@ export const usePlaceOrder = () => {
             };
 
             const checkout = await startCheckout(draft);
-            useBookingStore.getState().setCheckout({ sessionId: checkout.sessionId, url: checkout.url });
+            useBookingStore.getState().setCheckout({ orderId: checkout.orderId, url: checkout.url });
             window.location.assign(checkout.url);
             return checkout;
         },

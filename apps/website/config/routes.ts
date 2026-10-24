@@ -7,10 +7,4 @@ export const API_ROUTES = {
     CHECKOUT: `/public/bookings/checkout`,
 } as const;
 
-// Public site routes
-export const SITE_ROUTES = {
-    HOME: `/`,
-    CONTACT: `/contact-us`,
-} as const;
-
 export default API_ROUTES;

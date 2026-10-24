@@ -42,7 +42,7 @@ USA Limousine Corporation is an enterprise transportation SaaS platform connecti
 | 👑 **Super Admin**       | Platform-wide    | Manages global fleet posture, driver KYC verification, vehicle categories, financial payouts, and compliance audits. |
 | 👥 **Operations Staff**  | Fleet & Dispatch | Monitors live map geospatial tracking (`ops:fleet`), coordinates active rides, and handles customer support tickets. |
 | 🚖 **Limousine Drivers** | Mobile & Shift   | Toggles shift availability, streams real-time GPS coordinates, submits ride quotes, and requests wallet payouts.     |
-| 👤 **End Customers**     | Web & Mobile     | Books rides, tracks driver arrival in real time, completes secure Stripe payments, and rates trip experiences.       |
+| 👤 **End Customers**     | Web & Mobile     | Books rides, tracks driver arrival in real time, completes secure Square payments, and rates trip experiences.       |
 
 ---
 
@@ -71,7 +71,7 @@ graph TD
     end
 
     subgraph Gateways["Third-Party Cloud Gateways"]
-        Stripe["Stripe Payments (Outbox)"]
+        Square["Square Payments"]
         Twilio["Twilio SMS (OTP)"]
         Firebase["Firebase Admin (FCM)"]
         Agora["Agora RTC (In-Trip Audio)"]
@@ -266,8 +266,8 @@ Explore the comprehensive enterprise documentation portal under [`docs/`](docs):
 - 🛠️ **[Operations & Deployment Runbooks](docs/operations/runbooks.md)** — Hostinger VPS setup, zero-downtime rolling deploys, database backup/restore, and disaster recovery.
 - 📡 **[WebSocket Events Specification](apps/backend/docs/websocket-events.md)** — Real-time Socket.IO event registry, room topologies, and live GPS streaming.
 - 🔔 **[Firebase Push Notifications (FCM)](apps/backend/docs/firebase-notifications.md)** — Push notification payloads, device tokens, and delivery gating.
-- 💳 **[Payments & Transactional Outbox](apps/backend/docs/payments.md)** — Stripe checkout, off-session renewals, and outbox event drainage.
-- 🔑 **[Infrastructure Credentials Guide](apps/backend/docs/guide.md)** — Configuration guide for Stripe, Twilio, Agora, Firebase, and Cloudinary.
+- 💳 **[Payments (Square)](apps/backend/docs/payments.md)** — Guest checkout, webhook settling, payment records and checkout expiry.
+- 🔑 **[Infrastructure Credentials Guide](apps/backend/docs/guide.md)** — Configuration guide for Square, Twilio, Firebase, and Cloudinary.
 
 ---
 

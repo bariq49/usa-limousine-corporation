@@ -8,6 +8,8 @@ import {
 } from "@usa-limousine-corporation/ui/providers/notification-context";
 import { useSocket } from "@/hooks/use-socket";
 import {
+  useDeleteNotifications,
+  useLoadMoreNotifications,
   useMarkAllNotificationsRead,
   useMarkNotificationRead,
   useNotificationEvents,
@@ -30,6 +32,8 @@ export function RealtimeProvider({ children }: { children: ReactNode }) {
   const { data, isLoading } = useNotificationList();
   const markRead = useMarkNotificationRead();
   const markAllRead = useMarkAllNotificationsRead();
+  const deleteNotifications = useDeleteNotifications();
+  const loadMore = useLoadMoreNotifications();
   useNotificationEvents(socket);
 
   return (
@@ -40,6 +44,12 @@ export function RealtimeProvider({ children }: { children: ReactNode }) {
       isConnected={isConnected}
       onMarkRead={(id) => markRead.mutate(id)}
       onMarkAllRead={() => markAllRead.mutate()}
+      onDelete={(ids) => deleteNotifications.mutate(ids)}
+      hasNextPage={data?.hasNextPage ?? false}
+      isLoadingMore={loadMore.isPending}
+      onLoadMore={() => {
+        if (data?.nextCursor) loadMore.mutate(data.nextCursor);
+      }}
       onSelect={(item) => {
         const href = notificationHref(item);
         if (href) router.push(href);

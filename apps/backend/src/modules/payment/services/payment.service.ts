@@ -3,6 +3,8 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  type OnModuleDestroy,
+  type OnModuleInit,
   ServiceUnavailableException,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
@@ -14,7 +16,7 @@ import { auditLog } from "../../../common/utils/audit-log";
 import { toRequestContext } from "../../../common/utils/to-request-context";
 import { PrismaService } from "../../../infrastructure/database/prisma.service";
 import { SequenceService } from "../../../infrastructure/sequence/sequence.service";
-import { StripeService } from "../../../infrastructure/stripe/stripe.service";
+import { SquareService } from "../../../infrastructure/square/square.service";
 import { TwilioService } from "../../../infrastructure/twilio/twilio.service";
 import type { CreateDto } from "../../booking/dto/booking.dto";
 import { formatDate, formatTime } from "../../booking/emails/cards";
@@ -25,9 +27,11 @@ import type { PassengerInput, TimeInput } from "../../booking/types/booking";
 import { NotificationService } from "../../notification/services/notification.service";
 import { PlatformSettingsService } from "../../platform-settings/services/platform-settings.service";
 import { PaymentRepository } from "../repositories/payment.repository";
-import type { CheckoutBooking } from "../types/payment";
+import type { CheckoutBooking, SquareWebhookEvent } from "../types/payment";
 
 const DEFAULT_WEBSITE_URL = "https://www.usalimocorp.com";
+const CHECKOUT_TTL_MS = 30 * 60 * 1000;
+const SWEEP_INTERVAL_MS = 5 * 60 * 1000;
 
 const TRIP_LABELS: Record<BookingType, string> = {
   ONE_WAY: "One-way transfer",
@@ -35,15 +39,10 @@ const TRIP_LABELS: Record<BookingType, string> = {
   HOURLY: "Hourly hire",
 };
 
-const SETTLING_EVENTS = new Set([
-  "checkout.session.completed",
-  "checkout.session.async_payment_succeeded",
-  "checkout.session.expired",
-  "checkout.session.async_payment_failed",
-]);
-
 @Injectable()
-export class PaymentService {
+export class PaymentService implements OnModuleInit, OnModuleDestroy {
+  private sweepTimer: NodeJS.Timeout | null = null;
+
   constructor(
     @Inject(BookingService) private readonly bookingService: BookingService,
     @Inject(BookingRepository) private readonly bookingRepository: BookingRepository,
@@ -53,16 +52,25 @@ export class PaymentService {
     @Inject(NotificationService) private readonly notificationService: NotificationService,
     @Inject(PlatformSettingsService)
     private readonly platformSettingsService: PlatformSettingsService,
-    @Inject(StripeService) private readonly stripe: StripeService,
+    @Inject(SquareService) private readonly square: SquareService,
     @Inject(BookingEmailService) private readonly bookingEmails: BookingEmailService,
     @Inject(TwilioService) private readonly twilio: TwilioService,
     @Inject(ConfigService) private readonly configService: ConfigService,
     @Inject(AppLogger) private readonly logger: AppLogger,
   ) {}
 
+  onModuleInit() {
+    if (this.configService.get<string>("NODE_ENV") === "test") return;
+    this.sweepTimer = setInterval(() => void this.releaseExpiredCheckouts(), SWEEP_INTERVAL_MS);
+  }
+
+  onModuleDestroy() {
+    if (this.sweepTimer) clearInterval(this.sweepTimer);
+  }
+
   async startCheckout(body: CreateDto, request: Request) {
     const { paymentMode } = await this.platformSettingsService.get();
-    if (!this.stripe.isConfigured(paymentMode)) {
+    if (!this.square.isConfigured(paymentMode)) {
       throw new ServiceUnavailableException(
         "Online payment is not available right now. Please contact us to book.",
       );
@@ -97,17 +105,16 @@ export class PaymentService {
     ).replace(/\/+$/, "");
 
     try {
-      const session = await this.stripe.createCheckoutSession({
+      const link = await this.square.createPaymentLink({
         mode: paymentMode,
-        bookingId: booking.id,
         bookingNumber,
         amount: pricing.total,
         description: TRIP_LABELS[bookingType],
         customerEmail: body.passenger.email,
-        successUrl: `${websiteUrl}/book-ride/payment-success?session_id={CHECKOUT_SESSION_ID}`,
-        cancelUrl: `${websiteUrl}/book-ride/payment-cancel`,
+        customerPhone: body.passenger.phone,
+        redirectUrl: `${websiteUrl}/book-ride/payment-success`,
       });
-      await this.bookingRepository.attachCheckoutSession(booking.id, session.id);
+      await this.bookingRepository.attachPaymentLink(booking.id, link, paymentMode);
 
       await auditLog({
         prisma: this.prisma,
@@ -117,20 +124,20 @@ export class PaymentService {
         metadata: { bookingId: booking.id, bookingNumber, paymentMode },
       });
 
-      return { url: session.url, sessionId: session.id, bookingNumber };
+      return { url: link.url, orderId: link.orderId, bookingNumber };
     } catch (error) {
       await this.bookingRepository.delete(booking.id);
       throw error;
     }
   }
 
-  async checkoutBooking(sessionId: string) {
-    const found = await this.bookingRepository.findByCheckoutSession(sessionId);
+  async checkoutBooking(orderId: string) {
+    const found = await this.bookingRepository.findByOrderId(orderId);
     if (!found) {
       throw new NotFoundException("Booking not found");
     }
     if (found.status === BookingStatus.PENDING) {
-      await this.settle(sessionId, false);
+      await this.settle(orderId, false);
     }
 
     const booking = await this.bookingRepository.findById(found.id);
@@ -142,23 +149,44 @@ export class PaymentService {
 
   async handleWebhook(payload: Buffer | undefined, signature: string | undefined) {
     if (!payload || !signature) {
-      throw new BadRequestException("Missing Stripe signature");
+      throw new BadRequestException("Missing Square signature");
     }
 
-    const { event } = this.stripe.constructEvent(payload, signature);
-    if (SETTLING_EVENTS.has(event.type)) {
-      const session = event.data.object as { id: string };
-      await this.settle(session.id, event.type === "checkout.session.async_payment_failed");
+    const body = payload.toString("utf8");
+    await this.square.verifyWebhook(body, signature);
+    const event = JSON.parse(body) as SquareWebhookEvent;
+    const orderId = event.data?.object?.payment?.order_id;
+    if (event.type?.startsWith("payment.") && orderId) {
+      await this.settle(orderId, false);
     }
     return { received: true };
   }
 
-  private async settle(sessionId: string, failed: boolean) {
-    const booking = await this.bookingRepository.findByCheckoutSession(sessionId);
+  async releaseExpiredCheckouts() {
+    const bookings = await this.bookingRepository.findUnpaidCheckouts(
+      new Date(Date.now() - CHECKOUT_TTL_MS),
+    );
+    for (const booking of bookings) {
+      if (!booking.squareOrderId) continue;
+      try {
+        await this.settle(booking.squareOrderId, true);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Unknown error";
+        this.logger.error(
+          `Checkout release failed for order ${booking.squareOrderId}: ${message}`,
+          undefined,
+          PaymentService.name,
+        );
+      }
+    }
+  }
+
+  private async settle(orderId: string, expired: boolean) {
+    const booking = await this.bookingRepository.findByOrderId(orderId);
     if (!booking || booking.status !== BookingStatus.PENDING) return;
 
-    const mode = sessionId.startsWith("cs_live_") ? PaymentMode.LIVE : PaymentMode.TEST;
-    const result = await this.stripe.retrieveCheckout(mode, sessionId);
+    const mode = booking.paymentMode ?? PaymentMode.TEST;
+    const result = await this.square.retrieveOrder(mode, orderId);
     const checkoutBooking: CheckoutBooking = {
       id: booking.id,
       status: booking.status,
@@ -170,7 +198,12 @@ export class PaymentService {
       if (await this.paymentRepository.recordPaid(checkoutBooking, result, mode)) {
         await this.onPaid(checkoutBooking);
       }
-    } else if (result.expired || failed) {
+    } else if (expired) {
+      if (booking.squarePaymentLinkId) {
+        await this.square
+          .deletePaymentLink(mode, booking.squarePaymentLinkId)
+          .catch(() => undefined);
+      }
       await this.paymentRepository.recordCancelled(checkoutBooking, result, mode);
     }
   }

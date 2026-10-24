@@ -12,7 +12,8 @@ import PaymentNotFound from "./payment-not-found";
 export default function PaymentCancel() {
   const hasHydrated = useHasHydrated();
   const checkout = useBookingStore((s) => s.checkout);
-  const { data: booking, isLoading, isError } = useCheckoutBooking(checkout?.sessionId);
+  const setCheckout = useBookingStore((s) => s.setCheckout);
+  const { data: booking, isLoading, isError } = useCheckoutBooking(checkout?.orderId);
 
   if (!hasHydrated || isLoading) return <BookingDetailSkeleton />;
   if (!checkout || isError || !booking) return <PaymentNotFound />;
@@ -22,7 +23,7 @@ export default function PaymentCancel() {
   return (
     <BookingDetailView
       booking={booking}
-      backHref="/book-ride/passenger-details"
+      backHref="/"
       mapStickyClassName="max-lg:top-safe-header"
       heading={
         isPending
@@ -33,15 +34,18 @@ export default function PaymentCancel() {
           : undefined
       }
       actions={
-        isPending ? (
-          <Button asChild className="h-10 bg-black px-4 text-white hover:bg-black/90">
-            <a href={checkout.url}>Complete Payment</a>
-          </Button>
-        ) : (
+        <>
+          {isPending ? (
+            <Button asChild className="h-10 bg-black px-4 text-white hover:bg-black/90">
+              <a href={checkout.url}>Complete Payment</a>
+            </Button>
+          ) : null}
           <Button asChild variant="outline" className="h-10 px-4">
-            <Link href="/book-ride/passenger-details">Edit Booking</Link>
+            <Link href="/book-ride/passenger-details" onClick={() => setCheckout(null)}>
+              Edit Booking
+            </Link>
           </Button>
-        )
+        </>
       }
     />
   );

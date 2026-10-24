@@ -6,19 +6,23 @@ import { BookingDetailView } from "@usa-limousine-corporation/ui/bookings/bookin
 import { BookingDetailSkeleton } from "@usa-limousine-corporation/ui/bookings/booking-detail-skeleton";
 import { useCheckoutBooking } from "@/hooks/queries/use-checkout-booking";
 import { useBookingStore } from "@/store/use-booking-store";
+import { useHasHydrated } from "@/hooks/use-has-hydrated";
 import PaymentNotFound from "./payment-not-found";
 
 export default function PaymentSuccess() {
-  const sessionId = useSearchParams().get("session_id");
-  const { data: booking, isError, isFetching } = useCheckoutBooking(sessionId, true);
+  const hasHydrated = useHasHydrated();
+  const checkout = useBookingStore((s) => s.checkout);
   const resetBooking = useBookingStore((s) => s.resetBooking);
+  const orderId = useSearchParams().get("orderId") ?? checkout?.orderId;
+  const { data: booking, isError, isFetching } = useCheckoutBooking(orderId, true);
   const isPaid = booking?.payment?.status === "PAID";
 
   useEffect(() => {
     if (isPaid) resetBooking();
   }, [isPaid, resetBooking]);
 
-  if (!sessionId || isError) return <PaymentNotFound />;
+  if (!hasHydrated) return <BookingDetailSkeleton />;
+  if (!orderId || isError) return <PaymentNotFound />;
   if (!booking || booking.status === "PENDING") {
     return isFetching || !booking ? <BookingDetailSkeleton /> : <PaymentNotFound />;
   }

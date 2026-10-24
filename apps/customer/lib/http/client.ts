@@ -13,7 +13,7 @@ export const DEFAULT_HTTP_TIMEOUT_MS = 30_000;
 
 export type HttpRequestConfig = Pick<
   AxiosRequestConfig,
-  "params" | "signal" | "timeout" | "headers"
+  "params" | "signal" | "timeout" | "headers" | "data"
 >;
 
 export type HttpClient = {
@@ -107,6 +107,7 @@ export function createAxiosInstance(baseURL = getApiBaseUrl()): AxiosInstance {
     timeout: DEFAULT_HTTP_TIMEOUT_MS,
     headers: {
       Accept: "application/json",
+      "X-App-Client": "customer",
     },
   });
 

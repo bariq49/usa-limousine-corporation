@@ -20,6 +20,10 @@ export interface NotificationContextValue {
   onMarkRead?: ((id: string) => void) | undefined;
   onMarkAllRead?: (() => void) | undefined;
   onSelect?: ((item: NotificationItem) => void) | undefined;
+  onDelete?: ((ids: string[]) => void) | undefined;
+  hasNextPage?: boolean | undefined;
+  isLoadingMore?: boolean | undefined;
+  onLoadMore?: (() => void) | undefined;
 }
 
 const NotificationContext = createContext<NotificationContextValue | null>(null);
@@ -33,6 +37,10 @@ export function NotificationProvider(props: NotificationContextValue & { childre
     onMarkRead: props.onMarkRead,
     onMarkAllRead: props.onMarkAllRead,
     onSelect: props.onSelect,
+    onDelete: props.onDelete,
+    hasNextPage: props.hasNextPage,
+    isLoadingMore: props.isLoadingMore,
+    onLoadMore: props.onLoadMore,
   };
 
   return (

@@ -23,7 +23,6 @@ export class NotificationDeliveryService {
     private readonly repository: NotificationRepository,
   ) {}
 
-  /** Socket emit + push enqueue, then stamp `deliveredAt` so the sweep skips it. */
   async deliver(params: Deliver) {
     const { notification } = params;
     this.realtime.emitCreated(notification);

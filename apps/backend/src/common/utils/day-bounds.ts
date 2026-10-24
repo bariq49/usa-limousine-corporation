@@ -67,17 +67,3 @@ export function wallClock(timeZone: string, date: string, time: string): Date | 
   return wallToUtc(zone, { year, month, day, hour, minute });
 }
 
-export function dayBounds(timeZone: string = APP_TIMEZONE, now: Date = new Date()) {
-  const zone = timeZone.trim() || APP_TIMEZONE;
-  const [year, month, day] = formatDate(now, zone).split("-").map(Number);
-  const start = wallToUtc(zone, { year: year!, month: month!, day: day!, hour: 0, minute: 0 });
-  const next = new Date(Date.UTC(year!, month! - 1, day! + 1));
-  const end = wallToUtc(zone, {
-    year: next.getUTCFullYear(),
-    month: next.getUTCMonth() + 1,
-    day: next.getUTCDate(),
-    hour: 0,
-    minute: 0,
-  });
-  return { start, end, timezone: zone };
-}

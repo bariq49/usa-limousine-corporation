@@ -42,7 +42,7 @@ docs/
 - **[Push Notifications Specification (FCM)](../apps/backend/docs/firebase-notifications.md)**  
   Firebase Cloud Messaging payload definitions, device registration, notification types, and delivery gating.
 - **[Payment & Webhook Outbox Specification](../apps/backend/docs/payments.md)**  
-  Stripe Checkout, saved payment methods, off-session renewal charges, and transactional outbox event delivery.
+  Square guest checkout, webhook settling, payment records and checkout expiry.
 
 ### 3. Operations & Infrastructure
 
@@ -51,7 +51,7 @@ docs/
 - **[VPS Deployment Setup Guide](../deploy/README.md)**  
   Hostinger VPS host configuration, Caddy reverse proxy, DNS records, SSH deployment keys, and production environment provisioning.
 - **[Infrastructure Credentials Guide](../apps/backend/docs/guide.md)**  
-  Provisioning guide for third-party integrations: Stripe, Twilio SMS, Agora RTC, Firebase Admin SDK, Cloudinary, and SMTP mailers.
+  Provisioning guide for third-party integrations: Square, Twilio SMS, Firebase Admin SDK, Cloudinary, and SMTP mailers.
 - **[Prisma Schema Organization](../apps/backend/prisma/schema/README.md)**  
   Domain-split Prisma schema design patterns and migration rules.
 

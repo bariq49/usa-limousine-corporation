@@ -36,7 +36,3 @@ export interface RevokeAll {
   userId: string;
 }
 
-export interface RevokeOthers {
-  userId: string;
-  exceptSessionId: string;
-}

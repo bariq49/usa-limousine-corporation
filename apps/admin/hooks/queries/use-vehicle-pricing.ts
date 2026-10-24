@@ -4,7 +4,6 @@ import {
   bulkDeleteVehiclePricings,
   createVehiclePricing,
   deleteVehiclePricing,
-  getVehiclePricing,
   getVehiclePricings,
   updateVehiclePricing,
 } from "../../lib/api/vehicle-pricing";
@@ -20,14 +19,6 @@ export const useVehiclePricings = (params?: Query) => {
   return useQuery({
     queryKey: pricingKeys.list(params),
     queryFn: () => getVehiclePricings(params),
-  });
-};
-
-export const useVehiclePricing = (id: string) => {
-  return useQuery({
-    queryKey: pricingKeys.detail(id),
-    queryFn: () => getVehiclePricing(id),
-    enabled: Boolean(id),
   });
 };
 

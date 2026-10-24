@@ -8,7 +8,7 @@ import { LoggerModule } from "./common/logger/logger.module";
 import { AppConfigModule } from "./config/config.module";
 import { DatabaseModule } from "./infrastructure/database/database.module";
 import { EmailModule } from "./infrastructure/email/email.module";
-import { StripeModule } from "./infrastructure/stripe/stripe.module";
+import { SquareModule } from "./infrastructure/square/square.module";
 import { QueueRegistryModule } from "./infrastructure/queue/queue-registry";
 import { RedisModule } from "./infrastructure/redis/redis.module";
 import { StorageModule } from "./infrastructure/storage/storage.module";
@@ -44,7 +44,7 @@ import { PlatformSettingsModule } from "./modules/platform-settings/platform-set
     StorageModule,
     FirebaseModule,
     TwilioModule,
-    StripeModule,
+    SquareModule,
     EmailModule,
     ThrottlerModule.forRootAsync({
       inject: [ConfigService],

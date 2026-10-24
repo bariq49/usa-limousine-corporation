@@ -115,7 +115,7 @@ Cookie: usa_limo_refresh_token=<refreshToken>; usa_limo_csrf_token=<csrfToken>
 | `/api/v1/customers` | Registered Customers   | Booking requests, price quotes, ride tracking, review submission, notifications       |
 | `/api/v1/drivers`   | Verified Drivers       | Profile & shift management, live trip GPS streaming, wallet balances, payout requests |
 | `/api/v1/admin`     | Platform Super Admins  | Driver document approvals, vehicle categories, financial payout execution, audit logs |
-| `/api/v1/payments`  | Public & Webhooks      | Stripe checkout session generation, payment status polling, Stripe webhook processing |
+| `/api/v1/payments`  | Webhooks               | Square payment webhook (`POST /payments/square/webhook`); guest checkout lives under `/public/bookings/checkout` |
 | `/api/v1/chat`      | Trip Participants      | Trip-scoped secure text messaging, typing indicators, read receipts                   |
 | `/api/v1/health`    | Monitoring / DevOps    | Comprehensive deep health probe (PostgreSQL, Redis, BullMQ, storage, email)           |
 
@@ -153,4 +153,4 @@ For deep specifications on Socket.IO events, payloads, room subscriptions, and p
 
 - **[WebSocket Events Specification](../../apps/backend/docs/websocket-events.md)** — Event index, payload schemas, GPS tracking channels, and ride chat lifecycle.
 - **[Firebase Push Notifications Specification](../../apps/backend/docs/firebase-notifications.md)** — FCM message contracts, device registration, and notification routing.
-- **[Payment Outbox & Stripe Webhook Guide](../../apps/backend/docs/payments.md)** — Webhook idempotency, transactional outbox drain, and off-session billing.
+- **[Payments (Square)](../../apps/backend/docs/payments.md)** — Guest checkout, webhook settling, payment records and checkout expiry.

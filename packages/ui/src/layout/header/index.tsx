@@ -8,11 +8,6 @@ import { VerticalHeader } from "./vertical-header";
 import { FullScreenToggle } from "./full-screen";
 import { NotificationBell } from "./notification-bell";
 
-export interface HeaderProps {
-  onLogout?: () => void;
-  isLoggingOut?: boolean;
-}
-
 export function Header() {
   const { collapsed } = useSidebar();
   const isDesktop = useMediaQuery("(min-width: 1280px)");

@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { LoginSchema, RegisterSchema } from "@usa-limousine-corporation/ui/schemas";
@@ -19,7 +19,6 @@ import { isCustomerUser } from "@/lib/auth/roles";
 import {
   applyAuthSession,
   clearAuthSession,
-  hasAccessToken,
   setCsrfToken,
 } from "@/lib/auth/session";
 import { isHttpError } from "@/lib/http/error";
@@ -38,15 +37,6 @@ function errorMessage(error: unknown, fallback: string): string {
 
 export const authQueryKeys = {
   me: ["me"] as const,
-};
-
-export const useAuthMe = (enabled = true) => {
-  return useQuery({
-    queryKey: authQueryKeys.me,
-    queryFn: getMe,
-    enabled: enabled && hasAccessToken(),
-    retry: false,
-  });
 };
 
 export const useAuthLogin = () => {

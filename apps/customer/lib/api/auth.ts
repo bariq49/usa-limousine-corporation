@@ -63,14 +63,6 @@ export const logout = async () => {
   }
 };
 
-export const logoutAll = async () => {
-  try {
-    return await http.post<MessageResponse>(API_ROUTES.AUTH_LOGOUT_ALL);
-  } finally {
-    clearAuthSession();
-  }
-};
-
 export const changePassword = async (payload: ChangePasswordSchema) => {
   try {
     return await http.post<MessageResponse>(API_ROUTES.AUTH_CHANGE_PASSWORD, {

@@ -4,10 +4,9 @@ import type { NotificationList } from "./types";
 
 export const NOTIFICATION_PAGE_SIZE = 20;
 
-export const getNotifications = () => {
+export const getNotifications = (cursor = "") => {
   return http.get<NotificationList>(API_ROUTES.NOTIFICATIONS, {
-    // Empty cursor = first page of keyset paging (no total count on the server).
-    params: { cursor: "", limit: NOTIFICATION_PAGE_SIZE },
+    params: { cursor, limit: NOTIFICATION_PAGE_SIZE },
   });
 };
 
@@ -17,4 +16,10 @@ export const markNotificationRead = (id: string) => {
 
 export const markAllNotificationsRead = () => {
   return http.patch(`${API_ROUTES.NOTIFICATIONS}/read-all`);
+};
+
+export const deleteNotifications = (ids: string[]) => {
+  return ids.length === 1
+    ? http.delete(`${API_ROUTES.NOTIFICATIONS}/${ids[0]}`)
+    : http.delete(`${API_ROUTES.NOTIFICATIONS}/bulk`, { data: { ids } });
 };

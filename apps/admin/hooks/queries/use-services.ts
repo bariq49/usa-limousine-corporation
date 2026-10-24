@@ -4,7 +4,6 @@ import {
   bulkDeleteServices,
   createService,
   deleteService,
-  getServiceItem,
   getServices,
   updateService,
 } from "../../lib/api/services";
@@ -20,14 +19,6 @@ export const useServices = (params?: Query) => {
   return useQuery({
     queryKey: servicesKeys.list(params),
     queryFn: () => getServices(params),
-  });
-};
-
-export const useServiceItem = (id: string) => {
-  return useQuery({
-    queryKey: servicesKeys.detail(id),
-    queryFn: () => getServiceItem(id),
-    enabled: Boolean(id),
   });
 };
 

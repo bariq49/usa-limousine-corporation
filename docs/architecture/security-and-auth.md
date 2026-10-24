@@ -71,7 +71,7 @@ Authorization is enforced at the controller and route level using NestJS decorat
 | `SUPER_ADMIN` | Super Administrator  | Global platform control: driver approvals, pricing management, manual payouts, and system audit logs                 |
 | `EMPLOYEE`    | Operations Staff     | Fleet monitoring (`ops:fleet`), customer support tickets, and ride dispatch coordination                             |
 | `DRIVER`      | Limousine Driver     | Mobile application access: shift status, live trip GPS streaming, in-trip audio, wallet balance, and payout requests |
-| `CUSTOMER`    | Registered Passenger | Web portal & mobile app: ride booking, quote reviews, Stripe checkout, trip history, and driver reviews              |
+| `CUSTOMER`    | Registered Passenger | Web portal & mobile app: ride booking, quote reviews, Square checkout, trip history, and driver reviews              |
 
 ### Route Protection Matrix
 

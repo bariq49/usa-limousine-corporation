@@ -9,8 +9,7 @@ Never commit real secrets. Check status with `GET /api/v1/health`.
 | ------------------ | -------------------- | -------------------------------------- |
 | Twilio (SMS)       | `twilio`             | No — `not_configured` until set        |
 | Firebase (FCM)     | `firebase`           | No — `not_configured` until set        |
-| Agora (RTC tokens) | `agora`              | No — `not_configured` until set        |
-| Stripe             | `stripe`             | No outside prod (prod needs test keys) |
+| Square (payments)  | —                    | No — checkout needs the active mode's keys |
 | Cloudinary         | `storage`            | Yes                                    |
 | Email (SMTP)       | `email`              | Yes                                    |
 | Redis / Postgres   | `redis` / `database` | Yes                                    |
@@ -177,35 +176,36 @@ Restart API → `GET /api/v1/health` → `"firebase": "up"`.
 
 ---
 
-## Stripe (payments)
+## Square (payments)
 
-Env vars (test mode first):
+Env vars (sandbox first):
 
 ```env
-STRIPE_SECRET_KEY_TEST=sk_test_...
-STRIPE_WEBHOOK_SECRET_TEST=whsec_...
-STRIPE_SECRET_KEY_LIVE=sk_live_...
-STRIPE_WEBHOOK_SECRET_LIVE=whsec_...
+SQUARE_ACCESS_TOKEN_TEST=EAAA...
+SQUARE_LOCATION_ID_TEST=L...
+SQUARE_WEBHOOK_SIGNATURE_KEY_TEST=...
+SQUARE_ACCESS_TOKEN_LIVE=EAAA...
+SQUARE_LOCATION_ID_LIVE=L...
+SQUARE_WEBHOOK_SIGNATURE_KEY_LIVE=...
+SQUARE_WEBHOOK_URL=https://api.usalimocorp.com/api/v1/payments/square/webhook
 ```
 
 More detail: [payments.md](./payments.md).
 
 ### Get keys
 
-1. Open [Stripe Dashboard](https://dashboard.stripe.com/).
-2. Toggle **Test mode** on.
-3. **Developers** → **API keys** → copy **Secret key** (`sk_test_…`) → `STRIPE_SECRET_KEY_TEST`.
-4. **Developers** → **Webhooks** → add endpoint  
-   `http://localhost:3000/api/v1/payments/webhooks/stripe` (or your live URL).
-5. Copy the webhook **Signing secret** (`whsec_…`) → `STRIPE_WEBHOOK_SECRET_TEST`.
+1. Open the [Square Developer Console](https://developer.squareup.com/apps) and create (or open) an
+   application.
+2. Switch to **Sandbox** → **Credentials** → copy the **Sandbox access token** →
+   `SQUARE_ACCESS_TOKEN_TEST`.
+3. **Locations** → copy the sandbox location id → `SQUARE_LOCATION_ID_TEST`.
+4. **Webhooks** → **Subscriptions** → **Add subscription** with the URL
+   `https://<public-api>/api/v1/payments/square/webhook` and the events `payment.created` and
+   `payment.updated`. Copy its **Signature key** → `SQUARE_WEBHOOK_SIGNATURE_KEY_TEST`, and put the
+   exact same URL in `SQUARE_WEBHOOK_URL`.
 
-Local forwarding:
-
-```bash
-stripe listen --forward-to http://localhost:3000/api/v1/payments/webhooks/stripe
-```
-
-Repeat with **Live mode** for `STRIPE_*_LIVE` when going to production.
+Locally, expose the API with a tunnel (for example `ngrok http 3000`) and use the tunnel URL.
+Repeat in **Production** for the `SQUARE_*_LIVE` values when going live.
 
 ---
 

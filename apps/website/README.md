@@ -25,12 +25,12 @@ pnpm --filter @usa-limousine-corporation/website dev
    stop, meet & greet fees and booking notice from `GET /public/settings`.
    Hourly hire is offered as a quote request.
 3. Passenger details → `POST /public/bookings/checkout` saves the booking as `PENDING` (priced on
-   the server) and returns a Stripe Checkout page. No sign-in is needed.
-4. Stripe's webhook (`POST /payments/stripe/webhook`) marks the booking paid and `CONFIRMED` and
-   emails the rider. Stripe returns them to `/book-ride/payment-success`, which shows the full
-   booking from `GET /public/bookings/checkout/:sessionId` and waits for the webhook. Leaving
-   checkout lands on `/book-ride/payment-cancel`, which shows the booking with a button back to the
-   still-open checkout page; unpaid bookings are cancelled when it expires after 30 minutes.
+   the server) and returns a Square payment link. No sign-in is needed.
+4. The rider pays on Square and is sent back to `/book-ride/payment-success`, which shows the full
+   booking from `GET /public/bookings/checkout/:orderId`. The booking is confirmed as soon as Square
+   reports the payment (webhook or this page, whichever is first). Going back from Square lands on
+   `/book-ride/payment-cancel`, which can resume payment or edit the booking; unpaid bookings are
+   cancelled after 30 minutes.
 
 Blog, reviews, contact and newsletter have no backend yet. They show static content, and the
 forms open the visitor's email app.

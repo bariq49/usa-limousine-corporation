@@ -9,17 +9,6 @@ export type StorageUploadInput = {
   mimeType?: string | undefined;
 };
 
-export type StorageUploadResult = {
-  publicId: string;
-  url: string;
-  secureUrl: string;
-  resourceType: string;
-  format?: string | undefined;
-  bytes?: number | undefined;
-  width?: number | undefined;
-  height?: number | undefined;
-};
-
 export type StorageDeleteInput = {
   publicId: string;
   resourceType?: StorageResourceType | undefined;

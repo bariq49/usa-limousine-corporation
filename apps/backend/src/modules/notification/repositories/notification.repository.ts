@@ -165,7 +165,6 @@ export class NotificationRepository {
       }));
   }
 
-  /** Keyset page ordered newest first; no total count, so it stays fast for large inboxes. */
   async listByCursor(query: Query, recipient: Recipient): Promise<CursorPage> {
     const requested = Number(query.limit) || DEFAULT_NOTIFICATION_LIMIT;
     const limit = Math.min(Math.max(requested, 1), MAX_NOTIFICATION_LIMIT);

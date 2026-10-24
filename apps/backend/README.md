@@ -90,11 +90,14 @@ Unset optional services report `not_configured` in health and do not block start
 | Variable                       | Purpose                                                     |
 | ------------------------------ | ----------------------------------------------------------- |
 | `DEFAULT_ADMIN_EMAIL`          | Admin inbox for new and paid booking emails                 |
-| `STRIPE_SECRET_KEY_TEST`       | Stripe test secret (`sk_test_…`; optional outside prod)     |
-| `STRIPE_WEBHOOK_SECRET_TEST`   | Stripe test webhook signing secret                          |
-| `STRIPE_SECRET_KEY_LIVE`       | Stripe live secret (`sk_live_…`; needed for LIVE mode)      |
-| `STRIPE_WEBHOOK_SECRET_LIVE`   | Stripe live webhook signing secret                          |
-| `WEBSITE_URL`                  | Public website; Stripe redirects and email images use it    |
+| `SQUARE_ACCESS_TOKEN_TEST`     | Square sandbox access token                                 |
+| `SQUARE_LOCATION_ID_TEST`      | Square sandbox location id                                  |
+| `SQUARE_WEBHOOK_SIGNATURE_KEY_TEST` | Signature key of the sandbox webhook subscription      |
+| `SQUARE_ACCESS_TOKEN_LIVE`     | Square production access token                              |
+| `SQUARE_LOCATION_ID_LIVE`      | Square production location id                               |
+| `SQUARE_WEBHOOK_SIGNATURE_KEY_LIVE` | Signature key of the production webhook subscription   |
+| `SQUARE_WEBHOOK_URL`           | Public webhook URL exactly as entered in Square             |
+| `WEBSITE_URL`                  | Public website; Square redirects and email images use it    |
 | `CUSTOMER_APP_URL`             | Customer portal; booking emails link to it                  |
 | `GOOGLE_REVIEW_URL`            | Google review link in the ride completed email              |
 | `FIREBASE_PROJECT_ID`          | Firebase project id (FCM push; optional until configured)   |
@@ -104,75 +107,73 @@ Unset optional services report `not_configured` in health and do not block start
 | `TWILIO_AUTH_TOKEN`            | Twilio auth token                                           |
 | `TWILIO_SENDER_ID`             | SMS sender name, max 11 characters (e.g. `USALimoCorp`)     |
 
-See [Payments (Stripe)](#payments-stripe) for running Stripe locally.
+See [Payments (Square)](#payments-square) for running Square locally.
 
-## Payments (Stripe)
+## Payments (Square)
 
-Riders pay on Stripe Checkout as guests. The website calls `POST /public/bookings/checkout`, which
-saves the booking as `PENDING` (priced on the server) and returns the Stripe page. Stripe's webhook
-then records a `Payment` (`PAID` or `CANCELLED`) and moves the booking to `CONFIRMED` or
-`CANCELLED`. A paid booking emails the rider and `DEFAULT_ADMIN_EMAIL` and texts the rider.
+Riders pay as guests on a Square-hosted checkout page. The website calls
+`POST /public/bookings/checkout`, which saves the booking as `PENDING` (priced on the server) and
+returns a Square payment link. When Square reports the payment, the API records a `Payment`
+(`PAID`, with a `TID-` transaction id, card brand and last 4) and confirms the booking, then emails
+the rider and `DEFAULT_ADMIN_EMAIL` and texts the rider.
 
-The **Live Payment Mode** switch in admin **Platform settings** chooses which keys are used: off uses
-the `_TEST` keys, on uses the `_LIVE` keys.
+- Square's `payment.created` / `payment.updated` webhooks hit `POST /payments/square/webhook`.
+- Square sends the rider back to `/book-ride/payment-success`; that page also asks Square directly,
+  so it does not wait for the webhook.
+- Square links never expire, so every 5 minutes the API checks unpaid checkouts older than
+  30 minutes: paid ones are recorded, the rest are cancelled and their link deleted.
+
+The **Live Payment Mode** switch in admin **Platform settings** picks the keys: off uses the
+`_TEST` (sandbox) keys, on uses the `_LIVE` (production) keys.
 
 ### Run it locally
 
-1. Install the [Stripe CLI](https://docs.stripe.com/stripe-cli) and sign in once:
-
-   ```bash
-   stripe login
-   ```
-
-2. Copy your **test** secret key from [Developers → API keys](https://dashboard.stripe.com/test/apikeys)
-   into `apps/backend/.env`:
+1. In the [Square Developer Console](https://developer.squareup.com/apps), open your app and
+   switch to **Sandbox**. Copy the **Sandbox access token** and, under **Locations**, the sandbox
+   location id into `apps/backend/.env`:
 
    ```env
-   STRIPE_SECRET_KEY_TEST=sk_test_...
+   SQUARE_ACCESS_TOKEN_TEST=EAAA...
+   SQUARE_LOCATION_ID_TEST=L...
    WEBSITE_URL=http://localhost:3003
    ```
 
-3. Forward Stripe events to the local API (keep this terminal open):
+2. Square must reach your machine for webhooks. Start a tunnel to the API, for example
+   `ngrok http 3000`, and note the `https://…` URL.
+3. In the console go to **Webhooks → Subscriptions → Add subscription** (Sandbox):
+   - URL: `https://<tunnel>/api/v1/payments/square/webhook`
+   - Events: `payment.created`, `payment.updated`
 
-   ```bash
-   stripe listen --forward-to http://localhost:3000/api/v1/payments/stripe/webhook
-   ```
-
-   It prints a signing secret (`whsec_...`). Put it in `apps/backend/.env` and restart the backend:
+   Copy its **Signature key** and set both values in `.env`, then restart the backend:
 
    ```env
-   STRIPE_WEBHOOK_SECRET_TEST=whsec_...
+   SQUARE_WEBHOOK_URL=https://<tunnel>/api/v1/payments/square/webhook
+   SQUARE_WEBHOOK_SIGNATURE_KEY_TEST=...
    ```
 
+   `SQUARE_WEBHOOK_URL` must match the subscription URL exactly, or signatures will not verify.
+   Without a tunnel, payments are still confirmed when the rider lands on the success page.
 4. Start the apps (`pnpm dev` from the repository root) and make sure **Live Payment Mode** is off.
-5. Book a ride on the website and pay with a [test card](https://docs.stripe.com/testing):
-   `4242 4242 4242 4242`, any future expiry, any CVC and ZIP.
+5. Book a ride on the website and pay with a
+   [sandbox test card](https://developer.squareup.com/docs/devtools/sandbox/payments):
+   `4111 1111 1111 1111`, any future expiry, CVV `111`, any ZIP.
 
-You should see `checkout.session.completed` in the `stripe listen` terminal, the booking become
-`CONFIRMED` with a `PAID` payment, and the confirmation emails and SMS go out.
-
-Useful test cases:
-
-| Case | How |
-| --- | --- |
-| Declined card | `4000 0000 0000 0002` |
-| Leave checkout | Click **←** on the Stripe page; you land on `/book-ride/payment-cancel` |
-| Checkout expires | `stripe trigger checkout.session.expired` sends a sample event (real bookings expire after 30 minutes) |
+You should land on the payment success page with the booking confirmed, and the emails and SMS go
+out. Going back from the Square page opens `/book-ride/payment-cancel`, where the rider can resume
+payment or edit the booking.
 
 ### Production
 
-1. In [Developers → Webhooks](https://dashboard.stripe.com/webhooks), add an endpoint
-   `https://<api-domain>/api/v1/payments/stripe/webhook` with these events:
-   - `checkout.session.completed`
-   - `checkout.session.expired`
-   - `checkout.session.async_payment_succeeded`
-   - `checkout.session.async_payment_failed`
-2. Put the keys in `apps/backend/.env.production`: `STRIPE_SECRET_KEY_LIVE` and the endpoint's
-   signing secret as `STRIPE_WEBHOOK_SECRET_LIVE` (and the `_TEST` pair for a test-mode endpoint).
+1. In the console switch to **Production**, copy the production access token and location id into
+   `apps/backend/.env.production` as `SQUARE_ACCESS_TOKEN_LIVE` and `SQUARE_LOCATION_ID_LIVE`.
+2. Add a production webhook subscription for `https://<api-domain>/api/v1/payments/square/webhook`
+   with `payment.created` and `payment.updated`, and set `SQUARE_WEBHOOK_URL` and
+   `SQUARE_WEBHOOK_SIGNATURE_KEY_LIVE`.
 3. Copy the env file to the server with `deploy/vps/push-env.sh`, deploy, then turn on **Live
    Payment Mode**.
 
-While the active mode has no keys, checkout answers "Online payment is not available right now".
+While the active mode is not fully configured, checkout answers "Online payment is not available
+right now".
 
 ## Infrastructure
 
@@ -180,7 +181,7 @@ Business modules must consume facades only:
 
 - `EmailService` → `NodemailerEmailProvider` (Nodemailer today; SES/SendGrid later)
 - `StorageService` → `STORAGE_PROVIDER` (Cloudinary today; S3/ImageKit later; required)
-- `StripeService` → Stripe SDK client + webhook verification (optional)
+- `SquareService` → Square payment links, order lookup + webhook verification (optional)
 - `FirebaseService` → Firebase Admin / FCM push (optional)
 - `TwilioService` → Twilio SMS client (optional)
 - `RedisService` — shared Redis client (required)
@@ -231,7 +232,6 @@ Online drivers may therefore receive both a live WebSocket event and an FCM push
   "storage": "up",
   "email": "up",
   "websocket": "up",
-  "stripe": "not_configured",
   "firebase": "not_configured",
   "twilio": "not_configured"
 }
@@ -239,11 +239,11 @@ Online drivers may therefore receive both a live WebSocket event and an FCM push
 
 - `503` only when `database` is `down`
 - Redis, queue, storage, email, and websocket are required; when down they mark overall `status` as `degraded`
-- Stripe, Firebase, and Twilio are optional; `not_configured` does not degrade overall status
+- Firebase and Twilio are optional; `not_configured` does not degrade overall status
 
 Swagger (non-production): `/api/docs`
 
-How to get Twilio / Firebase / Stripe / Cloudinary / email keys: [`docs/guide.md`](./docs/guide.md).
+How to get Twilio / Firebase / Square / Cloudinary / email keys: [`docs/guide.md`](./docs/guide.md).
 
 Authentication contract (access JWT, refresh cookie, CSRF, `/auth/me`): `docs/authentication.md`.
 

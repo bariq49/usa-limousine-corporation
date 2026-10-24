@@ -6,7 +6,9 @@ import {
   type OverviewStat,
 } from "@usa-limousine-corporation/ui/dashboard/booking-overview";
 import { useAuthMe } from "@/hooks/queries/use-auth";
-import { useBookingAnalytics } from "@/hooks/queries/use-bookings";
+import { BookingCalendar } from "@usa-limousine-corporation/ui/bookings/booking-calendar";
+import type { CalendarQuery } from "@usa-limousine-corporation/ui/bookings/types";
+import { useBookingAnalytics, useBookingCalendar } from "@/hooks/queries/use-bookings";
 
 const CURRENT_YEAR = new Date().getFullYear();
 const YEARS = [CURRENT_YEAR, CURRENT_YEAR - 1, CURRENT_YEAR - 2, CURRENT_YEAR - 3];
@@ -16,6 +18,8 @@ const Analytics = () => {
   const { data: admin } = useAuthMe();
   const greetingName = admin?.firstName?.trim() || admin?.name?.trim() || "Admin";
   const [year, setYear] = useState(CURRENT_YEAR);
+  const [calendarQuery, setCalendarQuery] = useState<CalendarQuery | null>(null);
+  const calendar = useBookingCalendar(calendarQuery);
   const { data, isLoading } = useBookingAnalytics(year);
 
   const stats: OverviewStat[] = [
@@ -85,6 +89,13 @@ const Analytics = () => {
         years={YEARS}
         onYearChange={setYear}
         isLoading={isLoading}
+      />
+
+      <BookingCalendar
+        events={calendar.data}
+        isFetching={calendar.isFetching}
+        onQueryChange={setCalendarQuery}
+        basePath="/bookings"
       />
     </div>
   );

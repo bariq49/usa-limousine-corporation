@@ -1,26 +1,25 @@
 import type { PaymentMode } from "@prisma/client";
 
-export type CheckoutSessionInput = {
+export type PaymentLinkInput = {
   mode: PaymentMode;
-  bookingId: string;
   bookingNumber: string;
   amount: number;
   description: string;
   customerEmail: string;
-  successUrl: string;
-  cancelUrl: string;
+  customerPhone: string;
+  redirectUrl: string;
 };
 
-export type CheckoutSession = {
+export type PaymentLink = {
   id: string;
+  orderId: string;
   url: string;
 };
 
-export type CheckoutResult = {
-  sessionId: string;
+export type OrderResult = {
+  orderId: string;
   paid: boolean;
-  expired: boolean;
-  transactionId: string | null;
+  paymentId: string | null;
   amount: number;
   currency: string;
   cardBrand: string | null;

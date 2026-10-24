@@ -13,7 +13,6 @@ export class PushDeliveryService {
     @Inject(AppLogger) private readonly logger: AppLogger,
   ) {}
 
-  /** Sends one multicast; returns tokens that failed transiently so the queue can retry them. */
   async deliver(payload: Push): Promise<PushResult> {
     const result: PushResult = { retryTokens: [] };
 

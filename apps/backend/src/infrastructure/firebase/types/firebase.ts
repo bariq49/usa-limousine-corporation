@@ -45,10 +45,6 @@ export type MulticastMessage = {
   apns?: Message["apns"];
 };
 
-export type SendResult = {
-  messageId: string;
-};
-
 export type MulticastResult = {
   successCount: number;
   failureCount: number;

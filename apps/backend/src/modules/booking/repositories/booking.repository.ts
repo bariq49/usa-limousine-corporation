@@ -1,5 +1,5 @@
 import { BadRequestException, Inject, Injectable } from "@nestjs/common";
-import { type BookingStatus, type BookingType, Prisma } from "@prisma/client";
+import { BookingStatus, type BookingType, type PaymentMode, Prisma } from "@prisma/client";
 import { APIFeature } from "../../../common/api-feature";
 import { wallClock } from "../../../common/utils/day-bounds";
 import { APP_TIMEZONE } from "../../../common/utils/format-time";
@@ -28,7 +28,6 @@ const paymentSelect = {
   },
 } as const;
 
-/** Line items with names; `unitPrice` is the price charged, not today's catalog price. */
 const itemsInclude = {
   luggage: {
     include: { luggageType: { select: { id: true, name: true } } },
@@ -42,7 +41,6 @@ const itemsInclude = {
 export class BookingRepository {
   constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
-  /** All bookings, or only one customer's when `userId` is given. */
   findMany(query: QueryDto, userId?: string) {
     const initialFilter: Prisma.BookingWhereInput = { deletedAt: null };
     if (userId) {
@@ -51,7 +49,6 @@ export class BookingRepository {
 
     const feature = new APIFeature(query, {
       initialFilter,
-      // Customers are pinned to their own userId; only admins may filter by it.
       filterFields: userId ? ["status", "bookingType"] : ["status", "bookingType", "userId"],
       excludeQueryKeys: userId ? ["userId"] : [],
       search: {
@@ -90,7 +87,6 @@ export class BookingRepository {
     });
   }
 
-  /** Bookings whose pickup date falls in [start, end]; one customer's when `userId` is set. */
   findForCalendar(params: {
     start: string;
     end: string;
@@ -159,18 +155,41 @@ export class BookingRepository {
     });
   }
 
-  attachCheckoutSession(id: string, sessionId: string) {
-    return this.prisma.booking.update({ where: { id }, data: { stripeSessionId: sessionId } });
-  }
-
-  findByCheckoutSession(sessionId: string) {
-    return this.prisma.booking.findFirst({
-      where: { stripeSessionId: sessionId, deletedAt: null },
-      select: { id: true, status: true, bookingNumber: true, passenger: true },
+  attachPaymentLink(id: string, link: { orderId: string; id: string }, mode: PaymentMode) {
+    return this.prisma.booking.update({
+      where: { id },
+      data: { squareOrderId: link.orderId, squarePaymentLinkId: link.id, paymentMode: mode },
     });
   }
 
-  /** Seats and suitcases one vehicle of an active category holds, or null when unavailable. */
+  findByOrderId(orderId: string) {
+    return this.prisma.booking.findFirst({
+      where: { squareOrderId: orderId, deletedAt: null },
+      select: {
+        id: true,
+        status: true,
+        bookingNumber: true,
+        passenger: true,
+        paymentMode: true,
+        squarePaymentLinkId: true,
+      },
+    });
+  }
+
+  findUnpaidCheckouts(createdBefore: Date) {
+    return this.prisma.booking.findMany({
+      where: {
+        status: BookingStatus.PENDING,
+        squareOrderId: { not: null },
+        payment: null,
+        createdAt: { lt: createdBefore },
+        deletedAt: null,
+      },
+      select: { squareOrderId: true },
+      take: 50,
+    });
+  }
+
   async vehicleCapacity(categoryId: string) {
     const category = await this.prisma.vehicleCategory.findFirst({
       where: { id: categoryId, isActive: true, deletedAt: null },
@@ -184,10 +203,6 @@ export class BookingRepository {
     };
   }
 
-  /**
-   * Looks up active catalog items and captures their current price.
-   * Unknown or inactive items are rejected so a booking never references a hidden product.
-   */
   async priceItems(
     extraServices: ExtraServiceItemInput[],
     luggage: LuggageItemInput[],

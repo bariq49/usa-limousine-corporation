@@ -324,8 +324,6 @@ Refresh balance anytime via REST `GET /drivers/wallet`.
 
 Subscription domain notifications use the standard inbox path (DB → WebSocket → optional FCM). Drivers listen on `driver.notification.created` only — there is no separate `subscription.*` Socket.IO event.
 
-Billing uses the **payment module** (one-time Stripe Checkout, purpose `DRIVER_SUBSCRIPTION`). Period close / past-due / trial reminders run via the subscription billing queue — not Stripe Billing webhooks.
-
 | Event                         | Room          | When                              |
 | ----------------------------- | ------------- | --------------------------------- |
 | `driver.notification.created` | `driver:<id>` | Any subscription inbox type below |

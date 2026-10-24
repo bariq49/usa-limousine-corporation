@@ -1,5 +1,6 @@
 import type { MenuSection } from "@usa-limousine-corporation/ui/types/navigation";
 import {
+  Bell,
   Calendar,
   CalendarCheck,
   CalendarCheck2,
@@ -87,6 +88,7 @@ export const navigation: MenuSection[] = [
             href: "/profile-setting",
             icon: User,
           },
+          { id: "notifications", label: "Notifications", href: "/notifications", icon: Bell },
           { id: "help-center", label: "Help Center", href: "/help-center", icon: Support },
         ],
       },

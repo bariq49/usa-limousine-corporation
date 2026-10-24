@@ -9,11 +9,6 @@ export interface LocationFormAccessor {
     ) => void;
 }
 
-export interface AddressInfo {
-    name: string;
-    detail: string;
-}
-
 export interface ReverseGeocodeParams {
     lat: number;
     lng: number;

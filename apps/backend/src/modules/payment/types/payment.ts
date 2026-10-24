@@ -6,3 +6,8 @@ export type CheckoutBooking = {
   bookingNumber: string;
   passenger: { name: string; email: string; phone: string };
 };
+
+export type SquareWebhookEvent = {
+  type?: string;
+  data?: { object?: { payment?: { order_id?: string } } };
+};

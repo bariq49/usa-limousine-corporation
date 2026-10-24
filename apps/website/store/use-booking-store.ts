@@ -35,7 +35,7 @@ interface BookingState {
     setStep2Data: (data: Partial<BookingStep2PersistedData> | null) => void;
     setStep3Data: (data: Partial<BookingStep3PersistedData> | null) => void;
     setBookingSettings: (settings: BookingSettings) => void;
-    setCheckout: (checkout: CheckoutSession) => void;
+    setCheckout: (checkout: CheckoutSession | null) => void;
     /** Clears the trip once it has been booked and paid. */
     resetBooking: () => void;
 }

@@ -14,7 +14,7 @@ import {
 import { Throttle, ThrottlerGuard } from "@nestjs/throttler";
 import type { Request } from "express";
 import { CreateDto } from "../../booking/dto/booking.dto";
-import { CheckoutSessionParamDto } from "../dto/checkout.dto";
+import { CheckoutOrderParamDto } from "../dto/checkout.dto";
 import { PaymentService } from "../services/payment.service";
 
 @Controller()
@@ -28,17 +28,17 @@ export class CheckoutController {
     return this.paymentService.startCheckout(body, request);
   }
 
-  @Get("public/bookings/checkout/:sessionId")
+  @Get("public/bookings/checkout/:orderId")
   @UseGuards(ThrottlerGuard)
-  checkoutBooking(@Param() params: CheckoutSessionParamDto) {
-    return this.paymentService.checkoutBooking(params.sessionId);
+  checkoutBooking(@Param() params: CheckoutOrderParamDto) {
+    return this.paymentService.checkoutBooking(params.orderId);
   }
 
-  @Post("payments/stripe/webhook")
+  @Post("payments/square/webhook")
   @HttpCode(200)
   webhook(
     @Req() request: RawBodyRequest<Request>,
-    @Headers("stripe-signature") signature: string | undefined,
+    @Headers("x-square-hmacsha256-signature") signature: string | undefined,
   ) {
     return this.paymentService.handleWebhook(request.rawBody, signature);
   }

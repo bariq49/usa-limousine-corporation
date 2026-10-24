@@ -5,7 +5,7 @@ import { fromZonedTime } from "date-fns-tz";
 import { loadGoogleMaps } from "@usa-limousine-corporation/ui/bookings/google-maps-loader";
 import { isAirportAddress } from "@usa-limousine-corporation/ui/utils/places";
 import { CURRENCY_SYMBOL, DEFAULT_TIMEZONE, DISTANCE_UNIT } from "@/constants/app-default";
-import type { LocationFormAccessor, AddressInfo, ReverseGeocodeParams, CalculateArrivalTimeParams, ValidateBookingTimeParams } from "@/types/utils.types";
+import type { LocationFormAccessor, ReverseGeocodeParams, CalculateArrivalTimeParams, ValidateBookingTimeParams } from "@/types/utils.types";
 
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs))
@@ -128,7 +128,6 @@ export const getPickupLocation = async (): Promise<string> => {
     return geocodedAddress ?? `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
 };
 
-
 export const isAirportPickupRequired = (
     pickupAddress: string,
     deliveryAddress?: string,
@@ -138,7 +137,6 @@ export const isAirportPickupRequired = (
         isAirportAddress(deliveryAddress ?? "")
     );
 };
-
 
 export function formatDuration(durationMinutes: number | undefined | null): string | null {
     if (typeof durationMinutes === "number" && durationMinutes > 0) {
@@ -151,18 +149,6 @@ export function formatDuration(durationMinutes: number | undefined | null): stri
 
 export const formatHrs = (hours: number) =>
   `${hours} ${hours === 1 ? "hr" : "hrs"}`;
-
-export function parseAddress(address: string | undefined | null): AddressInfo {
-    if (!address) return { name: "", detail: "" };
-    const parts = address.split(",");
-    if (parts.length > 1) {
-        return {
-            name: parts[0].trim(),
-            detail: parts.slice(1).join(",").trim(),
-        };
-    }
-    return { name: address, detail: "" };
-}
 
 /** Formats a picker time ("14:30") as "02:30 PM". */
 export function formatTime(time: string): string {

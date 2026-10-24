@@ -29,7 +29,7 @@ graph TD
     end
 
     subgraph ExternalIntegrations["Third-Party Cloud Gateways"]
-        Stripe["Stripe Payments<br/>Checkout & Off-Session Billing"]
+        Square["Square Payments<br/>Hosted checkout links"]
         Twilio["Twilio SMS<br/>OTP & Operational Alerts"]
         Firebase["Firebase Admin (FCM)<br/>Push Notifications"]
         Agora["Agora RTC<br/>In-Trip Voice Calling"]
@@ -51,7 +51,7 @@ graph TD
     NestWorker -->|Queue Consumer & Job Processor| Redis
     NestWorker -->|State Sync & Outbox Processing| Postgres
 
-    NestAPI -->|SDK / Webhooks| Stripe
+    NestAPI -->|SDK / Webhooks| Square
     NestAPI -->|REST| Twilio
     NestAPI -->|Admin SDK| Firebase
     NestAPI -->|Token Minting| Agora
@@ -101,7 +101,7 @@ The persistence layer uses PostgreSQL 16 managed through a multi-file domain-spl
 | `vehicle.prisma`      | Vehicle categories, capacities (passengers, luggage), make/model registries                                          |
 | `booking.prisma`      | Customer booking records, trip pricing breakdown, pickup/dropoff points, booking status                              |
 | `trip.prisma`         | Driver trip execution lifecycle, trip status transitions (`STARTED`, `ARRIVED_AT_DROPOFF`, `COMPLETED`), trip events |
-| `payment.prisma`      | Payment transactions, payment attempts, Stripe session mapping, transactional outbox events                          |
+| `payment.prisma`      | One payment per booking: TID, Square order and payment ids, card brand and last 4, amount, status                    |
 | `notification.prisma` | In-app notification inboxes for drivers and customers, push gating configuration                                     |
 | `wallets.prisma`      | Driver financial wallet, balances, and immutable transaction ledger                                                  |
 | `payouts.prisma`      | Driver payout requests, bank transfer snapshots, and lifecycle event logging                                         |
@@ -116,27 +116,22 @@ High-throughput, asynchronous workloads are isolated using Redis-backed BullMQ q
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Customer as Customer
-    participant API as NestJS API (QUEUE_MODE=api)
-    participant Redis as Redis 7 (BullMQ)
-    participant Worker as NestJS Worker (QUEUE_MODE=worker)
+    actor Rider as Rider (website)
+    participant API as NestJS API
     participant DB as PostgreSQL 16
-    participant Stripe as Stripe Gateway
+    participant Square as Square
 
-    Customer->>API: POST /api/v1/payments/checkout
-    API->>Stripe: Create Stripe Checkout Session
-    Stripe-->>API: Session Created (URL)
-    API->>DB: Upsert Payment (PENDING)
-    API-->>Customer: Return Checkout URL
-    Customer->>Stripe: Completes Payment
-    Stripe->>API: Webhook (checkout.session.completed)
-    API->>DB: Atomic TX: Update Payment (SUCCEEDED) + Insert PaymentOutboxEvent
-    API->>Redis: Enqueue Outbox Drain Job
-    API-->>Stripe: 200 OK (Acknowledged)
-    Redis->>Worker: Dispatch Outbox Drain Job
-    Worker->>DB: Read Unprocessed Outbox Events
-    Worker->>DB: Confirm Booking & Credit Driver Wallet
-    Worker->>Redis: Publish WebSocket Event & FCM Notification
+    Rider->>API: POST /api/v1/public/bookings/checkout
+    API->>DB: Save booking (PENDING, priced on the server)
+    API->>Square: Create payment link
+    Square-->>API: Link URL + order id
+    API-->>Rider: Redirect to Square checkout
+    Rider->>Square: Pays
+    Square->>API: Webhook (payment.updated)
+    API->>Square: Read order and payment
+    API->>DB: One transaction: insert Payment (PAID) + booking CONFIRMED
+    API-->>Rider: Emails, SMS, admin notification
+    Square-->>Rider: Redirect to /book-ride/payment-success
 ```
 
 ### Queue Modes & Scalability
@@ -166,7 +161,7 @@ The platform provides a bi-directional event stream powered by Socket.IO with a 
 
 ## 🛡️ Reliability & Resilience Patterns
 
-1. **Transactional Outbox Pattern:** Stripe webhooks write payment updates and domain outbox events in a single PostgreSQL database transaction. BullMQ workers drain the outbox, ensuring domain events (booking confirmation, wallet credit) survive crashes and network partitions.
-2. **Idempotency Guarantees:** Webhook processing dedupes events via `PaymentWebhookEvent`. Stripe payment sessions use deterministic idempotency keys (`checkout:{paymentId}:{amountCents}`).
-3. **Graceful Degradation:** Optional third-party providers (Stripe, Twilio, Firebase, Agora) report `not_configured` in `/api/v1/health` without blocking startup or failing critical health probes.
+1. **Atomic payment recording:** a paid Square order writes the `Payment` row and confirms the booking in one PostgreSQL transaction; a unique Square order id makes repeated webhooks harmless.
+2. **Two ways to settle:** the Square webhook and the website's success page both read the order from Square, so a missed or late webhook never leaves a paid booking pending. Unpaid checkouts are cancelled after 30 minutes.
+3. **Graceful Degradation:** Optional third-party providers (Twilio, Firebase) report `not_configured` in `/api/v1/health` without blocking startup or failing critical health probes.
 4. **Health Check Probes:** Deep health monitoring on `GET /api/v1/health` probes PostgreSQL, Redis, BullMQ, storage, and mailer availability.

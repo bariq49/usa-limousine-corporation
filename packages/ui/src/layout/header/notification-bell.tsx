@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Bell, CheckCheck } from "lucide-react";
 import { Button } from "../../components/button";
 import {
@@ -46,10 +47,7 @@ export function NotificationBell() {
             <span className="text-sm font-semibold text-default-900">Notifications</span>
             <span
               title={isConnected ? "Live updates on" : "Reconnecting…"}
-              className={cn(
-                "h-2 w-2 rounded-full",
-                isConnected ? "bg-success" : "bg-default-300",
-              )}
+              className={cn("h-2 w-2 rounded-full", isConnected ? "bg-success" : "bg-default-300")}
             />
           </div>
           {onMarkAllRead && unreadCount > 0 ? (
@@ -112,6 +110,12 @@ export function NotificationBell() {
             })
           )}
         </ScrollArea>
+        <DropdownMenuItem
+          asChild
+          className="cursor-pointer justify-center rounded-none border-t border-border py-2.5 text-sm font-medium text-primary"
+        >
+          <Link href="/notifications">View all notifications</Link>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

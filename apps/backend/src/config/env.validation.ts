@@ -187,22 +187,33 @@ export class EnvironmentVariables {
   @IsUrl({ require_tld: false })
   WEBSITE_URL?: string;
 
-  /** Stripe keys per payment mode; the admin platform settings choose test or live. */
   @IsOptional()
   @IsString()
-  STRIPE_SECRET_KEY_TEST?: string;
+  SQUARE_ACCESS_TOKEN_TEST?: string;
 
   @IsOptional()
   @IsString()
-  STRIPE_WEBHOOK_SECRET_TEST?: string;
+  SQUARE_LOCATION_ID_TEST?: string;
 
   @IsOptional()
   @IsString()
-  STRIPE_SECRET_KEY_LIVE?: string;
+  SQUARE_WEBHOOK_SIGNATURE_KEY_TEST?: string;
 
   @IsOptional()
   @IsString()
-  STRIPE_WEBHOOK_SECRET_LIVE?: string;
+  SQUARE_ACCESS_TOKEN_LIVE?: string;
+
+  @IsOptional()
+  @IsString()
+  SQUARE_LOCATION_ID_LIVE?: string;
+
+  @IsOptional()
+  @IsString()
+  SQUARE_WEBHOOK_SIGNATURE_KEY_LIVE?: string;
+
+  @IsOptional()
+  @IsUrl({ require_tld: false })
+  SQUARE_WEBHOOK_URL?: string;
 
   /** Google review link shown in the ride completed email. */
   @IsOptional()

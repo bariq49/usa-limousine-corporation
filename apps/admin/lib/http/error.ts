@@ -35,10 +35,6 @@ export class HttpError extends Error {
   }
 }
 
-export function isHttpError(error: unknown): error is HttpError {
-  return error instanceof HttpError;
-}
-
 function requestContext(error: {
   config?: { method?: string; url?: string; baseURL?: string };
 }): Pick<HttpErrorInit, "method" | "url"> {

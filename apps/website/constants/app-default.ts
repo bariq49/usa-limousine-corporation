@@ -1,11 +1,8 @@
-export const DEFAULT_PHONE_COUNTRY = "us";
 export const DEFAULT_TIMEZONE = "America/New_York";
 export const CURRENCY_SYMBOL = "$";
 export const DISTANCE_UNIT = "mi";
 
 export const COMPANY_NAME = "USA Limousine Corporation";
-export const COMPANY_DESCRIPTION =
-  "USA Limousine offers top-rated limousine and car services with professional, licensed drivers. With a fast network and quick response time, customer satisfaction is our top priority.";
 
 export const COMPANY_PHONE = "+1 732-289-8928";
 export const COMPANY_PHONE_HREF = "tel:+17322898928";

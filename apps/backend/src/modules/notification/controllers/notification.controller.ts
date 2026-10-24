@@ -26,7 +26,7 @@ import { NotificationService } from "../services/notification.service";
 import { TestPushService } from "../services/test-push.service";
 import { RecipientType, type Recipient } from "../types/notification";
 
-/** The signed-in admin's own notifications. */
+
 function adminRecipient(request: Request): Recipient {
   return {
     recipientType: RecipientType.USER,

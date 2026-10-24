@@ -10,6 +10,8 @@ import { Reflector } from "@nestjs/core";
 import { map } from "rxjs";
 import { getAppEnv } from "../../../config/env";
 import { AUTH_COOKIE_ACTION_KEY, CSRF_COOKIE_ACTION_KEY } from "../constants/auth.constants";
+import type { Request } from "express";
+import { forAppClient } from "../utils/app-cookie";
 import { applyAuthCookie } from "../utils/auth-cookie";
 import { applyCsrfCookie } from "../utils/csrf-cookie";
 
@@ -30,7 +32,9 @@ export class AuthCookieInterceptor implements NestInterceptor {
 
     return next.handle().pipe(
       map((data) => {
-        const response = context.switchToHttp().getResponse();
+        const http = context.switchToHttp();
+        const response = http.getResponse();
+        const request = http.getRequest<Request>();
         const env = getAppEnv(this.configService);
 
         if (csrfAction) {
@@ -41,7 +45,7 @@ export class AuthCookieInterceptor implements NestInterceptor {
 
           applyCsrfCookie({
             response,
-            cookie: env.csrfCookie,
+            cookie: forAppClient(env.csrfCookie, request),
             token: csrfToken,
           });
           return { csrfToken };
@@ -50,7 +54,7 @@ export class AuthCookieInterceptor implements NestInterceptor {
         return applyAuthCookie({
           action: authAction,
           response,
-          cookie: env.authCookie,
+          cookie: forAppClient(env.authCookie, request),
           data,
         });
       }),

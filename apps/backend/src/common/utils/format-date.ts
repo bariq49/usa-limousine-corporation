@@ -9,11 +9,3 @@ export function formatDate(date: Date = new Date(), timeZone: string = APP_TIMEZ
   }).format(date);
 }
 
-/** Parse `YYYY-MM-DD` into a UTC midnight Date. */
-export function parseDate(value: string): Date {
-  const date = new Date(`${value}T00:00:00.000Z`);
-  if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== value) {
-    throw new Error("Invalid date");
-  }
-  return date;
-}

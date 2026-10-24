@@ -11,15 +11,15 @@ const body = {
 } as never;
 const request = { headers: {} } as never;
 const passenger = { name: "Ada", email: "ada@example.com", phone: "+17322898928" };
+const ORDER_ID = "ORDER123456789";
 
-const paidResult = {
-  sessionId: "cs_test_1",
+const paidOrder = {
+  orderId: ORDER_ID,
   paid: true,
-  expired: false,
-  transactionId: "pi_1",
+  paymentId: "PAY123",
   amount: 110,
   currency: "usd",
-  cardBrand: "visa",
+  cardBrand: "VISA",
   cardLast4: "4242",
 };
 
@@ -27,64 +27,44 @@ function setup(
   options: {
     configured?: boolean;
     status?: BookingStatus;
-    result?: typeof paidResult;
+    order?: typeof paidOrder;
     recorded?: boolean;
-    createSession?: jest.Mock;
+    createLink?: jest.Mock;
   } = {},
 ) {
   const bookingRepository = {
     create: jest.fn(async () => ({ id: "book-1", bookingNumber: "BK-1" })),
-    attachCheckoutSession: jest.fn(async () => undefined),
+    attachPaymentLink: jest.fn(async () => undefined),
     delete: jest.fn(async () => undefined),
-    findByCheckoutSession: jest.fn(async () => ({
+    findByOrderId: jest.fn(async () => ({
       id: "book-1",
       status: options.status ?? BookingStatus.PENDING,
       bookingNumber: "BK-000001",
       passenger,
+      paymentMode: PaymentMode.TEST,
+      squarePaymentLinkId: "LINK1",
     })),
+    findUnpaidCheckouts: jest.fn(async () => [{ squareOrderId: ORDER_ID }]),
     findById: jest.fn(async () => ({
       id: "book-1",
-      userId: null,
-      bookingNumber: "BK-000001",
-      bookingType: "ONE_WAY",
-      vehicleCount: 1,
       status: BookingStatus.CONFIRMED,
       totalPrice: { toFixed: () => "110.00" },
-      vehicleCategory: { name: "Sedan", description: null, image: null, passengerCount: 4 },
-      address: { pickup: { address: "A" }, dropoff: { address: "B" }, distance: 10, duration: 20 },
-      passenger: Object.assign({ passengerCount: 1 }, passenger),
       bookingTime: { pickupDate: "2030-09-11", pickupTime: "14:00" },
-      flightDetails: null,
-      meetAndGreet: null,
-      luggage: [],
-      extraServices: [],
-      notes: null,
-      pricing: { total: 110 },
-      payment: {
-        status: PaymentStatus.PAID,
-        transactionId: "pi_1",
-        amount: { toNumber: () => 110 },
-        currency: "usd",
-        cardBrand: "visa",
-        cardLast4: "4242",
-        paidAt: new Date("2030-01-01T00:00:00Z"),
-      },
+      payment: { status: PaymentStatus.PAID, cardBrand: "VISA", cardLast4: "4242" },
     })),
   };
   const paymentRepository = {
     recordPaid: jest.fn(async () => options.recorded ?? true),
     recordCancelled: jest.fn(async () => true),
   };
-  const stripe = {
+  const square = {
     isConfigured: jest.fn(() => options.configured ?? true),
-    createCheckoutSession:
-      options.createSession ??
-      jest.fn(async () => ({
-        id: "cs_test_1",
-        url: "https://checkout.stripe.com/c/pay/cs_test_1",
-      })),
-    retrieveCheckout: jest.fn(async () => options.result ?? paidResult),
-    constructEvent: jest.fn(),
+    createPaymentLink:
+      options.createLink ??
+      jest.fn(async () => ({ id: "LINK1", orderId: ORDER_ID, url: "https://square.link/u/abc" })),
+    retrieveOrder: jest.fn(async () => options.order ?? paidOrder),
+    deletePaymentLink: jest.fn(async () => undefined),
+    verifyWebhook: jest.fn(async () => PaymentMode.TEST),
   };
   const notifications = {
     stageForAdmins: jest.fn(async () => [{ id: "n-1" }]),
@@ -105,7 +85,7 @@ function setup(
     prisma as never,
     notifications as never,
     { get: async () => ({ paymentMode: PaymentMode.TEST }) } as never,
-    stripe as never,
+    square as never,
     emails as never,
     twilio as never,
     {
@@ -114,13 +94,15 @@ function setup(
     { error: jest.fn() } as never,
   );
 
-  return { service, bookingRepository, paymentRepository, stripe, notifications, emails, twilio };
+  return { service, bookingRepository, paymentRepository, square, notifications, emails, twilio };
 }
 
 const flush = () => new Promise((resolve) => setImmediate(resolve));
+const webhook = (type: string) =>
+  Buffer.from(JSON.stringify({ type, data: { object: { payment: { order_id: ORDER_ID } } } }));
 
 describe("PaymentService.startCheckout", () => {
-  it("refuses bookings when Stripe is not set up for the active mode", async () => {
+  it("refuses bookings when Square is not set up for the active mode", async () => {
     const { service, bookingRepository } = setup({ configured: false });
 
     await expect(service.startCheckout(body, request)).rejects.toThrow(
@@ -129,67 +111,64 @@ describe("PaymentService.startCheckout", () => {
     expect(bookingRepository.create).not.toHaveBeenCalled();
   });
 
-  it("saves a pending booking and returns the Stripe checkout page", async () => {
-    const { service, bookingRepository, stripe } = setup();
+  it("saves a pending booking and returns the Square checkout page", async () => {
+    const { service, bookingRepository, square } = setup();
 
     const result = await service.startCheckout(body, request);
 
     expect(bookingRepository.create).toHaveBeenCalledWith(
       expect.objectContaining({ userId: null, status: BookingStatus.PENDING }),
     );
-    expect(stripe.createCheckoutSession).toHaveBeenCalledWith(
+    expect(square.createPaymentLink).toHaveBeenCalledWith(
       expect.objectContaining({
         amount: 110,
-        successUrl:
-          "https://www.usalimocorp.com/book-ride/payment-success?session_id={CHECKOUT_SESSION_ID}",
-        cancelUrl: "https://www.usalimocorp.com/book-ride/payment-cancel",
+        customerPhone: "+17322898928",
+        redirectUrl: "https://www.usalimocorp.com/book-ride/payment-success",
       }),
     );
-    expect(bookingRepository.attachCheckoutSession).toHaveBeenCalledWith("book-1", "cs_test_1");
+    expect(bookingRepository.attachPaymentLink).toHaveBeenCalledWith(
+      "book-1",
+      expect.objectContaining({ orderId: ORDER_ID }),
+      PaymentMode.TEST,
+    );
     expect(result).toEqual({
-      url: "https://checkout.stripe.com/c/pay/cs_test_1",
-      sessionId: "cs_test_1",
+      url: "https://square.link/u/abc",
+      orderId: ORDER_ID,
       bookingNumber: "BK-000001",
     });
   });
 
-  it("removes the booking when Stripe cannot open a checkout page", async () => {
+  it("removes the booking when Square cannot open a checkout page", async () => {
     const { service, bookingRepository } = setup({
-      createSession: jest.fn(async () => {
-        throw new Error("Stripe down");
+      createLink: jest.fn(async () => {
+        throw new Error("Square down");
       }),
     });
 
-    await expect(service.startCheckout(body, request)).rejects.toThrow("Stripe down");
+    await expect(service.startCheckout(body, request)).rejects.toThrow("Square down");
     expect(bookingRepository.delete).toHaveBeenCalledWith("book-1");
   });
 });
 
 describe("PaymentService.handleWebhook", () => {
-  const event = (type: string) => ({
-    event: { type, data: { object: { id: "cs_test_1" } } },
-    mode: PaymentMode.TEST,
-  });
-
-  it("rejects requests without a Stripe signature", async () => {
+  it("rejects requests without a Square signature", async () => {
     const { service } = setup();
 
-    await expect(service.handleWebhook(Buffer.from("{}"), undefined)).rejects.toThrow(
-      "Missing Stripe signature",
+    await expect(service.handleWebhook(webhook("payment.updated"), undefined)).rejects.toThrow(
+      "Missing Square signature",
     );
   });
 
   it("records the payment and tells the admin and the rider by email and SMS", async () => {
-    const { service, paymentRepository, stripe, notifications, emails, twilio } = setup();
-    stripe.constructEvent.mockReturnValue(event("checkout.session.completed"));
+    const { service, paymentRepository, square, notifications, emails, twilio } = setup();
 
-    await service.handleWebhook(Buffer.from("{}"), "sig");
+    await service.handleWebhook(webhook("payment.updated"), "sig");
     await flush();
 
-    expect(stripe.retrieveCheckout).toHaveBeenCalledWith(PaymentMode.TEST, "cs_test_1");
+    expect(square.retrieveOrder).toHaveBeenCalledWith(PaymentMode.TEST, ORDER_ID);
     expect(paymentRepository.recordPaid).toHaveBeenCalledWith(
       expect.objectContaining({ id: "book-1", passenger }),
-      paidResult,
+      paidOrder,
       PaymentMode.TEST,
     );
     expect(notifications.stageForAdmins).toHaveBeenCalled();
@@ -203,45 +182,62 @@ describe("PaymentService.handleWebhook", () => {
   });
 
   it("sends nothing again when the payment was already recorded", async () => {
-    const { service, stripe, emails, twilio } = setup({ recorded: false });
-    stripe.constructEvent.mockReturnValue(event("checkout.session.completed"));
+    const { service, emails, twilio } = setup({ recorded: false });
 
-    await service.handleWebhook(Buffer.from("{}"), "sig");
+    await service.handleWebhook(webhook("payment.updated"), "sig");
     await flush();
 
     expect(emails.sendPaid).not.toHaveBeenCalled();
     expect(twilio.send).not.toHaveBeenCalled();
   });
 
-  it("cancels the booking when the checkout page expires unpaid", async () => {
-    const result = Object.assign({}, paidResult, { paid: false, expired: true });
-    const { service, paymentRepository, stripe } = setup({ result });
-    stripe.constructEvent.mockReturnValue(event("checkout.session.expired"));
+  it("leaves an unpaid order open until it expires", async () => {
+    const order = Object.assign({}, paidOrder, { paid: false, paymentId: null });
+    const { service, paymentRepository } = setup({ order });
 
-    await service.handleWebhook(Buffer.from("{}"), "sig");
+    await service.handleWebhook(webhook("payment.created"), "sig");
 
-    expect(paymentRepository.recordCancelled).toHaveBeenCalled();
     expect(paymentRepository.recordPaid).not.toHaveBeenCalled();
+    expect(paymentRepository.recordCancelled).not.toHaveBeenCalled();
   });
 
   it("ignores bookings that are no longer pending", async () => {
-    const { service, stripe } = setup({ status: BookingStatus.CONFIRMED });
-    stripe.constructEvent.mockReturnValue(event("checkout.session.completed"));
+    const { service, square } = setup({ status: BookingStatus.CONFIRMED });
 
-    await service.handleWebhook(Buffer.from("{}"), "sig");
+    await service.handleWebhook(webhook("payment.updated"), "sig");
 
-    expect(stripe.retrieveCheckout).not.toHaveBeenCalled();
+    expect(square.retrieveOrder).not.toHaveBeenCalled();
+  });
+});
+
+describe("PaymentService.releaseExpiredCheckouts", () => {
+  it("cancels unpaid checkouts older than 30 minutes and deletes their payment link", async () => {
+    const order = Object.assign({}, paidOrder, { paid: false, paymentId: null });
+    const { service, square, paymentRepository } = setup({ order });
+
+    await service.releaseExpiredCheckouts();
+
+    expect(square.deletePaymentLink).toHaveBeenCalledWith(PaymentMode.TEST, "LINK1");
+    expect(paymentRepository.recordCancelled).toHaveBeenCalled();
+  });
+
+  it("records the payment instead when the expired checkout was actually paid", async () => {
+    const { service, square, paymentRepository } = setup();
+
+    await service.releaseExpiredCheckouts();
+
+    expect(paymentRepository.recordPaid).toHaveBeenCalled();
+    expect(square.deletePaymentLink).not.toHaveBeenCalled();
   });
 });
 
 describe("PaymentService.checkoutBooking", () => {
-  it("settles a pending booking with Stripe before showing it", async () => {
+  it("settles a pending booking with Square before showing it", async () => {
     const { service, paymentRepository } = setup();
 
-    const view = await service.checkoutBooking("cs_test_1");
+    const booking = await service.checkoutBooking(ORDER_ID);
 
     expect(paymentRepository.recordPaid).toHaveBeenCalled();
-    expect(view.status).toBe(BookingStatus.CONFIRMED);
-    expect(view.payment).toEqual(expect.objectContaining({ cardBrand: "visa", cardLast4: "4242" }));
+    expect(booking.status).toBe(BookingStatus.CONFIRMED);
   });
 });

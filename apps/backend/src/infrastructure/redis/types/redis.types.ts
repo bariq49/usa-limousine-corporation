@@ -18,11 +18,3 @@ export type RedisConfig = {
   sentinelName?: string | undefined;
 };
 
-export type RedisClientOptions = {
-  lazyConnect: boolean;
-  maxRetriesPerRequest: number | null;
-  enableReadyCheck: boolean;
-  connectTimeout: number;
-  keepAlive: number;
-  keyPrefix?: string | undefined;
-};

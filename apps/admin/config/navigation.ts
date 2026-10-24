@@ -1,5 +1,6 @@
 import type { MenuSection } from "@usa-limousine-corporation/ui/types/navigation";
 import {
+  Bell,
   Dashboard,
   Calendar,
   CalendarCheck,
@@ -38,6 +39,18 @@ export const navigation: MenuSection[] = [
             icon: Graph,
           },
           {
+            id: "booking-calendar",
+            label: "Calendar",
+            href: "/calendar",
+            icon: CalendarClock,
+          },
+          {
+            id: "notifications",
+            label: "Notifications",
+            href: "/notifications",
+            icon: Bell,
+          },
+          {
             id: "help-center",
             label: "Help Center",
             href: "/help-center",
@@ -62,12 +75,7 @@ export const navigation: MenuSection[] = [
             href: "/bookings",
             icon: Calendar,
           },
-          {
-            id: "booking-calendar",
-            label: "Calendar",
-            href: "/calendar",
-            icon: CalendarClock,
-          },
+          
           {
             id: "pending-bookings",
             label: "Pending Bookings",

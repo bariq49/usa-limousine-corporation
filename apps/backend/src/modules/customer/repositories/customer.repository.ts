@@ -45,7 +45,6 @@ export class CustomerRepository {
     });
   }
 
-  /** Admin list: search by name/email/phone, filter by tier. */
   findMany(query: AdminCustomerQueryDto) {
     const initialFilter: Prisma.CustomerWhereInput = { deletedAt: null };
 

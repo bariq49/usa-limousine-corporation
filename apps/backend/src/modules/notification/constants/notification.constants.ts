@@ -12,7 +12,6 @@ export const NOTIFICATION_WS_EVENTS = {
   REMOVED: "notification.removed",
 } as const;
 
-export const DEFAULT_NOTIFICATION_PAGE = 1;
 export const DEFAULT_NOTIFICATION_LIMIT = 20;
 export const MAX_NOTIFICATION_LIMIT = 100;
 

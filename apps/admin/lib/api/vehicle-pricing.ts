@@ -8,10 +8,6 @@ export const getVehiclePricings = (params?: Query) => {
   });
 };
 
-export const getVehiclePricing = (id: string) => {
-  return http.get<Item>(`${API_ROUTES.VEHICLE_CATEGORY_PRICING}/${id}`);
-};
-
 export const createVehiclePricing = (payload: CreatePayload) => {
   return http.post<Item>(API_ROUTES.VEHICLE_CATEGORY_PRICING, payload);
 };

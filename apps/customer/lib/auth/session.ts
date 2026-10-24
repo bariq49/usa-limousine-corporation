@@ -2,14 +2,9 @@ import type { AuthTokens } from "../api/types";
 
 let accessToken: string | null = null;
 let csrfToken: string | null = null;
-let sessionId: string | null = null;
 
 export function getAccessToken(): string | null {
   return accessToken;
-}
-
-export function setAccessToken(token: string | null): void {
-  accessToken = token;
 }
 
 export function getCsrfToken(): string | null {
@@ -20,14 +15,6 @@ export function setCsrfToken(token: string | null): void {
   csrfToken = token;
 }
 
-export function getSessionId(): string | null {
-  return sessionId;
-}
-
-export function setSessionId(id: string | null): void {
-  sessionId = id;
-}
-
 export function hasAccessToken(): boolean {
   return typeof accessToken === "string" && accessToken.length > 0;
 }
@@ -35,12 +22,10 @@ export function hasAccessToken(): boolean {
 export function clearAuthSession(): void {
   accessToken = null;
   csrfToken = null;
-  sessionId = null;
 }
 
 export function applyAuthSession(params: AuthTokens): void {
   accessToken = params.accessToken;
-  sessionId = params.sessionId;
 }
 
 const DEVICE_ID_KEY = "usa_limo_device_id";

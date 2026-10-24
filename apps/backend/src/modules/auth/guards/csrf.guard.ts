@@ -8,6 +8,7 @@ import {
 import { ConfigService } from "@nestjs/config";
 import type { Request } from "express";
 import { getAppEnv } from "../../../config/env";
+import { forAppClient } from "../utils/app-cookie";
 import { csrfTokensEqual } from "../utils/csrf";
 
 @Injectable()
@@ -16,7 +17,9 @@ export class CsrfGuard implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest<Request>();
-    const { authCookie, csrfCookie } = getAppEnv(this.configService);
+    const env = getAppEnv(this.configService);
+    const authCookie = forAppClient(env.authCookie, request);
+    const csrfCookie = forAppClient(env.csrfCookie, request);
     const refreshCookie = request.cookies?.[authCookie.name];
 
     if (typeof refreshCookie !== "string" || refreshCookie.length === 0) {

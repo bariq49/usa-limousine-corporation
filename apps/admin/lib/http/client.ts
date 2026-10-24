@@ -55,7 +55,7 @@ export function createAxiosInstance(baseURL = getBaseUrl()): AxiosInstance {
     baseURL,
     withCredentials: true,
     timeout: 30_000,
-    headers: { Accept: "application/json" },
+    headers: { Accept: "application/json", "X-App-Client": "admin" },
   });
 
   instance.interceptors.request.use((config) => {

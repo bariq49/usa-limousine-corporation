@@ -78,7 +78,6 @@ export class NotificationQueueService extends BaseQueueService {
     }
 
     if (job.name === NOTIFICATION_JOB_NAMES.DELIVER_PENDING) {
-      // Rows whose request/process died between insert and delivery (outbox recovery).
       const pending = await this.repository.findUndelivered(
         new Date(Date.now() - DELIVER_PENDING_AFTER_MS),
         DELIVER_PENDING_BATCH,
@@ -106,7 +105,6 @@ export class NotificationQueueService extends BaseQueueService {
     }
   }
 
-  /** One job per notification + attempt, so a re-delivery never queues the same push twice. */
   async enqueuePush(payload: Push, delay = 0) {
     if (!this.bullQueue.isReady()) {
       await this.pushDelivery.deliver(payload);

@@ -13,12 +13,6 @@ export const luxuryStaggerTransition: Transition = {
   ease: luxuryEase,
 };
 
-export const viewportOnce = {
-  once: true,
-  amount: 0.15,
-  margin: "0px 0px -6% 0px",
-} as const;
-
 /** Play once when scrolling into view — no reverse on scroll up */
 export const viewportReplay = {
   once: true,
@@ -26,58 +20,11 @@ export const viewportReplay = {
   margin: "0px 0px -4% 0px",
 } as const;
 
-/** `custom` = delay in seconds so siblings can cascade one-by-one */
-export const fadeUpVariants: Variants = {
-  hidden: { opacity: 0, y: 24 },
-  visible: (delay: number = 0) => ({
-    opacity: 1,
-    y: 0,
-    transition: { ...luxuryTransition, delay },
-  }),
-};
-
 export const fadeInVariants: Variants = {
   hidden: { opacity: 0 },
   visible: (delay: number = 0) => ({
     opacity: 1,
     transition: { ...luxuryTransition, duration: 0.65, delay },
-  }),
-};
-
-export const fadeLeftVariants: Variants = {
-  hidden: { opacity: 0, x: -18 },
-  visible: (delay: number = 0) => ({
-    opacity: 1,
-    x: 0,
-    transition: { ...luxuryTransition, delay },
-  }),
-};
-
-export const fadeRightVariants: Variants = {
-  hidden: { opacity: 0, x: 18 },
-  visible: (delay: number = 0) => ({
-    opacity: 1,
-    x: 0,
-    transition: { ...luxuryTransition, delay },
-  }),
-};
-
-export const scaleInVariants: Variants = {
-  hidden: { opacity: 0, scale: 0.97 },
-  visible: (delay: number = 0) => ({
-    opacity: 1,
-    scale: 1,
-    transition: { ...luxuryTransition, delay },
-  }),
-};
-
-/** Soft image zoom-in — used for media within cards/sections */
-export const imageRevealVariants: Variants = {
-  hidden: { opacity: 0, scale: 1.05 },
-  visible: (delay: number = 0) => ({
-    opacity: 1,
-    scale: 1,
-    transition: { duration: 0.65, ease: luxuryEase, delay },
   }),
 };
 
@@ -126,22 +73,6 @@ export const cardShellVariants: Variants = {
       when: "beforeChildren",
       staggerChildren: 0.07,
       delayChildren: 0.03,
-    },
-  },
-};
-
-/** Inside one card: image first, then text (when shell is not used) */
-export const cardInnerVariants: Variants = {
-  hidden: {
-    transition: {
-      staggerChildren: 0.03,
-      staggerDirection: -1,
-    },
-  },
-  visible: {
-    transition: {
-      staggerChildren: 0.07,
-      delayChildren: 0.01,
     },
   },
 };

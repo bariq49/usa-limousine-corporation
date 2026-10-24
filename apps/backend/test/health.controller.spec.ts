@@ -19,7 +19,6 @@ describe("HealthController", () => {
               storage: "not_configured",
               email: "not_configured",
               websocket: "not_configured",
-              stripe: "not_configured",
               firebase: "not_configured",
               twilio: "not_configured",
               agora: "not_configured",

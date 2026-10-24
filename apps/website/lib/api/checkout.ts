@@ -8,7 +8,7 @@ export const startCheckout = async (draft: BookingDraft): Promise<CheckoutStart>
   return response.data;
 };
 
-export const getCheckoutBooking = async (sessionId: string): Promise<Booking> => {
-  const response = await api.get(`${API_ROUTES.CHECKOUT}/${encodeURIComponent(sessionId)}`);
+export const getCheckoutBooking = async (orderId: string): Promise<Booking> => {
+  const response = await api.get(`${API_ROUTES.CHECKOUT}/${encodeURIComponent(orderId)}`);
   return response.data;
 };

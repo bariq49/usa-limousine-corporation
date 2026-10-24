@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import type { Socket } from "socket.io-client";
 import type { NotificationItem } from "@usa-limousine-corporation/ui/providers/notification-context";
 import {
+  deleteNotifications,
   getNotifications,
   markAllNotificationsRead,
   markNotificationRead,
@@ -59,7 +60,7 @@ function markItemsRead(items: NotificationItem[], ids: string[] | null, readAt: 
 export const useNotificationList = () => {
   return useQuery({
     queryKey: notificationQueryKeys.list,
-    queryFn: getNotifications,
+    queryFn: () => getNotifications(),
     staleTime: 30_000,
   });
 };
@@ -170,6 +171,62 @@ export const useMarkAllNotificationsRead = () => {
     onError: () => {
       toast.error("Failed to mark notifications as read.");
       void queryClient.invalidateQueries({ queryKey: notificationQueryKeys.list });
+    },
+  });
+};
+
+export const useDeleteNotifications = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: deleteNotifications,
+    onMutate: (ids: string[]) => {
+      queryClient.setQueryData<NotificationList>(notificationQueryKeys.list, (list) => {
+        if (!list) {
+          return list;
+        }
+        const removedUnread = list.items.filter((item) => ids.includes(item.id) && !item.readAt);
+        return withChanges(
+          list,
+          list.items.filter((item) => !ids.includes(item.id)),
+          Math.max(0, list.unreadCount - removedUnread.length),
+        );
+      });
+    },
+    onSuccess: (_result, ids) => {
+      toast.success(
+        ids.length === 1 ? "Notification deleted." : `${ids.length} notifications deleted.`,
+      );
+    },
+    onError: () => {
+      toast.error("Failed to delete notifications.");
+      void queryClient.invalidateQueries({ queryKey: notificationQueryKeys.list });
+    },
+  });
+};
+
+export const useLoadMoreNotifications = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (cursor: string) => getNotifications(cursor),
+    onSuccess: (page) => {
+      queryClient.setQueryData<NotificationList>(notificationQueryKeys.list, (list) => {
+        if (!list) {
+          return page;
+        }
+        const known = new Set(list.items.map((item) => item.id));
+        const next: NotificationList = {
+          items: list.items.concat(page.items.filter((item) => !known.has(item.id))),
+          nextCursor: page.nextCursor,
+          hasNextPage: page.hasNextPage,
+          unreadCount: page.unreadCount,
+        };
+        return next;
+      });
+    },
+    onError: () => {
+      toast.error("Failed to load more notifications.");
     },
   });
 };

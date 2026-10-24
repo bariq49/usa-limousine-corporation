@@ -96,16 +96,11 @@ export class NotificationService {
     return results;
   }
 
-  /**
-   * Transactional outbox: insert rows with the caller's transaction so they commit (or roll back)
-   * together with the business change. Call `deliverStaged` after the transaction commits; if the
-   * process dies first, the sweep job delivers them.
-   */
+
   stage(inputs: Create[], client: Client) {
     return this.repository.createManyAndReturn({ inputs }, client);
   }
 
-  /** Stage one in-app notification per active super admin (no push). */
   async stageForAdmins(input: NotifyAdmins, client: Client) {
     const adminIds = await this.repository.findAdminUserIds(input.excludeUserId, client);
     return this.stage(
@@ -131,10 +126,7 @@ export class NotificationService {
     return this.repository.list(query, recipient);
   }
 
-  /**
-   * A page of the recipient's notifications plus their unread count.
-   * With `cursor` (empty string for the first page) it uses keyset paging and skips the total count.
-   */
+
   async listWithUnread(query: Query, recipient: Recipient) {
     if (query.cursor !== undefined) {
       const [page, unreadCount] = await Promise.all([

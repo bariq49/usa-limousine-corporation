@@ -5,7 +5,6 @@ import {
   createLuggage,
   deleteLuggage,
   getLuggage,
-  getLuggageItem,
   updateLuggage,
 } from "../../lib/api/luggage";
 import type { CreatePayload, Query, UpdatePayload } from "../../lib/types/luggage";
@@ -20,14 +19,6 @@ export const useLuggage = (params?: Query) => {
   return useQuery({
     queryKey: luggageKeys.list(params),
     queryFn: () => getLuggage(params),
-  });
-};
-
-export const useLuggageItem = (id: string) => {
-  return useQuery({
-    queryKey: luggageKeys.detail(id),
-    queryFn: () => getLuggageItem(id),
-    enabled: Boolean(id),
   });
 };
 
