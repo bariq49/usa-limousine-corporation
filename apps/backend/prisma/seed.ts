@@ -287,24 +287,6 @@ const DEFAULT_EXTRA_SERVICES = [
     sortOrder: 3,
     isActive: true,
   },
-  {
-    name: "Meet & Greet",
-    description: "Driver welcomes you inside the arrival hall with a name sign",
-    price: 15,
-    type: ExtraServiceType.MEET_AND_GREET,
-    maxQuantity: 1,
-    sortOrder: 4,
-    isActive: true,
-  },
-  {
-    name: "Additional Stop",
-    description: "Additional stop along the route",
-    price: 10,
-    type: ExtraServiceType.EXTRA,
-    maxQuantity: 4,
-    sortOrder: 5,
-    isActive: true,
-  },
 ];
 
 async function ensureExtraServices() {
@@ -338,6 +320,16 @@ async function ensureExtraServices() {
   console.log(`Seeded ${DEFAULT_EXTRA_SERVICES.length} extra services`);
 }
 
+/** Creates the single platform settings row; existing values are left as admins set them. */
+async function ensurePlatformSettings() {
+  await prisma.platformSettings.upsert({
+    where: { id: "global" },
+    create: { id: "global" },
+    update: {},
+  });
+  console.log("Platform settings ready");
+}
+
 async function main() {
   await ensureRoles();
   for (const admin of SUPER_ADMINS) {
@@ -348,6 +340,7 @@ async function main() {
   await ensureVehicleCategories();
   await ensureCategoryLuggageCapacities();
   await ensureExtraServices();
+  await ensurePlatformSettings();
 }
 
 main()

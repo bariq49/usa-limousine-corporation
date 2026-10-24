@@ -63,6 +63,12 @@ export const navigation: MenuSection[] = [
             icon: Calendar,
           },
           {
+            id: "booking-calendar",
+            label: "Calendar",
+            href: "/calendar",
+            icon: CalendarClock,
+          },
+          {
             id: "pending-bookings",
             label: "Pending Bookings",
             href: "/pending-bookings",
@@ -160,6 +166,12 @@ export const navigation: MenuSection[] = [
             label: "Profile Settings",
             href: "/profile-setting",
             icon: User,
+          },
+          {
+            id: "platform-settings",
+            label: "Platform Settings",
+            href: "/platform-settings",
+            icon: Tag,
           },
         ],
       },

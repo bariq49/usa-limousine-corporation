@@ -1,3 +1,4 @@
+import type { BookingPricing } from "../../platform-settings/types/platform-settings";
 import type { BookingStatus, BookingType, Prisma } from "@prisma/client";
 
 export type LocationInput = {
@@ -42,6 +43,7 @@ export type FlightDetailsInput = {
 
 export type MeetAndGreetInput = {
   enabled?: boolean | undefined;
+  returnEnabled?: boolean | undefined;
   instructions?: string | undefined;
   signName?: string | undefined;
 };
@@ -69,7 +71,8 @@ export type CreateData = {
   bookingType: BookingType;
   status: BookingStatus;
   confirmedAt?: Date | undefined;
-  pricing: PricingInput;
+  /** Admin bookings keep the entered pricing; customer bookings store the server-built breakdown. */
+  pricing: PricingInput | BookingPricing;
   address: AddressInput;
   passenger: PassengerInput;
   bookingTime: TimeInput;
@@ -135,4 +138,20 @@ export type AnalyticsRow = {
   status: BookingStatus;
   count: number;
   amount: number;
+};
+
+/** One booking on the calendar, placed on its pickup date. */
+export type CalendarEvent = {
+  id: string;
+  bookingNumber: string;
+  bookingType: BookingType;
+  status: BookingStatus;
+  pickupDate: string;
+  pickupTime: string;
+  returnDate: string | null;
+  returnTime: string | null;
+  customerName: string;
+  vehicleName: string;
+  pickupAddress: string;
+  dropoffAddress: string | null;
 };

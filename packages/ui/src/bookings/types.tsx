@@ -36,6 +36,13 @@ export type BookingTime = {
 export type Pricing = {
   total: number;
   basePrice?: number | undefined;
+  /** Platform fees charged at booking time (customer bookings priced by the server). */
+  fuelSurchargePrice?: number | undefined;
+  gratuityPrice?: number | undefined;
+  taxPrice?: number | undefined;
+  transactionFeePrice?: number | undefined;
+  discountPrice?: number | undefined;
+  meetAndGreetPrice?: number | undefined;
   stopsPrice?: number | undefined;
   airportPickupPrice?: number | undefined;
   extraServicesPrice?: number | undefined;
@@ -50,6 +57,7 @@ export type FlightDetails = {
 
 export type MeetAndGreet = {
   enabled?: boolean | undefined;
+  returnEnabled?: boolean | undefined;
   instructions?: string | undefined;
   signName?: string | undefined;
 };
@@ -136,4 +144,42 @@ export type ListResponse = {
   pages: number;
   hasNextPage: boolean;
   hasPrevPage: boolean;
+};
+
+/** Body for creating a booking (customer `POST /customers/bookings`). */
+export type CreateInput = {
+  vehicleCategoryId: string;
+  bookingType?: BookingType | undefined;
+  address: Address & { distance: number; duration: number };
+  passenger: Passenger & { passengerCount: number; phone: string; email: string };
+  bookingTime: BookingTime;
+  flightDetails?: FlightDetails | undefined;
+  meetAndGreet?: MeetAndGreet | undefined;
+  extraServices?: { extraServiceId: string; quantity: number }[] | undefined;
+  luggage?: { luggageTypeId: string; quantity: number }[] | undefined;
+  notes?: string | undefined;
+  pricing: Pricing;
+};
+
+/** One booking on the calendar, placed on its pickup date (`GET .../bookings/calendar`). */
+export type CalendarEvent = {
+  id: string;
+  bookingNumber: string;
+  bookingType: BookingType;
+  status: BookingStatus;
+  pickupDate: string;
+  pickupTime: string;
+  returnDate: string | null;
+  returnTime: string | null;
+  customerName: string;
+  vehicleName: string;
+  pickupAddress: string;
+  dropoffAddress: string | null;
+};
+
+/** Calendar request: inclusive YYYY-MM-DD range plus optional filters. */
+export type CalendarQuery = {
+  start: string;
+  end: string;
+  bookingType?: BookingType[] | undefined;
 };

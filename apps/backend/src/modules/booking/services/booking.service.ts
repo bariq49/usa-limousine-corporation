@@ -3,19 +3,35 @@ import { BookingStatus, BookingType, NotificationType } from "@prisma/client";
 import type { Request } from "express";
 import { auditLog } from "../../../common/utils/audit-log";
 import { allocateCode } from "../../../common/utils/allocate-sequence-code";
+import { wallClock } from "../../../common/utils/day-bounds";
+import { APP_TIMEZONE } from "../../../common/utils/format-time";
+import { roundAmount } from "../../../common/utils/money";
+import { isAirportTrip } from "../../../common/utils/places";
 import { requireUserId, toRequestContext } from "../../../common/utils/to-request-context";
 import { PrismaService } from "../../../infrastructure/database/prisma.service";
 import { SequenceService } from "../../../infrastructure/sequence/sequence.service";
 import { NotificationService } from "../../notification/services/notification.service";
+import { PlatformSettingsService } from "../../platform-settings/services/platform-settings.service";
+import type { BookingPricing } from "../../platform-settings/types/platform-settings";
+import { bookingPricing } from "../../platform-settings/utils/pricing";
+import { PublicService as VehiclePricingService } from "../../vehicle-categories/services/public.service";
 import type {
   AnalyticsQueryDto,
+  CalendarQueryDto,
   CancelDto,
   CreateDto,
   QueryDto,
   UpdateDto,
 } from "../dto/booking.dto";
 import { BookingRepository } from "../repositories/booking.repository";
-import type { Analytics, UpdateData } from "../types/booking";
+import type {
+  AddressInput,
+  Analytics,
+  CalendarEvent,
+  PassengerInput,
+  TimeInput,
+  UpdateData,
+} from "../types/booking";
 
 @Injectable()
 export class BookingService {
@@ -24,11 +40,76 @@ export class BookingService {
     @Inject(SequenceService) private readonly sequenceService: SequenceService,
     @Inject(PrismaService) private readonly prisma: PrismaService,
     @Inject(NotificationService) private readonly notificationService: NotificationService,
+    @Inject(PlatformSettingsService)
+    private readonly platformSettingsService: PlatformSettingsService,
+    @Inject(VehiclePricingService)
+    private readonly vehiclePricingService: VehiclePricingService,
   ) {}
+
+  /**
+   * Prices a customer booking on the server from the distance pricing and platform settings,
+   * so the total never comes from the client. Hourly quotes keep the entered pricing.
+   */
+  private async priceCustomerBooking(
+    body: CreateDto,
+  ): Promise<CreateDto["pricing"] | BookingPricing> {
+    const bookingType = body.bookingType ?? BookingType.ONE_WAY;
+    if (bookingType !== BookingType.ONE_WAY && bookingType !== BookingType.RETURN) {
+      return body.pricing;
+    }
+
+    const rates = await this.platformSettingsService.get();
+    const pickupAt = wallClock(
+      APP_TIMEZONE,
+      body.bookingTime.pickupDate,
+      body.bookingTime.pickupTime,
+    );
+    if (!pickupAt) {
+      throw new BadRequestException("Pickup date or time is invalid");
+    }
+    if (pickupAt.getTime() < Date.now() + rates.minBookingMinutes * 60_000) {
+      throw new BadRequestException(
+        `Bookings need at least ${rates.minBookingNotice} ${rates.minBookingNoticeUnit === "HOUR" ? "hour(s)" : "minute(s)"} notice`,
+      );
+    }
+
+    const basePrice = await this.vehiclePricingService.basePriceFor(
+      body.vehicleCategoryId,
+      body.address.distance,
+    );
+    if (basePrice === null) {
+      throw new BadRequestException("This vehicle is not available for the trip distance");
+    }
+
+    const items = await this.bookingRepository.priceItems(
+      body.extraServices ?? [],
+      body.luggage ?? [],
+    );
+    const lineTotal = (
+      total: number,
+      item: { unitPrice: { toNumber(): number }; quantity: number },
+    ) => total + item.unitPrice.toNumber() * item.quantity;
+    const extraServicesPrice =
+      items.extraServices.reduce(lineTotal, 0) + items.luggage.reduce(lineTotal, 0);
+
+    const isReturn = bookingType === BookingType.RETURN;
+    return bookingPricing({
+      basePrice,
+      rates,
+      isAirport: isAirportTrip(body.address.pickup.address, body.address.dropoff?.address),
+      isReturn,
+      stopsCount: (body.address.stops ?? []).length,
+      meetAndGreetLegs:
+        Number(Boolean(body.meetAndGreet?.enabled)) +
+        Number(isReturn && Boolean(body.meetAndGreet?.returnEnabled)),
+      extraServicesPrice: roundAmount(extraServicesPrice),
+    });
+  }
 
   async create(body: CreateDto, request: Request) {
     const context = toRequestContext(request);
     const userId = requireUserId(context);
+    const pricing = await this.priceCustomerBooking(body);
     const bookingNumber = await allocateCode({
       prefix: "BK",
       nextSequence: () => this.sequenceService.nextBooking(),
@@ -41,7 +122,7 @@ export class BookingService {
           bookingNumber,
           bookingType: body.bookingType ?? BookingType.ONE_WAY,
           status: BookingStatus.PENDING,
-          pricing: body.pricing,
+          pricing,
           address: body.address,
           passenger: body.passenger,
           bookingTime: body.bookingTime,
@@ -132,6 +213,54 @@ export class BookingService {
     });
 
     return (await this.bookingRepository.findById(booking.id)) ?? booking;
+  }
+
+  /** Platform-wide booking calendar for admins. */
+  calendar(query: CalendarQueryDto) {
+    return this.buildCalendar(query);
+  }
+
+  /** The signed-in customer's own bookings on the calendar. */
+  calendarForCustomer(query: CalendarQueryDto, request: Request) {
+    return this.buildCalendar(query, requireUserId(toRequestContext(request)));
+  }
+
+  /** Bookings in the range as calendar events; pending, confirmed and completed by default. */
+  async buildCalendar(query: CalendarQueryDto, userId?: string): Promise<CalendarEvent[]> {
+    const days = (Date.parse(query.end) - Date.parse(query.start)) / 86_400_000;
+    if (!Number.isFinite(days) || days < 0 || days > 62) {
+      throw new BadRequestException("Choose a date range of up to 62 days");
+    }
+
+    const rows = await this.bookingRepository.findForCalendar({
+      start: query.start,
+      end: query.end,
+      bookingTypes: query.bookingType,
+      statuses: query.status?.length
+        ? query.status
+        : [BookingStatus.PENDING, BookingStatus.CONFIRMED, BookingStatus.COMPLETED],
+      userId,
+    });
+
+    return rows.map((row) => {
+      const address = row.address as AddressInput;
+      const passenger = row.passenger as PassengerInput;
+      const time = row.bookingTime as TimeInput;
+      return {
+        id: row.id,
+        bookingNumber: row.bookingNumber,
+        bookingType: row.bookingType,
+        status: row.status,
+        pickupDate: time.pickupDate,
+        pickupTime: time.pickupTime,
+        returnDate: time.returnDate ?? null,
+        returnTime: time.returnTime ?? null,
+        customerName: passenger.name,
+        vehicleName: row.vehicleCategory.name,
+        pickupAddress: address.pickup.address,
+        dropoffAddress: address.dropoff?.address ?? null,
+      };
+    });
   }
 
   list(query: QueryDto) {

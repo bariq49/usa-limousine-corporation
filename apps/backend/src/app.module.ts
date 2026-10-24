@@ -28,6 +28,7 @@ import { CustomerModule } from "./modules/customer/customer.module";
 import { ActivityModule } from "./modules/activity/activity.module";
 import { NotificationModule } from "./modules/notification/notification.module";
 import { ExtraServiceModule } from "./modules/extra-services/extra-service.module";
+import { PlatformSettingsModule } from "./modules/platform-settings/platform-settings.module";
 
 @Module({
   imports: [
@@ -65,6 +66,7 @@ import { ExtraServiceModule } from "./modules/extra-services/extra-service.modul
     HelpCenterModule,
     VehicleCategoryModule,
     ExtraServiceModule,
+    PlatformSettingsModule,
   ],
   providers: [
     {

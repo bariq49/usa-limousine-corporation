@@ -1,5 +1,5 @@
 import { BadRequestException, Inject, Injectable } from "@nestjs/common";
-import { type BookingStatus, Prisma } from "@prisma/client";
+import { type BookingStatus, type BookingType, Prisma } from "@prisma/client";
 import { APIFeature } from "../../../common/api-feature";
 import { wallClock } from "../../../common/utils/day-bounds";
 import { APP_TIMEZONE } from "../../../common/utils/format-time";
@@ -75,6 +75,46 @@ export class BookingRepository {
           },
         }),
       count: ({ where }) => this.prisma.booking.count({ where: where as never }),
+    });
+  }
+
+  /** Bookings whose pickup date falls in [start, end]; one customer's when `userId` is set. */
+  findForCalendar(params: {
+    start: string;
+    end: string;
+    bookingTypes?: BookingType[] | undefined;
+    statuses: BookingStatus[];
+    userId?: string | undefined;
+  }) {
+    const where: Prisma.BookingWhereInput = {
+      deletedAt: null,
+      status: { in: params.statuses },
+      AND: [
+        { bookingTime: { path: ["pickupDate"], gte: params.start } },
+        { bookingTime: { path: ["pickupDate"], lte: params.end } },
+      ],
+    };
+    if (params.bookingTypes?.length) {
+      where.bookingType = { in: params.bookingTypes };
+    }
+    if (params.userId) {
+      where.userId = params.userId;
+    }
+
+    return this.prisma.booking.findMany({
+      where,
+      orderBy: { createdAt: "asc" },
+      take: 1000,
+      select: {
+        id: true,
+        bookingNumber: true,
+        status: true,
+        bookingType: true,
+        address: true,
+        passenger: true,
+        bookingTime: true,
+        vehicleCategory: { select: { name: true } },
+      },
     });
   }
 
@@ -169,7 +209,7 @@ export class BookingRepository {
         bookingType: data.bookingType,
         status: data.status,
         totalPrice: data.pricing.total,
-        pricing: data.pricing,
+        pricing: data.pricing as Prisma.InputJsonValue,
         address: data.address,
         passenger: data.passenger,
         bookingTime: data.bookingTime,

@@ -53,8 +53,11 @@ DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 
 export const DialogContent = forwardRef<
   ElementRef<typeof DialogPrimitive.Content>,
-  ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
->(({ className, children, ...props }, ref) => (
+  ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
+    /** Hide the built-in close button when the content renders its own. */
+    showCloseButton?: boolean;
+  }
+>(({ className, children, showCloseButton = true, ...props }, ref) => (
   <DialogPortal>
     <DialogOverlay />
     <DialogPrimitive.Content
@@ -66,13 +69,15 @@ export const DialogContent = forwardRef<
       {...props}
     >
       {children}
-      <DialogPrimitive.Close
-        className="absolute right-4 top-4 rounded-md p-1 text-default-400 hover:text-default-700 hover:bg-default-100 transition-colors cursor-pointer"
-        style={{ cursor: "pointer" }}
-      >
-        <X className="h-4 w-4 cursor-pointer" />
-        <span className="sr-only">Close</span>
-      </DialogPrimitive.Close>
+      {showCloseButton ? (
+        <DialogPrimitive.Close
+          className="absolute right-4 top-4 rounded-md p-1 text-default-400 hover:text-default-700 hover:bg-default-100 transition-colors cursor-pointer"
+          style={{ cursor: "pointer" }}
+        >
+          <X className="h-4 w-4 cursor-pointer" />
+          <span className="sr-only">Close</span>
+        </DialogPrimitive.Close>
+      ) : null}
     </DialogPrimitive.Content>
   </DialogPortal>
 ));

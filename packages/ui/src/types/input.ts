@@ -15,7 +15,9 @@ export type InputType =
   | "select"
   | "multiselect"
   | "textarea"
-  | "upload";
+  | "upload"
+  | "location"
+  | "counter";
 
 export type InputOption = {
   label: ReactNode;
@@ -40,6 +42,12 @@ export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 
   maxSizeMB?: number | undefined;
   hint?: string | undefined;
   disablePast?: boolean;
+  /** Earliest selectable day (YYYY-MM-DD) for `date` fields. */
+  minDate?: string | undefined;
+  /** Icon shown inside the field on the left. */
+  icon?: ReactNode;
+  /** Store `select` values as numbers instead of strings. */
+  valueAsNumber?: boolean;
 }
 
 // Short aliases

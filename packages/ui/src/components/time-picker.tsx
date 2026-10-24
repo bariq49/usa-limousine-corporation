@@ -16,7 +16,7 @@ export type TimePickerProps = {
   disabled?: boolean;
   error?: boolean;
   className?: string;
-  placeholder?: string;
+  placeholder?: string | undefined;
 };
 
 const HOURS_12 = Array.from({ length: 12 }, (_, i) => i + 1);
@@ -172,7 +172,7 @@ export function TimePicker(props: TimePickerProps) {
         className={cn(
           "flex w-full items-center gap-2 text-left",
           className,
-          disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer",
+          disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer read-only:cursor-pointer",
           error && "border-destructive text-destructive",
         )}
         onClick={() => {
@@ -182,7 +182,12 @@ export function TimePicker(props: TimePickerProps) {
         }}
       >
         {displayVal ? (
-          <span className="min-w-0 flex-1 truncate text-sm font-medium text-default-900">
+          <span
+            className={cn(
+              "min-w-0 flex-1 truncate text-sm",
+              value ? "font-medium text-default-900" : "text-default-400",
+            )}
+          >
             {displayVal}
           </span>
         ) : (

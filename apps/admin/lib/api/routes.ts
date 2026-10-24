@@ -16,6 +16,7 @@ const API_ROUTES = {
   EXTRA_SERVICES: "/admin/extra-services",
   TICKETS: "/admin/tickets",
   CUSTOMERS: "/admin/customers",
+  PLATFORM_SETTINGS: "/admin/settings/platform",
   NOTIFICATIONS: "/notifications",
 } as const;
 

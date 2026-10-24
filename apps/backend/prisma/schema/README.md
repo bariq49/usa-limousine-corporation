@@ -43,3 +43,5 @@ This folder splits the Prisma data model by domain so the schema can scale witho
 ## Organization Rule
 
 Every new business domain should receive its own Prisma file as soon as it owns multiple models or a distinct bounded context. This keeps schema reviews focused, reduces merge conflicts, and makes long-term ownership clearer as the platform grows.
+- `schema/settings.prisma`
+  Owns platform-wide pricing rules: `PlatformSettings` (single `global` row) and `NoticeUnit`.

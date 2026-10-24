@@ -19,6 +19,8 @@ describe("BookingService.createManual", () => {
       { nextBooking: async () => 1 } as never,
       { auditLog: { create: jest.fn(async () => undefined) } } as never,
       { stageForAdmins: jest.fn(), deliverStaged: jest.fn() } as never,
+      {} as never,
+      {} as never,
     );
 
     const result = await service.createManual(
@@ -72,26 +74,50 @@ describe("BookingService.create", () => {
       $transaction: jest.fn(async (fn: (client: typeof tx) => Promise<unknown>) => fn(tx)),
     };
 
+    const priceItems = jest.fn(async () => ({ extraServices: [], luggage: [] }));
+    const rates = {
+      fuelSurchargeRate: 0,
+      gratuityRate: 10,
+      taxRate: 0,
+      transactionFeeRate: 0,
+      oneWayDiscountRate: 0,
+      returnDiscountRate: 0,
+      airportPickupFee: 0,
+      stopFee: 0,
+      meetAndGreetFee: 0,
+      minBookingNotice: 0,
+      minBookingNoticeUnit: "HOUR",
+      minBookingMinutes: 0,
+    };
+
     const service = new BookingService(
-      { create, findOwnedByUser } as never,
+      { create, findOwnedByUser, priceItems } as never,
       { nextBooking: async () => 2 } as never,
       prisma as never,
       { stageForAdmins, deliverStaged } as never,
+      { get: async () => rates } as never,
+      { basePriceFor: async () => 100 } as never,
     );
 
+    const nextYear = new Date().getFullYear() + 1;
     const result = await service.create(
       {
         vehicleCategoryId: "cat-1",
         address: { pickup: { address: "A" }, distance: 10, duration: 20 },
         passenger: { passengerCount: 1, name: "Ada", phone: "+316", email: "ada@example.com" },
-        bookingTime: { pickupDate: "2026-09-11", pickupTime: "14:00" },
-        pricing: { basePrice: 50, total: 50 },
+        bookingTime: { pickupDate: `${nextYear}-09-11`, pickupTime: "14:00" },
+        // Client total is ignored; the server prices the trip.
+        pricing: { basePrice: 1, total: 1 },
       } as never,
       { headers: {}, user: { sub: "customer-user", sid: "s1", roles: [] } } as never,
     );
 
     expect(create).toHaveBeenCalledWith(
-      expect.objectContaining({ status: BookingStatus.PENDING, userId: "customer-user" }),
+      expect.objectContaining({
+        status: BookingStatus.PENDING,
+        userId: "customer-user",
+        pricing: expect.objectContaining({ basePrice: 100, gratuityPrice: 10, total: 110 }),
+      }),
       tx,
     );
     expect(stageForAdmins).toHaveBeenCalledWith(
@@ -120,6 +146,8 @@ describe("BookingService.buildAnalytics", () => {
       {} as never,
       {} as never,
       {} as never,
+      {} as never,
+      {} as never,
     );
 
     const result = await service.buildAnalytics(2026, "user-1");
@@ -137,5 +165,78 @@ describe("BookingService.buildAnalytics", () => {
     expect(result.monthlyBookings.confirmed[2]).toBe(4);
     expect(result.monthlyBookings.cancelled[11]).toBe(1);
     expect(result.monthlyRevenue).toHaveLength(12);
+  });
+});
+
+describe("BookingService.buildCalendar", () => {
+  const makeService = (findForCalendar: jest.Mock) =>
+    new BookingService(
+      { findForCalendar } as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+    );
+
+  it("returns bookings in the range as calendar events", async () => {
+    const findForCalendar = jest.fn(async () => [
+      {
+        id: "book-1",
+        bookingNumber: "BK-1",
+        status: BookingStatus.CONFIRMED,
+        bookingType: BookingType.RETURN,
+        address: { pickup: { address: "EWR" }, dropoff: { address: "Times Square" } },
+        passenger: { name: "Ada", passengerCount: 2 },
+        bookingTime: {
+          pickupDate: "2026-11-02",
+          pickupTime: "14:30",
+          returnDate: "2026-11-05",
+          returnTime: "09:00",
+        },
+        vehicleCategory: { name: "Sedan" },
+      },
+    ]);
+
+    const events = await makeService(findForCalendar).buildCalendar(
+      { start: "2026-11-01", end: "2026-11-30" },
+      "user-1",
+    );
+
+    expect(findForCalendar).toHaveBeenCalledWith(
+      expect.objectContaining({
+        start: "2026-11-01",
+        end: "2026-11-30",
+        userId: "user-1",
+        statuses: [BookingStatus.PENDING, BookingStatus.CONFIRMED, BookingStatus.COMPLETED],
+      }),
+    );
+    expect(events).toEqual([
+      {
+        id: "book-1",
+        bookingNumber: "BK-1",
+        bookingType: BookingType.RETURN,
+        status: BookingStatus.CONFIRMED,
+        pickupDate: "2026-11-02",
+        pickupTime: "14:30",
+        returnDate: "2026-11-05",
+        returnTime: "09:00",
+        customerName: "Ada",
+        vehicleName: "Sedan",
+        pickupAddress: "EWR",
+        dropoffAddress: "Times Square",
+      },
+    ]);
+  });
+
+  it("rejects ranges longer than 62 days or ending before they start", async () => {
+    const service = makeService(jest.fn());
+
+    await expect(service.buildCalendar({ start: "2026-01-01", end: "2026-06-01" })).rejects.toThrow(
+      "62 days",
+    );
+    await expect(service.buildCalendar({ start: "2026-02-01", end: "2026-01-01" })).rejects.toThrow(
+      "62 days",
+    );
   });
 });

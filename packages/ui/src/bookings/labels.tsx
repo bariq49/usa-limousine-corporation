@@ -15,6 +15,14 @@ export const BOOKING_TYPE_LABELS: Record<BookingType, string> = {
   CREW_RIDE: "Crew Ride",
 };
 
+/** Event colours on the booking calendar, one per trip type. */
+export const BOOKING_TYPE_COLORS: Record<BookingType, string> = {
+  ONE_WAY: "#C9A84C",
+  RETURN: "#0EA5E9",
+  HOURLY: "#16A34A",
+  CREW_RIDE: "#8B5CF6",
+};
+
 export const BOOKING_STATUS_HEADINGS: Record<BookingStatus, string> = {
   DRAFT: "Booking Draft",
   PENDING: "Booking Pending Confirmation",

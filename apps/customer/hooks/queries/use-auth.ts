@@ -52,7 +52,9 @@ export const useAuthMe = (enabled = true) => {
 export const useAuthLogin = () => {
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl");
+  const callback = searchParams.get("callbackUrl");
+  // Same-origin paths only, so the param cannot send users to another site.
+  const callbackUrl = callback?.startsWith("/") && !callback.startsWith("//") ? callback : null;
 
   return useMutation({
     mutationFn: async (values: LoginSchema) => {
@@ -83,6 +85,7 @@ export const useAuthLogin = () => {
 
 export const useAuthRegister = () => {
   const router = useRouter();
+  const callbackUrl = useSearchParams().get("callbackUrl");
 
   return useMutation({
     mutationFn: async (values: RegisterSchema) => {
@@ -95,7 +98,8 @@ export const useAuthRegister = () => {
     },
     onSuccess: (_data, values) => {
       toast.success("Account created. Verify your email to continue.");
-      router.push(`/auth/verify?email=${encodeURIComponent(values.email)}`);
+      const callback = callbackUrl ? `&callbackUrl=${encodeURIComponent(callbackUrl)}` : "";
+      router.push(`/auth/verify?email=${encodeURIComponent(values.email)}${callback}`);
     },
     onError: (error: unknown) => {
       toast.error(errorMessage(error, "Failed to create account."));
@@ -120,12 +124,15 @@ export const useAuthForgot = () => {
 
 export const useAuthVerify = () => {
   const router = useRouter();
+  const callbackUrl = useSearchParams().get("callbackUrl");
 
   return useMutation({
     mutationFn: verify,
     onSuccess: (data) => {
       toast.success(data.message || "Email verified");
-      router.push("/auth/login");
+      router.push(
+        callbackUrl ? `/auth/login?callbackUrl=${encodeURIComponent(callbackUrl)}` : "/auth/login",
+      );
     },
     onError: (error: unknown) => {
       toast.error(errorMessage(error, "Failed to verify."));

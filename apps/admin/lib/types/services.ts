@@ -1,4 +1,4 @@
-export type ExtraServiceType = "CHILD_SEAT" | "MEET_AND_GREET" | "EXTRA";
+export type ExtraServiceType = "CHILD_SEAT" | "EXTRA";
 
 export type Item = {
   id: string;

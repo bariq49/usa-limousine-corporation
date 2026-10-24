@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { DatabaseModule } from "../../infrastructure/database/database.module";
 import { AuthModule } from "../auth/auth.module";
+import { PlatformSettingsModule } from "../platform-settings/platform-settings.module";
 import { CategoriesController } from "./controllers/categories.controller";
 import { LuggageController } from "./controllers/luggage.controller";
 import { PricingController } from "./controllers/pricing.controller";
@@ -14,7 +15,7 @@ import { PricingService } from "./services/pricing.service";
 import { PublicService } from "./services/public.service";
 
 @Module({
-  imports: [DatabaseModule, AuthModule],
+  imports: [DatabaseModule, AuthModule, PlatformSettingsModule],
   controllers: [PublicController, CategoriesController, LuggageController, PricingController],
   providers: [
     CategoriesRepository,

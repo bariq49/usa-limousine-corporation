@@ -12,9 +12,9 @@ export type DatePickerProps = {
   disabled?: boolean;
   error?: boolean;
   className?: string;
-  placeholder?: string;
-  /** When true, days before today (in APP_TIMEZONE) cannot be selected. */
+  placeholder?: string | undefined;
   disablePast?: boolean;
+  minDate?: string | undefined;
 };
 
 function toDateKey(date: Date) {
@@ -84,6 +84,7 @@ export function DatePicker(props: DatePickerProps) {
     className,
     placeholder = "",
     disablePast = false,
+    minDate,
   } = props;
   const timezone = APP_TIMEZONE;
   const [open, setOpen] = useState(false);
@@ -122,12 +123,13 @@ export function DatePicker(props: DatePickerProps) {
 
   const checkIsDisabled = useCallback(
     (date: Date) => {
-      if (!disablePast) {
-        return false;
+      const dateKey = toDateKey(date);
+      if (disablePast && dateKey < todayKey) {
+        return true;
       }
-      return toDateKey(date) < todayKey;
+      return Boolean(minDate && dateKey < minDate);
     },
-    [disablePast, todayKey],
+    [disablePast, minDate, todayKey],
   );
 
   const handleSelect = (date: Date) => {
@@ -190,7 +192,7 @@ export function DatePicker(props: DatePickerProps) {
         className={cn(
           "flex w-full items-center gap-2 text-left",
           className,
-          disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer",
+          disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer read-only:cursor-pointer",
           error && "border-destructive text-destructive",
         )}
         onClick={() => {
@@ -200,7 +202,12 @@ export function DatePicker(props: DatePickerProps) {
         }}
       >
         {displayValue ? (
-          <span className="min-w-0 flex-1 truncate text-sm font-medium text-default-900">
+          <span
+            className={cn(
+              "min-w-0 flex-1 truncate text-sm",
+              selectedDate ? "font-medium text-default-900" : "text-default-400",
+            )}
+          >
             {displayValue}
           </span>
         ) : (

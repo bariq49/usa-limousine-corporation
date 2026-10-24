@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { Button } from "@usa-limousine-corporation/ui/components/button";
 import { Form } from "@usa-limousine-corporation/ui/components/form";
@@ -12,6 +13,7 @@ import { useAuthLogin } from "@/hooks/queries/use-auth";
 
 export function LoginForm() {
   const { mutate: login, isPending: isLoading } = useAuthLogin();
+  const callbackUrl = useSearchParams().get("callbackUrl");
 
   const form = useForm<LoginSchema>({
     resolver: zodResolver(loginSchema),
@@ -63,7 +65,12 @@ export function LoginForm() {
       </Form>
       <div className="mt-6 text-center text-base text-default-600">
         Don&apos;t have an account?{" "}
-        <Link href="/auth/register" className="text-primary">
+        <Link
+          href={
+            callbackUrl ? `/auth/register?callbackUrl=${encodeURIComponent(callbackUrl)}` : "/auth/register"
+          }
+          className="text-primary"
+        >
           Sign Up
         </Link>
       </div>

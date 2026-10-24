@@ -1,6 +1,5 @@
 enum ExtraServiceType {
   CHILD_SEAT
-  MEET_AND_GREET
   EXTRA
 }
 

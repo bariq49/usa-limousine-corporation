@@ -1,6 +1,8 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { PricingType } from "@prisma/client";
 import { roundAmount } from "../../../common/utils/money";
+import { PlatformSettingsService } from "../../platform-settings/services/platform-settings.service";
+import { priceBreakdown } from "../../platform-settings/utils/pricing";
 import type { DistanceQueryDto } from "../dto/distance-query.dto";
 import type { LuggageQueryDto } from "../dto/luggage-query.dto";
 import type { VehicleCategoryQueryDto } from "../dto/query.dto";
@@ -17,6 +19,8 @@ export class PublicService {
     private readonly luggageRepository: LuggageRepository,
     @Inject(PricingRepository)
     private readonly pricingRepository: PricingRepository,
+    @Inject(PlatformSettingsService)
+    private readonly platformSettingsService: PlatformSettingsService,
   ) {}
 
   async findCategories(query: VehicleCategoryQueryDto) {
@@ -29,6 +33,7 @@ export class PublicService {
 
   async findCategoriesForDistance(query: DistanceQueryDto) {
     const distance = query.distance;
+    const rates = await this.platformSettingsService.get();
     const categories = await this.categoriesRepository.findPublicActive();
     const pricings = await this.pricingRepository.findAllForDistance(
       distance,
@@ -46,6 +51,13 @@ export class PublicService {
       .filter((category) => bestByCategory.has(category.id))
       .map((category) => {
         const pricing = bestByCategory.get(category.id)!;
+        const price = this.computePrice({
+          pricingType: pricing.pricingType,
+          basePrice: pricing.basePrice.toNumber(),
+          perUnitRate: pricing.perUnitRate?.toNumber() ?? null,
+          percentageRate: pricing.percentageRate?.toNumber() ?? null,
+          distance,
+        });
 
         return {
           id: category.id,
@@ -68,15 +80,31 @@ export class PublicService {
             perUnitRate: pricing.perUnitRate,
             percentageRate: pricing.percentageRate,
           },
-          price: this.computePrice({
-            pricingType: pricing.pricingType,
-            basePrice: pricing.basePrice.toNumber(),
-            perUnitRate: pricing.perUnitRate?.toNumber() ?? null,
-            percentageRate: pricing.percentageRate?.toNumber() ?? null,
-            distance,
-          }),
+          price,
+          priceBreakdown: priceBreakdown(price, rates, Boolean(query.isAirport)),
         };
       });
+  }
+
+  /** Base fare for one category at a distance, or null when it has no active pricing band. */
+  async basePriceFor(vehicleCategoryId: string, distance: number): Promise<number | null> {
+    const categories = await this.categoriesRepository.findPublicActive();
+    if (!categories.some((category) => category.id === vehicleCategoryId)) {
+      return null;
+    }
+    const [pricing] = await this.pricingRepository.findAllForDistance(distance, [
+      vehicleCategoryId,
+    ]);
+    if (!pricing) {
+      return null;
+    }
+    return this.computePrice({
+      pricingType: pricing.pricingType,
+      basePrice: pricing.basePrice.toNumber(),
+      perUnitRate: pricing.perUnitRate?.toNumber() ?? null,
+      percentageRate: pricing.percentageRate?.toNumber() ?? null,
+      distance,
+    });
   }
 
   private computePrice(params: {

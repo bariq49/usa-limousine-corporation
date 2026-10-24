@@ -13,6 +13,8 @@ export default tseslint.config(
       "**/.next/**",
       "**/next-env.d.ts",
       "**/src/generated/**",
+      // Linted by its own config via turbo (apps/website/eslint.config.mjs).
+      "apps/website/**",
     ],
   },
   eslint.configs.recommended,

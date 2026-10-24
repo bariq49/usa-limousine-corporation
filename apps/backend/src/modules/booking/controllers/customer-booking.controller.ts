@@ -4,7 +4,13 @@ import type { Request } from "express";
 import { Roles } from "../../auth/decorators/roles.decorator";
 import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../../auth/guards/roles.guard";
-import { AnalyticsQueryDto, CancelDto, CreateDto, QueryDto } from "../dto/booking.dto";
+import {
+  AnalyticsQueryDto,
+  CalendarQueryDto,
+  CancelDto,
+  CreateDto,
+  QueryDto,
+} from "../dto/booking.dto";
 import { BookingService } from "../services/booking.service";
 
 @Controller("customers/bookings")
@@ -21,6 +27,11 @@ export class CustomerBookingController {
   @Get()
   list(@Query() query: QueryDto, @Req() request: Request) {
     return this.bookingService.listForCustomer(query, request);
+  }
+
+  @Get("calendar")
+  calendar(@Query() query: CalendarQueryDto, @Req() request: Request) {
+    return this.bookingService.calendarForCustomer(query, request);
   }
 
   @Get("analytics")

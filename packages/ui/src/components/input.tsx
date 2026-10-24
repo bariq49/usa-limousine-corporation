@@ -7,6 +7,7 @@ import { Check, ChevronDown, Eye, EyeOff } from "lucide-react";
 import { cn } from "../utils/cn";
 import { Badge } from "./badge";
 import { Checkbox } from "./checkbox";
+import { Counter } from "./counter";
 import {
   Command,
   CommandEmpty,
@@ -17,6 +18,7 @@ import {
 } from "./command";
 import { DatePicker } from "./date-picker";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "./form";
+import { LocationInput } from "./location-input";
 import { PhoneInput } from "./phone-input";
 import { Popover, PopoverContent, PopoverTrigger } from "./popover";
 import { RadioGroup, RadioGroupItem } from "./radio-group";
@@ -96,9 +98,13 @@ export function Input(props: InputProps) {
     maxSizeMB,
     hint,
     disablePast = false,
+    minDate,
+    icon,
+    valueAsNumber = false,
     onChange: onChangeProp,
     ...inputProps
   } = props;
+  const showIcon = Boolean(icon) && type !== "date" && type !== "time" && type !== "counter";
   const [showPassword, setShowPassword] = React.useState(false);
   const resolvedPlaceholder = placeholder ?? (label ? "\u00a0" : undefined);
   const isFloatingSelect =
@@ -162,12 +168,13 @@ export function Input(props: InputProps) {
   const renderInput = (field: ControllerRenderProps<FieldValues, string>, hasError: boolean) => {
     const fieldClassName = cn(
       inputVariants({ element: "input" }),
+      showIcon && "ps-10",
       hasError && "border-destructive focus:border-destructive",
       inputClassName,
     );
     const selectFieldClassName = cn(
       fieldClassName,
-      "cursor-pointer !bg-white shadow-none focus:ring-0 [&>svg]:stroke-default-600",
+      "cursor-pointer read-only:cursor-pointer !bg-white shadow-none focus:ring-0 [&>svg]:stroke-default-600",
     );
 
     switch (type) {
@@ -234,10 +241,12 @@ export function Input(props: InputProps) {
             <DatePicker
               value={field.value ?? ""}
               onChange={field.onChange}
+              placeholder={placeholder}
               disabled={disabled}
               error={hasError}
               className={cn(selectFieldClassName, hasError && "border-destructive")}
               disablePast={disablePast}
+              minDate={minDate}
             />
           </FormControl>
         );
@@ -247,6 +256,7 @@ export function Input(props: InputProps) {
             <TimePicker
               value={field.value ?? ""}
               onChange={field.onChange}
+              placeholder={placeholder}
               disabled={disabled}
               error={hasError}
               className={cn(selectFieldClassName, hasError && "border-destructive")}
@@ -255,7 +265,11 @@ export function Input(props: InputProps) {
         );
       case "select":
         return (
-          <Select value={field.value ?? ""} onValueChange={field.onChange} disabled={disabled}>
+          <Select
+            value={field.value === undefined || field.value === null ? "" : String(field.value)}
+            onValueChange={(value) => field.onChange(valueAsNumber ? Number(value) : value)}
+            disabled={disabled}
+          >
             <FormControl>
               <SelectTrigger className={cn(selectFieldClassName, hasError && "border-destructive")}>
                 <SelectValue placeholder={placeholder ?? "Select an option"} />
@@ -369,6 +383,28 @@ export function Input(props: InputProps) {
             className={inputClassName}
           />
         );
+      case "location":
+        return (
+          <LocationInput
+            value={field.value ?? ""}
+            onChange={field.onChange}
+            placeholder={placeholder}
+            className={fieldClassName}
+          />
+        );
+      case "counter":
+        return (
+          <Counter
+            value={Number(field.value ?? 0)}
+            onChange={field.onChange}
+            min={Number(props.min ?? 0)}
+            max={Number(props.max ?? 999)}
+            step={Number(props.step ?? 1)}
+            disabled={disabled}
+            hasError={hasError}
+            className={inputClassName}
+          />
+        );
       case "upload":
         return (
           <Upload
@@ -407,6 +443,7 @@ export function Input(props: InputProps) {
     <FormField
       control={control}
       name={name}
+      rules={{ required: props.required ? "This field is required" : false }}
       render={({ field, fieldState }) => {
         const hasError = !!fieldState.error;
         const isEmptyValue = !field.value;
@@ -455,6 +492,16 @@ export function Input(props: InputProps) {
                 (isFloatingSelect || type === "upload") && "cursor-pointer",
               )}
             >
+              {showIcon ? (
+                <span
+                  className={cn(
+                    "pointer-events-none absolute start-3 z-10 text-default-400",
+                    type === "textarea" ? "top-3" : "top-1/2 -translate-y-1/2",
+                  )}
+                >
+                  {icon}
+                </span>
+              ) : null}
               {isDateOrTime ? (
                 renderInput(field, hasError)
               ) : (

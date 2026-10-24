@@ -1,5 +1,6 @@
-import { Type } from "class-transformer";
+import { Transform, Type } from "class-transformer";
 import {
+  Matches,
   ArrayMaxSize,
   IsArray,
   IsBoolean,
@@ -163,6 +164,11 @@ export class MeetAndGreetDto {
   @IsOptional()
   @IsBoolean()
   enabled?: boolean;
+
+  /** Meet & greet on the return leg as well. */
+  @IsOptional()
+  @IsBoolean()
+  returnEnabled?: boolean;
 
   @IsOptional()
   @IsString()
@@ -352,4 +358,37 @@ export class AnalyticsQueryDto {
   @IsOptional()
   @IsString()
   userId?: string;
+}
+
+/** Accepts `a,b`, `?x=a&x=b` or a single value and returns an array. */
+function toList({ value }: { value: unknown }): unknown {
+  if (value === undefined || value === null || value === "") return undefined;
+  if (Array.isArray(value)) return value;
+  return String(value)
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+export class CalendarQueryDto {
+  /** First day shown (YYYY-MM-DD), inclusive. */
+  @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: "start must be YYYY-MM-DD" })
+  start!: string;
+
+  /** Last day shown (YYYY-MM-DD), inclusive. */
+  @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: "end must be YYYY-MM-DD" })
+  end!: string;
+
+  @IsOptional()
+  @Transform(toList)
+  @IsArray()
+  @IsEnum(BookingType, { each: true })
+  bookingType?: BookingType[];
+
+  /** Defaults to pending, confirmed and completed bookings. */
+  @IsOptional()
+  @Transform(toList)
+  @IsArray()
+  @IsEnum(BookingStatus, { each: true })
+  status?: BookingStatus[];
 }

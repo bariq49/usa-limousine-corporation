@@ -2,6 +2,7 @@ import { http } from "../http/client";
 import API_ROUTES from "./routes";
 import type { Item, ListResponse, Query } from "../types/bookings";
 import type { BookingAnalytics } from "../types/dashboard";
+import type { CalendarEvent, CalendarQuery } from "@usa-limousine-corporation/ui/bookings/types";
 
 export const getBookings = (params?: Query) => {
   return http.get<ListResponse>(API_ROUTES.BOOKINGS, { params });
@@ -35,4 +36,15 @@ export const deleteBooking = (id: string) => {
 
 export const bulkDeleteBookings = (ids: string[]) => {
   return http.delete(`${API_ROUTES.BOOKINGS}/bulk`, { data: { ids } });
+};
+
+/** Bookings as calendar events for an inclusive YYYY-MM-DD range. */
+export const getBookingCalendar = (query: CalendarQuery) => {
+  return http.get<CalendarEvent[]>(`${API_ROUTES.BOOKINGS}/calendar`, {
+    params: {
+      start: query.start,
+      end: query.end,
+      bookingType: query.bookingType?.join(","),
+    },
+  });
 };

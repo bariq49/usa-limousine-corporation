@@ -289,3 +289,61 @@ body {
   overflow-x: clip;
   max-width: 100%;
 }
+
+/* Booking calendar (FullCalendar) */
+.booking-calendar .fc-toolbar-chunk button,
+.booking-calendar .fc-button {
+  @apply h-9;
+}
+.booking-calendar .fc .fc-toolbar-title {
+  @apply text-base font-semibold text-default-900 sm:text-lg;
+}
+.booking-calendar .fc .fc-button-primary {
+  @apply border border-border bg-transparent capitalize text-default-700 shadow-none;
+}
+.booking-calendar .fc .fc-button-primary:not(:disabled):active,
+.booking-calendar .fc .fc-button-primary:not(:disabled).fc-button-active,
+.booking-calendar .fc .fc-button-primary:hover {
+  @apply border-primary bg-primary text-primary-foreground;
+}
+.booking-calendar .fc .fc-button-primary:disabled {
+  @apply cursor-not-allowed border border-border bg-transparent text-default-400 opacity-100;
+}
+.booking-calendar .fc .fc-button-primary:focus {
+  @apply shadow-none;
+}
+.booking-calendar .fc-theme-standard .fc-scrollgrid,
+.booking-calendar .fc-theme-standard td,
+.booking-calendar .fc-theme-standard th {
+  @apply border-default-100;
+}
+.booking-calendar .fc-col-header-cell .fc-scrollgrid-sync-inner {
+  @apply bg-default-50 py-3 text-xs font-normal text-default-600;
+}
+.booking-calendar td.fc-daygrid-day {
+  @apply cursor-pointer;
+}
+.booking-calendar .fc-daygrid-day .fc-daygrid-day-frame {
+  @apply h-full min-h-28 cursor-pointer transition-colors duration-150;
+}
+.booking-calendar td.fc-daygrid-day:hover .fc-daygrid-day-frame {
+  @apply bg-default-100;
+}
+.booking-calendar .fc-daygrid-day.fc-day-selected .fc-daygrid-day-frame {
+  @apply bg-primary/10 ring-1 ring-primary/35 ring-inset;
+}
+.booking-calendar .fc-daygrid-day.fc-day-today:not(.fc-day-selected) .fc-daygrid-day-frame {
+  @apply bg-default-100;
+}
+.booking-calendar .fc .fc-daygrid-day.fc-day-today {
+  @apply bg-transparent;
+}
+.booking-calendar .fc-daygrid-event {
+  @apply cursor-pointer rounded-md border-0 px-1.5 py-0.5 text-[11px] font-medium shadow-none;
+}
+.booking-calendar .fc-daygrid-day-number {
+  @apply px-2 py-1.5 text-xs font-medium text-default-700;
+}
+.booking-calendar .fc-daygrid-more-link {
+  @apply text-[11px] font-medium text-primary;
+}

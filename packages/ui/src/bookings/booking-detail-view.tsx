@@ -240,13 +240,11 @@ export function BookingDetailView(props: Props) {
                       </DetailItem>
                     );
                   })}
-                  {otherExtras
-                    .filter((item) => item.extraService?.type !== "MEET_AND_GREET")
-                    .map((item) => (
-                      <DetailItem key={`extra-${item.extraServiceId}`} icon={preferenceIcon(Tag)}>
-                        {item.extraService?.name || "Extra"}: {item.quantity}
-                      </DetailItem>
-                    ))}
+                  {otherExtras.map((item) => (
+                    <DetailItem key={`extra-${item.extraServiceId}`} icon={preferenceIcon(Tag)}>
+                      {item.extraService?.name || "Extra"}: {item.quantity}
+                    </DetailItem>
+                  ))}
                   {flight?.flightName ? (
                     <DetailItem icon={preferenceIcon(Globe)}>
                       Airline: {flight.flightName}

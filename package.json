@@ -11,7 +11,7 @@
     "pnpm": ">=9.0.0"
   },
   "scripts": {
-    "dev": "turbo run dev --filter=@usa-limousine-corporation/backend --filter=@usa-limousine-corporation/admin --filter=@usa-limousine-corporation/customer --concurrency=15 --ui=tui",
+    "dev": "turbo run dev --filter=@usa-limousine-corporation/backend --filter=@usa-limousine-corporation/admin --filter=@usa-limousine-corporation/customer --filter=@usa-limousine-corporation/website --concurrency=15 --ui=tui",
     "build": "turbo run build",
     "lint": "eslint . --max-warnings=0 && turbo run lint",
     "format": "prettier --write .",

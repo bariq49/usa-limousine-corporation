@@ -1,4 +1,5 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { CalendarQuery } from "@usa-limousine-corporation/ui/bookings/types";
 import toast from "react-hot-toast";
 import {
   bulkDeleteBookings,
@@ -8,6 +9,7 @@ import {
   deleteBooking,
   getBooking,
   getBookingAnalytics,
+  getBookingCalendar,
   getBookings,
 } from "../../lib/api/bookings";
 import type { Query } from "../../lib/types/bookings";
@@ -117,5 +119,15 @@ export const useBulkDeleteBookings = () => {
     onError: (error: Error) => {
       toast.error(error.message || "Failed to delete bookings");
     },
+  });
+};
+
+/** Calendar events for the visible range; waits until the calendar reports one. */
+export const useBookingCalendar = (query: CalendarQuery | null) => {
+  return useQuery({
+    queryKey: ["bookings", "calendar", query] as const,
+    queryFn: () => getBookingCalendar(query as CalendarQuery),
+    enabled: Boolean(query),
+    placeholderData: keepPreviousData,
   });
 };

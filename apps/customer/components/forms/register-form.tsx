@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { Button } from "@usa-limousine-corporation/ui/components/button";
 import { Form } from "@usa-limousine-corporation/ui/components/form";
@@ -12,6 +13,7 @@ import { useAuthRegister } from "@/hooks/queries/use-auth";
 
 export function RegisterForm() {
   const { mutate: register, isPending: isLoading } = useAuthRegister();
+  const callbackUrl = useSearchParams().get("callbackUrl");
 
   const form = useForm<RegisterSchema>({
     resolver: zodResolver(registerSchema),
@@ -61,7 +63,12 @@ export function RegisterForm() {
       </Form>
       <div className="mt-5 text-center text-base text-default-600 2xl:mt-8">
         Already Registered?{" "}
-        <Link href="/auth/login" className="text-primary">
+        <Link
+          href={
+            callbackUrl ? `/auth/login?callbackUrl=${encodeURIComponent(callbackUrl)}` : "/auth/login"
+          }
+          className="text-primary"
+        >
           Sign In
         </Link>
       </div>

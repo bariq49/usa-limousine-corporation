@@ -7,13 +7,16 @@ type Props = {
   booking: Pick<Item, "pricing" | "totalPrice" | "extraServices" | "luggage">;
 };
 
-function row(label: string, amount: number) {
+function row(label: string, amount: number, discount = false) {
   if (!amount || amount <= 0) return null;
 
   return (
     <div className="flex items-center justify-between gap-4">
       <span className="text-default-600">{label}</span>
-      <span className="font-semibold text-default-900">{formatPrice({ price: amount })}</span>
+      <span className={discount ? "font-semibold text-success" : "font-semibold text-default-900"}>
+        {discount ? "- " : ""}
+        {formatPrice({ price: amount })}
+      </span>
     </div>
   );
 }
@@ -45,8 +48,14 @@ export function BookingPaymentSummary(props: Props) {
       <h3 className="text-base font-bold text-default-900 sm:text-lg">Payment Summary</h3>
       <div className="mt-3 space-y-2.5 text-sm sm:mt-4">
         {row("Base Price", Number(pricing.basePrice ?? 0))}
+        {row("Fuel Surcharge", Number(pricing.fuelSurchargePrice ?? 0))}
+        {row("Gratuity", Number(pricing.gratuityPrice ?? 0))}
+        {row("Tax", Number(pricing.taxPrice ?? 0))}
+        {row("Transaction Fee", Number(pricing.transactionFeePrice ?? 0))}
+        {row("Discount", Number(pricing.discountPrice ?? 0), true)}
         {row("Additional Stops", Number(pricing.stopsPrice ?? 0))}
         {row("Airport Pickup", Number(pricing.airportPickupPrice ?? 0))}
+        {row("Meet & Greet", Number(pricing.meetAndGreetPrice ?? 0))}
         {serviceRows(props.booking.extraServices)}
         {luggage.map((item) => {
           const amount = item.unitPrice * item.quantity;

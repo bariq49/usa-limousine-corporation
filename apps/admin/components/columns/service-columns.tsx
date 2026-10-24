@@ -101,13 +101,6 @@ export const getColumns = (options?: ServiceColumnOptions): ColumnDef<Item>[] =>
           </Badge>
         );
       }
-      if (type === "MEET_AND_GREET") {
-        return (
-          <Badge variant="soft" color="warning">
-            Meet & Greet
-          </Badge>
-        );
-      }
       return (
         <Badge variant="soft" color="secondary">
           Extra
@@ -192,7 +185,6 @@ export const filter: DataTableFilterColumn[] = [
     multiple: false,
     options: [
       { value: "CHILD_SEAT", label: "Child Seat" },
-      { value: "MEET_AND_GREET", label: "Meet & Greet" },
       { value: "EXTRA", label: "Extra" },
     ],
   },

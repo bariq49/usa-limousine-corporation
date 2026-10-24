@@ -27,7 +27,6 @@ type ServiceModalProps = {
 
 const serviceTypeOptions: InputOption[] = [
   { label: "Child Seat", value: "CHILD_SEAT" },
-  { label: "Meet & Greet", value: "MEET_AND_GREET" },
   { label: "Extra Service", value: "EXTRA" },
 ];
 

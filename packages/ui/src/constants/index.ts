@@ -18,3 +18,5 @@ export const TIME_FORMAT: Intl.DateTimeFormatOptions = {
   hour: "2-digit",
   minute: "2-digit",
 };
+
+export { AIRPORT_KEYWORDS, TRAIN_KEYWORDS } from "./places";

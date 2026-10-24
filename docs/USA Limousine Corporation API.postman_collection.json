@@ -1333,6 +1333,64 @@
           ]
         },
         {
+          "name": "Platform Settings",
+          "description": "Platform-wide fees and booking rules (single settings record). Rates are percentages of the base fare; fees are flat USD amounts.",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{super_admin_access_token}}",
+                "type": "string"
+              }
+            ]
+          },
+          "item": [
+            {
+              "name": "Get",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{super_admin_access_token}}"
+                  }
+                ],
+                "url": "{{base_url}}/admin/settings/platform"
+              },
+              "response": []
+            },
+            {
+              "name": "Update",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{super_admin_access_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"paymentMode\": \"TEST\",\n  \"fuelSurchargeRate\": 5,\n  \"gratuityRate\": 15,\n  \"taxRate\": 8.875,\n  \"transactionFeeRate\": 3,\n  \"oneWayDiscountRate\": 0,\n  \"returnDiscountRate\": 10,\n  \"airportPickupFee\": 15,\n  \"stopFee\": 10,\n  \"meetAndGreetFee\": 25,\n  \"minBookingNotice\": 2,\n  \"minBookingNoticeUnit\": \"HOUR\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": "{{base_url}}/admin/settings/platform",
+                "description": "Send only the fields to change."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
           "name": "Tickets",
           "item": [
             {
@@ -2073,6 +2131,55 @@
                   }
                 }
               ]
+            },
+            {
+              "name": "Calendar",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{super_admin_access_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/admin/bookings/calendar?start=2026-11-01&end=2026-11-30&bookingType=ONE_WAY,RETURN",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "bookings",
+                    "calendar"
+                  ],
+                  "query": [
+                    {
+                      "key": "start",
+                      "value": "2026-11-01",
+                      "description": "First day (YYYY-MM-DD), inclusive"
+                    },
+                    {
+                      "key": "end",
+                      "value": "2026-11-30",
+                      "description": "Last day (YYYY-MM-DD), inclusive; range up to 62 days"
+                    },
+                    {
+                      "key": "bookingType",
+                      "value": "ONE_WAY,RETURN",
+                      "description": "Optional. Comma-separated ONE_WAY, RETURN, HOURLY, CREW_RIDE",
+                      "disabled": true
+                    },
+                    {
+                      "key": "status",
+                      "value": "CONFIRMED",
+                      "description": "Optional. Comma-separated; defaults to PENDING, CONFIRMED, COMPLETED",
+                      "disabled": true
+                    }
+                  ]
+                },
+                "description": "Bookings whose pickup date is in the range, as calendar events (booking number, trip type, status, pickup/return date and time, customer, vehicle, addresses)."
+              },
+              "response": []
             }
           ],
           "description": "Super-admin bookings management (`/admin/bookings`).",
@@ -3291,6 +3398,55 @@
                   ]
                 }
               ]
+            },
+            {
+              "name": "Calendar",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customer_access_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/customers/bookings/calendar?start=2026-11-01&end=2026-11-30&bookingType=ONE_WAY,RETURN",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "customers",
+                    "bookings",
+                    "calendar"
+                  ],
+                  "query": [
+                    {
+                      "key": "start",
+                      "value": "2026-11-01",
+                      "description": "First day (YYYY-MM-DD), inclusive"
+                    },
+                    {
+                      "key": "end",
+                      "value": "2026-11-30",
+                      "description": "Last day (YYYY-MM-DD), inclusive; range up to 62 days"
+                    },
+                    {
+                      "key": "bookingType",
+                      "value": "ONE_WAY,RETURN",
+                      "description": "Optional. Comma-separated ONE_WAY, RETURN, HOURLY, CREW_RIDE",
+                      "disabled": true
+                    },
+                    {
+                      "key": "status",
+                      "value": "CONFIRMED",
+                      "description": "Optional. Comma-separated; defaults to PENDING, CONFIRMED, COMPLETED",
+                      "disabled": true
+                    }
+                  ]
+                },
+                "description": "Bookings whose pickup date is in the range, as calendar events (booking number, trip type, status, pickup/return date and time, customer, vehicle, addresses)."
+              },
+              "response": []
             }
           ],
           "description": "Customer bookings. Create sets status PENDING and notifies admins in real time; admins confirm, complete or cancel. Customers can list, view and cancel their own bookings.",
@@ -3993,7 +4149,7 @@
                 "method": "GET",
                 "header": [],
                 "url": {
-                  "raw": "{{base_url}}/public/vehicle-categories/pricing?distance=10",
+                  "raw": "{{base_url}}/public/vehicle-categories/pricing?distance=10&isAirport=false",
                   "host": [
                     "{{base_url}}"
                   ],
@@ -4006,11 +4162,16 @@
                     {
                       "key": "distance",
                       "value": "10",
-                      "description": "Trip distance in km — matches ACTIVE VehicleCategoryPricing tiers"
+                      "description": "Trip distance in miles — matches ACTIVE VehicleCategoryPricing tiers"
+                    },
+                    {
+                      "key": "isAirport",
+                      "value": "false",
+                      "description": "Optional. true adds the airport pickup fee to each leg"
                     }
                   ]
                 },
-                "description": "Returns active vehicle categories that have an ACTIVE pricing tier covering the given distance (km), including matched pricing and computed price."
+                "description": "Returns active vehicle categories that have an ACTIVE pricing tier covering the given distance (miles), with the matched pricing, the base `price` and a `priceBreakdown` (one-way and return legs with surcharge, gratuity, tax, transaction fee, discount and airport fee from platform settings)."
               },
               "response": []
             }
@@ -4149,6 +4310,24 @@
           "auth": {
             "type": "noauth"
           }
+        },
+        {
+          "name": "Settings",
+          "description": "Public fees and booking rules used by the website to quote trips.",
+          "auth": {
+            "type": "noauth"
+          },
+          "item": [
+            {
+              "name": "Get",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{base_url}}/public/settings"
+              },
+              "response": []
+            }
+          ]
         }
       ]
     }
