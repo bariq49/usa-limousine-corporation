@@ -29,23 +29,18 @@ export type CategoryPriceBreakdown = {
   returnTotalPrice?: number;
 };
 
-export type CategoryByDistance = {
-  _id: string;
+/** Vehicle category from the public API (`/public/vehicle-categories...`). */
+export type VehicleCategory = {
+  id: string;
   name: string;
+  description?: string | null;
   /** Null when the category has no uploaded image. */
-  image: string | null;
-  description?: string;
-  passengers: number;
-  suitcases: number;
-  timePeriod?: string;
-  carType?: string;
-  allowRequestQuote?: boolean;
-  isChauffeur?: boolean;
-  createdAt?: string;
-  updatedAt?: string;
-  extraDistanceRate?: number;
-  includedDistance?: number;
-  priceBreakdown: CategoryPriceBreakdown;
+  image?: string | null;
+  passengerCount: number;
+  /** Total bags the vehicle carries. */
+  luggageCount: number;
+  /** Prices for the trip distance; hourly results have none and are quoted on request. */
+  priceBreakdown?: CategoryPriceBreakdown;
 };
 
 export type ByDistanceParams = {
@@ -54,32 +49,3 @@ export type ByDistanceParams = {
   enabled?: boolean;
 };
 
-
-export type ApiLuggageCapacity = {
-  luggageTypeId: string;
-  quantity: number;
-  luggageType?: { id: string; name: string } | null;
-};
-
-/** Vehicle category as returned by the public catalog endpoints. */
-export type ApiVehicleCategory = {
-  id: string;
-  name: string;
-  description?: string | null;
-  image?: string | null;
-  passengerCount: number;
-  luggageCapacity?: ApiLuggageCapacity[];
-};
-
-export type ApiPricedVehicleCategory = ApiVehicleCategory & {
-  distance: number;
-  /** Base fare for the distance. */
-  price: number;
-  /** One-way and return leg prices with platform fees applied. */
-  priceBreakdown: CategoryPriceBreakdown;
-};
-
-export type ApiPaginated<T> = {
-  data: T[];
-  total: number;
-};

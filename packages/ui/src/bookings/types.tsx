@@ -19,6 +19,7 @@ export type Address = {
 export type Passenger = {
   name: string;
   email?: string | undefined;
+  ccEmail?: string | undefined;
   phone?: string | undefined;
   passengerCount?: number | undefined;
   specialInstructions?: string | undefined;
@@ -86,6 +87,7 @@ export type Item = {
   bookingNumber: string;
   status: BookingStatus;
   bookingType: BookingType;
+  vehicleCount?: number | undefined;
   totalPrice: number;
   pricing: Pricing;
   address: Address;
@@ -149,6 +151,7 @@ export type ListResponse = {
 /** Body for creating a booking (customer `POST /customers/bookings`). */
 export type CreateInput = {
   vehicleCategoryId: string;
+  vehicleCount?: number | undefined;
   bookingType?: BookingType | undefined;
   address: Address & { distance: number; duration: number };
   passenger: Passenger & { passengerCount: number; phone: string; email: string };

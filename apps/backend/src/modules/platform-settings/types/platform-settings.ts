@@ -93,6 +93,8 @@ export type BookingPricingInput = {
   rates: PlatformRates;
   isAirport: boolean;
   isReturn: boolean;
+  /** Vehicles booked; each one pays its own fare legs. Defaults to 1. */
+  vehicleCount?: number;
   stopsCount: number;
   /** Legs with meet & greet (0, 1 or 2). */
   meetAndGreetLegs: number;

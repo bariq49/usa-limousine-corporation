@@ -88,15 +88,16 @@ export function priceBreakdown(
 }
 
 /**
- * Full booking price: the outbound leg (one-way discount), the return leg when booked
- * (return discount), stop fees, meet & greet per leg, and selected extras.
+ * Full booking price: the outbound leg (one-way discount) and the return leg when booked
+ * (return discount) for each vehicle, then stop fees, meet & greet per leg, and selected extras.
  */
 export function bookingPricing(input: BookingPricingInput): BookingPricing {
   const { rates } = input;
-  const legs = [quoteLeg(input.basePrice, rates.oneWayDiscountRate, rates, input.isAirport)];
-  if (input.isReturn) {
-    legs.push(quoteLeg(input.basePrice, rates.returnDiscountRate, rates, input.isAirport));
-  }
+  const oneWay = quoteLeg(input.basePrice, rates.oneWayDiscountRate, rates, input.isAirport);
+  const back = quoteLeg(input.basePrice, rates.returnDiscountRate, rates, input.isAirport);
+  const legs = Array.from({ length: Math.max(1, input.vehicleCount ?? 1) }).flatMap(() =>
+    input.isReturn ? [oneWay, back] : [oneWay],
+  );
 
   const sum = (pick: (leg: LegQuote) => number) =>
     roundAmount(legs.reduce((total, leg) => total + pick(leg), 0));

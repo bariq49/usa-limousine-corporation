@@ -16,6 +16,7 @@ export const ReturnTripField = () => {
   const { step1, step2 } = useBookingStore();
 
   const returnEnabled = useWatch({ control, name: "returnEnabled" });
+  const pickupDate = useWatch({ control, name: "pickupDate" });
   const returnTotalPrice = step2?.vehicleCategory?.priceBreakdown?.returnTotalPrice ?? 0;
   const showReturnAirport = Boolean(step1?.isAirportSelected);
 
@@ -34,8 +35,6 @@ export const ReturnTripField = () => {
     setValue("returnFlightNumber", "", { shouldDirty: true });
     setValue("returnMeetGreetEnabled", false, { shouldDirty: true });
     setValue("returnMeetGreet", "", { shouldDirty: true });
-    setValue("returnNotes", "", { shouldDirty: true });
-    setValue("returnNotesEnabled", false, { shouldDirty: true });
     setValue("returnChildSeatsEnabled", false, { shouldDirty: true });
     setValue("returnChildSeats", [], { shouldDirty: true });
   };
@@ -84,7 +83,7 @@ export const ReturnTripField = () => {
       </div>
 
       {returnEnabled ? (
-        <div className="space-y-4 border-t border-border px-4 py-4">
+        <div className="space-y-3 border-t border-border px-4 py-4">
           <div className="flex items-center gap-2">
             <span className="h-5 w-1 shrink-0 rounded-full bg-secondary" />
             <h4 className="text-base font-semibold text-gray-900">
@@ -99,7 +98,7 @@ export const ReturnTripField = () => {
               placeholder="Select return date"
               icon={<Calendar width={16} height={16} className="text-gray-400" />}
               disablePast
-              minDate={step1?.pickupDate}
+              minDate={pickupDate || undefined}
               required
             />
             <Input
@@ -131,12 +130,8 @@ export const ReturnTripField = () => {
           <TripExtrasFields
             childSeatsField="returnChildSeats"
             childSeatsEnabledField="returnChildSeatsEnabled"
-            notesField="returnNotes"
-            notesEnabledField="returnNotesEnabled"
-            childSeatsToggleLabel="Need a return child or booster seat?"
-            notesToggleLabel="Add return notes for the driver"
-            notesLabel="Return driver notes"
-            notesPlaceholder="Add any special instructions for your return driver..."
+            childSeatsLabel="Return Child Seats"
+            showNotes={false}
           />
         </div>
       ) : null}

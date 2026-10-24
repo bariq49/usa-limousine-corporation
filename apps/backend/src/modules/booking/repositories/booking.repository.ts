@@ -207,6 +207,7 @@ export class BookingRepository {
         vehicleCategoryId: data.vehicleCategoryId,
         bookingNumber: data.bookingNumber,
         bookingType: data.bookingType,
+        vehicleCount: data.vehicleCount ?? 1,
         status: data.status,
         totalPrice: data.pricing.total,
         pricing: data.pricing as Prisma.InputJsonValue,

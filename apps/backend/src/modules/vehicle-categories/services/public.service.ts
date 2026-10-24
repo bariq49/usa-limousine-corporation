@@ -10,6 +10,10 @@ import { CategoriesRepository } from "../repositories/categories.repository";
 import { LuggageRepository } from "../repositories/luggage.repository";
 import { PricingRepository } from "../repositories/pricing.repository";
 
+function luggageCount(capacity: { quantity: number }[]): number {
+  return capacity.reduce((total, item) => total + item.quantity, 0);
+}
+
 @Injectable()
 export class PublicService {
   constructor(
@@ -24,7 +28,11 @@ export class PublicService {
   ) {}
 
   async findCategories(query: VehicleCategoryQueryDto) {
-    return this.categoriesRepository.findPublicCatalog(query);
+    const page = await this.categoriesRepository.findPublicCatalog(query);
+    page.data.forEach((category) =>
+      Object.assign(category, { luggageCount: luggageCount(category.luggageCapacity) }),
+    );
+    return page;
   }
 
   async findLuggage(query: LuggageQueryDto) {
@@ -70,6 +78,7 @@ export class PublicService {
           updatedAt: category.updatedAt,
           deletedAt: category.deletedAt,
           luggageCapacity: category.luggageCapacity,
+          luggageCount: luggageCount(category.luggageCapacity),
           distance,
           pricing: {
             id: pricing.id,
@@ -86,7 +95,7 @@ export class PublicService {
       });
   }
 
-  /** Base fare for one category at a distance, or null when it has no active pricing band. */
+
   async basePriceFor(vehicleCategoryId: string, distance: number): Promise<number | null> {
     const categories = await this.categoriesRepository.findPublicActive();
     if (!categories.some((category) => category.id === vehicleCategoryId)) {

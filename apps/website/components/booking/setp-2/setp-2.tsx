@@ -2,13 +2,16 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { ChevronRight } from "@usa-limousine-corporation/ui/svg";
+import { Button } from "@usa-limousine-corporation/ui/components/button";
 import { useBookingStore } from "@/store/use-booking-store";
-import { useCategoriesByDistance, useCategoriesForHourly } from "@/hooks/queries/use-fleet";
+import { useCategories, useCategoriesByDistance } from "@/hooks/queries/use-fleet";
 import { TRIP_TYPES } from "@/constants/booking-constants";
 import VehicleCategoryCard from "./VehicleCategoryCard";
+import BookingStepActions from "../booking-step-actions";
 import { VehicleCategoryCardSkeleton } from "../../skeletons/VehicleCategoryCardSkeleton";
 import { useHasHydrated } from "@/hooks/use-has-hydrated";
-import type { Step2ContinueProp, VehicleCategory } from "@/types/booking.types";
+import type { VehicleCategory } from "@/types/booking.types";
 
 const SKELETON_COUNT = 10;
 
@@ -16,7 +19,7 @@ function Step2() {
   const hasHydrated = useHasHydrated();
   const router = useRouter();
   const { step1, step2, setStep2Data } = useBookingStore();
-  const [loadingCategoryId, setLoadingCategoryId] = useState<string | null>(null);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   const isHourly = step1?.tripType === TRIP_TYPES.HOURLY;
   const distanceQuery = useCategoriesByDistance({
@@ -24,36 +27,43 @@ function Step2() {
     isAirport: Boolean(step1?.isAirportSelected),
     enabled: !isHourly,
   });
-  const hourlyQuery = useCategoriesForHourly(isHourly);
+  const hourlyQuery = useCategories(isHourly);
   const { data: categories = [], isLoading } = isHourly ? hourlyQuery : distanceQuery;
 
-  const selectedId = step2?.vehicleCategory?._id;
+  const selectedId = step2?.vehicleCategory?.id;
   const showSkeletons = isLoading && categories.length === 0;
 
   const handleSelect = (vehicleCategory: VehicleCategory) => {
-    if (selectedId === vehicleCategory._id) {
+    if (selectedId === vehicleCategory.id) {
       setStep2Data(null);
       return;
     }
 
     setStep2Data({
       vehicleCategory,
+      vehicleCount: 1,
       passengers: 1,
       bags: 0,
     });
   };
 
-  const handleContinue = (prop: Step2ContinueProp) => {
-    const { vehicleCategory, passengers, luggage } = prop;
-    if (loadingCategoryId) return;
+  /** Fewer vehicles lower the capacity, so passengers and bags are capped to match. */
+  const handleVehicleCountChange = (vehicleCount: number) => {
+    const category = step2?.vehicleCategory;
+    if (!category) return;
 
-    setLoadingCategoryId(vehicleCategory._id);
     setStep2Data({
-      vehicleCategory,
-      passengers,
-      bags: luggage,
+      vehicleCount,
+      passengers: Math.min(step2.passengers, category.passengerCount * vehicleCount),
+      bags: Math.min(step2.bags, category.luggageCount > 0 ? vehicleCount : 0),
     });
-    router.push("/book-ride/passenger-details");
+  };
+
+  const handleContinue = () => {
+    if (!step2 || isNavigating) return;
+
+    setIsNavigating(true);
+    router.push(isHourly ? "/contact-us" : "/book-ride/passenger-details");
   };
 
   if (!hasHydrated) return null;
@@ -71,15 +81,32 @@ function Step2() {
 
         {categories.map((vehicleCategory: VehicleCategory) => (
           <VehicleCategoryCard
-            key={vehicleCategory._id}
+            key={vehicleCategory.id}
             vehicleCategory={vehicleCategory}
-            isSelected={selectedId === vehicleCategory._id}
-            isLoading={loadingCategoryId === vehicleCategory._id}
+            isSelected={selectedId === vehicleCategory.id}
+            vehicleCount={selectedId === vehicleCategory.id ? (step2?.vehicleCount ?? 1) : 1}
+            passengers={step2?.passengers ?? 1}
+            bags={step2?.bags ?? 0}
             onSelect={handleSelect}
-            onContinue={handleContinue}
+            onVehicleCountChange={handleVehicleCountChange}
+            onPassengersChange={(passengers) => setStep2Data({ passengers })}
+            onBagsChange={(bags) => setStep2Data({ bags })}
           />
         ))}
       </div>
+
+      <BookingStepActions backHref="/">
+        <Button
+          type="button"
+          onClick={handleContinue}
+          disabled={!step2}
+          isLoading={isNavigating}
+          className="h-11 flex-1 gap-2 rounded-sm bg-black font-semibold text-white hover:bg-black/90"
+        >
+          {isHourly ? "Request Quote" : "Continue"}
+          <ChevronRight width={16} height={16} strokeWidth={2.5} />
+        </Button>
+      </BookingStepActions>
     </>
   );
 }

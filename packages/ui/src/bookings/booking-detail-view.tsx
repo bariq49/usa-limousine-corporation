@@ -171,7 +171,10 @@ export function BookingDetailView(props: Props) {
 
               <div className="mt-5 flex flex-col gap-4 sm:mt-6">
                 <BookingCustomerDetails passenger={booking.passenger} />
-                <BookingVehicleDetails vehicleCategory={booking.vehicleCategory} />
+                <BookingVehicleDetails
+                  vehicleCategory={booking.vehicleCategory}
+                  vehicleCount={booking.vehicleCount}
+                />
               </div>
             </div>
 

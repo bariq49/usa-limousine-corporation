@@ -20,6 +20,7 @@ export type PassengerInput = {
   name: string;
   phone: string;
   email: string;
+  ccEmail?: string | null;
   specialInstructions?: string | null;
   flightNumber?: string | null;
   trainNumber?: string | null;
@@ -69,6 +70,7 @@ export type CreateData = {
   vehicleCategoryId: string;
   bookingNumber: string;
   bookingType: BookingType;
+  vehicleCount?: number | undefined;
   status: BookingStatus;
   confirmedAt?: Date | undefined;
   /** Admin bookings keep the entered pricing; customer bookings store the server-built breakdown. */

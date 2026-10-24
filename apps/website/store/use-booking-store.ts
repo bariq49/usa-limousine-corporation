@@ -2,7 +2,6 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { useShallow } from 'zustand/react/shallow';
 import type {
-    ServiceType,
     VehicleCategory,
     Pricing,
     BookingStep1PersistedData,
@@ -10,9 +9,9 @@ import type {
     BookingStep3PersistedData,
     BookingSettings,
 } from '@/types/booking.types';
+import { PASSENGER_TITLES } from '@/constants/booking-constants';
 
 export type {
-    ServiceType,
     VehicleCategory,
     Pricing,
     BookingStep1PersistedData,
@@ -34,24 +33,14 @@ interface BookingState {
     setStep2Data: (data: Partial<BookingStep2PersistedData> | null) => void;
     setStep3Data: (data: Partial<BookingStep3PersistedData> | null) => void;
     setBookingSettings: (settings: BookingSettings) => void;
-
-    clearStep1: () => void;
-    resetAll: () => void;
 }
 
 // =============== STORE ===============
 
-const STORE_VERSION = 33;
+const STORE_VERSION = 38;
 
-export const resolveVehicleCategoryPrice = (vehicleCategory: VehicleCategory): number => {
-    if (!vehicleCategory) return 0;
-    return vehicleCategory?.priceBreakdown?.oneWayTotalPrice ?? 0;
-};
-
-/** @deprecated Use resolveVehicleCategoryPrice */
-export const resolveCategoryPrice = resolveVehicleCategoryPrice;
-/** @deprecated Use resolveVehicleCategoryPrice */
-export const resolveVehiclePrice = resolveVehicleCategoryPrice;
+export const resolveVehicleCategoryPrice = (vehicleCategory: VehicleCategory): number =>
+    vehicleCategory.priceBreakdown?.oneWayTotalPrice ?? 0;
 
 export const useBookingStore = create<BookingState>()(
     persist(
@@ -88,6 +77,7 @@ export const useBookingStore = create<BookingState>()(
 
                     const step2Data: BookingStep2PersistedData = {
                         vehicleCategory,
+                        vehicleCount: data.vehicleCount ?? state.step2?.vehicleCount ?? 1,
                         passengers: data.passengers ?? state.step2?.passengers ?? 1,
                         bags: data.bags ?? state.step2?.bags ?? 0,
                     };
@@ -106,10 +96,13 @@ export const useBookingStore = create<BookingState>()(
 
                     return {
                         step3: {
-                            firstName: data.firstName ?? state.step3?.firstName ?? "",
-                            lastName: data.lastName ?? state.step3?.lastName ?? "",
+                            title: data.title ?? state.step3?.title ?? PASSENGER_TITLES[0].value,
+                            fullName: data.fullName ?? state.step3?.fullName ?? "",
                             phone: data.phone ?? state.step3?.phone ?? "",
                             email: data.email ?? state.step3?.email ?? "",
+                            ccEmail: data.ccEmail,
+                            pickupDate: data.pickupDate ?? state.step3?.pickupDate ?? "",
+                            pickupTime: data.pickupTime ?? state.step3?.pickupTime ?? "",
                             notes: data.notes,
                             airlineName: data.airlineName,
                             flightNumber: data.flightNumber,
@@ -124,7 +117,6 @@ export const useBookingStore = create<BookingState>()(
                             returnFlightNumber: data.returnFlightNumber,
                             returnMeetGreetEnabled: data.returnMeetGreetEnabled ?? false,
                             returnMeetGreet: data.returnMeetGreet,
-                            returnNotes: data.returnNotes,
                             returnChildSeats: data.returnChildSeats ?? [],
                         },
                     };
@@ -133,21 +125,6 @@ export const useBookingStore = create<BookingState>()(
             setBookingSettings: (settings) =>
                 set({
                     bookingSettings: settings,
-                }),
-
-            clearStep1: () =>
-                set({
-                    step1: null,
-                    step2: null,
-                    step3: null,
-                }),
-
-            resetAll: () =>
-                set({
-                    step1: null,
-                    step2: null,
-                    step3: null,
-                    bookingSettings: null,
                 }),
         }),
         {
@@ -182,56 +159,58 @@ export const calculatePricing = (state: BookingState): Pricing | null => {
     if (!vehicleCategory || !step1) return null;
 
     const breakdown = vehicleCategory.priceBreakdown;
+    // Each vehicle pays its own fare; extras below are charged once per booking.
+    const vehicleCount = step2?.vehicleCount ?? 1;
 
-    const oneWayBasePrice = breakdown?.oneWayBasePrice ?? 0;
+    const oneWayBasePrice = (breakdown?.oneWayBasePrice ?? 0) * vehicleCount;
     const oneWaySurchargePercentage = breakdown?.oneWaySurchargePercentage ?? 0;
-    const oneWaySurchargeAmount = breakdown?.oneWaySurchargeAmount ?? 0;
+    const oneWaySurchargeAmount = (breakdown?.oneWaySurchargeAmount ?? 0) * vehicleCount;
     const oneWayGratuityPercentage = breakdown?.oneWayGratuityPercentage ?? 0;
-    const oneWayGratuityAmount = breakdown?.oneWayGratuityAmount ?? 0;
+    const oneWayGratuityAmount = (breakdown?.oneWayGratuityAmount ?? 0) * vehicleCount;
     const oneWayTaxPercentage = breakdown?.oneWayTaxPercentage ?? 0;
-    const oneWayTaxAmount = breakdown?.oneWayTaxAmount ?? 0;
+    const oneWayTaxAmount = (breakdown?.oneWayTaxAmount ?? 0) * vehicleCount;
     const oneWayTransactionFeePercentage =
         breakdown?.oneWayTransactionFeePercentage ?? 0;
-    const oneWayTransactionFeeAmount = breakdown?.oneWayTransactionFeeAmount ?? 0;
+    const oneWayTransactionFeeAmount = (breakdown?.oneWayTransactionFeeAmount ?? 0) * vehicleCount;
     const oneWayDiscountPercentage = breakdown?.oneWayDiscountPercentage ?? 0;
-    const oneWayDiscountAmount = breakdown?.oneWayDiscountAmount ?? 0;
-    const oneWayAirportFeeAmount = breakdown?.oneWayAirportFeeAmount ?? 0;
-    const oneWayTotalPrice = resolveVehicleCategoryPrice(vehicleCategory);
+    const oneWayDiscountAmount = (breakdown?.oneWayDiscountAmount ?? 0) * vehicleCount;
+    const oneWayAirportFeeAmount = (breakdown?.oneWayAirportFeeAmount ?? 0) * vehicleCount;
+    const oneWayTotalPrice = resolveVehicleCategoryPrice(vehicleCategory) * vehicleCount;
 
     const returnEnabled = Boolean(step3?.returnEnabled);
 
-    const returnBasePrice = returnEnabled ? (breakdown?.returnBasePrice ?? 0) : 0;
+    const returnBasePrice = returnEnabled ? (breakdown?.returnBasePrice ?? 0) * vehicleCount : 0;
     const returnSurchargePercentage = returnEnabled
         ? (breakdown?.returnSurchargePercentage ?? 0)
         : 0;
     const returnSurchargeAmount = returnEnabled
-        ? (breakdown?.returnSurchargeAmount ?? 0)
+        ? (breakdown?.returnSurchargeAmount ?? 0) * vehicleCount
         : 0;
     const returnGratuityPercentage = returnEnabled
         ? (breakdown?.returnGratuityPercentage ?? 0)
         : 0;
     const returnGratuityAmount = returnEnabled
-        ? (breakdown?.returnGratuityAmount ?? 0)
+        ? (breakdown?.returnGratuityAmount ?? 0) * vehicleCount
         : 0;
     const returnTaxPercentage = returnEnabled ? (breakdown?.returnTaxPercentage ?? 0) : 0;
-    const returnTaxAmount = returnEnabled ? (breakdown?.returnTaxAmount ?? 0) : 0;
+    const returnTaxAmount = returnEnabled ? (breakdown?.returnTaxAmount ?? 0) * vehicleCount : 0;
     const returnTransactionFeePercentage = returnEnabled
         ? (breakdown?.returnTransactionFeePercentage ?? 0)
         : 0;
     const returnTransactionFeeAmount = returnEnabled
-        ? (breakdown?.returnTransactionFeeAmount ?? 0)
+        ? (breakdown?.returnTransactionFeeAmount ?? 0) * vehicleCount
         : 0;
     const returnDiscountPercentage = returnEnabled
         ? (breakdown?.returnDiscountPercentage ?? 0)
         : 0;
     const returnDiscountAmount = returnEnabled
-        ? (breakdown?.returnDiscountAmount ?? 0)
+        ? (breakdown?.returnDiscountAmount ?? 0) * vehicleCount
         : 0;
     const returnAirportFeeAmount = returnEnabled
-        ? (breakdown?.returnAirportFeeAmount ?? 0)
+        ? (breakdown?.returnAirportFeeAmount ?? 0) * vehicleCount
         : 0;
     const returnTotalPrice = returnEnabled
-        ? (breakdown?.returnTotalPrice ?? 0)
+        ? (breakdown?.returnTotalPrice ?? 0) * vehicleCount
         : 0;
 
     const stopFeeAmount =
@@ -325,8 +304,3 @@ export const usePricing = () =>
 
 export const useTotalPrice = () =>
     useBookingStore((state) => calculatePricing(state)?.total ?? 0);
-
-export const useIsBookingReady = () =>
-    useBookingStore((state) =>
-        Boolean(state.step1 && state.step2?.vehicleCategory && state.step3)
-    );

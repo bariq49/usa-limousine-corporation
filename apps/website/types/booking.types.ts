@@ -1,21 +1,11 @@
-import type { CategoryByDistance } from './vehicle-category.types';
+import type { VehicleCategory } from './vehicle-category.types';
 import type { BookingSettings } from './settings.types';
 
 export type { BookingSettings };
 
 export type TripType = "one-way" | "return" | "hourly";
 
-export type ServiceType =
-  | 'airport-transfer'
-  | 'hourly-transfer'
-  | 'point-to-point-transfer'
-  | 'city-transfer'
-  | 'wedding-special-occasion'
-  | 'corporate-transfer'
-  | 'nightlife'
-  | (string & {});
-
-export type VehicleCategory = CategoryByDistance;
+export type { VehicleCategory };
 
 export type Pricing = {
     oneWayBasePrice: number;
@@ -55,13 +45,10 @@ export type Pricing = {
 };
 
 export interface BookingStep1PersistedData {
-    serviceType: ServiceType;
     tripType: TripType;
     pickupAddress: string;
     deliveryAddress: string;
     stops: { address: string }[];
-    pickupDate: string;
-    pickupTime: string;
     distance?: number;
     travelDuration?: number;
     duration?: number;
@@ -70,15 +57,11 @@ export interface BookingStep1PersistedData {
 
 export interface BookingStep2PersistedData {
     vehicleCategory: VehicleCategory;
+    /** Vehicles of the category booked; capacity and fare scale with it. */
+    vehicleCount: number;
     passengers: number;
     bags: number;
 }
-
-export type Step2ContinueProp = {
-    vehicleCategory: VehicleCategory;
-    passengers: number;
-    luggage: number;
-};
 
 export type Step3ChildSeatSelection = {
     id: string;
@@ -95,10 +78,13 @@ export type Step3LuggageSelection = {
 };
 
 export interface BookingStep3PersistedData {
-    firstName: string;
-    lastName: string;
+    title: string;
+    fullName: string;
     phone: string;
     email: string;
+    ccEmail?: string;
+    pickupDate: string;
+    pickupTime: string;
     notes?: string;
     airlineName?: string;
     flightNumber?: string;
@@ -113,7 +99,6 @@ export interface BookingStep3PersistedData {
     returnFlightNumber?: string;
     returnMeetGreetEnabled?: boolean;
     returnMeetGreet?: string;
-    returnNotes?: string;
     returnChildSeats?: Step3ChildSeatSelection[];
 }
 
@@ -122,23 +107,23 @@ export interface Step1FormValues {
     pickupAddress: string;
     deliveryAddress: string;
     stops: { address: string }[];
-    pickupDate: string;
-    pickupTime: string;
     duration?: number;
 }
 
 export type HeroFormValues = Step1FormValues;
-export type EditFormValues = Step1FormValues;
 
 export interface Step3FormValues {
-    firstName: string;
-    lastName: string;
+    title: string;
+    fullName: string;
     phone: string;
     email: string;
+    ccEmailEnabled: boolean;
+    ccEmail: string;
+    pickupDate: string;
+    pickupTime: string;
     airlineName: string;
     flightNumber: string;
     notes: string;
-    notesEnabled: boolean;
     luggage: Step3LuggageSelection[];
     meetGreetEnabled: boolean;
     meetGreet: string;
@@ -151,8 +136,6 @@ export interface Step3FormValues {
     returnFlightNumber: string;
     returnMeetGreetEnabled: boolean;
     returnMeetGreet: string;
-    returnNotes: string;
-    returnNotesEnabled: boolean;
     returnChildSeatsEnabled: boolean;
     returnChildSeats: Step3ChildSeatSelection[];
 }
@@ -163,6 +146,7 @@ export type BookingType = "ONE_WAY" | "RETURN" | "HOURLY";
 export interface BookingDraft {
     vehicleCategoryId: string;
     vehicleCategoryName: string;
+    vehicleCount: number;
     bookingType: BookingType;
     address: {
         pickup: { address: string };
@@ -176,8 +160,7 @@ export interface BookingDraft {
         name: string;
         phone: string;
         email: string;
-        specialInstructions?: string;
-        flightNumber?: string;
+        ccEmail?: string;
     };
     bookingTime: {
         pickupDate: string;
@@ -192,9 +175,6 @@ export interface BookingDraft {
     notes?: string;
     pricing: {
         basePrice: number;
-        stopsPrice?: number;
-        airportPickupPrice?: number;
-        extraServicesPrice?: number;
         total: number;
     };
 }

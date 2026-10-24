@@ -3,7 +3,7 @@
 import * as React from "react";
 import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
 import { cva, type VariantProps } from "class-variance-authority";
-import { Circle } from "lucide-react";
+import { Circle } from "../svg";
 import { cn } from "../utils/cn";
 import { Label } from "./label";
 

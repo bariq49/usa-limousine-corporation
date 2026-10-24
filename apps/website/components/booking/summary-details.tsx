@@ -12,6 +12,8 @@ import {
   formatDistance,
   formatDuration,
   formatHrs,
+  formatTime,
+  cn,
 } from "@/lib/utils";
 import { Car, Luggage, Pencil, Users } from "@usa-limousine-corporation/ui/svg";
 import Image from "next/image";
@@ -24,12 +26,17 @@ function getChildSeatLabel(name: string) {
   return shortName || name;
 }
 
-function SummaryDetails() {
+type Props = {
+  className?: string;
+};
+
+function SummaryDetails({ className }: Props = {}) {
   const hasHydrated = useHasHydrated();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { step1, step2, step3 } = useBookingStore();
   const pricing = usePricing();
   const selectedCategory = step2?.vehicleCategory;
+  const vehicleCount = step2?.vehicleCount ?? 1;
 
   const pickup = useMemo(() => parseAddress(step1?.pickupAddress || ""), [step1?.pickupAddress]);
   const delivery = useMemo(
@@ -44,8 +51,8 @@ function SummaryDetails() {
     [step1?.stops],
   );
 
-  const pickupDate = (step1?.pickupDate || "").trim();
-  const pickupTime = (step1?.pickupTime || "").trim();
+  const pickupDate = (step3?.pickupDate || "").trim();
+  const pickupTime = (step3?.pickupTime || "").trim();
   const hasPickupTime = Boolean(pickupTime);
   const formattedPickupDate = useMemo(() => formatDate(pickupDate), [pickupDate]);
 
@@ -83,7 +90,12 @@ function SummaryDetails() {
 
   return (
     <>
-      <div className="mx-auto mt-0 w-full rounded-none border border-border bg-white p-4 shadow-sm sm:p-5 lg:rounded-sm">
+      <div
+        className={cn(
+          "mx-auto mt-0 w-full rounded-none border border-border bg-white p-4 shadow-sm sm:p-5 lg:rounded-sm",
+          className,
+        )}
+      >
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-black">Summary Details</h2>
@@ -102,10 +114,10 @@ function SummaryDetails() {
             delivery={delivery}
             stops={stops}
             showTripMeta
-            serviceType={step1?.serviceType}
+            tripType={isHourly ? "By the Hour" : step3?.returnEnabled ? "Return" : "One Way"}
             dateValue={formattedPickupDate}
-            pickupTime={hasPickupTime ? pickupTime : undefined}
-            deliveryTime={hasPickupTime ? (deliveryTime ?? undefined) : undefined}
+            pickupTime={hasPickupTime ? formatTime(pickupTime) : undefined}
+            deliveryTime={hasPickupTime && deliveryTime !== "—" ? (deliveryTime ?? undefined) : undefined}
             hireDuration={hireDuration}
             estDistance={estDistance}
             estDuration={estDuration}
@@ -130,16 +142,22 @@ function SummaryDetails() {
                 <div className="min-w-0 flex-1">
                   <h4 className="mb-1 truncate text-base font-medium leading-none text-foreground">
                     {selectedCategory.name}
+                    {vehicleCount > 1 ? ` × ${vehicleCount}` : ""}
                   </h4>
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-                    <div className="flex items-center gap-1.5 text-sm text-gray-500">
-                      <span>Up to</span>
-                      <Users className="h-4 w-4 text-gray-400" />
-                      <span>{selectedCategory.passengers} Passengers</span>
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    <div
+                      className="flex shrink-0 items-center gap-x-1 rounded-full bg-secondary px-4 py-1 text-white"
+                      title="Passengers"
+                    >
+                      <Users className="h-4 w-4" />
+                      <span className="text-sm font-bold">{selectedCategory.passengerCount * vehicleCount}</span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-sm text-gray-500">
-                      <Luggage className="h-4 w-4 text-gray-400" />
-                      <span>{selectedCategory.suitcases} Suitcases</span>
+                    <div
+                      className="flex shrink-0 items-center gap-x-1 rounded-full bg-secondary px-4 py-1 text-white"
+                      title="Suitcases"
+                    >
+                      <Luggage className="h-4 w-4" />
+                      <span className="text-sm font-bold">{selectedCategory.luggageCount * vehicleCount}</span>
                     </div>
                   </div>
                 </div>

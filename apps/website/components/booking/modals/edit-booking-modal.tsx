@@ -13,8 +13,6 @@ import {
   isGeolocationError,
   getPickupLocation,
   swapPickupAndDelivery,
-  validateBookingTime,
-  resolveServiceType,
   formatHrs,
 } from "@/lib/utils";
 import { useSettings } from "@/hooks/queries/use-settings";
@@ -25,7 +23,7 @@ import { Form } from "@usa-limousine-corporation/ui/components/form";
 import { Input } from "@usa-limousine-corporation/ui/components/input";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@usa-limousine-corporation/ui/components/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogPortal, DialogTitle } from "@usa-limousine-corporation/ui/components/dialog";
 import type { HeroFormValues } from "@/types/booking.types";
 import { HOURLY_DURATIONS, TRIP_TYPES } from "@/constants/booking-constants";
 
@@ -50,8 +48,6 @@ export function EditBookingModal({ isOpen, onClose }: EditBookingModalProps) {
       pickupAddress: step1?.pickupAddress ?? "",
       deliveryAddress: step1?.deliveryAddress ?? "",
       stops: step1?.stops ?? [],
-      pickupDate: step1?.pickupDate ?? "",
-      pickupTime: step1?.pickupTime ?? "",
       duration: step1?.duration,
     },
   });
@@ -70,8 +66,6 @@ export function EditBookingModal({ isOpen, onClose }: EditBookingModalProps) {
         pickupAddress: step1.pickupAddress ?? "",
         deliveryAddress: step1.deliveryAddress ?? "",
         stops: step1.stops ?? [],
-        pickupDate: step1.pickupDate ?? "",
-        pickupTime: step1.pickupTime ?? "",
         duration: step1.duration,
       });
     }
@@ -123,21 +117,6 @@ export function EditBookingModal({ isOpen, onClose }: EditBookingModalProps) {
         return;
       }
 
-      const minMinutes = settings?.minBookingMinutes || 0;
-
-      const pickupValidation = validateBookingTime({
-        date: data.pickupDate,
-        time: data.pickupTime,
-        minBookingMinutes: minMinutes,
-      });
-
-      if (!pickupValidation.isValid) {
-        toast.error(
-          `Booking can't be added within ${pickupValidation.timeDisplay} of pickup time, choose another time.`,
-        );
-        return;
-      }
-
       const pickupAddress = data.pickupAddress.trim();
       const deliveryAddress = isHourly ? "" : data.deliveryAddress.trim();
       const normalizedStops = data.stops
@@ -162,13 +141,10 @@ export function EditBookingModal({ isOpen, onClose }: EditBookingModalProps) {
       const isAirportSelected = isAirportPickupRequired(pickupAddress, deliveryAddress);
 
       setStep1Data({
-        serviceType: isHourly ? "Hourly Chauffeur" : resolveServiceType(isAirportSelected),
         tripType,
         pickupAddress,
         deliveryAddress,
         stops: normalizedStops,
-        pickupDate: data.pickupDate,
-        pickupTime: data.pickupTime,
         distance: routeResult?.totalDistanceMiles,
         travelDuration: routeResult?.totalDurationMinutes,
         duration: isHourly ? data.duration : undefined,
@@ -182,25 +158,24 @@ export function EditBookingModal({ isOpen, onClose }: EditBookingModalProps) {
       router.push("/book-ride/select-vehicle");
       toast.success("Trip updated successfully");
       onClose();
-    } catch (err) {
+    } catch {
       toast.error("Something went wrong, please check details and try again");
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    // Non-modal so the address dropdown (portaled to <body>) keeps focus and clicks;
+    // the backdrop below stands in for the modal overlay.
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()} modal={false}>
+      <DialogPortal>
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" aria-hidden />
+      </DialogPortal>
       <DialogContent
         showCloseButton={false}
         className="sm:max-w-xl max-h-vh-90 overflow-y-auto p-0 border-none bg-transparent shadow-none"
         onInteractOutside={(e) => {
-          const target = e.target as HTMLElement;
-          if (target?.closest(".pac-container")) {
-            e.preventDefault();
-          }
-        }}
-        onPointerDownOutside={(e) => {
-          const target = e.target as HTMLElement;
-          if (target?.closest(".pac-container")) {
+          const target = (e.detail.originalEvent.target ?? e.target) as HTMLElement | null;
+          if (target?.closest?.("[data-location-dropdown]")) {
             e.preventDefault();
           }
         }}
@@ -224,7 +199,12 @@ export function EditBookingModal({ isOpen, onClose }: EditBookingModalProps) {
 
           <Form {...form}>
             <form
-              onSubmit={form.handleSubmit(onSubmit)}
+              onSubmit={(event) => {
+                // The modal can sit inside the passenger form in the React tree; keep its
+                // submit from reaching that form.
+                event.stopPropagation();
+                void form.handleSubmit(onSubmit)(event);
+              }}
               className="p-5 sm:p-6 bg-white flex flex-col items-stretch gap-4"
             >
               <TripTypeTabs
@@ -242,6 +222,7 @@ export function EditBookingModal({ isOpen, onClose }: EditBookingModalProps) {
                     <Input
                       name="pickupAddress"
                       type="location"
+                      label="Pickup Location"
                       placeholder="Enter Pickup Location"
                       className="flex-1"
                       required
@@ -301,21 +282,13 @@ export function EditBookingModal({ isOpen, onClose }: EditBookingModalProps) {
                       <Input
                         name="deliveryAddress"
                         type="location"
+                        label="Drop-off Location"
                         placeholder="Enter Drop-off Location"
                         className="flex-1"
                         required
                       />
                     </>
                   )}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <div className="flex-1">
-                  <Input name="pickupDate" type="date" placeholder="Select Date" disablePast required />
-                </div>
-                <div className="flex-1">
-                  <Input name="pickupTime" type="time" placeholder="Select Time" required />
                 </div>
               </div>
 

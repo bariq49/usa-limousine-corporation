@@ -21,6 +21,9 @@ export function BookingCustomerDetails(props: Props) {
         <DetailItem icon={<Mail className="h-5 w-5" />}>
           {passenger?.email?.trim() || "—"}
         </DetailItem>
+        {passenger?.ccEmail ? (
+          <DetailItem icon={<Mail className="h-5 w-5" />}>CC: {passenger.ccEmail}</DetailItem>
+        ) : null}
         <DetailItem icon={<Phone className="h-5 w-5" />}>
           {passenger?.phone?.trim() || "—"}
         </DetailItem>

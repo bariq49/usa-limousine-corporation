@@ -1,7 +1,7 @@
 "use client";
 
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { X } from "lucide-react";
+import { Close } from "../svg";
 import {
   type ComponentPropsWithoutRef,
   type ElementRef,
@@ -74,7 +74,7 @@ export const DialogContent = forwardRef<
           className="absolute right-4 top-4 rounded-md p-1 text-default-400 hover:text-default-700 hover:bg-default-100 transition-colors cursor-pointer"
           style={{ cursor: "pointer" }}
         >
-          <X className="h-4 w-4 cursor-pointer" />
+          <Close className="h-4 w-4 cursor-pointer" />
           <span className="sr-only">Close</span>
         </DialogPrimitive.Close>
       ) : null}

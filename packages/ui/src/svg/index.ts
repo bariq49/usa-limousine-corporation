@@ -63,6 +63,7 @@ export { default as ArrowLeftRight } from "./arrow-left-right";
 export { default as ArrowRight } from "./arrow-right";
 export { default as Baby } from "./baby";
 export { default as Check } from "./check";
+export { default as Circle } from "./circle";
 export { default as CircleCheck } from "./circle-check";
 export { default as ChevronDown } from "./chevron-down";
 export { default as ChevronLeft } from "./chevron-left";

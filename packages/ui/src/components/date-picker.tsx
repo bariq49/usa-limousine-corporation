@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Calendar, ChevronRight } from "lucide-react";
+import { Calendar, ChevronRight } from "../svg";
 import { APP_TIMEZONE } from "../constants/index";
 import { cn } from "../utils/cn";
 
@@ -236,7 +236,7 @@ export function DatePicker(props: DatePickerProps) {
                   onClick={() => setCurrentMonth(addMonths(currentMonth, -1))}
                   className="cursor-pointer rounded-full p-2 transition-colors hover:bg-primary/10 disabled:pointer-events-none disabled:opacity-20"
                 >
-                  <ChevronRight size={18} className="rotate-180 text-default-600" />
+                  <ChevronRight width={18} height={18} className="rotate-180 text-default-600" />
                 </button>
 
                 <h3 className="text-sm font-bold text-default-900">
@@ -251,7 +251,7 @@ export function DatePicker(props: DatePickerProps) {
                   onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
                   className="cursor-pointer rounded-full p-2 transition-colors hover:bg-primary/10"
                 >
-                  <ChevronRight size={18} className="text-default-600" />
+                  <ChevronRight width={18} height={18} className="text-default-600" />
                 </button>
               </div>
 

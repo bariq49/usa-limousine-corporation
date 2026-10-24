@@ -300,3 +300,29 @@ export const TRAIN_KEYWORDS = [
   "hauptbahnhof",
   "hbf",
 ];
+
+/** Words that mark a place as a hotel in Google Places results. */
+export const HOTEL_KEYWORDS = [
+  "hotel",
+  "hilton",
+  "marriott",
+  "sheraton",
+  "hyatt",
+  "radisson",
+  "holiday inn",
+  "ibis",
+  "novotel",
+  "crowne plaza",
+  "best western",
+  "intercontinental",
+  "ritz",
+  "four seasons",
+  "w hotel",
+  "motel",
+  "hostel",
+  "inn ",
+  "lodge",
+  "resort",
+  "suites",
+  "b&b",
+];

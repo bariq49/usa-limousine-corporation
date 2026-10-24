@@ -85,6 +85,12 @@ export class PassengerDto {
   @MaxLength(320)
   email!: string;
 
+  /** Extra address that receives a copy of booking emails. */
+  @IsOptional()
+  @IsEmail()
+  @MaxLength(320)
+  ccEmail?: string;
+
   @IsOptional()
   @IsString()
   @MaxLength(1000)
@@ -212,6 +218,12 @@ export class CreateDto {
   @IsOptional()
   @IsEnum(BookingType)
   bookingType?: BookingType;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(10)
+  vehicleCount?: number;
 
   @IsOptional()
   @IsEnum(BookingStatus)

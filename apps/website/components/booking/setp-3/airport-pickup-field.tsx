@@ -27,7 +27,7 @@ export const AirportPickupField = (props: Props = {}) => {
   if (requireAirport && !step1?.isAirportSelected) return null;
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Input
           icon={<Plane width={16} height={16} className="text-gray-400" />}

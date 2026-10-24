@@ -5,9 +5,7 @@ import { fromZonedTime } from "date-fns-tz";
 import { loadGoogleMaps } from "@usa-limousine-corporation/ui/bookings/google-maps-loader";
 import { isAirportAddress } from "@usa-limousine-corporation/ui/utils/places";
 import { CURRENCY_SYMBOL, DEFAULT_TIMEZONE, DISTANCE_UNIT } from "@/constants/app-default";
-import { TRIP_TYPES } from "@/constants/booking-constants";
 import type { LocationFormAccessor, AddressInfo, ReverseGeocodeParams, CalculateArrivalTimeParams, ValidateBookingTimeParams } from "@/types/utils.types";
-import type { TripType } from "@/types/booking.types";
 
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs))
@@ -40,9 +38,6 @@ export function formatDistance(distance: number | undefined | null): string | nu
     if (!distance) return null;
     return `${distance.toFixed(1)} ${DISTANCE_UNIT}`;
 }
-
-export const formatExtraDistanceRate = (rate: number) =>
-    `${formatPrice(rate)} / ${DISTANCE_UNIT}`;
 
 const isPlusCodeAddress = (address: string) => /^[A-Z0-9]{4,}\+[A-Z0-9]{2,}/i.test(address.trim());
 
@@ -157,13 +152,6 @@ export function formatDuration(durationMinutes: number | undefined | null): stri
 export const formatHrs = (hours: number) =>
   `${hours} ${hours === 1 ? "hr" : "hrs"}`;
 
-/** Service label shown on the booking summary, derived from the route. */
-export const resolveServiceType = (isAirportSelected: boolean) =>
-  isAirportSelected ? "Airport Transfer" : "Point-to-Point";
-
-export const formatTripType = (tripType?: string) =>
-  (tripType || TRIP_TYPES.ONE_WAY).replace(/-/g, " ");
-
 export function parseAddress(address: string | undefined | null): AddressInfo {
     if (!address) return { name: "", detail: "" };
     const parts = address.split(",");
@@ -174,6 +162,12 @@ export function parseAddress(address: string | undefined | null): AddressInfo {
         };
     }
     return { name: address, detail: "" };
+}
+
+/** Formats a picker time ("14:30") as "02:30 PM". */
+export function formatTime(time: string): string {
+    const date = parse(time, "HH:mm", new Date());
+    return isValid(date) ? format(date, "hh:mm a") : time;
 }
 
 export function calculateArrivalTime({ time, durationMinutes }: CalculateArrivalTimeParams): string {

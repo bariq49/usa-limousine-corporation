@@ -6,5 +6,14 @@ export const TRIP_TYPES = {
   HOURLY: 'hourly',
 } as const satisfies Record<string, TripType>
 
-/** Hourly hire packages offered in the booking form, in hours. */
 export const HOURLY_DURATIONS = [2, 3, 4, 5, 6, 8, 10, 12]
+
+export const PASSENGER_TITLES = [
+  { value: 'Mr.', label: 'Mr.' },
+  { value: 'Mrs.', label: 'Mrs.' },
+  { value: 'Ms.', label: 'Ms.' },
+  { value: 'Dr.', label: 'Dr.' },
+]
+
+/** Most vehicles of one category that can be booked together (matches the backend limit). */
+export const MAX_VEHICLES = 10

@@ -12,7 +12,7 @@ type TripRouteDetailsProps = {
   pickup: RouteAddress;
   delivery: RouteAddress;
   stops?: RouteAddress[];
-  serviceType?: string;
+  tripType?: string;
   dateValue?: string;
   pickupTime?: string;
   deliveryTime?: string;
@@ -28,7 +28,7 @@ export function TripRouteDetails({
   pickup,
   delivery,
   stops = [],
-  serviceType,
+  tripType,
   dateValue,
   pickupTime,
   deliveryTime,
@@ -48,10 +48,8 @@ export function TripRouteDetails({
       {showTripMeta ? (
         <div className="mb-4 -ml-9 space-y-1.5">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-600">Service</span>
-            <span className="text-sm font-normal text-gray-500">
-              {serviceType || "Airport Transfer"}
-            </span>
+            <span className="text-sm font-medium text-gray-600">Trip Type</span>
+            <span className="text-sm font-normal text-gray-500">{tripType || "—"}</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-gray-600">Date</span>
@@ -99,9 +97,12 @@ export function TripRouteDetails({
               </div>
             )}
           </div>
-          <span className="whitespace-nowrap pt-1 text-sm font-normal text-gray-500">
-            {showPickupTime ? pickupTime : "—"}
-          </span>
+          {showPickupTime ? (
+            <div className="shrink-0 pt-0.5 text-right">
+              <p className="text-3xs font-medium uppercase tracking-wide text-gray-400">Pickup</p>
+              <p className="whitespace-nowrap text-sm font-normal text-gray-500">{pickupTime}</p>
+            </div>
+          ) : null}
         </div>
       </div>
 
@@ -141,11 +142,12 @@ export function TripRouteDetails({
               <Clock className="h-3.5 w-3.5 shrink-0 text-secondary" />
               {hireDuration}
             </span>
-          ) : (
-            <span className="whitespace-nowrap pt-1 text-sm font-normal text-gray-500">
-              {showDeliveryTime ? deliveryTime : "—"}
-            </span>
-          )}
+          ) : showDeliveryTime ? (
+            <div className="shrink-0 pt-0.5 text-right">
+              <p className="text-3xs font-medium uppercase tracking-wide text-gray-400">Est. Arrival</p>
+              <p className="whitespace-nowrap text-sm font-normal text-gray-500">{deliveryTime}</p>
+            </div>
+          ) : null}
         </div>
       </div>
 

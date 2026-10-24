@@ -1,4 +1,4 @@
-import { getCategoriesByDistance, getCategoriesForHourly } from "@/lib/api/fleets";
+import { getCategories, getCategoriesByDistance } from "@/lib/api/fleets";
 import { useQuery } from "@tanstack/react-query";
 import type { ByDistanceParams } from "@/types/vehicle-category.types";
 
@@ -12,10 +12,10 @@ export const useCategoriesByDistance = (params: ByDistanceParams) => {
   });
 };
 
-export const useCategoriesForHourly = (enabled: boolean) => {
+export const useCategories = (enabled: boolean) => {
   return useQuery({
-    queryKey: ["categories-hourly"],
-    queryFn: getCategoriesForHourly,
+    queryKey: ["vehicle-categories"],
+    queryFn: getCategories,
     enabled,
   });
 };

@@ -14,8 +14,6 @@ import {
   isGeolocationError,
   getPickupLocation,
   swapPickupAndDelivery,
-  validateBookingTime,
-  resolveServiceType,
   formatHrs,
 } from "@/lib/utils";
 import { useHasHydrated } from "@/hooks/use-has-hydrated";
@@ -46,8 +44,6 @@ function Step1() {
       pickupAddress: step1?.pickupAddress ?? "",
       deliveryAddress: step1?.deliveryAddress ?? "",
       stops: step1?.stops ?? [],
-      pickupDate: step1?.pickupDate ?? "",
-      pickupTime: step1?.pickupTime ?? "",
       duration: step1?.duration,
     },
   });
@@ -109,21 +105,6 @@ function Step1() {
         return;
       }
 
-      const minMinutes = settings?.minBookingMinutes || 0;
-
-      const pickupValidation = validateBookingTime({
-        date: data.pickupDate,
-        time: data.pickupTime,
-        minBookingMinutes: minMinutes,
-      });
-
-      if (!pickupValidation.isValid) {
-        toast.error(
-          `Booking can't be added within ${pickupValidation.timeDisplay} of pickup time, choose another time.`,
-        );
-        return;
-      }
-
       const pickupAddress = data.pickupAddress.trim();
       const deliveryAddress = isHourly ? "" : data.deliveryAddress.trim();
       const normalizedStops = data.stops
@@ -148,13 +129,10 @@ function Step1() {
       const isAirportSelected = isAirportPickupRequired(pickupAddress, deliveryAddress);
 
       setStep1Data({
-        serviceType: isHourly ? "Hourly Chauffeur" : resolveServiceType(isAirportSelected),
         tripType,
         pickupAddress,
         deliveryAddress,
         stops: normalizedStops,
-        pickupDate: data.pickupDate,
-        pickupTime: data.pickupTime,
         distance: routeResult?.totalDistanceMiles,
         travelDuration: routeResult?.totalDurationMinutes,
         duration: isHourly ? data.duration : undefined,
@@ -165,7 +143,7 @@ function Step1() {
         setBookingSettings(settings);
       }
       router.replace("/book-ride/select-vehicle");
-    } catch (err) {
+    } catch {
       toast.error("Something went wrong, please check details and try again");
     }
   };
@@ -200,6 +178,7 @@ function Step1() {
                 <Input
                   name="pickupAddress"
                   type="location"
+                  label="From"
                   placeholder="Enter Pickup Location"
                   className="flex-1"
                   required
@@ -258,21 +237,13 @@ function Step1() {
                   <Input
                     name="deliveryAddress"
                     type="location"
+                    label="To"
                     placeholder="Enter Drop-off Location"
                     className="flex-1"
                     required
                   />
                 </>
               )}
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <div className="flex-1">
-              <Input name="pickupDate" type="date" placeholder="Select Date" disablePast required />
-            </div>
-            <div className="flex-1">
-              <Input name="pickupTime" type="time" placeholder="Select Time" required />
             </div>
           </div>
 

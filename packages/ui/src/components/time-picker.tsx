@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Clock } from "lucide-react";
+import { Clock } from "../svg";
 import { APP_TIMEZONE } from "../constants/index";
 import { cn } from "../utils/cn";
 import { Button } from "./button";

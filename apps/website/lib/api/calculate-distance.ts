@@ -5,11 +5,6 @@ import { DISTANCE_UNIT } from "@/constants/app-default";
 
 const METERS_PER_MILE = 1609.344;
 
-export interface LatLng {
-    lat: number;
-    lng: number;
-}
-
 export interface DistanceResult {
     distanceMiles: number;
     distanceKm: number;

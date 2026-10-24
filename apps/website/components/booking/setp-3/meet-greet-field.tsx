@@ -38,7 +38,7 @@ export const MeetGreetField = (props: Props = {}) => {
   if (!(meetGreetFee > 0)) return null;
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <Input
         name={enabledField}
         type="switch"

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp } from "../svg";
 import { cn } from "../utils/cn";
 
 type TimeColumnProps<T extends string | number> = {
@@ -54,7 +54,7 @@ export function TimeColumn<T extends string | number>(props: TimeColumnProps<T>)
           onClick={() => scroll("up")}
           className="flex w-full cursor-pointer justify-center border-b border-border py-1.5 transition hover:bg-primary/10"
         >
-          <ChevronUp size={14} className="text-default-400" />
+          <ChevronUp width={14} height={14} className="text-default-400" />
         </button>
 
         <div
@@ -90,7 +90,7 @@ export function TimeColumn<T extends string | number>(props: TimeColumnProps<T>)
           onClick={() => scroll("down")}
           className="flex w-full cursor-pointer justify-center border-t border-border py-1.5 transition hover:bg-primary/10"
         >
-          <ChevronDown size={14} className="text-default-400" />
+          <ChevronDown width={14} height={14} className="text-default-400" />
         </button>
       </div>
     </div>

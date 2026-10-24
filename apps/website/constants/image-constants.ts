@@ -4,6 +4,7 @@ export const IMAGES = {
     CONTACT: {
         BANNER: "/assets/images/contact-us/banner-1.png",
     },
+    MAP_CAR_MARKER: "/assets/images/map-car-marker.png",
     BAGS: {
         CARRY_ON: "/assets/images/bags/carry-on.png",
     },

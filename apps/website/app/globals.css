@@ -147,6 +147,9 @@
    --radius-md: 8px;
    --radius-lg: 10px;
 
+   /* Extra-wide screens (1920px+) */
+   --breakpoint-3xl: 120rem;
+
    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
@@ -182,6 +185,11 @@
 
 @utility max-h-dropdown {
    max-height: min(70vh, 24rem);
+}
+
+/* Booking route map column: full viewport height below the header */
+@utility h-map-panel {
+   height: calc(100vh - 7.5rem);
 }
 
 @utility h-hero-media {
@@ -347,6 +355,23 @@ select,
 textarea,
 .text-sm-input {
    font-size: 16px !important;
+}
+
+/* =========================
+   MARQUEE
+========================= */
+@theme {
+   --animate-marquee: marquee 12s linear infinite;
+
+   @keyframes marquee {
+      from {
+         transform: translateX(0);
+      }
+
+      to {
+         transform: translateX(-50%);
+      }
+   }
 }
 
 /* =========================

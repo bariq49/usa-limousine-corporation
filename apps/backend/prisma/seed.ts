@@ -80,63 +80,26 @@ const DEFAULT_LUGGAGES: Array<{
   isActive: boolean;
 }> = [
   {
-    name: "Large Case",
-    description: "Standard large suitcase",
-    dimensions: "85cm × 55cm × 35cm",
+    name: "Backpack",
+    description: "Hand bags, backpack",
     isActive: true,
   },
   {
-    name: "Medium Case",
-    description: "Standard medium suitcase",
-    dimensions: "68cm × 45cm × 28cm",
+    name: "Carry-on",
+    description: "Carry-on bag",
+    dimensions: "54cm x 45cm x 25cm",
     isActive: true,
   },
   {
-    name: "Cabin Bag",
-    description: "Carry-on cabin bag",
-    dimensions: "55cm × 40cm × 20cm",
+    name: "Large Bag",
+    description: "Large suitcase",
+    dimensions: "85cm x 55cm x 35cm",
     isActive: true,
   },
   {
-    name: "Bicycle",
-    description: "Bicycle",
-    dimensions: "175cm × 100cm × 40cm",
-    price: 15,
-    isActive: true,
-  },
-  {
-    name: "Winter Sport",
-    description: "Winter sports equipment",
-    dimensions: "190cm × 35cm × 20cm",
-    price: 15,
-    isActive: true,
-  },
-  {
-    name: "Stroller",
-    description: "Baby stroller",
-    dimensions: "100cm × 60cm × 45cm",
-    price: 10,
-    isActive: true,
-  },
-  {
-    name: "Golf Bag",
-    description: "Golf bag",
-    dimensions: "125cm × 30cm × 30cm",
-    price: 15,
-    isActive: true,
-  },
-  {
-    name: "Ski",
-    description: "Ski equipment",
-    dimensions: "200cm × 30cm × 20cm",
-    price: 15,
-    isActive: true,
-  },
-  {
-    name: "Wheelchair",
-    description: "Wheelchair",
-    dimensions: "110cm × 65cm × 95cm",
-    price: 0,
+    name: "Check-in Bag",
+    description: "Checked suitcase",
+    dimensions: "65cm x 45cm x 25cm",
     isActive: true,
   },
 ];
@@ -165,6 +128,25 @@ async function ensureLuggages() {
   }
 
   console.log(`Seeded ${DEFAULT_LUGGAGES.length} luggage types`);
+}
+
+/** Removes luggage types that are no longer in the defaults; ones used by bookings are deactivated. */
+async function removeOldLuggages() {
+  const oldLuggages = await prisma.luggageType.findMany({
+    where: { name: { notIn: DEFAULT_LUGGAGES.map((luggage) => luggage.name) } },
+    include: { _count: { select: { bookingSelections: true } } },
+  });
+
+  for (const luggage of oldLuggages) {
+    await prisma.vehicleCategoryLuggageCapacity.deleteMany({ where: { luggageTypeId: luggage.id } });
+    if (luggage._count.bookingSelections > 0) {
+      await prisma.luggageType.update({ where: { id: luggage.id }, data: { isActive: false } });
+    } else {
+      await prisma.luggageType.delete({ where: { id: luggage.id } });
+    }
+  }
+
+  console.log(`Removed ${oldLuggages.length} old luggage types`);
 }
 
 const DEFAULT_VEHICLE_CATEGORIES = [
@@ -227,12 +209,10 @@ async function ensureCategoryLuggageCapacities() {
 
   if (sedan) {
     const sedanCapacities: Array<{ name: string; quantity: number }> = [
-      { name: "Cabin Bag", quantity: 2 },
-      { name: "Medium Case", quantity: 2 },
-      { name: "Large Case", quantity: 2 },
-      { name: "Stroller", quantity: 1 },
-      { name: "Golf Bag", quantity: 1 },
-      { name: "Ski", quantity: 1 },
+      { name: "Backpack", quantity: 2 },
+      { name: "Carry-on", quantity: 2 },
+      { name: "Large Bag", quantity: 2 },
+      { name: "Check-in Bag", quantity: 2 },
     ];
 
     for (const item of sedanCapacities) {
@@ -336,6 +316,7 @@ async function main() {
     await seedSuperAdmin(admin.email, admin.password);
   }
   await ensureLuggages();
+  await removeOldLuggages();
   await removeVanCategory();
   await ensureVehicleCategories();
   await ensureCategoryLuggageCapacities();

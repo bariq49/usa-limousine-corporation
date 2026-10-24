@@ -19,4 +19,4 @@ export const TIME_FORMAT: Intl.DateTimeFormatOptions = {
   minute: "2-digit",
 };
 
-export { AIRPORT_KEYWORDS, TRAIN_KEYWORDS } from "./places";
+export { AIRPORT_KEYWORDS, HOTEL_KEYWORDS, TRAIN_KEYWORDS } from "./places";

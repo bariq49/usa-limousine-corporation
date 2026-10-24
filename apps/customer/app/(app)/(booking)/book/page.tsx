@@ -46,6 +46,7 @@ function parseDraft(raw: string | null): Draft | null {
 function toCreateInput(draft: Draft): CreateInput {
   return {
     vehicleCategoryId: draft.vehicleCategoryId,
+    vehicleCount: draft.vehicleCount,
     bookingType: draft.bookingType,
     address: draft.address,
     passenger: draft.passenger,
@@ -107,6 +108,7 @@ function ConfirmBooking() {
         <ul className="space-y-3.5">
           <SummaryRow icon={<Car className={icon} />} label="Vehicle">
             {draft.vehicleCategoryName ?? "Selected vehicle"}
+            {(draft.vehicleCount ?? 1) > 1 ? ` × ${draft.vehicleCount}` : ""}
             {draft.bookingType ? ` · ${BOOKING_TYPE_LABELS[draft.bookingType]}` : ""}
           </SummaryRow>
           <SummaryRow icon={<Location className={icon} />} label="Pickup">

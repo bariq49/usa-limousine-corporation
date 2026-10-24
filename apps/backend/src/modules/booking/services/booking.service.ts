@@ -98,6 +98,7 @@ export class BookingService {
       rates,
       isAirport: isAirportTrip(body.address.pickup.address, body.address.dropoff?.address),
       isReturn,
+      vehicleCount: body.vehicleCount ?? 1,
       stopsCount: (body.address.stops ?? []).length,
       meetAndGreetLegs:
         Number(Boolean(body.meetAndGreet?.enabled)) +
@@ -121,6 +122,7 @@ export class BookingService {
           vehicleCategoryId: body.vehicleCategoryId,
           bookingNumber,
           bookingType: body.bookingType ?? BookingType.ONE_WAY,
+          vehicleCount: body.vehicleCount,
           status: BookingStatus.PENDING,
           pricing,
           address: body.address,
@@ -185,6 +187,7 @@ export class BookingService {
       vehicleCategoryId: body.vehicleCategoryId,
       bookingNumber,
       bookingType: body.bookingType ?? BookingType.ONE_WAY,
+      vehicleCount: body.vehicleCount,
       status: BookingStatus.CONFIRMED,
       confirmedAt,
       pricing: body.pricing,

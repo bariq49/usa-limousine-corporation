@@ -1,10 +1,10 @@
-import { getExtraServices, toChildSeats } from "@/lib/api/extra-services";
+import { getExtraServices } from "@/lib/api/extra-services";
 import { useQuery } from "@tanstack/react-query";
 
-export const useChildSeats = () => {
+export const useExtraServices = () => {
   return useQuery({
     queryKey: ["extra-services"],
     queryFn: getExtraServices,
-    select: toChildSeats,
+    staleTime: 10 * 60 * 1000,
   });
 };

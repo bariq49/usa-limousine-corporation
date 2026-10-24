@@ -3,7 +3,7 @@
 import * as React from "react";
 import { type ControllerRenderProps, type FieldValues, useFormContext } from "react-hook-form";
 import { cva } from "class-variance-authority";
-import { Check, ChevronDown, Eye, EyeOff } from "lucide-react";
+import { Check, ChevronDown, Eye, EyeOff } from "../svg";
 import { cn } from "../utils/cn";
 import { Badge } from "./badge";
 import { Checkbox } from "./checkbox";
@@ -388,7 +388,7 @@ export function Input(props: InputProps) {
           <LocationInput
             value={field.value ?? ""}
             onChange={field.onChange}
-            placeholder={placeholder}
+            placeholder={resolvedPlaceholder}
             className={fieldClassName}
           />
         );
@@ -471,8 +471,13 @@ export function Input(props: InputProps) {
         const isMultiselectEmpty =
           type === "multiselect" && (!Array.isArray(field.value) || field.value.length === 0);
         const treatAsEmpty = isEmptyValue || isMultiselectEmpty;
+        // A label stays floated when a placeholder is shown under it.
         const alwaysFloated =
-          type === "select" || type === "multiselect" || type === "upload" || type === "phone";
+          type === "select" ||
+          type === "multiselect" ||
+          type === "upload" ||
+          type === "phone" ||
+          Boolean(label && placeholder && !isFloatingSelect);
         const isDateOrTime = type === "date" || type === "time";
         const pickerLabelFloated =
           "group-has-[[data-picker-open]]:top-2 group-has-[[data-picker-open]]:-translate-y-5 group-has-[[data-picker-open]]:scale-75 group-has-[[data-picker-open]]:bg-card group-has-[[data-picker-open]]:px-2 group-has-[[data-picker-filled]]:top-2 group-has-[[data-picker-filled]]:-translate-y-5 group-has-[[data-picker-filled]]:scale-75 group-has-[[data-picker-filled]]:bg-card group-has-[[data-picker-filled]]:px-2 group-focus-within:top-2 group-focus-within:-translate-y-5 group-focus-within:scale-75 group-focus-within:bg-card group-focus-within:px-2";
@@ -514,6 +519,10 @@ export function Input(props: InputProps) {
                     (!treatAsEmpty || alwaysFloated) &&
                       "top-2 -translate-y-5 scale-75 bg-card px-2",
                     alwaysFloated && "pointer-events-none bg-card",
+                    label &&
+                      placeholder &&
+                      !isFloatingSelect &&
+                      "group-has-[[placeholder]:placeholder-shown]:top-2 group-has-[[placeholder]:placeholder-shown]:-translate-y-5 group-has-[[placeholder]:placeholder-shown]:scale-75 group-has-[[placeholder]:placeholder-shown]:bg-card",
                     isDateOrTime &&
                       treatAsEmpty &&
                       cn(

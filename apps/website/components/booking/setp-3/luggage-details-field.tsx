@@ -17,7 +17,7 @@ export const LuggageDetailsField = () => {
     const selected = useWatch({ control, name: "luggage" }) ?? [];
 
     const bagsCount = step2?.bags ?? 0;
-    const maxBags = step2?.vehicleCategory?.suitcases || 0;
+    const maxBags = (step2?.vehicleCategory?.luggageCount || 0) * (step2?.vehicleCount ?? 1);
 
     if (bagsCount <= 0 || luggageTypes.length === 0) return null;
 
@@ -33,14 +33,14 @@ export const LuggageDetailsField = () => {
     };
 
     return (
-        <div className="mt-2 space-y-2">
+        <div className="space-y-3">
             <div className="px-1">
                 <h3 className="text-xl font-semibold text-gray-900 tracking-tight px-1">
                     Select Luggage
                 </h3>
             </div>
 
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {luggageTypes.map((type) => {
                     const value = quantityOf(type.id);
                     const price = type.price ?? 0;

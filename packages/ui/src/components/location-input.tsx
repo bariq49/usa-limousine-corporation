@@ -262,6 +262,12 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
                   <motion.div
                     ref={dropdownRef}
                     key="location-autocomplete-dropdown"
+                    data-location-dropdown
+                    // Keep focus in the address input while picking, so dialogs around it
+                    // don't treat the click as focus leaving them.
+                    onMouseDown={(event) => {
+                      if (!isMobile) event.preventDefault();
+                    }}
                     suppressHydrationWarning
                     initial={{ opacity: 0, y: -6, scale: 0.98 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -285,7 +291,7 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
                           }
                     }
                     className={cn(
-                      "z-[9999] overflow-hidden bg-white",
+                      "pointer-events-auto z-[9999] overflow-hidden bg-white",
                       isMobile ? "flex flex-col" : "rounded-md border border-default-200 shadow-lg",
                     )}
                   >

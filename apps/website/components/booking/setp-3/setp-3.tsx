@@ -2,7 +2,8 @@
 
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { Mail, User } from "@usa-limousine-corporation/ui/svg";
+import toast from "react-hot-toast";
+import { Calendar, ChevronRight, Clock, Mail, User } from "@usa-limousine-corporation/ui/svg";
 import { useBookingStore, useTotalPrice } from "@/store/use-booking-store";
 import { usePlaceOrder } from "@/hooks/queries/use-place-order";
 import { Button } from "@usa-limousine-corporation/ui/components/button";
@@ -10,17 +11,22 @@ import { Form } from "@usa-limousine-corporation/ui/components/form";
 import { Input } from "@usa-limousine-corporation/ui/components/input";
 import { TripExtrasFields } from "./trip-extras-fields";
 import { LuggageDetailsField } from "./luggage-details-field";
+import { CcEmailField } from "./cc-email-field";
 import { MeetGreetField } from "./meet-greet-field";
 import { AirportPickupField } from "./airport-pickup-field";
 import { ReturnTripField } from "./return-trip-field";
-import { formatPrice } from "@/lib/utils";
+import BookingStepActions from "../booking-step-actions";
+import { formatPrice, validateBookingTime } from "@/lib/utils";
 import { useHasHydrated } from "@/hooks/use-has-hydrated";
-import { TRIP_TYPES } from "@/constants/booking-constants";
+import { PASSENGER_TITLES, TRIP_TYPES } from "@/constants/booking-constants";
 import type { Step3FormValues } from "@/types/booking.types";
+
+/** Lets the copy of the submit button in the mobile summary sheet submit this form. */
+const PASSENGER_FORM_ID = "passenger-details-form";
 
 function Step3() {
   const hasHydrated = useHasHydrated();
-  const { step1, step3, setStep3Data } = useBookingStore();
+  const { step1, step3, bookingSettings, setStep3Data } = useBookingStore();
   const { mutateAsync: placeOrder, isPending } = usePlaceOrder();
   const totalPrice = useTotalPrice();
 
@@ -28,14 +34,17 @@ function Step3() {
 
   const form = useForm<Step3FormValues>({
     defaultValues: {
-      firstName: step3?.firstName ?? "",
-      lastName: step3?.lastName ?? "",
+      title: step3?.title ?? PASSENGER_TITLES[0].value,
+      fullName: step3?.fullName ?? "",
       phone: step3?.phone ?? "",
       email: step3?.email ?? "",
+      ccEmailEnabled: Boolean(step3?.ccEmail),
+      ccEmail: step3?.ccEmail ?? "",
+      pickupDate: step3?.pickupDate ?? "",
+      pickupTime: step3?.pickupTime ?? "",
       airlineName: step3?.airlineName ?? "",
       flightNumber: step3?.flightNumber ?? "",
       notes: step3?.notes ?? "",
-      notesEnabled: Boolean(step3?.notes?.trim()),
       luggage: step3?.luggage ?? [],
       meetGreetEnabled: Boolean(step3?.meetGreetEnabled),
       meetGreet: step3?.meetGreet ?? "",
@@ -50,8 +59,6 @@ function Step3() {
       returnFlightNumber: step3?.returnFlightNumber ?? "",
       returnMeetGreetEnabled: Boolean(step3?.returnMeetGreetEnabled),
       returnMeetGreet: step3?.returnMeetGreet ?? "",
-      returnNotes: step3?.returnNotes ?? "",
-      returnNotesEnabled: Boolean(step3?.returnNotes?.trim()),
       returnChildSeatsEnabled: Boolean(
         step3?.returnChildSeats?.some((seat) => seat.quantity > 0)
       ),
@@ -65,10 +72,13 @@ function Step3() {
       const returnEnabled = showReturnTrip && values.returnEnabled;
 
       setStep3Data({
-        firstName: values.firstName,
-        lastName: values.lastName,
+        title: values.title,
+        fullName: values.fullName,
         phone: values.phone,
         email: values.email,
+        ccEmail: values.ccEmailEnabled ? values.ccEmail.trim() || undefined : undefined,
+        pickupDate: values.pickupDate,
+        pickupTime: values.pickupTime,
         airlineName: values.airlineName.trim() || undefined,
         flightNumber: values.flightNumber.trim() || undefined,
         meetGreetEnabled: values.meetGreetEnabled,
@@ -94,9 +104,6 @@ function Step3() {
           returnEnabled && values.returnMeetGreetEnabled
             ? values.returnMeetGreet.trim() || undefined
             : undefined,
-        returnNotes: returnEnabled
-          ? values.returnNotes.trim() || undefined
-          : undefined,
         returnChildSeats: returnEnabled
           ? values.returnChildSeats.filter((seat) => seat.quantity > 0)
           : [],
@@ -108,7 +115,20 @@ function Step3() {
     return () => subscription.unsubscribe();
   }, [form, setStep3Data, showReturnTrip, step1?.isAirportSelected]);
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (values: Step3FormValues) => {
+    const pickupValidation = validateBookingTime({
+      date: values.pickupDate,
+      time: values.pickupTime,
+      minBookingMinutes: bookingSettings?.minBookingMinutes ?? 0,
+    });
+
+    if (!pickupValidation.isValid) {
+      toast.error(
+        `Booking can't be added within ${pickupValidation.timeDisplay} of pickup time, choose another time.`,
+      );
+      return;
+    }
+
     await placeOrder();
   };
 
@@ -118,27 +138,32 @@ function Step3() {
     <div className="flex flex-col animate-in fade-in duration-500 md:border border-border rounded-sm md:shadow-md px-3 py-5 md:px-6 md:py-6">
       <Form {...form}>
         <form
+          id={PASSENGER_FORM_ID}
           onSubmit={form.handleSubmit(handleSubmit)}
           className="flex flex-col gap-6"
         >
-          <div className="space-y-4">
+          <div className="space-y-3">
             <h3 className="text-xl font-semibold text-gray-900 tracking-tight px-1">
               Lead Passenger Details
             </h3>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <Input
-                name="firstName"
-                placeholder="First Name"
-                icon={<User width={16} height={16} className="text-gray-400" />}
-                required
-              />
-              <Input
-                name="lastName"
-                placeholder="Last Name"
-                icon={<User width={16} height={16} className="text-gray-400" />}
-                required
-              />
+              <div className="flex gap-3 sm:col-span-2">
+                <Input
+                  name="title"
+                  type="select"
+                  placeholder="Title"
+                  options={PASSENGER_TITLES}
+                  className="w-28 shrink-0"
+                />
+                <Input
+                  name="fullName"
+                  placeholder="Full Name"
+                  icon={<User width={16} height={16} className="text-gray-400" />}
+                  className="flex-1"
+                  required
+                />
+              </div>
               <Input
                 name="email"
                 type="email"
@@ -152,8 +177,24 @@ function Step3() {
                 placeholder="Phone Number"
                 required
               />
+              <Input
+                name="pickupDate"
+                type="date"
+                placeholder="Pickup Date"
+                icon={<Calendar width={16} height={16} className="text-gray-400" />}
+                disablePast
+                required
+              />
+              <Input
+                name="pickupTime"
+                type="time"
+                placeholder="Pickup Time"
+                icon={<Clock width={16} height={16} className="text-gray-400" />}
+                required
+              />
             </div>
 
+            <CcEmailField />
             <LuggageDetailsField />
             {step1?.tripType !== TRIP_TYPES.HOURLY ? <AirportPickupField /> : null}
             <MeetGreetField />
@@ -161,13 +202,17 @@ function Step3() {
             {showReturnTrip ? <ReturnTripField /> : null}
           </div>
 
-          <Button
-            type="submit"
-            className="mt-4 rounded-sm bg-secondary text-white hover:bg-secondary-600"
-            isLoading={isPending}
-          >
-            Continue to Book — {formatPrice(totalPrice)}
-          </Button>
+          <BookingStepActions backHref="/book-ride/select-vehicle">
+            <Button
+              type="submit"
+              form={PASSENGER_FORM_ID}
+              isLoading={isPending}
+              className="h-11 flex-1 gap-2 rounded-sm bg-black font-semibold text-white hover:bg-black/90"
+            >
+              Continue to Book — {formatPrice(totalPrice)}
+              <ChevronRight width={16} height={16} strokeWidth={2.5} />
+            </Button>
+          </BookingStepActions>
         </form>
       </Form>
     </div>
