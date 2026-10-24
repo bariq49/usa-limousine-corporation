@@ -1,5 +1,5 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from "@nestjs/common";
-import { BookingStatus, BookingType, NotificationType } from "@prisma/client";
+import { BookingStatus, BookingType, NotificationType, PaymentStatus } from "@prisma/client";
 import type { Request } from "express";
 import { auditLog } from "../../../common/utils/audit-log";
 import { allocateCode } from "../../../common/utils/allocate-sequence-code";
@@ -26,6 +26,7 @@ import type {
 import { BookingRepository } from "../repositories/booking.repository";
 import { BookingEmailService } from "./booking-email.service";
 import { BookingSmsService } from "./booking-sms.service";
+import { SquareService } from "../../../infrastructure/square/square.service";
 import type {
   AddressInput,
   Analytics,
@@ -48,6 +49,7 @@ export class BookingService {
     private readonly vehiclePricingService: VehiclePricingService,
     @Inject(BookingEmailService) private readonly bookingEmails: BookingEmailService,
     @Inject(BookingSmsService) private readonly bookingSms: BookingSmsService,
+    @Inject(SquareService) private readonly square: SquareService,
   ) {}
 
   async priceForCustomer(body: CreateDto): Promise<BookingPricing> {
@@ -379,8 +381,53 @@ export class BookingService {
   }
 
   async cancelForCustomer(id: string, body: CancelDto, request: Request) {
-    await this.getForCustomer(id, request);
-    return this.cancel(id, body, request);
+    const booking = await this.getForCustomer(id, request);
+    if (booking.status !== BookingStatus.PENDING && booking.status !== BookingStatus.CONFIRMED) {
+      throw new BadRequestException("This booking cannot be cancelled");
+    }
+
+    const rates = await this.platformSettingsService.get();
+    const time = booking.bookingTime as TimeInput;
+    const pickupAt = wallClock(APP_TIMEZONE, time.pickupDate, time.pickupTime);
+    if (pickupAt && pickupAt.getTime() - Date.now() < rates.cancellationMinutes * 60_000) {
+      const unit = rates.cancellationNoticeUnit === "HOUR" ? "hour" : "minute";
+      const plural = rates.cancellationNotice === 1 ? "" : "s";
+      throw new BadRequestException(
+        `Bookings can only be cancelled up to ${rates.cancellationNotice} ${unit}${plural} before pickup. Please contact us.`,
+      );
+    }
+
+    let refundAmount = 0;
+    const payment = await this.bookingRepository.findPaymentForRefund(id);
+    if (payment?.status === PaymentStatus.PAID && payment.squarePaymentId) {
+      refundAmount = roundAmount((payment.amount.toNumber() * rates.cancellationRefundRate) / 100);
+      if (refundAmount > 0) {
+        const refundId = await this.square.refundPayment(
+          payment.mode,
+          payment.squarePaymentId,
+          refundAmount,
+          `Booking ${booking.bookingNumber} cancelled by the customer`,
+        );
+        await this.bookingRepository.recordRefund(payment.id, refundAmount, refundId);
+      }
+    }
+
+    return this.cancel(id, body, request, { refundAmount, byCustomer: true });
+  }
+
+  async completeForCustomer(id: string, request: Request) {
+    const booking = await this.getForCustomer(id, request);
+    if (booking.status !== BookingStatus.CONFIRMED) {
+      throw new BadRequestException("Only confirmed bookings can be completed");
+    }
+
+    const time = booking.bookingTime as TimeInput;
+    const pickupAt = wallClock(APP_TIMEZONE, time.pickupDate, time.pickupTime);
+    if (pickupAt && pickupAt.getTime() > Date.now()) {
+      throw new BadRequestException("You can mark the ride completed after the pickup time");
+    }
+
+    return this.complete(id, request);
   }
 
   async getOne(id: string) {
@@ -520,7 +567,12 @@ export class BookingService {
     return updated;
   }
 
-  async cancel(id: string, body: CancelDto, request: Request) {
+  async cancel(
+    id: string,
+    body: CancelDto,
+    request: Request,
+    options: { refundAmount: number; byCustomer: boolean } = { refundAmount: 0, byCustomer: false },
+  ) {
     const context = toRequestContext(request);
 
     const booking = await this.bookingRepository.findById(id);
@@ -561,10 +613,37 @@ export class BookingService {
         reason: updated.cancellationReason,
       },
     });
-    void this.bookingEmails.sendCancelled(updated.id, updated.cancellationReason);
-    void this.bookingSms.sendCancelled(updated.id, updated.cancellationReason);
+    void this.bookingEmails.sendCancelled(updated.id, updated.cancellationReason, options);
+    void this.bookingSms.sendCancelled(updated.id, updated.cancellationReason, options.refundAmount);
+    if (options.byCustomer) {
+      await this.notifyAdminsCancelled(updated, context.userId);
+    }
 
     return updated;
+  }
+
+  private async notifyAdminsCancelled(
+    booking: { id: string; bookingNumber: string },
+    userId: string | null | undefined,
+  ) {
+    const notifications = await this.prisma.$transaction((tx) =>
+      this.notificationService.stageForAdmins(
+        {
+          type: NotificationType.BOOKING_CANCELLED,
+          title: "Booking cancelled",
+          body: `Booking ${booking.bookingNumber} was cancelled by the customer.`,
+          data: {
+            type: "BOOKING_CANCELLED",
+            bookingId: booking.id,
+            bookingNumber: booking.bookingNumber,
+          },
+          excludeUserId: userId ?? null,
+          idempotencyKey: `BOOKING_CANCELLED:${booking.id}`,
+        },
+        tx,
+      ),
+    );
+    await this.notificationService.deliverStaged(notifications);
   }
 
   async remove(id: string, request: Request) {

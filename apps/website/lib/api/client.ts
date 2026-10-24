@@ -1,6 +1,14 @@
 import axios, { AxiosError } from "axios";
 import { getApiBaseUrl } from "@/lib/api/base-url";
 
+type ApiErrorBody = {
+    error?: { message?: string | string[] };
+    message?: string | string[];
+};
+
+const toText = (value: string | string[] | undefined) =>
+    Array.isArray(value) ? value.join(", ") : value;
+
 export const api = axios.create({
     baseURL: getApiBaseUrl(),
     headers: {
@@ -13,10 +21,10 @@ api.interceptors.response.use(
     (response) => {
         return response.data;
     },
-    async (error: AxiosError<{ error?: string; message?: string }>) => {
+    async (error: AxiosError<ApiErrorBody>) => {
         const message =
-            error.response?.data?.error ||
-            error.response?.data?.message ||
+            toText(error.response?.data?.error?.message) ||
+            toText(error.response?.data?.message) ||
             error.message ||
             "Something went wrong";
         return Promise.reject({

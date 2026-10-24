@@ -42,13 +42,14 @@ export class BookingSmsService {
     );
   }
 
-  sendCancelled(bookingId: string, reason: string | null) {
+  sendCancelled(bookingId: string, reason: string | null, refundAmount = 0) {
     return this.deliver(
       bookingId,
       "cancelled",
       (booking) =>
         `${BRAND}: your booking ${booking.bookingNumber} has been cancelled.` +
         (reason ? ` Reason: ${reason}.` : "") +
+        (refundAmount > 0 ? ` A refund of $${refundAmount.toFixed(2)} is on its way to your card.` : "") +
         ` Questions? Call ${SUPPORT_PHONE}.`,
     );
   }
