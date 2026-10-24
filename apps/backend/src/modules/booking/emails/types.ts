@@ -42,3 +42,8 @@ export type EmailContext = {
   portalUrl: string;
   reviewUrl?: string | undefined;
 };
+
+export type ContactPreferences = {
+  email: boolean;
+  sms: boolean;
+};

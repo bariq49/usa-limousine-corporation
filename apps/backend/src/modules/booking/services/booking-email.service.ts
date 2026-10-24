@@ -11,7 +11,7 @@ import {
   bookingReceived,
   newBookingAdmin,
 } from "../emails/templates";
-import type { BookingEmail, EmailContext } from "../emails/types";
+import type { BookingEmail, ContactPreferences, EmailContext } from "../emails/types";
 import { toBookingEmail } from "../emails/view";
 import { BookingRepository } from "../repositories/booking.repository";
 
@@ -27,9 +27,10 @@ export class BookingEmailService {
   ) {}
 
   sendCreated(bookingId: string) {
-    return this.deliver(bookingId, "created", async (booking, context) => {
+    return this.deliver(bookingId, "created", async (booking, context, prefs) => {
       await this.toCustomer(
         booking,
+        prefs,
         `Booking request received · ${booking.bookingNumber}`,
         bookingReceived(booking, context),
       );
@@ -42,9 +43,10 @@ export class BookingEmailService {
   }
 
   sendPaid(bookingId: string) {
-    return this.deliver(bookingId, "paid", async (booking, context) => {
+    return this.deliver(bookingId, "paid", async (booking, context, prefs) => {
       await this.toCustomer(
         booking,
+        prefs,
         `Booking confirmed · ${booking.bookingNumber}`,
         bookingConfirmed(booking, context, true),
       );
@@ -57,9 +59,10 @@ export class BookingEmailService {
   }
 
   sendConfirmed(bookingId: string) {
-    return this.deliver(bookingId, "confirmed", (booking, context) =>
+    return this.deliver(bookingId, "confirmed", (booking, context, prefs) =>
       this.toCustomer(
         booking,
+        prefs,
         `Booking confirmed · ${booking.bookingNumber}`,
         bookingConfirmed(booking, context),
       ),
@@ -67,9 +70,10 @@ export class BookingEmailService {
   }
 
   sendCancelled(bookingId: string, reason: string | null) {
-    return this.deliver(bookingId, "cancelled", (booking, context) =>
+    return this.deliver(bookingId, "cancelled", (booking, context, prefs) =>
       this.toCustomer(
         booking,
+        prefs,
         `Booking cancelled · ${booking.bookingNumber}`,
         bookingCancelled(booking, context, reason),
       ),
@@ -77,9 +81,10 @@ export class BookingEmailService {
   }
 
   sendCompleted(bookingId: string) {
-    return this.deliver(bookingId, "completed", (booking, context) =>
+    return this.deliver(bookingId, "completed", (booking, context, prefs) =>
       this.toCustomer(
         booking,
+        prefs,
         `Ride completed · ${booking.bookingNumber}`,
         bookingCompleted(booking, context),
       ),
@@ -89,12 +94,17 @@ export class BookingEmailService {
   private async deliver(
     bookingId: string,
     kind: string,
-    send: (booking: BookingEmail, context: EmailContext) => Promise<unknown>,
+    send: (
+      booking: BookingEmail,
+      context: EmailContext,
+      prefs: ContactPreferences,
+    ) => Promise<unknown>,
   ) {
     try {
       const row = await this.bookingRepository.findById(bookingId);
       if (!row) return;
-      await send(toBookingEmail(row), this.context());
+      const prefs = await this.bookingRepository.contactPreferences(row.userId);
+      await send(toBookingEmail(row), this.context(), prefs);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown error";
       this.logger.error(
@@ -105,7 +115,13 @@ export class BookingEmailService {
     }
   }
 
-  private toCustomer(booking: BookingEmail, subject: string, html: string) {
+  private async toCustomer(
+    booking: BookingEmail,
+    prefs: ContactPreferences,
+    subject: string,
+    html: string,
+  ) {
+    if (!prefs.email) return undefined;
     const mail: SendMailOptions = {
       to: booking.passenger.email,
       subject: `${subject} - USA Limousine`,

@@ -25,6 +25,7 @@ import type {
 } from "../dto/booking.dto";
 import { BookingRepository } from "../repositories/booking.repository";
 import { BookingEmailService } from "./booking-email.service";
+import { BookingSmsService } from "./booking-sms.service";
 import type {
   AddressInput,
   Analytics,
@@ -46,6 +47,7 @@ export class BookingService {
     @Inject(VehiclePricingService)
     private readonly vehiclePricingService: VehiclePricingService,
     @Inject(BookingEmailService) private readonly bookingEmails: BookingEmailService,
+    @Inject(BookingSmsService) private readonly bookingSms: BookingSmsService,
   ) {}
 
   async priceForCustomer(body: CreateDto): Promise<BookingPricing> {
@@ -244,6 +246,7 @@ export class BookingService {
       },
     });
     void this.bookingEmails.sendConfirmed(booking.id);
+    void this.bookingSms.sendConfirmed(booking.id);
 
     return (await this.bookingRepository.findById(booking.id)) ?? booking;
   }
@@ -481,6 +484,7 @@ export class BookingService {
     });
     if (booking.status !== BookingStatus.CONFIRMED) {
       void this.bookingEmails.sendConfirmed(updated.id);
+      void this.bookingSms.sendConfirmed(updated.id);
     }
 
     return updated;
@@ -511,6 +515,7 @@ export class BookingService {
       metadata: { bookingId: updated.id, bookingNumber: updated.bookingNumber },
     });
     void this.bookingEmails.sendCompleted(updated.id);
+    void this.bookingSms.sendCompleted(updated.id);
 
     return updated;
   }
@@ -557,6 +562,7 @@ export class BookingService {
       },
     });
     void this.bookingEmails.sendCancelled(updated.id, updated.cancellationReason);
+    void this.bookingSms.sendCancelled(updated.id, updated.cancellationReason);
 
     return updated;
   }

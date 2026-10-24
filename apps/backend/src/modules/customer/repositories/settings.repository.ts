@@ -26,10 +26,12 @@ export class CustomerSettingsRepository {
         customerId,
         email: data.email,
         notification: data.notification,
+        sms: data.sms,
       },
       update: {
         email: data.email,
         notification: data.notification,
+        sms: data.sms,
       },
     });
   }

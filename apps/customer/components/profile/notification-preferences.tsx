@@ -29,19 +29,35 @@ export function NotificationPreferences() {
           <div className="mt-6 space-y-4">
             <Skeleton className="h-12 w-full" />
             <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
           </div>
         ) : (
           <div className="mt-6 space-y-5">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-sm font-semibold text-default-800">Email notifications</p>
-                <p className="text-xs text-default-500">Booking and ticket updates by email.</p>
+                <p className="text-xs text-default-500">Booking updates by email.</p>
               </div>
               <Switch
                 checked={settings.email}
                 disabled={update.isPending}
                 aria-label="Email notifications"
                 onCheckedChange={(checked) => update.mutate({ email: checked })}
+              />
+            </div>
+
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold text-default-800">SMS notifications</p>
+                <p className="text-xs text-default-500">
+                  Booking confirmations and changes by text message.
+                </p>
+              </div>
+              <Switch
+                checked={settings.sms}
+                disabled={update.isPending}
+                aria-label="SMS notifications"
+                onCheckedChange={(checked) => update.mutate({ sms: checked })}
               />
             </div>
 

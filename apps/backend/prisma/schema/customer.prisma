@@ -27,6 +27,7 @@ model CustomerSettings {
   customerId   String   @unique
   email        Boolean  @default(true)
   notification Boolean  @default(true)
+  sms          Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

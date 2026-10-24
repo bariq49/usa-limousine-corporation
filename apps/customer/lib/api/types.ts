@@ -100,11 +100,13 @@ export type CustomerSettings = {
   email: boolean;
   /** In-app (dashboard bell) notifications. */
   notification: boolean;
+  sms: boolean;
 };
 
 export type UpdateCustomerSettings = {
   email?: boolean | undefined;
   notification?: boolean | undefined;
+  sms?: boolean | undefined;
 };
 
 export type TicketStatus = "PENDING" | "OPEN" | "IN_PROGRESS" | "RESOLVED" | "CLOSED";

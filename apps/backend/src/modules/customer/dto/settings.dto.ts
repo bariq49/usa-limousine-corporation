@@ -9,4 +9,8 @@ export class UpdateSettingsDto {
   @IsOptional()
   @IsBoolean()
   notification?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  sms?: boolean;
 }

@@ -24,6 +24,7 @@ export class CustomerSettingsService {
     return {
       email: settings.email,
       notification: settings.notification,
+      sms: settings.sms,
     };
   }
 
@@ -34,10 +35,12 @@ export class CustomerSettingsService {
     const current = await this.settingsRepository.getSettings(customer.id);
     const email = body.email !== undefined ? body.email : current.email;
     const notification = body.notification !== undefined ? body.notification : current.notification;
+    const sms = body.sms !== undefined ? body.sms : current.sms;
 
     const settings = await this.settingsRepository.updateSettings(customer.id, {
       email,
       notification,
+      sms,
     });
 
     await auditLog({
@@ -50,12 +53,14 @@ export class CustomerSettingsService {
         customerId: customer.id,
         email: settings.email,
         notification: settings.notification,
+        sms: settings.sms,
       },
     });
 
     return {
       email: settings.email,
       notification: settings.notification,
+      sms: settings.sms,
     };
   }
 }

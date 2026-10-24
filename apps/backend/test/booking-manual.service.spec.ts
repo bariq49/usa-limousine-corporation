@@ -23,6 +23,7 @@ describe("BookingService.createManual", () => {
       {} as never,
       {} as never,
       { sendConfirmed } as never,
+      { sendConfirmed: jest.fn(async () => undefined) } as never,
     );
 
     const result = await service.createManual(
@@ -103,6 +104,7 @@ describe("BookingService.create", () => {
       { get: async () => rates } as never,
       { basePriceFor: async () => 100 } as never,
       { sendCreated } as never,
+      {} as never,
     );
 
     const nextYear = new Date().getFullYear() + 1;
@@ -243,6 +245,7 @@ describe("BookingService.buildAnalytics", () => {
       {} as never,
       {} as never,
       {} as never,
+      {} as never,
     );
 
     const result = await service.buildAnalytics(2026, "user-1");
@@ -267,6 +270,7 @@ describe("BookingService.buildCalendar", () => {
   const makeService = (findForCalendar: jest.Mock) =>
     new BookingService(
       { findForCalendar } as never,
+      {} as never,
       {} as never,
       {} as never,
       {} as never,

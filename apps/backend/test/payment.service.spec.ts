@@ -73,7 +73,7 @@ function setup(
     deliverStaged: jest.fn(async () => undefined),
   };
   const emails = { sendPaid: jest.fn(async () => undefined) };
-  const twilio = { isConfigured: jest.fn(() => true), send: jest.fn(async () => undefined) };
+  const sms = { sendPaid: jest.fn(async () => undefined) };
   const prisma = {
     auditLog: { create: jest.fn(async () => undefined) },
     $transaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn({})),
@@ -89,14 +89,14 @@ function setup(
     { get: async () => ({ paymentMode: PaymentMode.TEST }) } as never,
     square as never,
     emails as never,
-    twilio as never,
+    sms as never,
     {
       get: (key: string) => (key === "WEBSITE_URL" ? "https://www.usalimocorp.com/" : undefined),
     } as never,
     { error: jest.fn() } as never,
   );
 
-  return { service, bookingRepository, paymentRepository, square, notifications, emails, twilio };
+  return { service, bookingRepository, paymentRepository, square, notifications, emails, sms };
 }
 
 const flush = () => new Promise((resolve) => setImmediate(resolve));
@@ -173,7 +173,7 @@ describe("PaymentService.handleWebhook", () => {
   });
 
   it("records the payment and tells the admin and the rider by email and SMS", async () => {
-    const { service, paymentRepository, square, notifications, emails, twilio } = setup();
+    const { service, paymentRepository, square, notifications, emails, sms } = setup();
 
     await service.handleWebhook(webhook("payment.updated"), "sig");
     await flush();
@@ -186,22 +186,17 @@ describe("PaymentService.handleWebhook", () => {
     );
     expect(notifications.stageForAdmins).toHaveBeenCalled();
     expect(emails.sendPaid).toHaveBeenCalledWith("book-1");
-    expect(twilio.send).toHaveBeenCalledWith(
-      expect.objectContaining({
-        to: "+17322898928",
-        body: expect.stringContaining("BK-000001 is confirmed and paid ($110.00)"),
-      }),
-    );
+    expect(sms.sendPaid).toHaveBeenCalledWith("book-1");
   });
 
   it("sends nothing again when the payment was already recorded", async () => {
-    const { service, emails, twilio } = setup({ recorded: false });
+    const { service, emails, sms } = setup({ recorded: false });
 
     await service.handleWebhook(webhook("payment.updated"), "sig");
     await flush();
 
     expect(emails.sendPaid).not.toHaveBeenCalled();
-    expect(twilio.send).not.toHaveBeenCalled();
+    expect(sms.sendPaid).not.toHaveBeenCalled();
   });
 
   it("leaves an unpaid order open until it expires", async () => {

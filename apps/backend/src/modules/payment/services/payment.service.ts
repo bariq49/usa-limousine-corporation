@@ -17,13 +17,12 @@ import { toRequestContext } from "../../../common/utils/to-request-context";
 import { PrismaService } from "../../../infrastructure/database/prisma.service";
 import { SequenceService } from "../../../infrastructure/sequence/sequence.service";
 import { SquareService } from "../../../infrastructure/square/square.service";
-import { TwilioService } from "../../../infrastructure/twilio/twilio.service";
 import type { CreateDto } from "../../booking/dto/booking.dto";
-import { formatDate, formatTime } from "../../booking/emails/cards";
 import { BookingRepository } from "../../booking/repositories/booking.repository";
 import { BookingEmailService } from "../../booking/services/booking-email.service";
+import { BookingSmsService } from "../../booking/services/booking-sms.service";
 import { BookingService } from "../../booking/services/booking.service";
-import type { PassengerInput, TimeInput } from "../../booking/types/booking";
+import type { PassengerInput } from "../../booking/types/booking";
 import { NotificationService } from "../../notification/services/notification.service";
 import { PlatformSettingsService } from "../../platform-settings/services/platform-settings.service";
 import { PaymentRepository } from "../repositories/payment.repository";
@@ -54,7 +53,7 @@ export class PaymentService implements OnModuleInit, OnModuleDestroy {
     private readonly platformSettingsService: PlatformSettingsService,
     @Inject(SquareService) private readonly square: SquareService,
     @Inject(BookingEmailService) private readonly bookingEmails: BookingEmailService,
-    @Inject(TwilioService) private readonly twilio: TwilioService,
+    @Inject(BookingSmsService) private readonly bookingSms: BookingSmsService,
     @Inject(ConfigService) private readonly configService: ConfigService,
     @Inject(AppLogger) private readonly logger: AppLogger,
   ) {}
@@ -227,30 +226,6 @@ export class PaymentService implements OnModuleInit, OnModuleDestroy {
     );
     await this.notificationService.deliverStaged(notifications);
     void this.bookingEmails.sendPaid(booking.id);
-    void this.sendPaidSms(booking);
-  }
-
-  private async sendPaidSms(booking: CheckoutBooking) {
-    if (!this.twilio.isConfigured() || !booking.passenger.phone) return;
-
-    try {
-      const row = await this.bookingRepository.findById(booking.id);
-      if (!row) return;
-      const time = row.bookingTime as TimeInput;
-      await this.twilio.send({
-        to: booking.passenger.phone,
-        body:
-          `USA Limousine Corporation: your booking ${booking.bookingNumber} is confirmed and paid ` +
-          `($${row.totalPrice.toFixed(2)}). Pickup ${formatDate(time.pickupDate)} at ${formatTime(time.pickupTime)}. ` +
-          `Details are in your email. Questions? Call +1 732-289-8928.`,
-      });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Unknown error";
-      this.logger.error(
-        `Booking paid SMS failed for ${booking.id}: ${message}`,
-        undefined,
-        PaymentService.name,
-      );
-    }
+    void this.bookingSms.sendPaid(booking.id);
   }
 }

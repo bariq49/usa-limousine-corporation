@@ -10,6 +10,7 @@ import { BookingController } from "./controllers/booking.controller";
 import { CustomerBookingController } from "./controllers/customer-booking.controller";
 import { BookingRepository } from "./repositories/booking.repository";
 import { BookingEmailService } from "./services/booking-email.service";
+import { BookingSmsService } from "./services/booking-sms.service";
 import { BookingService } from "./services/booking.service";
 
 @Module({
@@ -23,7 +24,7 @@ import { BookingService } from "./services/booking.service";
     VehicleCategoryModule,
   ],
   controllers: [CustomerBookingController, BookingController],
-  providers: [BookingRepository, BookingEmailService, BookingService],
-  exports: [BookingService, BookingRepository, BookingEmailService],
+  providers: [BookingRepository, BookingEmailService, BookingSmsService, BookingService],
+  exports: [BookingService, BookingRepository, BookingEmailService, BookingSmsService],
 })
 export class BookingModule {}
