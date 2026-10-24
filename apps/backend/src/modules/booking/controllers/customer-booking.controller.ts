@@ -44,6 +44,11 @@ export class CustomerBookingController {
     return this.bookingService.getForCustomer(id, request);
   }
 
+  @Post(":id/complete")
+  complete(@Param("id") id: string, @Req() request: Request) {
+    return this.bookingService.completeForCustomer(id, request);
+  }
+
   @Post(":id/cancel")
   cancel(@Param("id") id: string, @Body() body: CancelDto, @Req() request: Request) {
     return this.bookingService.cancelForCustomer(id, body, request);

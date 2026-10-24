@@ -25,7 +25,7 @@ const TRIP_TYPE_LABELS: Record<BookingType, string> = {
   HOURLY: "By the Hour",
 };
 
-const formatPrice = (amount: number) =>
+export const formatPrice = (amount: number) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
 
 export const formatDate = (date: string) => {

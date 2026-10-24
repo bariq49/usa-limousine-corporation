@@ -88,13 +88,15 @@ export type BookingLuggageItem = {
 };
 
 export type Payment = {
-  status: "PAID" | "CANCELLED";
+  status: "PAID" | "REFUNDED" | "CANCELLED";
   transactionId?: string | null | undefined;
   amount: number | string;
   currency?: string | undefined;
   cardBrand?: string | null | undefined;
   cardLast4?: string | null | undefined;
   paidAt?: string | null | undefined;
+  refundedAmount?: number | string | null | undefined;
+  refundedAt?: string | null | undefined;
 };
 
 export type Item = {

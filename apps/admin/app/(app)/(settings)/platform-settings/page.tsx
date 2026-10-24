@@ -47,6 +47,9 @@ const defaultValues: FormValues = {
   meetAndGreetFee: 0,
   minBookingNotice: 0,
   minBookingNoticeUnit: "HOUR",
+  cancellationNotice: 0,
+  cancellationNoticeUnit: "HOUR",
+  cancellationRefundRate: 0,
 };
 
 function toFormValues(settings: PlatformSettings): FormValues {
@@ -63,6 +66,9 @@ function toFormValues(settings: PlatformSettings): FormValues {
     meetAndGreetFee: settings.meetAndGreetFee,
     minBookingNotice: settings.minBookingNotice,
     minBookingNoticeUnit: settings.minBookingNoticeUnit,
+    cancellationNotice: settings.cancellationNotice,
+    cancellationNoticeUnit: settings.cancellationNoticeUnit,
+    cancellationRefundRate: settings.cancellationRefundRate,
   };
 }
 
@@ -137,6 +143,9 @@ export default function PlatformSettingsPage() {
       meetAndGreetFee: values.meetAndGreetFee,
       minBookingNotice: values.minBookingNotice,
       minBookingNoticeUnit: values.minBookingNoticeUnit,
+      cancellationNotice: values.cancellationNotice,
+      cancellationNoticeUnit: values.cancellationNoticeUnit,
+      cancellationRefundRate: values.cancellationRefundRate,
     });
   };
 
@@ -299,6 +308,40 @@ export default function PlatformSettingsPage() {
                       disabled={disabled}
                     />
                   </div>
+                </SettingRow>
+              </SettingsSection>
+
+              <SettingsSection
+                icon={Clock}
+                title="Cancellation & Refunds"
+                description="Rules for customers cancelling their own bookings."
+              >
+                <SettingRow
+                  label="Cancellation Notice"
+                  description="Customers cannot cancel within this time before pickup (0 for no restriction)."
+                >
+                  <div className="w-28">
+                    <Input
+                      name="cancellationNotice"
+                      type="number"
+                      placeholder="0"
+                      disabled={disabled}
+                    />
+                  </div>
+                  <div className="w-32">
+                    <Input
+                      name="cancellationNoticeUnit"
+                      type="select"
+                      options={noticeUnitOptions}
+                      disabled={disabled}
+                    />
+                  </div>
+                </SettingRow>
+                <SettingRow
+                  label="Cancellation Refund (%)"
+                  description="Percentage of the paid amount refunded to the card when a customer cancels."
+                >
+                  {numberInput("cancellationRefundRate")}
                 </SettingRow>
               </SettingsSection>
 

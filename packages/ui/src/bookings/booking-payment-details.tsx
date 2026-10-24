@@ -11,15 +11,14 @@ type Props = {
 
 const STATUS_LABELS: Record<Payment["status"], string> = {
   PAID: "Paid",
+  REFUNDED: "Refunded",
   CANCELLED: "Cancelled",
 };
 
 export function BookingPaymentDetails({ payment }: Props) {
   if (!payment) return null;
 
-  const amount = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(
-    Number(payment.amount),
-  );
+  const currency = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
 
   return (
     <section className="flex flex-col rounded-md bg-default-100 p-4">
@@ -27,7 +26,7 @@ export function BookingPaymentDetails({ payment }: Props) {
       <div className="mt-3 space-y-3 sm:mt-4 sm:space-y-4">
         <DetailItem
           icon={
-            payment.status === "PAID" ? (
+            payment.status !== "CANCELLED" ? (
               <BadgeCheck className="h-5 w-5 fill-default-900 text-white" />
             ) : (
               <BadgeX className="h-5 w-5 fill-destructive text-white" />
@@ -44,10 +43,20 @@ export function BookingPaymentDetails({ payment }: Props) {
             {(payment.cardBrand ?? "Card").toUpperCase()} •••• {payment.cardLast4}
           </DetailItem>
         ) : null}
-        <DetailItem icon={<DollarSign className="h-5 w-5" />}>{amount}</DetailItem>
+        <DetailItem icon={<DollarSign className="h-5 w-5" />}>
+          {currency.format(Number(payment.amount))}
+        </DetailItem>
         {payment.paidAt ? (
           <DetailItem icon={<Calendar className="h-5 w-5" />}>
             {new Date(payment.paidAt).toLocaleString("en-US")}
+          </DetailItem>
+        ) : null}
+        {payment.refundedAmount ? (
+          <DetailItem icon={<DollarSign className="h-5 w-5" />}>
+            Refunded {currency.format(Number(payment.refundedAmount))}
+            {payment.refundedAt
+              ? ` on ${new Date(payment.refundedAt).toLocaleString("en-US")}`
+              : ""}
           </DetailItem>
         ) : null}
       </div>

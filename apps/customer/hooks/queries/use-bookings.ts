@@ -7,6 +7,7 @@ import type {
 } from "@usa-limousine-corporation/ui/bookings/types";
 import {
   cancelBooking,
+  completeBooking,
   createBooking,
   getBooking,
   getBookingAnalytics,
@@ -54,6 +55,21 @@ export const useCancelBooking = () => {
     },
     onError: (error: Error) => {
       toast.error(error.message || "Failed to cancel booking");
+    },
+  });
+};
+
+export const useCompleteBooking = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => completeBooking(id),
+    onSuccess: () => {
+      toast.success("Ride marked as completed");
+      return queryClient.invalidateQueries({ queryKey: bookingQueryKeys.all });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to complete booking");
     },
   });
 };

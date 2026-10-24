@@ -1,5 +1,12 @@
 import { BadRequestException, Inject, Injectable } from "@nestjs/common";
-import { BookingStatus, type BookingType, type PaymentMode, Prisma, RoleKey } from "@prisma/client";
+import {
+  BookingStatus,
+  type BookingType,
+  type PaymentMode,
+  PaymentStatus,
+  Prisma,
+  RoleKey,
+} from "@prisma/client";
 import { APIFeature } from "../../../common/api-feature";
 import { wallClock } from "../../../common/utils/day-bounds";
 import { APP_TIMEZONE } from "../../../common/utils/format-time";
@@ -25,6 +32,8 @@ const paymentSelect = {
     cardBrand: true,
     cardLast4: true,
     paidAt: true,
+    refundedAmount: true,
+    refundedAt: true,
   },
 } as const;
 
@@ -160,6 +169,26 @@ export class BookingRepository {
       where: { id },
       data: { squareOrderId: link.orderId, squarePaymentLinkId: link.id, paymentMode: mode },
     });
+  }
+
+  findPaymentForRefund(bookingId: string) {
+    return this.prisma.payment.findUnique({
+      where: { bookingId },
+      select: { id: true, status: true, mode: true, amount: true, squarePaymentId: true },
+    });
+  }
+
+  async recordRefund(paymentId: string, amount: number, refundId: string) {
+    const result = await this.prisma.payment.updateMany({
+      where: { id: paymentId, status: PaymentStatus.PAID },
+      data: {
+        status: PaymentStatus.REFUNDED,
+        refundedAmount: amount,
+        refundedAt: new Date(),
+        squareRefundId: refundId,
+      },
+    });
+    return result.count > 0;
   }
 
   async contactPreferences(userId: string | null) {

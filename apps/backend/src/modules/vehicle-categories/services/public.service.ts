@@ -95,7 +95,6 @@ export class PublicService {
       });
   }
 
-
   async basePriceFor(vehicleCategoryId: string, distance: number): Promise<number | null> {
     const categories = await this.categoriesRepository.findPublicActive();
     if (!categories.some((category) => category.id === vehicleCategoryId)) {

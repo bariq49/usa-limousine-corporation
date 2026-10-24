@@ -15,8 +15,6 @@ export class RootController {
         path: "/socket.io",
         namespace: "/",
         postman: "New → Socket.IO → Connect (do not use Send on an HTTP request)",
-        liveUrl: "wss://api.usalimocorp.com",
-        localUrl: "ws://localhost:3000",
       },
     };
   }

@@ -138,7 +138,9 @@ async function removeOldLuggages() {
   });
 
   for (const luggage of oldLuggages) {
-    await prisma.vehicleCategoryLuggageCapacity.deleteMany({ where: { luggageTypeId: luggage.id } });
+    await prisma.vehicleCategoryLuggageCapacity.deleteMany({
+      where: { luggageTypeId: luggage.id },
+    });
     if (luggage._count.bookingSelections > 0) {
       await prisma.luggageType.update({ where: { id: luggage.id }, data: { isActive: false } });
     } else {

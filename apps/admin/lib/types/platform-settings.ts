@@ -16,6 +16,12 @@ export type PlatformSettings = {
   minBookingNotice: number;
   minBookingNoticeUnit: NoticeUnit;
   minBookingMinutes: number;
+  cancellationNotice: number;
+  cancellationNoticeUnit: NoticeUnit;
+  cancellationMinutes: number;
+  cancellationRefundRate: number;
 };
 
-export type UpdatePayload = Partial<Omit<PlatformSettings, "minBookingMinutes">>;
+export type UpdatePayload = Partial<
+  Omit<PlatformSettings, "minBookingMinutes" | "cancellationMinutes">
+>;

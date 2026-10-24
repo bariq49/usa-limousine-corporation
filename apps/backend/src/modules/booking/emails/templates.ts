@@ -1,11 +1,18 @@
 import { escapeHtml } from "../../../infrastructure/email/templates/layout";
-import { bookingSummary, googleReviewCard } from "./cards";
+import { bookingSummary, formatPrice, googleReviewCard } from "./cards";
 import { emailButton, emailLayout, emailParagraph } from "./layout";
 import type { BookingEmail, EmailContext } from "./types";
 
 const viewBookingButton = (booking: BookingEmail, context: EmailContext) =>
   booking.hasAccount
     ? emailButton(`${context.portalUrl}/bookings/${booking.id}`, "View booking")
+    : "";
+
+const refundParagraph = (amount: number) =>
+  amount > 0
+    ? emailParagraph(
+        `A refund of ${escapeHtml(formatPrice(amount))} has been issued to your card. It can take 5-10 business days to appear on your statement.`,
+      )
     : "";
 
 const helpLine = emailParagraph("Need help? Reply to this email and our team will assist you.", {
@@ -72,6 +79,7 @@ export const bookingCancelled = (
   booking: BookingEmail,
   context: EmailContext,
   reason: string | null,
+  refundAmount: number,
 ) =>
   emailLayout({
     siteUrl: context.siteUrl,
@@ -83,8 +91,33 @@ export const bookingCancelled = (
       ${emailParagraph(`Hello, ${escapeHtml(booking.passenger.name)}.`, { strong: true })}
       ${emailParagraph(`Your booking ${escapeHtml(booking.bookingNumber)} has been cancelled.`)}
       ${reason ? emailParagraph(`Reason: ${escapeHtml(reason)}`) : ""}
+      ${refundParagraph(refundAmount)}
       ${bookingSummary(booking, context.siteUrl)}
       ${helpLine}
+    `,
+  });
+
+export const bookingCancelledAdmin = (
+  booking: BookingEmail,
+  context: EmailContext,
+  reason: string | null,
+  refundAmount: number,
+) =>
+  emailLayout({
+    siteUrl: context.siteUrl,
+    title: "Booking Cancelled",
+    subtitle: `Cancelled by customer · ${booking.bookingNumber}`,
+    preheader: `${booking.passenger.name} cancelled ${booking.bookingNumber}.`,
+    headerImage: booking.vehicle.image,
+    body: `
+      ${emailParagraph(`Booking ${escapeHtml(booking.bookingNumber)} was cancelled by the customer.`, { strong: true })}
+      ${emailParagraph(reason ? `Reason: ${escapeHtml(reason)}` : "No reason was given.")}
+      ${emailParagraph(
+        refundAmount > 0
+          ? `${escapeHtml(formatPrice(refundAmount))} was refunded to the customer's card automatically.`
+          : "No refund was issued.",
+      )}
+      ${bookingSummary(booking, context.siteUrl)}
     `,
   });
 

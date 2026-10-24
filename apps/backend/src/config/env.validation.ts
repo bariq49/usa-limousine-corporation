@@ -182,10 +182,11 @@ export class EnvironmentVariables {
   @IsEmail()
   DEFAULT_ADMIN_EMAIL?: string;
 
-  /** Public website; booking emails load the logo and icons from it. */
-  @IsOptional()
   @IsUrl({ require_tld: false })
-  WEBSITE_URL?: string;
+  WEBSITE_URL!: string;
+
+  @IsUrl({ require_tld: false })
+  CUSTOMER_APP_URL!: string;
 
   @IsOptional()
   @IsString()

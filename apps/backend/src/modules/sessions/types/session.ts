@@ -35,4 +35,3 @@ export interface RevokeOwned {
 export interface RevokeAll {
   userId: string;
 }
-

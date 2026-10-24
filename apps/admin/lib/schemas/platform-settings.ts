@@ -22,6 +22,9 @@ export const platformSettingsSchema = z.object({
   meetAndGreetFee: amount,
   minBookingNotice: z.coerce.number().int("Whole numbers only").min(0, "Cannot be negative"),
   minBookingNoticeUnit: z.enum(["HOUR", "MINUTE"] as const),
+  cancellationNotice: z.coerce.number().int("Whole numbers only").min(0, "Cannot be negative"),
+  cancellationNoticeUnit: z.enum(["HOUR", "MINUTE"] as const),
+  cancellationRefundRate: rate,
 });
 
 export type Schema = z.infer<typeof platformSettingsSchema>;

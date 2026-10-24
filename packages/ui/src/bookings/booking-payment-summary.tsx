@@ -13,7 +13,9 @@ function row(label: string, amount: number, discount = false) {
   return (
     <div className="flex items-center justify-between gap-4">
       <span className={discount ? "text-destructive" : "text-default-600"}>{label}</span>
-      <span className={discount ? "font-semibold text-destructive" : "font-semibold text-default-900"}>
+      <span
+        className={discount ? "font-semibold text-destructive" : "font-semibold text-default-900"}
+      >
         {discount ? "- " : ""}
         {formatPrice({ price: amount })}
       </span>
@@ -54,7 +56,10 @@ export function BookingPaymentSummary(props: Props) {
       <h3 className="text-base font-bold text-default-900 sm:text-lg">Payment Summary</h3>
       <div className="mt-3 space-y-2.5 text-sm sm:mt-4">
         {row("Base Price", Number(pricing.basePrice ?? 0))}
-        {row(`Fuel Surcharge${rate(rates?.fuelSurchargeRate)}`, Number(pricing.fuelSurchargePrice ?? 0))}
+        {row(
+          `Fuel Surcharge${rate(rates?.fuelSurchargeRate)}`,
+          Number(pricing.fuelSurchargePrice ?? 0),
+        )}
         {row(`Gratuity${rate(rates?.gratuityRate)}`, Number(pricing.gratuityPrice ?? 0))}
         {row(`Tax${rate(rates?.taxRate)}`, Number(pricing.taxPrice ?? 0))}
         {row(

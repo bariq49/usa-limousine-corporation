@@ -19,6 +19,10 @@ const rates: PlatformRates = {
   minBookingNotice: 2,
   minBookingNoticeUnit: "HOUR",
   minBookingMinutes: 120,
+  cancellationNotice: 2,
+  cancellationNoticeUnit: "HOUR",
+  cancellationMinutes: 120,
+  cancellationRefundRate: 100,
 };
 
 describe("platform pricing", () => {

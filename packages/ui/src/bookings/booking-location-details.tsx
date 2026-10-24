@@ -31,7 +31,10 @@ export function BookingLocationDetails(props: Props) {
     value: props.pickupLocation || "—",
     time: props.pickupTime,
   };
-  const stopPoints: Point[] = stops.map((stop, index) => ({ label: `Stop ${index + 1}`, value: stop }));
+  const stopPoints: Point[] = stops.map((stop, index) => ({
+    label: `Stop ${index + 1}`,
+    value: stop,
+  }));
   const last: Point = isHourly
     ? {
         label: "Hourly Duration",

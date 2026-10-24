@@ -78,4 +78,22 @@ export class UpdateDto {
   @IsOptional()
   @IsEnum(NoticeUnit)
   minBookingNoticeUnit?: NoticeUnit;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  @Max(10_000)
+  cancellationNotice?: number;
+
+  @IsOptional()
+  @IsEnum(NoticeUnit)
+  cancellationNoticeUnit?: NoticeUnit;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  @Max(100)
+  cancellationRefundRate?: number;
 }

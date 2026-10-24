@@ -163,7 +163,8 @@ export function BookingDetailView(props: Props) {
         <section
           className={cn(
             "relative z-10 bg-card px-4 pb-6 pt-6 sm:rounded-md sm:px-6 sm:pb-8 sm:pt-8 md:px-8 lg:rounded-none",
-            showMap && "max-lg:-mt-10 max-lg:rounded-t-2xl max-lg:pt-3 max-lg:shadow-lg sm:max-lg:pt-3",
+            showMap &&
+              "max-lg:-mt-10 max-lg:rounded-t-2xl max-lg:pt-3 max-lg:shadow-lg sm:max-lg:pt-3",
           )}
         >
           {showMap ? (

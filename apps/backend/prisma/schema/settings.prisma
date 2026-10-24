@@ -10,23 +10,28 @@ enum NoticeUnit {
 
 /// Platform-wide fees and rules used to price trips. A single row with id "global".
 model PlatformSettings {
-  id                   String      @id @default("global")
+  id                     String      @id @default("global")
   /// Payment environment; bookings use test payments until switched to LIVE.
-  paymentMode          PaymentMode @default(TEST)
+  paymentMode            PaymentMode @default(TEST)
   /// Percentages of the base fare (0-100).
-  fuelSurchargeRate    Decimal     @default(0) @db.Decimal(5, 2)
-  gratuityRate         Decimal     @default(0) @db.Decimal(5, 2)
-  taxRate              Decimal     @default(0) @db.Decimal(5, 2)
-  transactionFeeRate   Decimal     @default(0) @db.Decimal(5, 2)
-  oneWayDiscountRate   Decimal     @default(0) @db.Decimal(5, 2)
-  returnDiscountRate   Decimal     @default(0) @db.Decimal(5, 2)
+  fuelSurchargeRate      Decimal     @default(0) @db.Decimal(5, 2)
+  gratuityRate           Decimal     @default(0) @db.Decimal(5, 2)
+  taxRate                Decimal     @default(0) @db.Decimal(5, 2)
+  transactionFeeRate     Decimal     @default(0) @db.Decimal(5, 2)
+  oneWayDiscountRate     Decimal     @default(0) @db.Decimal(5, 2)
+  returnDiscountRate     Decimal     @default(0) @db.Decimal(5, 2)
   /// Flat amounts in USD.
-  airportPickupFee     Decimal     @default(0) @db.Decimal(12, 2)
-  stopFee              Decimal     @default(0) @db.Decimal(12, 2)
-  meetAndGreetFee      Decimal     @default(0) @db.Decimal(12, 2)
+  airportPickupFee       Decimal     @default(0) @db.Decimal(12, 2)
+  stopFee                Decimal     @default(0) @db.Decimal(12, 2)
+  meetAndGreetFee        Decimal     @default(0) @db.Decimal(12, 2)
   /// Earliest a trip can be booked ahead of pickup.
-  minBookingNotice     Int         @default(0)
-  minBookingNoticeUnit NoticeUnit  @default(HOUR)
-  createdAt            DateTime    @default(now())
-  updatedAt            DateTime    @updatedAt
+  minBookingNotice       Int         @default(0)
+  minBookingNoticeUnit   NoticeUnit  @default(HOUR)
+  /// Latest a customer can cancel ahead of pickup.
+  cancellationNotice     Int         @default(2)
+  cancellationNoticeUnit NoticeUnit  @default(HOUR)
+  /// Share of the payment refunded when a customer cancels in time (0-100).
+  cancellationRefundRate Decimal     @default(100) @db.Decimal(5, 2)
+  createdAt              DateTime    @default(now())
+  updatedAt              DateTime    @updatedAt
 }

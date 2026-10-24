@@ -6,6 +6,7 @@ import { EmailService } from "../../../infrastructure/email/email.service";
 import type { SendMailOptions } from "../../../infrastructure/email/types/mail";
 import {
   bookingCancelled,
+  bookingCancelledAdmin,
   bookingCompleted,
   bookingConfirmed,
   bookingReceived,
@@ -14,8 +15,6 @@ import {
 import type { BookingEmail, ContactPreferences, EmailContext } from "../emails/types";
 import { toBookingEmail } from "../emails/view";
 import { BookingRepository } from "../repositories/booking.repository";
-
-const DEFAULT_WEBSITE_URL = "https://demo.usalimocorp.com";
 
 @Injectable()
 export class BookingEmailService {
@@ -69,15 +68,26 @@ export class BookingEmailService {
     );
   }
 
-  sendCancelled(bookingId: string, reason: string | null) {
-    return this.deliver(bookingId, "cancelled", (booking, context, prefs) =>
-      this.toCustomer(
+  sendCancelled(
+    bookingId: string,
+    reason: string | null,
+    options: { refundAmount: number; byCustomer: boolean },
+  ) {
+    return this.deliver(bookingId, "cancelled", async (booking, context, prefs) => {
+      await this.toCustomer(
         booking,
         prefs,
         `Booking cancelled · ${booking.bookingNumber}`,
-        bookingCancelled(booking, context, reason),
-      ),
-    );
+        bookingCancelled(booking, context, reason, options.refundAmount),
+      );
+      if (options.byCustomer) {
+        await this.toAdmin(
+          booking,
+          `Booking cancelled by customer · ${booking.bookingNumber}`,
+          bookingCancelledAdmin(booking, context, reason, options.refundAmount),
+        );
+      }
+    });
   }
 
   sendCompleted(bookingId: string) {
@@ -146,11 +156,11 @@ export class BookingEmailService {
 
   private context(): EmailContext {
     const trimSlash = (url: string) => url.replace(/\/+$/, "");
-    const siteUrl = trimSlash(this.configService.get<string>("WEBSITE_URL") ?? DEFAULT_WEBSITE_URL);
+    const siteUrl = trimSlash(this.configService.getOrThrow<string>("WEBSITE_URL"));
 
     return {
       siteUrl,
-      portalUrl: trimSlash(this.configService.get<string>("CUSTOMER_APP_URL") ?? siteUrl),
+      portalUrl: trimSlash(this.configService.getOrThrow<string>("CUSTOMER_APP_URL")),
       reviewUrl: this.configService.get<string>("GOOGLE_REVIEW_URL"),
     };
   }

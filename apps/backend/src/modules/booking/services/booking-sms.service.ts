@@ -49,7 +49,9 @@ export class BookingSmsService {
       (booking) =>
         `${BRAND}: your booking ${booking.bookingNumber} has been cancelled.` +
         (reason ? ` Reason: ${reason}.` : "") +
-        (refundAmount > 0 ? ` A refund of $${refundAmount.toFixed(2)} is on its way to your card.` : "") +
+        (refundAmount > 0
+          ? ` A refund of $${refundAmount.toFixed(2)} is on its way to your card.`
+          : "") +
         ` Questions? Call ${SUPPORT_PHONE}.`,
     );
   }

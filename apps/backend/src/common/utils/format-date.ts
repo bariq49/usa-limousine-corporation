@@ -8,4 +8,3 @@ export function formatDate(date: Date = new Date(), timeZone: string = APP_TIMEZ
     day: "2-digit",
   }).format(date);
 }
-

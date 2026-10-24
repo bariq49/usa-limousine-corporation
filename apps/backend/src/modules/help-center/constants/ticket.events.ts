@@ -3,4 +3,3 @@ export const TICKET_EVENT = {
   REPLIED: "help_center.ticket_replied",
   STATUS_UPDATED: "help_center.ticket_status_updated",
 } as const;
-

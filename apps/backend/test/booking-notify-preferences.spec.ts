@@ -82,6 +82,8 @@ describe("BookingEmailService preferences", () => {
             EMAIL_FROM: "f@x.co",
             EMAIL_USER: "u",
             EMAIL_PASS: "p",
+            WEBSITE_URL: "https://demo.usalimocorp.com",
+            CUSTOMER_APP_URL: "https://customer.usalimocorp.com",
           })[key],
       } as never,
       { error: jest.fn() } as never,

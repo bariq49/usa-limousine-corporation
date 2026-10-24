@@ -26,6 +26,7 @@ function notificationHref(item: NotificationItem): string | null {
     case "TICKET_REPLY":
       return id("ticketId") ? `/help-center/${id("ticketId")}` : "/help-center";
     case "BOOKING_CREATED":
+    case "BOOKING_CANCELLED":
       return id("bookingId") ? `/bookings/${id("bookingId")}` : "/pending-bookings";
     default:
       return null;

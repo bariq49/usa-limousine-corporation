@@ -27,6 +27,13 @@ function toRates(row: PlatformSettings): PlatformRates {
       row.minBookingNoticeUnit === NoticeUnit.HOUR
         ? row.minBookingNotice * 60
         : row.minBookingNotice,
+    cancellationNotice: row.cancellationNotice,
+    cancellationNoticeUnit: row.cancellationNoticeUnit,
+    cancellationMinutes:
+      row.cancellationNoticeUnit === NoticeUnit.HOUR
+        ? row.cancellationNotice * 60
+        : row.cancellationNotice,
+    cancellationRefundRate: toAmount(row.cancellationRefundRate),
   };
 }
 

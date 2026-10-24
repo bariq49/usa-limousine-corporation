@@ -16,6 +16,11 @@ export type PlatformRates = {
   minBookingNoticeUnit: NoticeUnit;
   /** `minBookingNotice` converted to minutes. */
   minBookingMinutes: number;
+  cancellationNotice: number;
+  cancellationNoticeUnit: NoticeUnit;
+  /** `cancellationNotice` converted to minutes. */
+  cancellationMinutes: number;
+  cancellationRefundRate: number;
 };
 
 /** One leg of a trip priced from its base fare. */

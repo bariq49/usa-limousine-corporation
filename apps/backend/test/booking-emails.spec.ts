@@ -1,6 +1,7 @@
 import { BookingType } from "@prisma/client";
 import {
   bookingCancelled,
+  bookingCancelledAdmin,
   bookingCompleted,
   bookingConfirmed,
   bookingReceived,
@@ -87,8 +88,14 @@ describe("booking email templates", () => {
   it("renders every lifecycle email", () => {
     expect(newBookingAdmin(booking, context)).toContain("New booking request");
     expect(bookingConfirmed(booking, context)).toContain("Your booking is confirmed");
-    expect(bookingCancelled(booking, context, "Flight cancelled")).toContain(
+    expect(bookingCancelled(booking, context, "Flight cancelled", 0)).toContain(
       "Reason: Flight cancelled",
+    );
+    expect(bookingCancelled(booking, context, null, 55.5)).toContain(
+      "A refund of $55.50 has been issued",
+    );
+    expect(bookingCancelledAdmin(booking, context, null, 55.5)).toContain(
+      "$55.50 was refunded to the customer",
     );
     expect(bookingCompleted(booking, context)).toContain("Leave a Google review");
     expect(

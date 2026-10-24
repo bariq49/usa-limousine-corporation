@@ -76,6 +76,19 @@ export class SquareService {
     };
   }
 
+  async refundPayment(mode: PaymentMode, paymentId: string, amount: number, reason: string) {
+    const { refund } = await this.client(mode).refunds.refundPayment({
+      idempotencyKey: `refund-${paymentId}`,
+      paymentId,
+      amountMoney: { amount: BigInt(Math.round(amount * 100)), currency: "USD" },
+      reason: reason.slice(0, 192),
+    });
+    if (!refund?.id || refund.status === "REJECTED" || refund.status === "FAILED") {
+      throw new ServiceUnavailableException("Square could not refund the payment");
+    }
+    return refund.id;
+  }
+
   async deletePaymentLink(mode: PaymentMode, id: string) {
     await this.client(mode).checkout.paymentLinks.delete({ id });
   }

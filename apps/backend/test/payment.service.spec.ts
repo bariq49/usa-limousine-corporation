@@ -91,7 +91,10 @@ function setup(
     emails as never,
     sms as never,
     {
-      get: (key: string) => (key === "WEBSITE_URL" ? "https://demo.usalimocorp.com/" : undefined),
+      getOrThrow: (key: string) => {
+        if (key !== "WEBSITE_URL") throw new Error(`Missing ${key}`);
+        return "https://demo.usalimocorp.com/";
+      },
     } as never,
     { error: jest.fn() } as never,
   );

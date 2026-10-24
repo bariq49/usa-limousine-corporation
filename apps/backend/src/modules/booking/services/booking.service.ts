@@ -614,7 +614,11 @@ export class BookingService {
       },
     });
     void this.bookingEmails.sendCancelled(updated.id, updated.cancellationReason, options);
-    void this.bookingSms.sendCancelled(updated.id, updated.cancellationReason, options.refundAmount);
+    void this.bookingSms.sendCancelled(
+      updated.id,
+      updated.cancellationReason,
+      options.refundAmount,
+    );
     if (options.byCustomer) {
       await this.notifyAdminsCancelled(updated, context.userId);
     }

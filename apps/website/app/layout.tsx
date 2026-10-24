@@ -8,6 +8,7 @@ import {
   COMPANY_ADDRESS,
   SOCIAL_LINKS,
 } from "@/constants/app-default";
+import { getAppUrl } from "@/lib/api/base-url";
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
@@ -18,7 +19,7 @@ const robotoSlab = Roboto_Slab({
   subsets: ["latin"],
 });
 
-const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://demo.usalimocorp.com';
+const baseUrl = getAppUrl();
 /** Analytics are optional; nothing loads unless these are set. */
 const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID;
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;

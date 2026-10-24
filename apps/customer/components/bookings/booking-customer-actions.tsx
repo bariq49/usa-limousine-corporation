@@ -3,34 +3,64 @@
 import { useState } from "react";
 import { Button } from "@usa-limousine-corporation/ui/components/button";
 import { ConfirmDialog } from "@usa-limousine-corporation/ui/components/confirm-dialog";
+import { APP_TIMEZONE } from "@usa-limousine-corporation/ui/constants";
 import type { Item } from "@usa-limousine-corporation/ui/bookings/types";
-import { useCancelBooking } from "@/hooks/queries/use-bookings";
+import { useCancelBooking, useCompleteBooking } from "@/hooks/queries/use-bookings";
 
-/** Customers can cancel their own booking while it is pending or confirmed. */
+const nowInAppZone = () =>
+  new Intl.DateTimeFormat("sv-SE", {
+    timeZone: APP_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).format(new Date());
+
+/** Customers can cancel a pending or confirmed booking, and complete a confirmed ride after pickup. */
 export function BookingCustomerActions({ booking }: { booking: Item }) {
-  const [open, setOpen] = useState(false);
+  const [dialog, setDialog] = useState<"cancel" | "complete" | null>(null);
   const cancelMutation = useCancelBooking();
+  const completeMutation = useCompleteBooking();
 
-  if (booking.status !== "PENDING" && booking.status !== "CONFIRMED") {
+  const canCancel = booking.status === "PENDING" || booking.status === "CONFIRMED";
+  const canComplete =
+    booking.status === "CONFIRMED" &&
+    `${booking.bookingTime.pickupDate} ${booking.bookingTime.pickupTime}` <= nowInAppZone();
+
+  if (!canCancel && !canComplete) {
     return null;
   }
 
   return (
-    <>
-      <Button
-        type="button"
-        size="sm"
-        variant="outline"
-        className="h-10 px-3 sm:px-4"
-        onClick={() => setOpen(true)}
-      >
-        Cancel booking
-      </Button>
+    <div className="flex items-center gap-2">
+      {canComplete ? (
+        <Button
+          type="button"
+          size="sm"
+          className="h-10 px-3 sm:px-4"
+          onClick={() => setDialog("complete")}
+        >
+          Mark as completed
+        </Button>
+      ) : null}
+      {canCancel ? (
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className="h-10 px-3 sm:px-4"
+          onClick={() => setDialog("cancel")}
+        >
+          Cancel booking
+        </Button>
+      ) : null}
       <ConfirmDialog
-        open={open}
-        onOpenChange={setOpen}
+        open={dialog === "cancel"}
+        onOpenChange={(open) => setDialog(open ? "cancel" : null)}
         title="Cancel this booking?"
-        description={`Booking ${booking.bookingNumber} will be cancelled. This cannot be undone.`}
+        description={`Booking ${booking.bookingNumber} will be cancelled. If you paid online, a refund is issued to your card according to our cancellation policy. This cannot be undone.`}
         confirmLabel="Cancel booking"
         cancelLabel="Keep booking"
         confirmColor="destructive"
@@ -38,10 +68,20 @@ export function BookingCustomerActions({ booking }: { booking: Item }) {
         onConfirm={() =>
           cancelMutation.mutate(
             { id: booking.id, reason: "Cancelled by customer" },
-            { onSuccess: () => setOpen(false) },
+            { onSuccess: () => setDialog(null) },
           )
         }
       />
-    </>
+      <ConfirmDialog
+        open={dialog === "complete"}
+        onOpenChange={(open) => setDialog(open ? "complete" : null)}
+        title="Mark this ride as completed?"
+        description={`Booking ${booking.bookingNumber} will be marked as completed.`}
+        confirmLabel="Mark as completed"
+        cancelLabel="Not yet"
+        pending={completeMutation.isPending}
+        onConfirm={() => completeMutation.mutate(booking.id, { onSuccess: () => setDialog(null) })}
+      />
+    </div>
   );
 }

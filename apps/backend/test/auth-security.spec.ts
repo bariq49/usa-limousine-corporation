@@ -33,6 +33,8 @@ function productionEnv(overrides: Record<string, unknown> = {}) {
     EMAIL_USER: "ops@example.com",
     EMAIL_PASS: "pass",
     EMAIL_FROM: "ops@example.com",
+    WEBSITE_URL: "https://demo.usalimocorp.com",
+    CUSTOMER_APP_URL: "https://customer.usalimocorp.com",
     FIREBASE_PROJECT_ID: "usa-limousine-corporation",
     FIREBASE_CLIENT_EMAIL: "firebase-adminsdk@usa-limousine-corporation.iam.gserviceaccount.com",
     FIREBASE_PRIVATE_KEY: "-----BEGIN PRIVATE KEY-----\\ntest\\n-----END PRIVATE KEY-----",

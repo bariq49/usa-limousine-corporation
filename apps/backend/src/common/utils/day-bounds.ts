@@ -66,4 +66,3 @@ export function wallClock(timeZone: string, date: string, time: string): Date | 
   }
   return wallToUtc(zone, { year, month, day, hour, minute });
 }
-

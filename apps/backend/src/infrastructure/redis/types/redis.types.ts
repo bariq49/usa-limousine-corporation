@@ -17,4 +17,3 @@ export type RedisConfig = {
   sentinels?: RedisSentinelNode[] | undefined;
   sentinelName?: string | undefined;
 };
-

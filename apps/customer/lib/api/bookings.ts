@@ -26,6 +26,10 @@ export const cancelBooking = (id: string, cancellationReason?: string) => {
   return http.post<Item>(`${API_ROUTES.BOOKINGS}/${id}/cancel`, { cancellationReason });
 };
 
+export const completeBooking = (id: string) => {
+  return http.post<Item>(`${API_ROUTES.BOOKINGS}/${id}/complete`);
+};
+
 export const createBooking = (body: CreateInput) => {
   return http.post<Item>(API_ROUTES.BOOKINGS, body);
 };

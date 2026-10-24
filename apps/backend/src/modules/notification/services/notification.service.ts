@@ -96,7 +96,6 @@ export class NotificationService {
     return results;
   }
 
-
   stage(inputs: Create[], client: Client) {
     return this.repository.createManyAndReturn({ inputs }, client);
   }
@@ -125,7 +124,6 @@ export class NotificationService {
   list(query: Query, recipient: Recipient) {
     return this.repository.list(query, recipient);
   }
-
 
   async listWithUnread(query: Query, recipient: Recipient) {
     if (query.cursor !== undefined) {
