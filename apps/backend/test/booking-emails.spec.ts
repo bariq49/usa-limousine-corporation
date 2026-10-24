@@ -12,7 +12,6 @@ import type { BookingEmail, EmailContext } from "../src/modules/booking/emails/t
 const booking: BookingEmail = {
   id: "book-1",
   bookingNumber: "BK-1001",
-  hasAccount: true,
   bookingType: BookingType.RETURN,
   vehicleCount: 2,
   vehicle: { name: "Sedan", description: "Executive sedan", image: null, passengerCount: 4 },
@@ -49,7 +48,7 @@ const booking: BookingEmail = {
 
 const context: EmailContext = {
   siteUrl: "https://demo.usalimocorp.com",
-  portalUrl: "https://customer.usalimocorp.com",
+  assetsUrl: "https://res.cloudinary.com/cloud/image/upload/usa-limousine/email",
   reviewUrl: "https://g.page/r/example/review",
 };
 
@@ -67,15 +66,21 @@ describe("booking email templates", () => {
     expect(html).toContain("Baby Seat ×1");
     expect(html).toContain("CC: assistant@example.com");
     expect(html).toContain("$235.00");
-    expect(html).toContain("https://customer.usalimocorp.com/bookings/book-1");
-    expect(html).toContain("https://demo.usalimocorp.com/assets/email-icons/mapPin.png");
+    expect(html).toContain(
+      "https://res.cloudinary.com/cloud/image/upload/usa-limousine/email/mapPin.png",
+    );
+    expect(html).toContain(
+      "https://res.cloudinary.com/cloud/image/upload/usa-limousine/email/logo-white.png",
+    );
+    expect(html).toContain("Booking Received");
+    expect(html).not.toContain("View booking");
   });
 
-  it("leaves the portal link out of guest booking emails", () => {
-    const html = bookingConfirmed(Object.assign({}, booking, { hasAccount: false }), context, true);
+  it("confirms paid bookings", () => {
+    const html = bookingConfirmed(booking, context, true);
 
+    expect(html).toContain("Booking Confirmed");
     expect(html).toContain("We have received your payment");
-    expect(html).not.toContain("/bookings/book-1");
   });
 
   it("escapes customer-entered text", () => {
@@ -99,7 +104,7 @@ describe("booking email templates", () => {
     );
     expect(bookingCompleted(booking, context)).toContain("Leave a Google review");
     expect(
-      bookingCompleted(booking, { siteUrl: context.siteUrl, portalUrl: context.portalUrl }),
+      bookingCompleted(booking, { siteUrl: context.siteUrl, assetsUrl: context.assetsUrl }),
     ).not.toContain("Leave a Google review");
   });
 });

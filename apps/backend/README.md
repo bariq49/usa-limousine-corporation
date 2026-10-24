@@ -98,7 +98,6 @@ Unset optional services report `not_configured` in health and do not block start
 | `SQUARE_WEBHOOK_SIGNATURE_KEY_LIVE` | Signature key of the production webhook subscription   |
 | `SQUARE_WEBHOOK_URL`           | Public webhook URL exactly as entered in Square             |
 | `WEBSITE_URL`                  | Public website; Square redirects and email images use it    |
-| `CUSTOMER_APP_URL`             | Customer portal; booking emails link to it                  |
 | `GOOGLE_REVIEW_URL`            | Google review link in the ride completed email              |
 | `FIREBASE_PROJECT_ID`          | Firebase project id (FCM push; optional until configured)   |
 | `FIREBASE_CLIENT_EMAIL`        | Firebase service account email                              |

@@ -20,7 +20,6 @@ export function toBookingEmail(row: BookingRow): BookingEmail {
   return {
     id: row.id,
     bookingNumber: row.bookingNumber,
-    hasAccount: row.userId !== null,
     bookingType: row.bookingType,
     vehicleCount: row.vehicleCount,
     vehicle: {

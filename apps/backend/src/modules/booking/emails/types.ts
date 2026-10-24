@@ -4,7 +4,6 @@ import type { BookingPricing } from "../../platform-settings/types/platform-sett
 export type BookingEmail = {
   id: string;
   bookingNumber: string;
-  hasAccount: boolean;
   bookingType: BookingType;
   vehicleCount: number;
   vehicle: {
@@ -39,7 +38,7 @@ export type BookingEmail = {
 
 export type EmailContext = {
   siteUrl: string;
-  portalUrl: string;
+  assetsUrl: string;
   reviewUrl?: string | undefined;
 };
 

@@ -155,12 +155,9 @@ export class BookingEmailService {
   }
 
   private context(): EmailContext {
-    const trimSlash = (url: string) => url.replace(/\/+$/, "");
-    const siteUrl = trimSlash(this.configService.getOrThrow<string>("WEBSITE_URL"));
-
     return {
-      siteUrl,
-      portalUrl: trimSlash(this.configService.getOrThrow<string>("CUSTOMER_APP_URL")),
+      siteUrl: this.configService.getOrThrow<string>("WEBSITE_URL").replace(/\/+$/, ""),
+      assetsUrl: `https://res.cloudinary.com/${this.configService.getOrThrow<string>("CLOUDINARY_CLOUD_NAME")}/image/upload/usa-limousine/email`,
       reviewUrl: this.configService.get<string>("GOOGLE_REVIEW_URL"),
     };
   }

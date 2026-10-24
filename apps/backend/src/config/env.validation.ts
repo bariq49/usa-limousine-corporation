@@ -185,9 +185,6 @@ export class EnvironmentVariables {
   @IsUrl({ require_tld: false })
   WEBSITE_URL!: string;
 
-  @IsUrl({ require_tld: false })
-  CUSTOMER_APP_URL!: string;
-
   @IsOptional()
   @IsString()
   SQUARE_ACCESS_TOKEN_TEST?: string;

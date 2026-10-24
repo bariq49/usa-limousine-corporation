@@ -45,8 +45,8 @@ const formatHours = (minutes: number) => {
   return `${hours} ${hours === 1 ? "hr" : "hrs"}`;
 };
 
-const icon = (siteUrl: string, name: IconName, size = 20) =>
-  `<img src="${escapeHtml(siteUrl)}/assets/email-icons/${name}.png" width="${size}" height="${size}" alt="" style="display:block;border:0;outline:none;" />`;
+const icon = (assetsUrl: string, name: IconName, size = 20) =>
+  `<img src="${escapeHtml(assetsUrl)}/${name}.png" width="${size}" height="${size}" alt="" style="display:block;border:0;outline:none;" />`;
 
 export const infoCard = (title: string, content: string) => `
   <div style="padding:20px;background:#f3f4f6;border-radius:4px;margin:0 0 16px;">
@@ -70,7 +70,7 @@ const routeStop = (label: string, value: string, note?: string) => `
   ${note ? `<p style="margin:4px 0 0;font-size:13px;line-height:1.4;color:${EMAIL_BRAND.muted};">${escapeHtml(note)}</p>` : ""}
 `;
 
-export const routeCard = (booking: BookingEmail, siteUrl: string) => {
+export const routeCard = (booking: BookingEmail, assetsUrl: string) => {
   const isHourly = booking.bookingType === BookingType.HOURLY;
   const points = [
     routeStop("Pickup Location", booking.pickupAddress),
@@ -91,8 +91,8 @@ export const routeCard = (booking: BookingEmail, siteUrl: string) => {
         .map((point, index) => {
           const isLast = index === points.length - 1;
           const marker = isLast
-            ? icon(siteUrl, isHourly ? "clock" : "mapPin")
-            : icon(siteUrl, "mapPin");
+            ? icon(assetsUrl, isHourly ? "clock" : "mapPin")
+            : icon(assetsUrl, "mapPin");
           return `<tr>
             <td valign="top" width="20" style="width:20px;padding:0 12px 0 0;">
               ${marker}
@@ -106,10 +106,10 @@ export const routeCard = (booking: BookingEmail, siteUrl: string) => {
   );
 };
 
-export const tripDetailsCard = (booking: BookingEmail, siteUrl: string) => {
+export const tripDetailsCard = (booking: BookingEmail, assetsUrl: string) => {
   const rows = [
     iconRow(
-      icon(siteUrl, "calendar"),
+      icon(assetsUrl, "calendar"),
       `Pickup: ${formatDate(booking.pickupDate)} | ${formatTime(booking.pickupTime)}`,
     ),
   ];
@@ -117,38 +117,40 @@ export const tripDetailsCard = (booking: BookingEmail, siteUrl: string) => {
   if (booking.returnDate && booking.returnTime) {
     rows.push(
       iconRow(
-        icon(siteUrl, "calendar"),
+        icon(assetsUrl, "calendar"),
         `Return: ${formatDate(booking.returnDate)} | ${formatTime(booking.returnTime)}`,
       ),
     );
   }
-  rows.push(iconRow(icon(siteUrl, "tags"), `Trip Type: ${TRIP_TYPE_LABELS[booking.bookingType]}`));
+  rows.push(
+    iconRow(icon(assetsUrl, "tags"), `Trip Type: ${TRIP_TYPE_LABELS[booking.bookingType]}`),
+  );
   if (booking.bookingType !== BookingType.HOURLY && booking.distance > 0) {
-    rows.push(iconRow(icon(siteUrl, "gauge"), `Distance: ${booking.distance.toFixed(1)} mi`));
+    rows.push(iconRow(icon(assetsUrl, "gauge"), `Distance: ${booking.distance.toFixed(1)} mi`));
   }
-  rows.push(iconRow(icon(siteUrl, "seats"), `Passengers: ${booking.passenger.passengerCount}`));
+  rows.push(iconRow(icon(assetsUrl, "seats"), `Passengers: ${booking.passenger.passengerCount}`));
   booking.luggage.forEach((item) => {
-    rows.push(iconRow(icon(siteUrl, "luggage"), `${item.name}: ${item.quantity}`));
+    rows.push(iconRow(icon(assetsUrl, "luggage"), `${item.name}: ${item.quantity}`));
   });
   booking.extras.forEach((item) => {
-    rows.push(iconRow(icon(siteUrl, "seats"), `${item.name} ×${item.quantity}`));
+    rows.push(iconRow(icon(assetsUrl, "seats"), `${item.name} ×${item.quantity}`));
   });
   if (booking.meetAndGreet.enabled) {
     rows.push(
       iconRow(
-        icon(siteUrl, "badgeCheck"),
+        icon(assetsUrl, "badgeCheck"),
         `Meet & Greet${booking.meetAndGreet.signName ? `: ${booking.meetAndGreet.signName}` : ""}`,
       ),
     );
   }
   if (booking.meetAndGreet.returnEnabled) {
-    rows.push(iconRow(icon(siteUrl, "badgeCheck"), "Return Meet & Greet"));
+    rows.push(iconRow(icon(assetsUrl, "badgeCheck"), "Return Meet & Greet"));
   }
   if (booking.flight.airline) {
-    rows.push(iconRow(icon(siteUrl, "tags"), `Airline: ${booking.flight.airline}`));
+    rows.push(iconRow(icon(assetsUrl, "tags"), `Airline: ${booking.flight.airline}`));
   }
   if (booking.flight.number) {
-    rows.push(iconRow(icon(siteUrl, "hash"), `Flight Number: ${booking.flight.number}`));
+    rows.push(iconRow(icon(assetsUrl, "hash"), `Flight Number: ${booking.flight.number}`));
   }
 
   const notes = booking.notes
@@ -161,26 +163,26 @@ export const tripDetailsCard = (booking: BookingEmail, siteUrl: string) => {
   return infoCard("Trip Details", rows.join("") + notes);
 };
 
-export const passengerCard = (booking: BookingEmail, siteUrl: string) =>
+export const passengerCard = (booking: BookingEmail, assetsUrl: string) =>
   infoCard(
     "Passenger Details",
     [
-      iconRow(icon(siteUrl, "user"), booking.passenger.name),
-      iconRow(icon(siteUrl, "mail"), booking.passenger.email),
+      iconRow(icon(assetsUrl, "user"), booking.passenger.name),
+      iconRow(icon(assetsUrl, "mail"), booking.passenger.email),
       booking.passenger.ccEmail
-        ? iconRow(icon(siteUrl, "mail"), `CC: ${booking.passenger.ccEmail}`)
+        ? iconRow(icon(assetsUrl, "mail"), `CC: ${booking.passenger.ccEmail}`)
         : "",
-      iconRow(icon(siteUrl, "phone"), booking.passenger.phone),
+      iconRow(icon(assetsUrl, "phone"), booking.passenger.phone),
     ].join(""),
   );
 
-export const vehicleCard = (booking: BookingEmail, siteUrl: string) => {
+export const vehicleCard = (booking: BookingEmail, assetsUrl: string) => {
   const { vehicle, vehicleCount } = booking;
   const name = vehicleCount > 1 ? `${vehicle.name} × ${vehicleCount}` : vehicle.name;
 
   return infoCard(
     "Vehicle Choice",
-    `${iconRow(icon(siteUrl, "car"), name)}
+    `${iconRow(icon(assetsUrl, "car"), name)}
     ${vehicle.description ? `<p style="margin:0;font-size:13px;color:${EMAIL_BRAND.muted};">${escapeHtml(vehicle.description)}</p>` : ""}
     <p style="margin:6px 0 0;font-size:13px;font-weight:600;color:${EMAIL_BRAND.accent};">Up to ${vehicle.passengerCount * vehicleCount} passengers</p>`,
   );
@@ -230,11 +232,11 @@ export const paymentSummaryCard = (booking: BookingEmail) => {
   );
 };
 
-export const bookingSummary = (booking: BookingEmail, siteUrl: string) => `
-  ${routeCard(booking, siteUrl)}
-  ${tripDetailsCard(booking, siteUrl)}
-  ${passengerCard(booking, siteUrl)}
-  ${vehicleCard(booking, siteUrl)}
+export const bookingSummary = (booking: BookingEmail, assetsUrl: string) => `
+  ${routeCard(booking, assetsUrl)}
+  ${tripDetailsCard(booking, assetsUrl)}
+  ${passengerCard(booking, assetsUrl)}
+  ${vehicleCard(booking, assetsUrl)}
   ${paymentSummaryCard(booking)}
 `;
 
