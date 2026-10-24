@@ -90,64 +90,32 @@ export class PassengerDto {
   @IsEmail()
   @MaxLength(320)
   ccEmail?: string;
-
-  @IsOptional()
-  @IsString()
-  @MaxLength(1000)
-  specialInstructions?: string;
-
-  @IsOptional()
-  @IsString()
-  @MaxLength(50)
-  flightNumber?: string;
-
-  @IsOptional()
-  @IsString()
-  @MaxLength(50)
-  trainNumber?: string;
 }
 
+const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
+
 export class TimeDto {
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(10)
+  @Matches(DATE_PATTERN, { message: "pickupDate must be YYYY-MM-DD" })
   pickupDate!: string;
 
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(5)
+  @Matches(TIME_PATTERN, { message: "pickupTime must be HH:mm" })
   pickupTime!: string;
 
   @IsOptional()
-  @IsString()
-  @MaxLength(10)
+  @Matches(DATE_PATTERN, { message: "returnDate must be YYYY-MM-DD" })
   returnDate?: string;
 
   @IsOptional()
-  @IsString()
-  @MaxLength(5)
+  @Matches(TIME_PATTERN, { message: "returnTime must be HH:mm" })
   returnTime?: string;
 }
 
+/** Client totals; customer bookings are re-priced on the server and only keep the breakdown it builds. */
 export class PricingDto {
   @IsNumber()
   @Min(0)
   basePrice!: number;
-
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  stopsPrice?: number;
-
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  airportPickupPrice?: number;
-
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  extraServicesPrice?: number;
 
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
@@ -175,11 +143,6 @@ export class MeetAndGreetDto {
   @IsOptional()
   @IsBoolean()
   returnEnabled?: boolean;
-
-  @IsOptional()
-  @IsString()
-  @MaxLength(500)
-  instructions?: string;
 
   @IsOptional()
   @IsString()
@@ -224,10 +187,6 @@ export class CreateDto {
   @Min(1)
   @Max(10)
   vehicleCount?: number;
-
-  @IsOptional()
-  @IsEnum(BookingStatus)
-  status?: BookingStatus;
 
   @ValidateNested()
   @Type(() => AddressDto)

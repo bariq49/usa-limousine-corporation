@@ -14,7 +14,7 @@ export function getConfig(configService: ConfigService): Config {
     config.token = token;
   }
 
-  const from = configService.get<string>("TWILIO_FROM_NUMBER")?.trim();
+  const from = configService.get<string>("TWILIO_SENDER_ID")?.trim();
   if (from) {
     config.from = from;
   }

@@ -24,7 +24,7 @@ Env vars:
 ```env
 TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 TWILIO_AUTH_TOKEN=your-twilio-auth-token
-TWILIO_FROM_NUMBER=+15551234567
+TWILIO_SENDER_ID=USALimoCorp
 ```
 
 ### 1. Create / open a Twilio account
@@ -41,17 +41,14 @@ TWILIO_FROM_NUMBER=+15551234567
 
 Trial accounts work for development. For production, upgrade the account when ready.
 
-### 3. Get `TWILIO_FROM_NUMBER`
+### 3. Set `TWILIO_SENDER_ID`
 
-**Option A — Trial / quick start (recommended first)**
+Texts are sent from the company name rather than a phone number (an alphanumeric sender ID).
 
-1. Console → **Phone Numbers** → **Manage** → **Buy a number** (or **Active numbers**).
-2. Buy / claim a number with **SMS** capability (country must support SMS to your test phones).
-3. Copy the number in **E.164** form, e.g. `+15551234567` → `TWILIO_FROM_NUMBER`.
-
-**Option B — Messaging Service (later)**
-
-If you use a Messaging Service SID later, we can extend config. For now the API uses a single `TWILIO_FROM_NUMBER`.
+- Up to **11** letters, digits or spaces, with at least one letter: `USALimoCorp`.
+- Some countries need the sender ID registered first: Console → **Messaging** → **Sender IDs**.
+- **US and Canada (+1) numbers do not accept alphanumeric sender IDs**, so texts to them are
+  not delivered. Those need a Twilio phone number instead.
 
 ### 4. Trial account limits
 

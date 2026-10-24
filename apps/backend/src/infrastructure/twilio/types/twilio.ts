@@ -1,6 +1,7 @@
 export type Config = {
   sid?: string;
   token?: string;
+  /** Alphanumeric sender ID shown as the SMS sender instead of a phone number. */
   from?: string;
 };
 

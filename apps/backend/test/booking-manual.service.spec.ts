@@ -14,6 +14,7 @@ describe("BookingService.createManual", () => {
       bookingNumber: "BK-1",
       status: BookingStatus.CONFIRMED,
     }));
+    const sendConfirmed = jest.fn(async () => undefined);
     const service = new BookingService(
       { create, findById } as never,
       { nextBooking: async () => 1 } as never,
@@ -21,6 +22,7 @@ describe("BookingService.createManual", () => {
       { stageForAdmins: jest.fn(), deliverStaged: jest.fn() } as never,
       {} as never,
       {} as never,
+      { sendConfirmed } as never,
     );
 
     const result = await service.createManual(
@@ -57,6 +59,7 @@ describe("BookingService.createManual", () => {
         status: BookingStatus.CONFIRMED,
       }),
     );
+    expect(sendConfirmed).toHaveBeenCalledWith("book-1");
   });
 });
 
@@ -75,6 +78,8 @@ describe("BookingService.create", () => {
     };
 
     const priceItems = jest.fn(async () => ({ extraServices: [], luggage: [] }));
+    const vehicleCapacity = jest.fn(async () => ({ passengers: 4, luggage: 3 }));
+    const sendCreated = jest.fn(async () => undefined);
     const rates = {
       fuelSurchargeRate: 0,
       gratuityRate: 10,
@@ -91,19 +96,25 @@ describe("BookingService.create", () => {
     };
 
     const service = new BookingService(
-      { create, findOwnedByUser, priceItems } as never,
+      { create, findOwnedByUser, priceItems, vehicleCapacity } as never,
       { nextBooking: async () => 2 } as never,
       prisma as never,
       { stageForAdmins, deliverStaged } as never,
       { get: async () => rates } as never,
       { basePriceFor: async () => 100 } as never,
+      { sendCreated } as never,
     );
 
     const nextYear = new Date().getFullYear() + 1;
     const result = await service.create(
       {
         vehicleCategoryId: "cat-1",
-        address: { pickup: { address: "A" }, distance: 10, duration: 20 },
+        address: {
+          pickup: { address: "A" },
+          dropoff: { address: "B" },
+          distance: 10,
+          duration: 20,
+        },
         passenger: { passengerCount: 1, name: "Ada", phone: "+316", email: "ada@example.com" },
         bookingTime: { pickupDate: `${nextYear}-09-11`, pickupTime: "14:00" },
         // Client total is ignored; the server prices the trip.
@@ -128,7 +139,90 @@ describe("BookingService.create", () => {
       tx,
     );
     expect(deliverStaged).toHaveBeenCalledWith(staged);
+    expect(sendCreated).toHaveBeenCalledWith("book-2");
     expect(result.id).toBe("book-2");
+  });
+});
+
+describe("BookingService.create checks", () => {
+  const nextYear = new Date().getFullYear() + 1;
+  const request = { headers: {}, user: { sub: "customer-user", sid: "s1", roles: [] } } as never;
+  const service = new BookingService(
+    { vehicleCapacity: async () => ({ passengers: 4, luggage: 3 }) } as never,
+    {} as never,
+    {} as never,
+    {} as never,
+    { get: async () => ({ minBookingMinutes: 0 }) } as never,
+    {} as never,
+    {} as never,
+  );
+  const body = (overrides: Record<string, unknown>) =>
+    Object.assign(
+      {
+        vehicleCategoryId: "cat-1",
+        bookingType: BookingType.ONE_WAY,
+        vehicleCount: 1,
+        address: {
+          pickup: { address: "A" },
+          dropoff: { address: "B" },
+          distance: 10,
+          duration: 20,
+        },
+        passenger: { passengerCount: 1, name: "Ada", phone: "+316", email: "ada@example.com" },
+        bookingTime: { pickupDate: `${nextYear}-09-11`, pickupTime: "14:00" },
+        pricing: { basePrice: 1, total: 1 },
+      },
+      overrides,
+    ) as never;
+
+  it("rejects hourly bookings, which are quoted on request", async () => {
+    await expect(
+      service.create(body({ bookingType: BookingType.HOURLY }), request),
+    ).rejects.toThrow("quoted on request");
+  });
+
+  it("rejects more passengers or bags than the vehicles hold", async () => {
+    await expect(
+      service.create(
+        body({ passenger: { passengerCount: 5, name: "Ada", phone: "+316", email: "a@b.co" } }),
+        request,
+      ),
+    ).rejects.toThrow("Up to 4 passengers");
+    await expect(
+      service.create(body({ luggage: [{ luggageTypeId: "l1", quantity: 4 }] }), request),
+    ).rejects.toThrow("Up to 3 bags");
+  });
+
+  it("allows more passengers when more vehicles are booked", async () => {
+    await expect(
+      service.create(
+        body({
+          vehicleCount: 2,
+          passenger: { passengerCount: 9, name: "Ada", phone: "+316", email: "a@b.co" },
+        }),
+        request,
+      ),
+    ).rejects.toThrow("Up to 8 passengers");
+  });
+
+  it("requires the return to come after the pickup", async () => {
+    await expect(
+      service.create(body({ bookingType: BookingType.RETURN }), request),
+    ).rejects.toThrow("Return date and time are required");
+    await expect(
+      service.create(
+        body({
+          bookingType: BookingType.RETURN,
+          bookingTime: {
+            pickupDate: `${nextYear}-09-11`,
+            pickupTime: "14:00",
+            returnDate: `${nextYear}-09-11`,
+            returnTime: "13:00",
+          },
+        }),
+        request,
+      ),
+    ).rejects.toThrow("after the pickup");
   });
 });
 
@@ -143,6 +237,7 @@ describe("BookingService.buildAnalytics", () => {
     ]);
     const service = new BookingService(
       { analyticsRows } as never,
+      {} as never,
       {} as never,
       {} as never,
       {} as never,
@@ -172,6 +267,7 @@ describe("BookingService.buildCalendar", () => {
   const makeService = (findForCalendar: jest.Mock) =>
     new BookingService(
       { findForCalendar } as never,
+      {} as never,
       {} as never,
       {} as never,
       {} as never,

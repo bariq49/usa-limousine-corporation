@@ -24,6 +24,7 @@ import type {
   UpdateDto,
 } from "../dto/booking.dto";
 import { BookingRepository } from "../repositories/booking.repository";
+import { BookingEmailService } from "./booking-email.service";
 import type {
   AddressInput,
   Analytics,
@@ -44,18 +45,38 @@ export class BookingService {
     private readonly platformSettingsService: PlatformSettingsService,
     @Inject(VehiclePricingService)
     private readonly vehiclePricingService: VehiclePricingService,
+    @Inject(BookingEmailService) private readonly bookingEmails: BookingEmailService,
   ) {}
 
   /**
-   * Prices a customer booking on the server from the distance pricing and platform settings,
-   * so the total never comes from the client. Hourly quotes keep the entered pricing.
+   * Checks a customer booking and prices it on the server from the distance pricing and
+   * platform settings, so the total never comes from the client. Hourly hire is quoted on
+   * request, so customers can only book one-way and return trips.
    */
-  private async priceCustomerBooking(
-    body: CreateDto,
-  ): Promise<CreateDto["pricing"] | BookingPricing> {
+  private async priceCustomerBooking(body: CreateDto): Promise<BookingPricing> {
     const bookingType = body.bookingType ?? BookingType.ONE_WAY;
     if (bookingType !== BookingType.ONE_WAY && bookingType !== BookingType.RETURN) {
-      return body.pricing;
+      throw new BadRequestException("Hourly hire is quoted on request; please contact us");
+    }
+    if (!body.address.dropoff) {
+      throw new BadRequestException("A drop-off location is required");
+    }
+
+    const vehicleCount = body.vehicleCount ?? 1;
+    const capacity = await this.bookingRepository.vehicleCapacity(body.vehicleCategoryId);
+    if (!capacity) {
+      throw new BadRequestException("This vehicle is not available");
+    }
+    if (body.passenger.passengerCount > capacity.passengers * vehicleCount) {
+      throw new BadRequestException(
+        `Up to ${capacity.passengers * vehicleCount} passengers fit in the selected vehicles`,
+      );
+    }
+    const luggageCount = (body.luggage ?? []).reduce((total, item) => total + item.quantity, 0);
+    if (luggageCount > capacity.luggage * vehicleCount) {
+      throw new BadRequestException(
+        `Up to ${capacity.luggage * vehicleCount} bags fit in the selected vehicles`,
+      );
     }
 
     const rates = await this.platformSettingsService.get();
@@ -71,6 +92,18 @@ export class BookingService {
       throw new BadRequestException(
         `Bookings need at least ${rates.minBookingNotice} ${rates.minBookingNoticeUnit === "HOUR" ? "hour(s)" : "minute(s)"} notice`,
       );
+    }
+
+    if (bookingType === BookingType.RETURN) {
+      const { returnDate, returnTime } = body.bookingTime;
+      const returnAt =
+        returnDate && returnTime ? wallClock(APP_TIMEZONE, returnDate, returnTime) : null;
+      if (!returnAt) {
+        throw new BadRequestException("Return date and time are required for a return trip");
+      }
+      if (returnAt.getTime() <= pickupAt.getTime()) {
+        throw new BadRequestException("The return must be after the pickup");
+      }
     }
 
     const basePrice = await this.vehiclePricingService.basePriceFor(
@@ -157,6 +190,7 @@ export class BookingService {
     });
     const booking = created.booking;
     await this.notificationService.deliverStaged(created.notifications);
+    void this.bookingEmails.sendCreated(booking.id);
 
     await auditLog({
       prisma: this.prisma,
@@ -214,6 +248,7 @@ export class BookingService {
         source: "admin",
       },
     });
+    void this.bookingEmails.sendConfirmed(booking.id);
 
     return (await this.bookingRepository.findById(booking.id)) ?? booking;
   }
@@ -451,6 +486,9 @@ export class BookingService {
       userId: context.userId,
       metadata: { bookingId: updated.id, bookingNumber: updated.bookingNumber },
     });
+    if (booking.status !== BookingStatus.CONFIRMED) {
+      void this.bookingEmails.sendConfirmed(updated.id);
+    }
 
     return updated;
   }
@@ -479,6 +517,7 @@ export class BookingService {
       userId: context.userId,
       metadata: { bookingId: updated.id, bookingNumber: updated.bookingNumber },
     });
+    void this.bookingEmails.sendCompleted(updated.id);
 
     return updated;
   }
@@ -524,6 +563,7 @@ export class BookingService {
         reason: updated.cancellationReason,
       },
     });
+    void this.bookingEmails.sendCancelled(updated.id, updated.cancellationReason);
 
     return updated;
   }

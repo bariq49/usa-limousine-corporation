@@ -16,7 +16,7 @@ export class TwilioService {
 
     if (!isComplete(config)) {
       this.logger.warn(
-        "Twilio SMS disabled: set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_FROM_NUMBER",
+        "Twilio SMS disabled: set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_SENDER_ID",
       );
       this.client = null;
       this.sid = null;

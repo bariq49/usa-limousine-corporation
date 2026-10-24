@@ -105,7 +105,7 @@ Unset optional services report `not_configured` in health and do not block start
 | `FIREBASE_PRIVATE_KEY`         | Firebase service account private key (`\n` escaped OK)      |
 | `TWILIO_ACCOUNT_SID`           | Twilio account SID (SMS; optional until configured)         |
 | `TWILIO_AUTH_TOKEN`            | Twilio auth token                                           |
-| `TWILIO_FROM_NUMBER`           | Twilio sender number (E.164, e.g. `+15551234567`)           |
+| `TWILIO_SENDER_ID`             | SMS sender name, max 11 characters (e.g. `USALimoCorp`)     |
 | `AGORA_APP_ID`                 | Agora App ID (trip audio RTC tokens; optional until set)    |
 | `AGORA_APP_CERTIFICATE`        | Agora App Certificate                                       |
 | `AGORA_TOKEN_TTL_SECONDS`      | Agora token TTL (default `3600`)                            |

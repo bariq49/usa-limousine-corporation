@@ -146,6 +146,20 @@ export class BookingRepository {
     });
   }
 
+  /** Seats and suitcases one vehicle of an active category holds, or null when unavailable. */
+  async vehicleCapacity(categoryId: string) {
+    const category = await this.prisma.vehicleCategory.findFirst({
+      where: { id: categoryId, isActive: true, deletedAt: null },
+      select: { passengerCount: true, luggageCapacity: { select: { quantity: true } } },
+    });
+    if (!category) return null;
+
+    return {
+      passengers: category.passengerCount,
+      luggage: category.luggageCapacity.reduce((total, item) => total + item.quantity, 0),
+    };
+  }
+
   /**
    * Looks up active catalog items and captures their current price.
    * Unknown or inactive items are rejected so a booking never references a hidden product.

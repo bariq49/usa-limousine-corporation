@@ -7,6 +7,8 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  IsUrl,
+  Matches,
   Max,
   Min,
   MinLength,
@@ -139,9 +141,15 @@ export class EnvironmentVariables {
   @IsString()
   TWILIO_AUTH_TOKEN?: string;
 
+  /**
+   * SMS sender name instead of a phone number. Twilio allows up to 11 letters, digits and
+   * spaces with at least one letter. Not delivered to US/Canada (+1) numbers.
+   */
   @IsOptional()
-  @IsString()
-  TWILIO_FROM_NUMBER?: string;
+  @Matches(/^(?=.*[A-Za-z])[A-Za-z0-9 ]{1,11}$/, {
+    message: "TWILIO_SENDER_ID must be 1-11 letters, digits or spaces with at least one letter",
+  })
+  TWILIO_SENDER_ID?: string;
 
   @IsString()
   @IsNotEmpty()
@@ -173,6 +181,16 @@ export class EnvironmentVariables {
   @IsOptional()
   @IsEmail()
   DEFAULT_ADMIN_EMAIL?: string;
+
+  /** Public website; booking emails load the logo and icons from it. */
+  @IsOptional()
+  @IsUrl({ require_tld: false })
+  WEBSITE_URL?: string;
+
+  /** Google review link shown in the ride completed email. */
+  @IsOptional()
+  @IsUrl()
+  GOOGLE_REVIEW_URL?: string;
 
   @IsString()
   @IsNotEmpty()
