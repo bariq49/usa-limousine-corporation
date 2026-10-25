@@ -35,7 +35,7 @@ export const emailLayout = ({
   const subtitleHtml = subtitle
     ? `<p style="margin:12px 0 0;"><span style="display:inline-block;padding:6px 14px;border:1px solid rgba(201,168,76,0.6);border-radius:999px;font-size:13px;line-height:1.4;letter-spacing:0.06em;color:${EMAIL_BRAND.accent};font-weight:600;">${escapeHtml(subtitle)}</span></p>`
     : "";
-  const header = `<td style="padding:40px 24px 44px;background:${EMAIL_BRAND.dark};border-radius:0 0 20px 20px;text-align:center;">
+  const header = `<td style="padding:40px 24px 44px;background:${EMAIL_BRAND.dark};border-radius:0 0 6px 6px;text-align:center;">
         <img src="${escapeHtml(assetsUrl)}/logo-white.png" alt="${escapeHtml(EMAIL_BRAND.name)}" width="180" style="display:block;margin:0 auto 28px;border:0;outline:none;max-width:180px;width:100%;height:auto;" />
         <h1 style="margin:0;font-size:28px;line-height:1.3;color:#ffffff;font-weight:700;">${safeTitle}</h1>
         ${subtitleHtml}
@@ -55,7 +55,7 @@ export const emailLayout = ({
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${EMAIL_BRAND.background};padding:32px 16px;">
     <tr>
       <td align="center">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:${EMAIL_BRAND.surface};border:1px solid ${EMAIL_BRAND.border};border-radius:20px;overflow:hidden;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:${EMAIL_BRAND.surface};border:1px solid ${EMAIL_BRAND.border};border-radius:6px;overflow:hidden;">
           <tr>${header}</tr>
           <tr>
             <td style="padding:32px;">${body}</td>

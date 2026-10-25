@@ -2,6 +2,7 @@ import { roundAmount } from "../../../common/utils/money";
 import type {
   BookingPricing,
   BookingPricingInput,
+  LegPricing,
   LegQuote,
   PlatformRates,
   PriceBreakdown,
@@ -11,10 +12,6 @@ function percentOf(amount: number, rate: number): number {
   return roundAmount((amount * rate) / 100);
 }
 
-/**
- * Prices one leg: surcharge, gratuity, tax and transaction fee are percentages of the base;
- * the leg discount comes off that subtotal, then the airport fee is added.
- */
 export function quoteLeg(
   basePrice: number,
   discountRate: number,
@@ -46,7 +43,6 @@ export function quoteLeg(
   };
 }
 
-/** One-way and return leg prices for a vehicle, as shown on the website. */
 export function priceBreakdown(
   basePrice: number,
   rates: PlatformRates,
@@ -87,27 +83,38 @@ export function priceBreakdown(
   };
 }
 
-/**
- * Full booking price: the outbound leg (one-way discount) and the return leg when booked
- * (return discount) for each vehicle, then stop fees, meet & greet per leg, and selected extras.
- */
 export function bookingPricing(input: BookingPricingInput): BookingPricing {
   const { rates } = input;
   const oneWay = quoteLeg(input.basePrice, rates.oneWayDiscountRate, rates, input.isAirport);
   const back = quoteLeg(input.basePrice, rates.returnDiscountRate, rates, input.isAirport);
-  const legs = Array.from({ length: Math.max(1, input.vehicleCount ?? 1) }).flatMap(() =>
+  const vehicles = Math.max(1, input.vehicleCount ?? 1);
+  const legs = Array.from({ length: vehicles }).flatMap(() =>
     input.isReturn ? [oneWay, back] : [oneWay],
   );
+  const legPricing = (leg: LegQuote, meetAndGreet: boolean): LegPricing => ({
+    basePrice: roundAmount(leg.basePrice * vehicles),
+    fuelSurchargePrice: roundAmount(leg.fuelSurchargeAmount * vehicles),
+    gratuityPrice: roundAmount(leg.gratuityAmount * vehicles),
+    taxPrice: roundAmount(leg.taxAmount * vehicles),
+    transactionFeePrice: roundAmount(leg.transactionFeeAmount * vehicles),
+    discountPrice: roundAmount(leg.discountAmount * vehicles),
+    airportPickupPrice: roundAmount(leg.airportFeeAmount * vehicles),
+    meetAndGreetPrice: meetAndGreet ? roundAmount(rates.meetAndGreetFee) : 0,
+    total: roundAmount(leg.total * vehicles),
+  });
 
   const sum = (pick: (leg: LegQuote) => number) =>
     roundAmount(legs.reduce((total, leg) => total + pick(leg), 0));
 
   const stopsPrice = roundAmount(rates.stopFee * input.stopsCount);
-  const meetAndGreetPrice = roundAmount(rates.meetAndGreetFee * input.meetAndGreetLegs);
+  const meetAndGreetPrice = roundAmount(
+    rates.meetAndGreetFee *
+      (Number(input.meetAndGreetOneWay) + Number(input.isReturn && input.meetAndGreetReturn)),
+  );
   const extraServicesPrice = roundAmount(input.extraServicesPrice);
   const legsTotal = sum((leg) => leg.total);
 
-  return {
+  const pricing: BookingPricing = {
     basePrice: sum((leg) => leg.basePrice),
     fuelSurchargePrice: sum((leg) => leg.fuelSurchargeAmount),
     gratuityPrice: sum((leg) => leg.gratuityAmount),
@@ -128,4 +135,11 @@ export function bookingPricing(input: BookingPricingInput): BookingPricing {
       returnDiscountRate: rates.returnDiscountRate,
     },
   };
+  if (input.isReturn) {
+    pricing.legs = {
+      oneWay: legPricing(oneWay, input.meetAndGreetOneWay),
+      returnTrip: legPricing(back, input.meetAndGreetReturn),
+    };
+  }
+  return pricing;
 }

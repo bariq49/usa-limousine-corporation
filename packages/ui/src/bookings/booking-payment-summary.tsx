@@ -1,7 +1,7 @@
 "use client";
 
 import { formatPrice } from "../utils/price";
-import type { ExtraServiceItem, Item, Pricing } from "./types";
+import type { ExtraServiceItem, Item, LegPricing, Pricing } from "./types";
 
 type Props = {
   booking: Pick<Item, "pricing" | "totalPrice" | "extraServices" | "luggage" | "bookingType">;
@@ -23,15 +23,20 @@ function row(label: string, amount: number, discount = false) {
   );
 }
 
-function serviceRows(services: ExtraServiceItem[] | null | undefined) {
+function serviceRows(
+  services: ExtraServiceItem[] | null | undefined,
+  prefix: string,
+  quantityOf: (item: ExtraServiceItem) => number,
+) {
   return (services ?? [])
-    .filter((item) => item.quantity > 0)
+    .filter((item) => quantityOf(item) > 0)
     .map((item) => {
-      const amount = item.unitPrice * item.quantity;
-      const name = item.extraService?.name || "Extra service";
-      const label = item.quantity > 1 ? `${name} ×${item.quantity}` : name;
+      const quantity = quantityOf(item);
+      const amount = item.unitPrice * quantity;
+      const name = `${prefix}${item.extraService?.name || "Extra service"}`;
+      const label = quantity > 1 ? `${name} ×${quantity}` : name;
       return (
-        <div key={item.id} className="flex items-center justify-between gap-4">
+        <div key={`${prefix}${item.id}`} className="flex items-center justify-between gap-4">
           <span className="text-default-600">{label}</span>
           <span className="font-semibold text-default-900">{formatPrice({ price: amount })}</span>
         </div>
@@ -47,6 +52,24 @@ export function BookingPaymentSummary(props: Props) {
     rates && props.booking.bookingType === "RETURN"
       ? ` (${rates.oneWayDiscountRate}% / ${rates.returnDiscountRate}%)`
       : rate(rates?.oneWayDiscountRate);
+  const legRows = (prefix: string, leg: LegPricing, legDiscountRate: number | undefined) => (
+    <>
+      {row(`${prefix}Base Price`, Number(leg.basePrice))}
+      {row(
+        `${prefix}Fuel Surcharge${rate(rates?.fuelSurchargeRate)}`,
+        Number(leg.fuelSurchargePrice),
+      )}
+      {row(`${prefix}Gratuity${rate(rates?.gratuityRate)}`, Number(leg.gratuityPrice))}
+      {row(`${prefix}Tax${rate(rates?.taxRate)}`, Number(leg.taxPrice))}
+      {row(
+        `${prefix}Transaction Fee${rate(rates?.transactionFeeRate)}`,
+        Number(leg.transactionFeePrice),
+      )}
+      {row(`${prefix}Discount${rate(legDiscountRate)}`, Number(leg.discountPrice), true)}
+      {row(`${prefix}Airport Pickup`, Number(leg.airportPickupPrice))}
+      {row(`${prefix}Meet & Greet`, Number(leg.meetAndGreetPrice ?? 0))}
+    </>
+  );
   const luggage = (props.booking.luggage ?? []).filter(
     (item) => item.quantity > 0 && item.unitPrice > 0,
   );
@@ -55,22 +78,41 @@ export function BookingPaymentSummary(props: Props) {
     <section className="rounded-md bg-default-100 p-4">
       <h3 className="text-base font-bold text-default-900 sm:text-lg">Payment Summary</h3>
       <div className="mt-3 space-y-2.5 text-sm sm:mt-4">
-        {row("Base Price", Number(pricing.basePrice ?? 0))}
-        {row(
-          `Fuel Surcharge${rate(rates?.fuelSurchargeRate)}`,
-          Number(pricing.fuelSurchargePrice ?? 0),
+        {pricing.legs ? (
+          <>
+            {legRows("", pricing.legs.oneWay, rates?.oneWayDiscountRate)}
+            {serviceRows(props.booking.extraServices, "", (item) => item.quantity)}
+            {legRows("Return ", pricing.legs.returnTrip, rates?.returnDiscountRate)}
+            {serviceRows(
+              props.booking.extraServices,
+              "Return ",
+              (item) => item.returnQuantity ?? 0,
+            )}
+          </>
+        ) : (
+          <>
+            {row("Base Price", Number(pricing.basePrice ?? 0))}
+            {row(
+              `Fuel Surcharge${rate(rates?.fuelSurchargeRate)}`,
+              Number(pricing.fuelSurchargePrice ?? 0),
+            )}
+            {row(`Gratuity${rate(rates?.gratuityRate)}`, Number(pricing.gratuityPrice ?? 0))}
+            {row(`Tax${rate(rates?.taxRate)}`, Number(pricing.taxPrice ?? 0))}
+            {row(
+              `Transaction Fee${rate(rates?.transactionFeeRate)}`,
+              Number(pricing.transactionFeePrice ?? 0),
+            )}
+            {row(`Discount${discountRate}`, Number(pricing.discountPrice ?? 0), true)}
+            {row("Airport Pickup", Number(pricing.airportPickupPrice ?? 0))}
+            {row("Meet & Greet", Number(pricing.meetAndGreetPrice ?? 0))}
+            {serviceRows(
+              props.booking.extraServices,
+              "",
+              (item) => item.quantity + (item.returnQuantity ?? 0),
+            )}
+          </>
         )}
-        {row(`Gratuity${rate(rates?.gratuityRate)}`, Number(pricing.gratuityPrice ?? 0))}
-        {row(`Tax${rate(rates?.taxRate)}`, Number(pricing.taxPrice ?? 0))}
-        {row(
-          `Transaction Fee${rate(rates?.transactionFeeRate)}`,
-          Number(pricing.transactionFeePrice ?? 0),
-        )}
-        {row(`Discount${discountRate}`, Number(pricing.discountPrice ?? 0), true)}
         {row("Additional Stops", Number(pricing.stopsPrice ?? 0))}
-        {row("Airport Pickup", Number(pricing.airportPickupPrice ?? 0))}
-        {row("Meet & Greet", Number(pricing.meetAndGreetPrice ?? 0))}
-        {serviceRows(props.booking.extraServices)}
         {luggage.map((item) => {
           const amount = item.unitPrice * item.quantity;
           const label =

@@ -137,7 +137,10 @@ export class BookingEmailService {
       subject: `${subject} - USA Limousine`,
       html,
     };
-    if (booking.passenger.ccEmail) {
+    if (
+      booking.passenger.ccEmail &&
+      booking.passenger.ccEmail.toLowerCase() !== booking.passenger.email.toLowerCase()
+    ) {
       mail.cc = booking.passenger.ccEmail;
     }
     return this.emailService.send(mail);

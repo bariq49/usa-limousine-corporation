@@ -69,6 +69,19 @@ export type PriceBreakdown = {
   returnTotalPrice: number;
 };
 
+/** Amounts charged for one leg across all booked vehicles. */
+export type LegPricing = {
+  basePrice: number;
+  fuelSurchargePrice: number;
+  gratuityPrice: number;
+  taxPrice: number;
+  transactionFeePrice: number;
+  discountPrice: number;
+  airportPickupPrice: number;
+  meetAndGreetPrice: number;
+  total: number;
+};
+
 /** Pricing stored on a booking: the amounts charged and the rates used at booking time. */
 export type BookingPricing = {
   basePrice: number;
@@ -82,6 +95,8 @@ export type BookingPricing = {
   meetAndGreetPrice: number;
   extraServicesPrice: number;
   total: number;
+  /** Outbound and return leg amounts, stored for return trips only. */
+  legs?: { oneWay: LegPricing; returnTrip: LegPricing };
   rates: {
     fuelSurchargeRate: number;
     gratuityRate: number;
@@ -101,8 +116,8 @@ export type BookingPricingInput = {
   /** Vehicles booked; each one pays its own fare legs. Defaults to 1. */
   vehicleCount?: number;
   stopsCount: number;
-  /** Legs with meet & greet (0, 1 or 2). */
-  meetAndGreetLegs: number;
+  meetAndGreetOneWay: boolean;
+  meetAndGreetReturn: boolean;
   /** Child seats, luggage and other selected extras. */
   extraServicesPrice: number;
 };

@@ -49,6 +49,7 @@ export type MeetAndGreetInput = {
 export type ExtraServiceItemInput = {
   extraServiceId: string;
   quantity: number;
+  returnQuantity?: number | undefined;
 };
 
 export type LuggageItemInput = {
@@ -58,7 +59,12 @@ export type LuggageItemInput = {
 
 /** Items with the catalog unit price captured at booking time. */
 export type PricedItems = {
-  extraServices: { extraServiceId: string; quantity: number; unitPrice: Prisma.Decimal }[];
+  extraServices: {
+    extraServiceId: string;
+    quantity: number;
+    returnQuantity: number;
+    unitPrice: Prisma.Decimal;
+  }[];
   luggage: { luggageTypeId: string; quantity: number; unitPrice: Prisma.Decimal }[];
 };
 

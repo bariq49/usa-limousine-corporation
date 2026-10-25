@@ -121,10 +121,15 @@ export class BookingService {
       total: number,
       item: { unitPrice: { toNumber(): number }; quantity: number },
     ) => total + item.unitPrice.toNumber() * item.quantity;
-    const extraServicesPrice =
-      items.extraServices.reduce(lineTotal, 0) + items.luggage.reduce(lineTotal, 0);
-
     const isReturn = bookingType === BookingType.RETURN;
+    const extraServicesPrice =
+      items.extraServices.reduce(
+        (total, item) =>
+          total +
+          item.unitPrice.toNumber() * (item.quantity + (isReturn ? item.returnQuantity : 0)),
+        0,
+      ) + items.luggage.reduce(lineTotal, 0);
+
     return bookingPricing({
       basePrice,
       rates,
@@ -132,9 +137,8 @@ export class BookingService {
       isReturn,
       vehicleCount: body.vehicleCount ?? 1,
       stopsCount: (body.address.stops ?? []).length,
-      meetAndGreetLegs:
-        Number(Boolean(body.meetAndGreet?.enabled)) +
-        Number(isReturn && Boolean(body.meetAndGreet?.returnEnabled)),
+      meetAndGreetOneWay: Boolean(body.meetAndGreet?.enabled),
+      meetAndGreetReturn: isReturn && Boolean(body.meetAndGreet?.returnEnabled),
       extraServicesPrice: roundAmount(extraServicesPrice),
     });
   }

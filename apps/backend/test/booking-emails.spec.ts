@@ -34,7 +34,7 @@ const booking: BookingEmail = {
   flight: { airline: "United", number: "UA100" },
   meetAndGreet: { enabled: true, returnEnabled: false, signName: "Lovelace" },
   luggage: [{ name: "Large Bag", quantity: 2 }],
-  extras: [{ name: "Baby Seat", quantity: 1, unitPrice: 10 }],
+  extras: [{ name: "Baby Seat", quantity: 1, returnQuantity: 0, unitPrice: 10 }],
   notes: "Call on arrival",
   pricing: {
     basePrice: 200,
@@ -66,6 +66,8 @@ describe("booking email templates", () => {
     expect(html).toContain("Baby Seat ×1");
     expect(html).toContain("CC: assistant@example.com");
     expect(html).toContain("$235.00");
+    expect(html).toContain("Baby Seat ×1");
+    expect(html).not.toContain("Child Seats &amp; Extras");
     expect(html).toContain(
       "https://res.cloudinary.com/cloud/image/upload/usa-limousine/email/mapPin.png",
     );
@@ -81,6 +83,45 @@ describe("booking email templates", () => {
 
     expect(html).toContain("Booking Confirmed");
     expect(html).toContain("We have received your payment");
+  });
+
+  it("splits a return trip into one-way and return charges", () => {
+    const leg = {
+      basePrice: 100,
+      fuelSurchargePrice: 0,
+      gratuityPrice: 10,
+      taxPrice: 5,
+      transactionFeePrice: 0,
+      discountPrice: 2.5,
+      airportPickupPrice: 0,
+      meetAndGreetPrice: 25,
+      total: 112.5,
+    };
+    const html = bookingConfirmed(
+      Object.assign({}, booking, {
+        extras: [{ name: "Baby Seat", quantity: 1, returnQuantity: 2, unitPrice: 10 }],
+        pricing: Object.assign({}, booking.pricing, {
+          legs: { oneWay: leg, returnTrip: leg },
+          rates: {
+            fuelSurchargeRate: 0,
+            gratuityRate: 10,
+            taxRate: 5,
+            transactionFeeRate: 0,
+            oneWayDiscountRate: 2,
+            returnDiscountRate: 3,
+          },
+        }),
+      }),
+      context,
+    );
+
+    expect(html).toContain("Return Base Price");
+    expect(html).toContain("Return Gratuity (10%)");
+    expect(html).toContain("Discount (2%)");
+    expect(html).toContain("Return Discount (3%)");
+    expect(html).toContain("Return Meet &amp; Greet");
+    expect(html).toContain("Baby Seat ×1");
+    expect(html).toContain("Return Baby Seat ×2");
   });
 
   it("escapes customer-entered text", () => {

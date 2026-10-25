@@ -47,7 +47,21 @@ export type Pricing = {
   extraServicesPrice?: number | undefined;
   subtotal?: number | undefined;
   currency?: string | undefined;
+  /** Outbound and return leg amounts on return trips. */
+  legs?: { oneWay: LegPricing; returnTrip: LegPricing } | undefined;
   rates?: PricingRates | undefined;
+};
+
+export type LegPricing = {
+  basePrice: number;
+  fuelSurchargePrice: number;
+  gratuityPrice: number;
+  taxPrice: number;
+  transactionFeePrice: number;
+  discountPrice: number;
+  airportPickupPrice: number;
+  meetAndGreetPrice?: number | undefined;
+  total: number;
 };
 
 export type PricingRates = {
@@ -75,6 +89,7 @@ export type ExtraServiceItem = {
   id: string;
   extraServiceId: string;
   quantity: number;
+  returnQuantity?: number | undefined;
   unitPrice: number;
   extraService?: { id: string; name: string; type: string } | null;
 };

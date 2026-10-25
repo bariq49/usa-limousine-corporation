@@ -170,7 +170,7 @@ export interface BookingDraft {
     };
     flightDetails?: { flightName?: string; flightNumber?: string };
     meetAndGreet?: { enabled: boolean; signName?: string; returnEnabled?: boolean };
-    extraServices?: { extraServiceId: string; quantity: number }[];
+    extraServices?: { extraServiceId: string; quantity: number; returnQuantity: number }[];
     luggage?: { luggageTypeId: string; quantity: number }[];
     notes?: string;
     pricing: {

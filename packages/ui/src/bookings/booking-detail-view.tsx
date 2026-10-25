@@ -251,14 +251,26 @@ export function BookingDetailView(props: Props) {
                       Passengers: {booking.passenger.passengerCount}
                     </DetailItem>
                   ) : null}
-                  {childSeats.map((item) => (
-                    <DetailItem
-                      key={`seat-${item.extraServiceId}`}
-                      icon={preferenceIcon(getSeatIcon(item.extraService?.name))}
-                    >
-                      {item.extraService?.name || "Child seat"}: {item.quantity}
-                    </DetailItem>
-                  ))}
+                  {childSeats.map((item) =>
+                    item.quantity > 0 ? (
+                      <DetailItem
+                        key={`seat-${item.extraServiceId}`}
+                        icon={preferenceIcon(getSeatIcon(item.extraService?.name))}
+                      >
+                        {item.extraService?.name || "Child seat"}: {item.quantity}
+                      </DetailItem>
+                    ) : null,
+                  )}
+                  {childSeats.map((item) =>
+                    item.returnQuantity ? (
+                      <DetailItem
+                        key={`return-seat-${item.extraServiceId}`}
+                        icon={preferenceIcon(getSeatIcon(item.extraService?.name))}
+                      >
+                        Return {item.extraService?.name || "Child seat"}: {item.returnQuantity}
+                      </DetailItem>
+                    ) : null,
+                  )}
                   {luggageItems.map((item) => {
                     const LuggageIcon = getLuggageIcon(item.luggageType?.name);
                     return (

@@ -62,7 +62,8 @@ describe("platform pricing", () => {
       isAirport: false,
       isReturn: true,
       stopsCount: 2,
-      meetAndGreetLegs: 2,
+      meetAndGreetOneWay: true,
+      meetAndGreetReturn: true,
       extraServicesPrice: 15,
     });
 
@@ -72,5 +73,34 @@ describe("platform pricing", () => {
     expect(pricing.meetAndGreetPrice).toBe(50);
     expect(pricing.total).toBe(117.9 + 104.8 + 20 + 50 + 15);
     expect(pricing.rates.taxRate).toBe(8);
+    expect(pricing.legs?.oneWay).toEqual(
+      expect.objectContaining({ basePrice: 100, discountPrice: 13.1, total: 117.9 }),
+    );
+    expect(pricing.legs?.returnTrip).toEqual(
+      expect.objectContaining({
+        basePrice: 100,
+        discountPrice: 26.2,
+        meetAndGreetPrice: 25,
+        total: 104.8,
+      }),
+    );
+  });
+
+  it("stores leg amounts for every booked vehicle and none on one-way trips", () => {
+    const input = {
+      basePrice: 100,
+      rates,
+      isAirport: false,
+      vehicleCount: 2,
+      stopsCount: 0,
+      meetAndGreetOneWay: false,
+      meetAndGreetReturn: false,
+      extraServicesPrice: 0,
+    };
+
+    expect(bookingPricing(Object.assign({ isReturn: true }, input)).legs?.returnTrip.total).toBe(
+      209.6,
+    );
+    expect(bookingPricing(Object.assign({ isReturn: false }, input)).legs).toBeUndefined();
   });
 });

@@ -129,6 +129,14 @@ function Step3() {
       return;
     }
 
+    if (
+      values.ccEmailEnabled &&
+      values.ccEmail.trim().toLowerCase() === values.email.trim().toLowerCase()
+    ) {
+      form.setError("ccEmail", { message: "Enter a different email from the passenger email" });
+      return;
+    }
+
     placeOrder();
   };
 

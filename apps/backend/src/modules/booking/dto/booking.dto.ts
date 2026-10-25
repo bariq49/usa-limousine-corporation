@@ -162,9 +162,16 @@ export class ExtraServiceItemDto {
 
   @Type(() => Number)
   @IsInt()
-  @Min(1)
+  @Min(0)
   @Max(20)
   quantity!: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  @Max(20)
+  returnQuantity?: number;
 }
 
 export class LuggageItemDto {

@@ -1,6 +1,7 @@
 import { BookingType } from "@prisma/client";
 import { escapeHtml } from "../../../infrastructure/email/templates/layout";
 import { EMAIL_BRAND } from "./layout";
+import type { LegPricing } from "../../platform-settings/types/platform-settings";
 import type { BookingEmail } from "./types";
 
 type IconName =
@@ -133,7 +134,12 @@ export const tripDetailsCard = (booking: BookingEmail, assetsUrl: string) => {
     rows.push(iconRow(icon(assetsUrl, "luggage"), `${item.name}: ${item.quantity}`));
   });
   booking.extras.forEach((item) => {
-    rows.push(iconRow(icon(assetsUrl, "seats"), `${item.name} ×${item.quantity}`));
+    if (item.quantity > 0) {
+      rows.push(iconRow(icon(assetsUrl, "seats"), `${item.name} ×${item.quantity}`));
+    }
+    if (item.returnQuantity > 0) {
+      rows.push(iconRow(icon(assetsUrl, "seats"), `Return ${item.name} ×${item.returnQuantity}`));
+    }
   });
   if (booking.meetAndGreet.enabled) {
     rows.push(
@@ -196,24 +202,59 @@ const priceRow = (label: string, amount: number, options?: { discount?: boolean 
   </tr>`;
 };
 
+type ChargeLine = [string, number | undefined, boolean?];
+
 export const paymentSummaryCard = (booking: BookingEmail) => {
   const { pricing } = booking;
   const rates = pricing.rates;
-  const lines: [string, number | undefined, boolean?][] = [
-    ["Base Price", pricing.basePrice],
-    [`Fuel Surcharge${rates ? ` (${rates.fuelSurchargeRate}%)` : ""}`, pricing.fuelSurchargePrice],
-    [`Gratuity${rates ? ` (${rates.gratuityRate}%)` : ""}`, pricing.gratuityPrice],
-    [`Tax${rates ? ` (${rates.taxRate}%)` : ""}`, pricing.taxPrice],
-    [
-      `Transaction Fee${rates ? ` (${rates.transactionFeeRate}%)` : ""}`,
-      pricing.transactionFeePrice,
-    ],
-    ["Discount", pricing.discountPrice, true],
-    ["Airport Pickup", pricing.airportPickupPrice],
+  const extrasTotal = booking.extras.reduce(
+    (sum, item) => sum + item.unitPrice * (item.quantity + item.returnQuantity),
+    0,
+  );
+  const luggagePrice = Math.round(((pricing.extraServicesPrice ?? 0) - extrasTotal) * 100) / 100;
+  const percent = (value: number | undefined) => (value != null ? ` (${value}%)` : "");
+  const legCharges = (
+    prefix: string,
+    leg: Partial<LegPricing>,
+    discountRate: number | undefined,
+    quantityOf: (item: BookingEmail["extras"][number]) => number,
+  ): ChargeLine[] =>
+    (
+      [
+        [`${prefix}Base Price`, leg.basePrice],
+        [`${prefix}Fuel Surcharge${percent(rates?.fuelSurchargeRate)}`, leg.fuelSurchargePrice],
+        [`${prefix}Gratuity${percent(rates?.gratuityRate)}`, leg.gratuityPrice],
+        [`${prefix}Tax${percent(rates?.taxRate)}`, leg.taxPrice],
+        [`${prefix}Transaction Fee${percent(rates?.transactionFeeRate)}`, leg.transactionFeePrice],
+        [`${prefix}Discount${percent(discountRate)}`, leg.discountPrice, true],
+        [`${prefix}Airport Pickup`, leg.airportPickupPrice],
+        [`${prefix}Meet & Greet`, leg.meetAndGreetPrice],
+      ] as ChargeLine[]
+    ).concat(
+      booking.extras.map((item): [string, number] => [
+        `${prefix}${item.name} ×${quantityOf(item)}`,
+        item.unitPrice * quantityOf(item),
+      ]),
+    );
+  const charges = pricing.legs
+    ? legCharges(
+        "",
+        pricing.legs.oneWay,
+        rates?.oneWayDiscountRate,
+        (item) => item.quantity,
+      ).concat(
+        legCharges(
+          "Return ",
+          pricing.legs.returnTrip,
+          rates?.returnDiscountRate,
+          (item) => item.returnQuantity,
+        ),
+      )
+    : legCharges("", pricing, undefined, (item) => item.quantity + item.returnQuantity);
+  const lines = charges.concat([
     ["Additional Stops", pricing.stopsPrice],
-    ["Meet & Greet", pricing.meetAndGreetPrice],
-    ["Child Seats & Extras", pricing.extraServicesPrice],
-  ];
+    ["Luggage", luggagePrice],
+  ]);
 
   return infoCard(
     "Payment Summary",

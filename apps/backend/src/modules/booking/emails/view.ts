@@ -54,6 +54,7 @@ export function toBookingEmail(row: BookingRow): BookingEmail {
     extras: row.extraServices.map((item) => ({
       name: item.extraService.name,
       quantity: item.quantity,
+      returnQuantity: item.returnQuantity,
       unitPrice: item.unitPrice.toNumber(),
     })),
     notes: row.notes,

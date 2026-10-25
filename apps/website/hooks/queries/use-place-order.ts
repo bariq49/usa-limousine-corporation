@@ -20,12 +20,17 @@ export const usePlaceOrder = () => {
             const returnEnabled = Boolean(step3.returnEnabled);
             const deliveryAddress = step1.deliveryAddress.trim();
 
-            const seatCounts = new Map<string, number>();
-            (step3.childSeats ?? [])
-                .concat(returnEnabled ? (step3.returnChildSeats ?? []) : [])
-                .forEach((seat) => {
-                    seatCounts.set(seat.id, (seatCounts.get(seat.id) ?? 0) + seat.quantity);
-                });
+            const seatCounts = new Map<string, { quantity: number; returnQuantity: number }>();
+            (step3.childSeats ?? []).forEach((seat) => {
+                const counts = seatCounts.get(seat.id) ?? { quantity: 0, returnQuantity: 0 };
+                counts.quantity += seat.quantity;
+                seatCounts.set(seat.id, counts);
+            });
+            (returnEnabled ? (step3.returnChildSeats ?? []) : []).forEach((seat) => {
+                const counts = seatCounts.get(seat.id) ?? { quantity: 0, returnQuantity: 0 };
+                counts.returnQuantity += seat.quantity;
+                seatCounts.set(seat.id, counts);
+            });
 
             const returnDetails = returnEnabled
                 ? [
@@ -72,9 +77,10 @@ export const usePlaceOrder = () => {
                               returnEnabled: Boolean(step3.returnMeetGreetEnabled),
                           }
                         : undefined,
-                extraServices: Array.from(seatCounts, ([extraServiceId, quantity]) => ({
+                extraServices: Array.from(seatCounts, ([extraServiceId, counts]) => ({
                     extraServiceId,
-                    quantity,
+                    quantity: counts.quantity,
+                    returnQuantity: counts.returnQuantity,
                 })),
                 luggage: (step3.luggage ?? []).map((item) => ({
                     luggageTypeId: item.id,

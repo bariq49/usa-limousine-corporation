@@ -292,6 +292,7 @@ export class BookingRepository {
       extraServices: extraServices.map((item) => ({
         extraServiceId: item.extraServiceId,
         quantity: item.quantity,
+        returnQuantity: item.returnQuantity ?? 0,
         unitPrice: servicePrice.get(item.extraServiceId) as Prisma.Decimal,
       })),
       luggage: luggage.map((item) => ({
@@ -397,6 +398,7 @@ export class BookingRepository {
             bookingId: id,
             extraServiceId: item.extraServiceId,
             quantity: item.quantity,
+            returnQuantity: item.returnQuantity,
             unitPrice: item.unitPrice,
           })),
         });
