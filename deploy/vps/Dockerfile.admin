@@ -14,12 +14,14 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/admin/package.json apps/admin/package.json
 COPY packages/ui/package.json packages/ui/package.json
+COPY packages/config packages/config
 
 RUN pnpm install --frozen-lockfile --filter @usa-limousine-corporation/admin...
 
 COPY tsconfig.base.json ./
 COPY packages/ui packages/ui
 COPY apps/admin apps/admin
+RUN mkdir -p apps/admin/public
 
 ARG NEXT_PUBLIC_API_BASE_URL
 ARG NEXT_PUBLIC_APP_URL

@@ -1,12 +1,13 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { AppLogger } from "../../../common/logger/app.logger";
 import { TwilioService } from "../../../infrastructure/twilio/twilio.service";
-import { formatDate, formatTime } from "../emails/cards";
+import { formatDate, formatTime } from "../../../infrastructure/email/templates/booking/cards";
 import { BookingRepository } from "../repositories/booking.repository";
 import type { PassengerInput, TimeInput } from "../types/booking";
+import { PLATFORM } from "@usa-limousine-corporation/config";
 
-const BRAND = "USA Limousine Corporation";
-const SUPPORT_PHONE = "+1 732-289-8928";
+const BRAND = PLATFORM.name;
+const SUPPORT_PHONE = PLATFORM.contact.phone;
 
 type SmsBooking = {
   bookingNumber: string;

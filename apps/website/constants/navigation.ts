@@ -10,17 +10,14 @@ export type NavLink = {
   sublinks?: { title: string; path: string; icon?: ComponentType<SVGProps<SVGSVGElement>> }[];
 };
 
-/** Footer quick links; only Home and Contact have pages, the rest lead home. */
 export const QUICK_NAV_ITEMS = [
   { title: "Home", href: "/" },
-  { title: "Services", href: "/" },
-  { title: "Fleet", href: "/" },
-  { title: "Blog", href: "/" },
-  { title: "About Us", href: "/" },
+  { title: "Services", href: "/services" },
+  { title: "About Us", href: "/about-us" },
+  { title: "Blog", href: "/blog" },
   { title: "Contact", href: "/contact-us" },
 ] as const satisfies readonly NavItem[];
 
-/** Services listed in the footer; each opens the booking form. */
 export const SERVICE_LINKS = [
   { title: "Airport Transfers", href: "/#hero-booking" },
   { title: "Hourly Chauffeur", href: "/#hero-booking" },
@@ -33,7 +30,7 @@ export const SERVICE_LINKS = [
   { title: "Diplomatic & Government", href: "/#hero-booking" },
 ] as const satisfies readonly NavItem[];
 
-/** Airports listed in the footer; each opens the booking form. */
+
 export const AIRPORTS = [
   { code: "EWR", name: "Newark" },
   { code: "JFK", name: "John F. Kennedy" },
@@ -48,9 +45,11 @@ export const AIRPORTS = [
   { code: "SWF", name: "Stewart" },
 ] as const;
 
-/** Header order: Home → Contact */
 export const NAV_LINKS: NavLink[] = [
   { title: "Home", path: "/" },
+  { title: "Services", path: "/services" },
+  { title: "About Us", path: "/about-us" },
+  { title: "Blog", path: "/blog" },
   { title: "Contact Us", path: "/contact-us" },
 ];
 

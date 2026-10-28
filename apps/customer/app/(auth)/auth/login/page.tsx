@@ -1,16 +1,17 @@
 import { Suspense } from "react";
 import { LoginForm } from "@/components/forms/login-form";
+import { ASSETS } from "@usa-limousine-corporation/ui/assets";
 
 export default function LoginPage() {
   return (
     <div className="loginwrapper relative flex min-h-screen items-center justify-center overflow-hidden">
       <img
-        src="/images/auth/auth3-dark.png"
+        src={ASSETS.auth.dark.src}
         alt=""
         className="absolute top-0 left-0 hidden h-full w-full object-cover dark:block"
       />
       <img
-        src="/images/auth/auth3-light.png"
+        src={ASSETS.auth.light.src}
         alt=""
         className="absolute top-0 left-0 h-full w-full object-cover dark:hidden"
       />

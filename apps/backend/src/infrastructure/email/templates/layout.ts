@@ -1,10 +1,11 @@
+import { PLATFORM } from "@usa-limousine-corporation/config";
 interface Layout {
   preheader: string;
   title: string;
   content: string;
 }
 
-const BRAND_NAME = "USA Limousine Corporation";
+const BRAND_NAME = PLATFORM.name;
 const SUPPORT_MESSAGE = "If you did not request this email, you can safely ignore it.";
 
 export function escapeHtml(value: string): string {

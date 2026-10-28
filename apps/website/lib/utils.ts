@@ -5,7 +5,7 @@ import { fromZonedTime } from "date-fns-tz";
 import { loadGoogleMaps } from "@usa-limousine-corporation/ui/bookings/google-maps-loader";
 import type { HourCycle } from "@usa-limousine-corporation/ui/store/time-format";
 import { isAirportAddress } from "@usa-limousine-corporation/ui/utils/places";
-import { CURRENCY_SYMBOL, DEFAULT_TIMEZONE, DISTANCE_UNIT } from "@/constants/app-default";
+import { PLATFORM } from "@usa-limousine-corporation/config";
 import type { LocationFormAccessor, ReverseGeocodeParams, CalculateArrivalTimeParams, ValidateBookingTimeParams } from "@/types/utils.types";
 
 export function cn(...inputs: ClassValue[]) {
@@ -19,7 +19,7 @@ export function formatPrice(value: number | undefined | null): string {
     const formatted = Number.isInteger(roundedValue)
         ? String(roundedValue)
         : roundedValue.toFixed(2);
-    return `${CURRENCY_SYMBOL}${formatted}`;
+    return `${PLATFORM.locale.currencySymbol}${formatted}`;
 }
 
 export function formatDate(dateStr: string | undefined): string {
@@ -37,7 +37,7 @@ export function formatDate(dateStr: string | undefined): string {
 
 export function formatDistance(distance: number | undefined | null): string | null {
     if (!distance) return null;
-    return `${distance.toFixed(1)} ${DISTANCE_UNIT}`;
+    return `${distance.toFixed(1)} ${PLATFORM.locale.distanceUnitShort}`;
 }
 
 const isPlusCodeAddress = (address: string) => /^[A-Z0-9]{4,}\+[A-Z0-9]{2,}/i.test(address.trim());
@@ -181,7 +181,7 @@ export const validateBookingTime = ({
     if (!date || !time) return { isValid: true };
 
     try {
-        const pickupDateTime = fromZonedTime(`${date} ${time}`, DEFAULT_TIMEZONE);
+        const pickupDateTime = fromZonedTime(`${date} ${time}`, PLATFORM.locale.timezone);
         const now = new Date();
         const minNoticeMs = minBookingMinutes * 60 * 1000;
 

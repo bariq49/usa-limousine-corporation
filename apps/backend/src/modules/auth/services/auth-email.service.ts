@@ -20,6 +20,7 @@ import type {
   SmsPayload,
 } from "../types/auth-email.jobs";
 import { hashToken } from "../utils/hash-token";
+import { PLATFORM } from "@usa-limousine-corporation/config";
 
 @Injectable()
 export class AuthEmailService {
@@ -92,14 +93,14 @@ export class AuthEmailService {
   async deliverVerificationSms(payload: SmsPayload) {
     await this.twilio.send({
       to: payload.to,
-      body: `Your USA Limousine Corporation verification code is ${payload.token}. It expires in ${payload.expiresInMinutes} minutes.`,
+      body: `Your ${PLATFORM.name} verification code is ${payload.token}. It expires in ${payload.expiresInMinutes} minutes.`,
     });
   }
 
   async deliverPasswordResetSms(payload: SmsPayload) {
     await this.twilio.send({
       to: payload.to,
-      body: `Your USA Limousine Corporation password reset code is ${payload.token}. It expires in ${payload.expiresInMinutes} minutes.`,
+      body: `Your ${PLATFORM.name} password reset code is ${payload.token}. It expires in ${payload.expiresInMinutes} minutes.`,
     });
   }
 

@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { AnimatedRouteMap } from "@usa-limousine-corporation/ui/bookings/animated-route-map";
 import SummaryDetails from "@/components/booking/summary-details";
-import { IMAGES } from "@/constants/image-constants";
 import { useBookingStore } from "@/store/use-booking-store";
 import { useSyncQuote } from "@/hooks/queries/use-quotes";
 import { cn } from "@/lib/utils";
@@ -51,7 +50,6 @@ export default function BookingStepLayout({ children, showMobileMap = true }: Pr
                 stops={step1?.stops}
                 pickupTime={pickupTime}
                 travelDuration={step1?.travelDuration}
-                carMarkerSrc={IMAGES.MAP_CAR_MARKER}
                 bottomInset={MOBILE_SHEET_OVERLAP}
                 wrapperClassName="h-full"
                 className="max-xl:rounded-none max-xl:border-0 max-xl:shadow-none xl:h-map-panel xl:min-h-130 xl:rounded-sm xl:border xl:border-border xl:shadow-sm"

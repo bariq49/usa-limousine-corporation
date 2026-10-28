@@ -11,7 +11,7 @@ import {
   createPasswordSchema,
   type CreatePasswordSchema,
 } from "@usa-limousine-corporation/ui/schemas";
-import { SiteLogo } from "@usa-limousine-corporation/ui/svg";
+import { Logo } from "@usa-limousine-corporation/ui/components/logo";
 import { useAuthResetPassword } from "@/hooks/queries/use-auth";
 
 export function CreatePasswordForm() {
@@ -40,7 +40,7 @@ export function CreatePasswordForm() {
   return (
     <div className="w-full">
       <span className="inline-block">
-        <SiteLogo className="h-10 w-10 text-primary 2xl:h-14 2xl:w-14" />
+        <Logo />
       </span>
       <div className="mt-6 text-2xl font-bold text-default-900 2xl:mt-8 2xl:text-3xl">
         Create New Password

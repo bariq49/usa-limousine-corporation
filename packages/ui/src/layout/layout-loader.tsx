@@ -1,6 +1,6 @@
 "use client";
 
-import { SiteLogo } from "../svg";
+import { Logo } from "../components/logo";
 
 export function LayoutLoader() {
   return (
@@ -15,7 +15,7 @@ export function LayoutLoader() {
         }
       `}</style>
       <div className="relative overflow-hidden inline-flex items-center justify-center p-2 rounded-lg bg-background">
-        <SiteLogo />
+        <Logo />
         <div className="pointer-events-none absolute inset-0 z-10 w-[75%] animate-shimmer-sweep bg-gradient-to-r from-transparent via-white to-transparent mix-blend-screen" />
       </div>
     </div>

@@ -8,7 +8,7 @@ import { Button } from "@usa-limousine-corporation/ui/components/button";
 import { Form } from "@usa-limousine-corporation/ui/components/form";
 import { Input } from "@usa-limousine-corporation/ui/components/input";
 import { verifySchema, type VerifySchema } from "@usa-limousine-corporation/ui/schemas";
-import { SiteLogo } from "@usa-limousine-corporation/ui/svg";
+import { Logo } from "@usa-limousine-corporation/ui/components/logo";
 import { useAuthResendOtp, useAuthVerify } from "@/hooks/queries/use-auth";
 
 export function VerifyForm() {
@@ -49,7 +49,7 @@ export function VerifyForm() {
   return (
     <div className="w-full py-5 md:w-[420px]">
       <span className="inline-block">
-        <SiteLogo className="h-10 w-10 text-primary 2xl:h-14 2xl:w-14" />
+        <Logo />
       </span>
       <div className="mt-6 text-2xl font-bold text-default-900 2xl:mt-8 2xl:text-3xl">
         Email Verification

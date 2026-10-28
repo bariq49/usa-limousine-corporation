@@ -104,6 +104,53 @@ describe("Booking (e2e)", () => {
     expect(saved.total.toNumber()).toBe(estimate.total);
   });
 
+  it("downloads a paid booking's receipt as a PDF", async () => {
+    const fixtures = await seedBookingFixtures(prisma);
+    const payload = buildBookingPayload({ vehicleCategoryId: fixtures.vehicleCategoryId });
+    const orderId = `ORDER${Date.now()}`;
+    const booking = await prisma.booking.create({
+      data: {
+        vehicleCategoryId: fixtures.vehicleCategoryId,
+        bookingNumber: `BK-R${Date.now()}`,
+        status: BookingStatus.CONFIRMED,
+        totalPrice: 55.55,
+        pricing: { basePrice: 55.55, total: 55.55 },
+        address: payload.address,
+        passenger: payload.passenger,
+        bookingTime: { pickupDate: payload.bookingTime.pickupDate, pickupTime: "14:30" },
+        squareOrderId: orderId,
+        payment: {
+          create: {
+            status: "PAID",
+            mode: "TEST",
+            amount: 55.55,
+            squareOrderId: orderId,
+            customerName: "John Doe",
+            customerEmail: "john@example.com",
+            customerPhone: "+31612345678",
+            paidAt: new Date(),
+          },
+        },
+      },
+    });
+
+    const response = await request(app.getHttpServer())
+      .get(`${basePath}/public/bookings/checkout/${orderId}/receipt`)
+      .buffer(true)
+      .parse((res, callback) => {
+        const chunks: Buffer[] = [];
+        res.on("data", (chunk: Buffer) => chunks.push(chunk));
+        res.on("end", () => callback(null, Buffer.concat(chunks)));
+      })
+      .expect(200);
+
+    expect(response.headers["content-type"]).toBe("application/pdf");
+    expect(response.headers["content-disposition"]).toContain(
+      `receipt-${booking.bookingNumber}.pdf`,
+    );
+    expect((response.body as Buffer).subarray(0, 4).toString()).toBe("%PDF");
+  });
+
   it("creates a pending booking as a logged-in customer", async () => {
     const stamp = Date.now();
     const email = `customer-booking-${stamp}@example.com`;

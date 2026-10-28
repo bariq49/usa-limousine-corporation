@@ -8,8 +8,9 @@ import { Button } from "@usa-limousine-corporation/ui/components/button";
 import { Form } from "@usa-limousine-corporation/ui/components/form";
 import { Input } from "@usa-limousine-corporation/ui/components/input";
 import { registerSchema, type RegisterSchema } from "@usa-limousine-corporation/ui/schemas";
-import { SiteLogo } from "@usa-limousine-corporation/ui/svg";
+import { Logo } from "@usa-limousine-corporation/ui/components/logo";
 import { useAuthRegister } from "@/hooks/queries/use-auth";
+import { PLATFORM } from "@usa-limousine-corporation/config";
 
 export function RegisterForm() {
   const { mutate: register, isPending: isLoading } = useAuthRegister();
@@ -34,13 +35,13 @@ export function RegisterForm() {
   return (
     <div className="w-full">
       <span className="inline-block">
-        <SiteLogo className="h-10 w-10 text-primary 2xl:h-14 2xl:w-14" />
+        <Logo />
       </span>
       <div className="mt-6 text-2xl font-bold text-default-900 2xl:mt-8 2xl:text-3xl">
         Hey, Hello 👋
       </div>
       <div className="mt-2 text-base leading-6 text-default-600 2xl:text-lg">
-        Create an account to start using USA Limousine Corporation.
+        Create an account to start using {PLATFORM.name}.
       </div>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="mt-5 xl:mt-7 space-y-4">

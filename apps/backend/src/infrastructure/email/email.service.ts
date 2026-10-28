@@ -8,6 +8,7 @@ import { verification } from "./templates/verification";
 import type { SendMailOptions } from "./types/mail";
 import type { PasswordReset } from "./types/password-reset";
 import type { Verification } from "./types/verification";
+import { PLATFORM } from "@usa-limousine-corporation/config";
 
 @Injectable()
 export class EmailService {
@@ -68,7 +69,7 @@ export class EmailService {
   async sendVerificationEmail(params: Verification) {
     await this.send({
       to: params.to,
-      subject: "Verify your USA Limousine Corporation email address",
+      subject: `Verify your ${PLATFORM.name} email address`,
       html: verification(params),
     });
   }
@@ -76,7 +77,7 @@ export class EmailService {
   async sendPasswordResetEmail(params: PasswordReset) {
     await this.send({
       to: params.to,
-      subject: "Reset your USA Limousine Corporation password",
+      subject: `Reset your ${PLATFORM.name} password`,
       html: passwordReset(params),
     });
   }

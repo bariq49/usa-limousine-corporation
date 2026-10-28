@@ -9,7 +9,7 @@ import { useSidebar } from "../../store/sidebar";
 import { useMediaQuery } from "../../hooks/use-media-query";
 import { ScrollArea } from "../../components/scroll-area";
 import { Button } from "../../components/button";
-import { SiteLogo } from "../../svg";
+import { Logo } from "../../components/logo";
 import { useShell } from "../../providers/shell-context";
 import { toShellNav, type ShellNavChild } from "../../utils/nav-model";
 import { SingleIconMenu } from "./single-icon-menu";
@@ -113,7 +113,7 @@ export function Sidebar() {
         >
           <div className="flex items-center justify-center border-b border-dashed border-border pt-4 pb-4">
             <Link href="/analytics">
-              <SiteLogo variant="short" className="h-16 w-16 text-primary" />
+              <Logo variant="short" className="h-16 w-16 text-primary" />
             </Link>
           </div>
           <ScrollArea className="grow pt-6 pb-6">

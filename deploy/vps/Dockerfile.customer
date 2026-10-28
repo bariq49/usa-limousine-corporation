@@ -14,6 +14,7 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/customer/package.json apps/customer/package.json
 COPY packages/ui/package.json packages/ui/package.json
+COPY packages/config packages/config
 
 RUN pnpm install --frozen-lockfile --filter @usa-limousine-corporation/customer...
 

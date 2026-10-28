@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "../components/avatar";
 import { Tabs, TabsList, TabsTrigger } from "../components/tabs";
 import { useUser } from "../providers/user-context";
 import { cn } from "../utils/cn";
+import { ASSETS } from "../assets/images";
 
 export interface ProfileHeaderTab {
   value: string;
@@ -66,7 +67,7 @@ export function ProfileSettingsHeader({
               )}
               style={{
                 backgroundImage:
-                  "linear-gradient(to top, rgb(0 0 0 / 0.75), rgb(0 0 0 / 0.2), transparent), url(/assets/images/profile/user-cover.png)",
+                  `linear-gradient(to top, rgb(0 0 0 / 0.75), rgb(0 0 0 / 0.2), transparent), url(${ASSETS.profile.cover.src})`,
               }}
             >
               {/* Profile information at bottom-left; overhangs the tab strip, so only the avatar takes clicks */}

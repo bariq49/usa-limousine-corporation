@@ -1,7 +1,7 @@
 "use client";
 
 import { loadGoogleMaps } from "@usa-limousine-corporation/ui/bookings/google-maps-loader";
-import { DISTANCE_UNIT } from "@/constants/app-default";
+import { PLATFORM } from "@usa-limousine-corporation/config";
 
 const METERS_PER_MILE = 1609.344;
 
@@ -27,7 +27,7 @@ function milesToKm(miles: number): number {
 }
 
 function formatDistanceLabel(value: number): string {
-    return `${value.toFixed(1)} ${DISTANCE_UNIT}`;
+    return `${value.toFixed(1)} ${PLATFORM.locale.distanceUnitShort}`;
 }
 
 function formatDuration(minutes: number): string {

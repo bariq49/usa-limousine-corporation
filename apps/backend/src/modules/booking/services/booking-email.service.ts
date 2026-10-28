@@ -11,10 +11,11 @@ import {
   bookingConfirmed,
   bookingReceived,
   newBookingAdmin,
-} from "../emails/templates";
-import type { BookingEmail, ContactPreferences, EmailContext } from "../emails/types";
-import { toBookingEmail } from "../emails/view";
+} from "../../../infrastructure/email/templates/booking/templates";
+import type { BookingEmail, ContactPreferences, EmailContext } from "../../../infrastructure/email/templates/booking/types";
+import { toBookingEmail } from "../utils/booking-email-view";
 import { BookingRepository } from "../repositories/booking.repository";
+import { PLATFORM } from "@usa-limousine-corporation/config";
 
 @Injectable()
 export class BookingEmailService {
@@ -138,7 +139,7 @@ export class BookingEmailService {
     if (!prefs.email) return undefined;
     const mail: SendMailOptions = {
       to: booking.passenger.email,
-      subject: `${subject} - USA Limousine`,
+      subject: `${subject} - ${PLATFORM.shortName}`,
       html,
     };
     if (

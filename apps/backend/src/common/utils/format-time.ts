@@ -1,5 +1,5 @@
-/** US Eastern time (New York); used for day boundaries and wall-clock dates. */
-export const APP_TIMEZONE = "America/New_York";
+import { PLATFORM } from "@usa-limousine-corporation/config";
+export const APP_TIMEZONE = PLATFORM.locale.timezone;
 
 export function formatTime(date: Date = new Date(), timeZone: string = APP_TIMEZONE): string {
   const parts = new Intl.DateTimeFormat("en-GB", {

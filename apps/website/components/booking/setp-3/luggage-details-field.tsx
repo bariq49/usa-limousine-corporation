@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useFormContext, useWatch } from "react-hook-form";
 import { useBookingStore } from "@/store/use-booking-store";
 import { Stepper } from "@usa-limousine-corporation/ui/components/stepper";
-import { IMAGES } from "@/constants/image-constants";
+import { Luggage } from "@usa-limousine-corporation/ui/svg";
 import { useLuggageTypes } from "@/hooks/queries/use-luggage";
 import { formatPrice } from "@/lib/utils";
 import type { Step3FormValues, Step3LuggageSelection } from "@/types/booking.types";
@@ -47,13 +47,17 @@ export const LuggageDetailsField = () => {
                             className="flex items-center gap-3 rounded-sm border border-border bg-white px-3 py-2.5"
                         >
                             <div className="relative h-14 w-14 shrink-0 sm:h-16 sm:w-16">
-                                <Image
-                                    src={type.image || IMAGES.BAGS.CARRY_ON}
-                                    alt={type.name}
-                                    fill
-                                    className="object-contain"
-                                    sizes="64px"
-                                />
+                                {type.image ? (
+                                    <Image
+                                        src={type.image}
+                                        alt={type.name}
+                                        fill
+                                        className="object-contain"
+                                        sizes="64px"
+                                    />
+                                ) : (
+                                    <Luggage className="h-full w-full p-3 text-gray-400" aria-hidden />
+                                )}
                             </div>
 
                             <div className="min-w-0 flex-1 leading-snug">

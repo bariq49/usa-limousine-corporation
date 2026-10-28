@@ -15,7 +15,6 @@ export const PASSENGER_TITLES = [
   { value: 'Dr.', label: 'Dr.' },
 ]
 
-/** Most vehicles of one category that can be booked together (matches the backend limit). */
 export const MAX_VEHICLES = 10
 
 export const PICKUP_TIME_ERRORS = ["PICKUP_PASSED", "PICKUP_TOO_SOON"];

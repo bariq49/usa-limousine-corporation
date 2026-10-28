@@ -3,11 +3,12 @@ import { IMAGES } from "@/constants/image-constants";
 import ContactInfoCards from "@/components/contact/contact-info-cards";
 import ContactFormSection from "@/components/contact/contact-form-section";
 import { Metadata } from "next";
+import { PLATFORM } from "@usa-limousine-corporation/config";
 
 export const metadata: Metadata = {
-    title: "Contact Us | USA Limousine",
-    description: "Get in touch with USA Limousine for airport transfers, chauffeur bookings and executive travel across New Jersey, New York and Connecticut.",
-    keywords: "Contact USA Limousine, limo service New Jersey, chauffeur inquiry Sayreville NJ",
+    title: `Contact Us | ${PLATFORM.shortName}`,
+    description: `Get in touch with ${PLATFORM.shortName} for airport transfers, chauffeur bookings and executive travel across New Jersey, New York and Connecticut.`,
+    keywords: `Contact ${PLATFORM.shortName}, limo service New Jersey, chauffeur inquiry ${PLATFORM.contact.address.city} ${PLATFORM.contact.address.region}`,
 };
 
 export default function ContactPage() {

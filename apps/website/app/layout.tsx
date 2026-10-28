@@ -3,12 +3,8 @@ import { Archivo } from "next/font/google";
 import "./globals.css";
 import Script from "next/script";
 import Providers from "@/providers/query-provider";
-import {
-  COMPANY_PHONE_HREF,
-  COMPANY_ADDRESS,
-  SOCIAL_LINKS,
-} from "@/constants/app-default";
 import { getAppUrl } from "@/lib/api/base-url";
+import { PLATFORM } from "@usa-limousine-corporation/config";
 const archivo = Archivo({
   variable: "--font-archivo",
   subsets: ["latin"],
@@ -18,15 +14,15 @@ const baseUrl = getAppUrl();
 /** Analytics are optional; nothing loads unless these are set. */
 const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID;
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
-const siteTitle = "USA Limousine | Premium Airport Car Service New Jersey & NYC";
-const siteDescription = "USA Limousine provides luxury car service, executive chauffeur service, and reliable airport transportation across New Jersey, New York City, Newark (EWR), and JFK.";
+const siteTitle = `${PLATFORM.shortName} | Premium Airport Car Service New Jersey & NYC`;
+const siteDescription = `${PLATFORM.shortName} provides luxury car service, executive chauffeur service, and reliable airport transportation across New Jersey, New York City, Newark (EWR), and JFK.`;
 const siteKeywords = "airport car service new jersey, airport chauffeur service, limousine service in new york city, executive transportation services, luxury car service new jersey, ewr airport pickup, hourly car service nyc";
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: {
     default: siteTitle,
-    template: "%s | USA Limousine",
+    template: `%s | ${PLATFORM.shortName}`,
   },
   description: siteDescription,
   keywords: siteKeywords,
@@ -37,7 +33,7 @@ export const metadata: Metadata = {
     title: siteTitle,
     description: siteDescription,
     url: baseUrl,
-    siteName: 'USA Limousine',
+    siteName: PLATFORM.shortName,
     locale: 'en',
     type: 'website',
   },
@@ -113,14 +109,14 @@ export default function RootLayout({
               description: siteDescription,
               "@id": baseUrl,
               url: baseUrl,
-              telephone: COMPANY_PHONE_HREF.replace("tel:", ""),
+              telephone: PLATFORM.contact.phoneE164,
               address: {
                 "@type": "PostalAddress",
-                streetAddress: COMPANY_ADDRESS,
-                addressLocality: "Sayreville",
-                addressRegion: "NJ",
-                postalCode: "08872",
-                addressCountry: "US",
+                streetAddress: PLATFORM.contact.address.display,
+                addressLocality: PLATFORM.contact.address.city,
+                addressRegion: PLATFORM.contact.address.region,
+                postalCode: PLATFORM.contact.address.postalCode,
+                addressCountry: PLATFORM.contact.address.country,
               },
               openingHoursSpecification: {
                 "@type": "OpeningHoursSpecification",
@@ -136,7 +132,7 @@ export default function RootLayout({
                 opens: "00:00",
                 closes: "23:59",
               },
-              sameAs: Object.values(SOCIAL_LINKS),
+              sameAs: Object.values(PLATFORM.social),
             }),
           }}
         />

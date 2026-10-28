@@ -4,19 +4,9 @@ import Link from "next/link";
 import type { ComponentType, ReactNode, SVGProps } from "react";
 import FooterLinksColumn, { FooterHeading } from "./FooterLinksColumn";
 import FooterBottomBar from "./FooterBottomBar";
-import { Logo } from "@/layout/header/logo";
+import { Logo } from "@usa-limousine-corporation/ui/components/logo";
 import { AIRPORTS, QUICK_NAV_ITEMS, SERVICE_LINKS } from "@/constants/navigation";
-import {
-  COMPANY_ADDRESS,
-  COMPANY_AVAILABILITY,
-  COMPANY_EMAIL,
-  COMPANY_EMAIL_HREF,
-  COMPANY_FOOTER_DESCRIPTION,
-  COMPANY_PHONE,
-  COMPANY_PHONE_HREF,
-  COMPANY_WHATSAPP_HREF,
-  SOCIAL_LINKS,
-} from "@/constants/app-default";
+import { PLATFORM } from "@usa-limousine-corporation/config";
 import {
   Clock,
   Facebook,
@@ -34,14 +24,14 @@ import {
 import { Stagger, StaggerItem } from "@/components/animations";
 
 const socialItems = [
-  { label: "Facebook", href: SOCIAL_LINKS.facebook, icon: Facebook },
-  { label: "Instagram", href: SOCIAL_LINKS.instagram, icon: Instagram },
-  { label: "TikTok", href: SOCIAL_LINKS.tiktok, icon: TikTok },
-  { label: "LinkedIn", href: SOCIAL_LINKS.linkedin, icon: LinkedIn },
-  { label: "Pinterest", href: SOCIAL_LINKS.pinterest, icon: Pinterest },
-  { label: "X", href: SOCIAL_LINKS.x, icon: XLogo },
-  { label: "YouTube", href: SOCIAL_LINKS.youtube, icon: YouTube },
-  { label: "WhatsApp", href: COMPANY_WHATSAPP_HREF, icon: WhatsApp },
+  { label: "Facebook", href: PLATFORM.social.facebook, icon: Facebook },
+  { label: "Instagram", href: PLATFORM.social.instagram, icon: Instagram },
+  { label: "TikTok", href: PLATFORM.social.tiktok, icon: TikTok },
+  { label: "LinkedIn", href: PLATFORM.social.linkedin, icon: LinkedIn },
+  { label: "Pinterest", href: PLATFORM.social.pinterest, icon: Pinterest },
+  { label: "X", href: PLATFORM.social.x, icon: XLogo },
+  { label: "YouTube", href: PLATFORM.social.youtube, icon: YouTube },
+  { label: "WhatsApp", href: PLATFORM.contact.whatsappHref, icon: WhatsApp },
 ] as const;
 
 type ContactItem = {
@@ -53,17 +43,17 @@ type ContactItem = {
 };
 
 const contactItems: ContactItem[] = [
-  { label: "Office", value: COMPANY_ADDRESS, icon: Location },
-  { label: "Call us", value: COMPANY_PHONE, icon: Phone, href: COMPANY_PHONE_HREF },
+  { label: "Office", value: PLATFORM.contact.address.display, icon: Location },
+  { label: "Call us", value: PLATFORM.contact.phone, icon: Phone, href: PLATFORM.contact.phoneHref },
   {
     label: "WhatsApp",
-    value: COMPANY_PHONE,
+    value: PLATFORM.contact.phone,
     icon: WhatsApp,
-    href: COMPANY_WHATSAPP_HREF,
+    href: PLATFORM.contact.whatsappHref,
     external: true,
   },
-  { label: "Email", value: COMPANY_EMAIL, icon: Mail, href: COMPANY_EMAIL_HREF },
-  { label: "Availability", value: COMPANY_AVAILABILITY, icon: Clock },
+  { label: "Email", value: PLATFORM.contact.email, icon: Mail, href: PLATFORM.contact.emailHref },
+  { label: "Availability", value: PLATFORM.contact.availability, icon: Clock },
 ];
 
 function ContactRow({ item }: { item: ContactItem }) {
@@ -108,9 +98,9 @@ export default function Footer() {
       <div className="container mx-auto px-4">
         <Stagger className="flex flex-col gap-6 border-b border-white/10 py-10 lg:flex-row lg:items-end lg:justify-between">
           <StaggerItem soft className="max-w-md">
-            <Logo />
+            <Logo href="/" size="lg" tone="white" />
             <p className="mt-5 text-sm leading-relaxed text-gray-400">
-              {COMPANY_FOOTER_DESCRIPTION}
+              {PLATFORM.description}
             </p>
           </StaggerItem>
           <StaggerItem soft>

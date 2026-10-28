@@ -48,6 +48,7 @@ jobs:
           filters: |
             backend:
               - 'apps/backend/**'
+              - 'packages/config/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
@@ -59,6 +60,7 @@ jobs:
               - 'apps/admin/**'
               - 'apps/customer/**'
               - 'packages/ui/**'
+              - 'packages/config/**'
               - 'tests/e2e/**'
               - 'playwright.config.ts'
               - 'package.json'

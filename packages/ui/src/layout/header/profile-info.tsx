@@ -14,7 +14,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "../../components/avatar";
 import { useUser } from "../../providers/user-context";
 
-import userAvatar from "../../../public/assets/avatar/user.png";
+import { ASSETS } from "../../assets/images";
 
 export function ProfileInfo() {
   const { user, onLogout, isLoggingOut } = useUser();
@@ -32,7 +32,7 @@ export function ProfileInfo() {
         >
           <Avatar className="h-9 w-9">
             <AvatarImage
-              src={user?.avatar || userAvatar.src}
+              src={user?.avatar || ASSETS.avatar.user.src}
               alt={displayName}
             />
             <AvatarFallback>
@@ -45,7 +45,7 @@ export function ProfileInfo() {
         <DropdownMenuLabel className="mb-1 flex items-center gap-2 p-3">
           <Avatar className="h-9 w-9">
             <AvatarImage
-              src={user?.avatar || userAvatar.src}
+              src={user?.avatar || ASSETS.avatar.user.src}
               alt={displayName}
             />
             <AvatarFallback>

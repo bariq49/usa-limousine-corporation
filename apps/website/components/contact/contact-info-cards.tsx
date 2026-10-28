@@ -3,13 +3,7 @@
 import React from "react";
 import { Clock, Mail, Phone } from "@usa-limousine-corporation/ui/svg";
 import Link from "next/link";
-import {
-    COMPANY_PHONE_HREF,
-    COMPANY_EMAIL,
-    COMPANY_EMAIL_HREF,
-    COMPANY_OPERATING_HOURS,
-    COMPANY_PHONE,
-} from "@/constants/app-default";
+import { PLATFORM } from "@usa-limousine-corporation/config";
 
 export default function ContactInfoCards() {
     const CONTACT_CARDS = [
@@ -17,21 +11,21 @@ export default function ContactInfoCards() {
             icon: Phone,
             title: "Phone & WhatsApp",
             description: "Speak directly with our concierge team",
-            value: COMPANY_PHONE,
-            href: COMPANY_PHONE_HREF,
+            value: PLATFORM.contact.phone,
+            href: PLATFORM.contact.phoneHref,
         },
         {
             icon: Mail,
             title: "Email",
             description: "General inquiries & corporate quotes",
-            value: COMPANY_EMAIL,
-            href: COMPANY_EMAIL_HREF,
+            value: PLATFORM.contact.email,
+            href: PLATFORM.contact.emailHref,
         },
         {
             icon: Clock,
             title: "Operating Hours",
             description: "Round-the-clock availability",
-            value: COMPANY_OPERATING_HOURS,
+            value: PLATFORM.contact.operatingHours,
         },
     ];
 

@@ -13,6 +13,7 @@ WORKDIR /app
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/backend/package.json apps/backend/package.json
+COPY packages/config packages/config
 COPY apps/backend/prisma.config.ts apps/backend/prisma.config.ts
 COPY apps/backend/prisma apps/backend/prisma
 

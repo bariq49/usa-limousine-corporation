@@ -1,8 +1,9 @@
-/** App-wide display defaults for USA Limousine Corporation. */
-export const APP_TIMEZONE = "America/New_York";
-export const APP_LOCALE = "en-US";
-export const APP_CURRENCY = "$";
-export const APP_DISTANCE_UNIT = "mile";
+import { PLATFORM } from "@usa-limousine-corporation/config";
+
+export const APP_TIMEZONE = PLATFORM.locale.timezone;
+export const APP_LOCALE = PLATFORM.locale.locale;
+export const APP_CURRENCY = PLATFORM.locale.currencySymbol;
+export const APP_DISTANCE_UNIT = PLATFORM.locale.distanceUnit;
 
 /** formatDate — e.g. "Oct 15, 2026" */
 export const DATE_FORMAT: Intl.DateTimeFormatOptions = {

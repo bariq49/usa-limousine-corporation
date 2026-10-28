@@ -38,7 +38,7 @@ import { EditBookingModal } from "./modals/edit-booking-modal";
 import { ReturnTripModal } from "./modals/return-trip-modal";
 import { useHasHydrated } from "@/hooks/use-has-hydrated";
 import { TRIP_TYPES } from "@/constants/booking-constants";
-import { CURRENCY_SYMBOL, DEFAULT_TIMEZONE } from "@/constants/app-default";
+import { PLATFORM } from "@usa-limousine-corporation/config";
 
 function getChildSeatLabel(name: string) {
   const shortName = name.split("(")[0]?.trim();
@@ -105,11 +105,11 @@ function SummaryDetails({ className }: Props = {}) {
   const returnEnabled = Boolean(returnTrip);
   const stopCount = stops.length;
   const cancellationRefundRate = settings?.cancellationRefundRate ?? 0;
-  const pickupDateTime = fromZonedTime(`${pickupDate} ${pickupTime}`, DEFAULT_TIMEZONE);
+  const pickupDateTime = fromZonedTime(`${pickupDate} ${pickupTime}`, PLATFORM.locale.timezone);
   const cancellationDeadline = isValid(pickupDateTime)
     ? formatInTimeZone(
         subMinutes(pickupDateTime, settings?.cancellationMinutes ?? 0),
-        DEFAULT_TIMEZONE,
+        PLATFORM.locale.timezone,
         hourCycle === "24h" ? "d MMMM yyyy HH:mm" : "d MMMM yyyy hh:mm a",
       )
     : null;
@@ -303,7 +303,7 @@ function SummaryDetails({ className }: Props = {}) {
               <div className="flex items-end justify-between">
                 <span className="text-sm font-semibold text-black">Total</span>
                 <span className="flex items-baseline gap-1 leading-none text-black">
-                  <span className="text-sm font-medium text-gray-600">{CURRENCY_SYMBOL}</span>
+                  <span className="text-sm font-medium text-gray-600">{PLATFORM.locale.currencySymbol}</span>
                   <span className="text-2xl font-semibold tracking-tight">
                     {pricing.total.toFixed(2)}
                   </span>
@@ -372,7 +372,7 @@ function SummaryDetails({ className }: Props = {}) {
                   <div className="flex items-end justify-between border-t border-gray-100 pt-2">
                     <span className="text-sm font-semibold text-black">Total price</span>
                     <span className="flex items-baseline gap-1 leading-none text-black">
-                      <span className="text-sm font-medium text-gray-600">{CURRENCY_SYMBOL}</span>
+                      <span className="text-sm font-medium text-gray-600">{PLATFORM.locale.currencySymbol}</span>
                       <span className="text-2xl font-semibold tracking-tight">
                         {pricing.total.toFixed(2)}
                       </span>

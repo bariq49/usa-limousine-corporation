@@ -4,7 +4,7 @@ import Link from "next/link";
 import { cn } from "../../utils/cn";
 import { useSidebar } from "../../store/sidebar";
 import { useMediaQuery } from "../../hooks/use-media-query";
-import { SiteLogo } from "../../svg";
+import { Logo } from "../../components/logo";
 
 function MenuBar({
   collapsed,
@@ -52,7 +52,7 @@ export function VerticalHeader() {
     <div className="flex min-w-0 shrink items-center gap-2 sm:gap-3">
       {showLogo ? (
         <Link href="/dashboard" className="shrink-0 text-primary">
-          <SiteLogo className="h-7 w-7" />
+          <Logo />
         </Link>
       ) : null}
       {showMenuBar ? <MenuBar collapsed={collapsed} setCollapsed={setCollapsed} /> : null}

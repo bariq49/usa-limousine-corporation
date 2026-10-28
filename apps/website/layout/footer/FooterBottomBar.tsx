@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { COMPANY_NAME } from "@/constants/app-default";
+import { PLATFORM } from "@usa-limousine-corporation/config";
 import { Stagger, StaggerItem } from "@/components/animations";
 
 export default function FooterBottomBar() {
@@ -12,7 +12,7 @@ export default function FooterBottomBar() {
       <Stagger className="container mx-auto flex flex-col items-center justify-center gap-2 px-4 py-5 text-center text-sm text-gray-400 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:text-left">
         <StaggerItem soft>
           <p>
-            Copyright © {year} <span className="font-semibold text-secondary">{COMPANY_NAME}</span>.
+            Copyright © {year} <span className="font-semibold text-secondary">{PLATFORM.name}</span>.
             All Rights Reserved
           </p>
         </StaggerItem>

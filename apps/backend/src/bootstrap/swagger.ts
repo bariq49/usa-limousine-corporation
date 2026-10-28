@@ -1,13 +1,14 @@
 import { type INestApplication } from "@nestjs/common";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { API_PREFIX, APP_NAME, API_VERSION, SWAGGER_PATH } from "../config/api.constants";
+import { PLATFORM } from "@usa-limousine-corporation/config";
 
 export function setupSwagger(app: INestApplication): void {
   const document = SwaggerModule.createDocument(
     app,
     new DocumentBuilder()
       .setTitle(APP_NAME)
-      .setDescription("USA Limousine Corporation platform API")
+      .setDescription(`${PLATFORM.name} platform API`)
       .setVersion(`${API_VERSION}.0`)
       .build(),
   );

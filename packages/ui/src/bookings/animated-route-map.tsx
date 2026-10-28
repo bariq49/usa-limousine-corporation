@@ -5,6 +5,7 @@ import { useTimeFormat, type HourCycle } from "../store/time-format";
 import { cn } from "../utils/cn";
 import { isAirportAddress, isHotelAddress, isTrainAddress } from "../utils/places";
 import { loadGoogleMaps } from "./google-maps-loader";
+import { ASSETS } from "../assets/images";
 
 export interface AnimatedRouteMapProps {
   pickupAddress: string;
@@ -24,7 +25,7 @@ export interface AnimatedRouteMapProps {
 
 // --- Constants & Styles ---
 const BRAND_GOLD = "#C9A84C";
-const DEFAULT_CAR_MARKER = "/assets/images/map-car-marker.png";
+const DEFAULT_CAR_MARKER = ASSETS.map.carMarker.src;
 const NEW_YORK = { lat: 40.7128, lng: -74.006 };
 
 /**

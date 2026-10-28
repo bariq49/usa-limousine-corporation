@@ -9,6 +9,7 @@ import { ConfigService } from "@nestjs/config";
 import { PaymentMode } from "@prisma/client";
 import { SquareClient, SquareEnvironment, SquareError, WebhooksHelper } from "square";
 import type { OrderResult, PaymentLink, PaymentLinkInput } from "./types/square";
+import { PLATFORM } from "@usa-limousine-corporation/config";
 
 @Injectable()
 export class SquareService {
@@ -35,7 +36,7 @@ export class SquareService {
     const paymentLink = await paymentLinks
       .create({
         idempotencyKey: randomUUID(),
-        description: `USA Limousine · ${input.bookingNumber}`,
+        description: `${PLATFORM.shortName} · ${input.bookingNumber}`,
         paymentNote: input.bookingNumber,
         quickPay: {
           name: `${input.description} · ${input.bookingNumber}`,

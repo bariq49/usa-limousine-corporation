@@ -1,4 +1,4 @@
-import { COMPANY_EMAIL } from "@/constants/app-default";
+import { PLATFORM } from "@usa-limousine-corporation/config";
 
 export interface ContactPayload {
     firstName: string;
@@ -19,6 +19,6 @@ export const contactUs = async (payload: ContactPayload) => {
         `Phone: ${payload.phone}`,
     ].join("\n");
     const query = new URLSearchParams({ subject: payload.subject || "Website enquiry", body });
-    window.location.href = `mailto:${COMPANY_EMAIL}?${query.toString().replace(/\+/g, "%20")}`;
+    window.location.href = `mailto:${PLATFORM.contact.email}?${query.toString().replace(/\+/g, "%20")}`;
     return { message: "Your email app has opened with your message." };
 };

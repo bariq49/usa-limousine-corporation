@@ -21,3 +21,13 @@ export function getAppUrl(): string {
 
     return fromEnv;
 }
+
+export function getCustomerAppUrl(): string {
+    const fromEnv = normalizeUrl(process.env.NEXT_PUBLIC_CUSTOMER_APP_URL || "");
+
+    if (!fromEnv) {
+        throw new Error("NEXT_PUBLIC_CUSTOMER_APP_URL is not set");
+    }
+
+    return fromEnv;
+}

@@ -3,15 +3,12 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import {
-  COMPANY_PHONE,
-  COMPANY_PHONE_HREF,
-} from "@/constants/app-default";
-import { Phone } from "@usa-limousine-corporation/ui/svg";
+import { CircleUser } from "@usa-limousine-corporation/ui/svg";
+import { Logo } from "@usa-limousine-corporation/ui/components/logo";
+import { getCustomerAppUrl } from "@/lib/api/base-url";
 import { useHeaderMenu } from "./use-header-menu";
 import { HeaderDesktopNav } from "./header-desktop-nav";
 import { HeaderMobileMenu } from "./header-mobile-menu";
-import { Logo } from "./logo";
 
 const SCROLL_THRESHOLD = 10;
 
@@ -56,7 +53,7 @@ export default function Header() {
       <div className="relative mx-auto container px-4">
         <div className="relative flex h-16 items-center justify-between md:h-20">
           <div className="relative z-10 shrink-0">
-            <Logo variant={useDarkContent ? "dark" : "white"} />
+            <Logo href="/" size="lg" tone={useDarkContent ? "dark" : "white"} />
           </div>
 
           <div className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 md:block">
@@ -71,18 +68,18 @@ export default function Header() {
           </div>
 
           <div className="relative z-10 flex items-center gap-3">
-            <div className="hidden items-center gap-4 md:flex lg:gap-5">
-              <a
-                href={COMPANY_PHONE_HREF}
-                className={cn(
-                  "group flex items-center gap-2 text-sm font-semibold transition-colors hover:text-secondary lg:text-base",
-                  useDarkContent ? "text-black" : "text-white"
-                )}
-              >
-                <Phone className="h-5 w-5 shrink-0 text-secondary" />
-                <span>{COMPANY_PHONE}</span>
-              </a>
-            </div>
+            <a
+              href={`${getCustomerAppUrl()}/auth/login`}
+              className={cn(
+                "hidden items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold transition-colors md:inline-flex",
+                useDarkContent
+                  ? "border-border text-black hover:bg-gray-50"
+                  : "border-white/40 text-white hover:bg-white/10"
+              )}
+            >
+              <CircleUser className="h-4.5 w-4.5" />
+              Sign-in
+            </a>
 
             <HeaderMobileMenu
               ref={mobileMenuRef}

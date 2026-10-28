@@ -2,11 +2,12 @@
 
 import { forwardRef } from "react";
 import Link from "next/link";
-import { ArrowRight, ChevronDown, Close, Menu, Phone, WhatsApp } from "@usa-limousine-corporation/ui/svg";
+import { ArrowRight, ChevronDown, CircleUser, Close, Menu, Phone } from "@usa-limousine-corporation/ui/svg";
+import { Logo } from "@usa-limousine-corporation/ui/components/logo";
+import { getCustomerAppUrl } from "@/lib/api/base-url";
 import { NAV_LINKS, isNavActive } from "@/constants/navigation";
-import { COMPANY_PHONE, COMPANY_PHONE_HREF, COMPANY_WHATSAPP_HREF } from "@/constants/app-default";
+import { PLATFORM } from "@usa-limousine-corporation/config";
 
-import { Logo } from "./logo";
 
 interface HeaderMobileMenuProps {
   isOpen: boolean;
@@ -39,20 +40,20 @@ export const HeaderMobileMenu = forwardRef<HTMLDivElement, HeaderMobileMenuProps
         <div className="flex items-center gap-3 md:hidden">
           <div className="flex items-center gap-2">
             <a
-              href={COMPANY_PHONE_HREF}
+              href={PLATFORM.contact.phoneHref}
               className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-white shadow-sm transition-all duration-300 hover:scale-105"
-              aria-label={`Call ${COMPANY_PHONE}`}
+              aria-label={`Call ${PLATFORM.contact.phone}`}
             >
               <Phone className="h-4 w-4" strokeWidth={2.5} />
             </a>
             <a
-              href={COMPANY_WHATSAPP_HREF}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-whatsapp text-white shadow-sm transition-all duration-300 hover:scale-105 hover:bg-whatsapp-dark"
-              aria-label="Chat on WhatsApp"
+              href={`${getCustomerAppUrl()}/auth/login`}
+              className={`flex h-8 w-8 items-center justify-center rounded-full border transition-all duration-300 hover:scale-105 ${
+                inverted ? "border-border text-black" : "border-white/40 text-white"
+              }`}
+              aria-label="Sign in"
             >
-              <WhatsApp className="h-4 w-4" fill="currentColor" />
+              <CircleUser className="h-4.5 w-4.5" />
             </a>
           </div>
 
@@ -89,7 +90,7 @@ export const HeaderMobileMenu = forwardRef<HTMLDivElement, HeaderMobileMenuProps
           <div className="flex h-full flex-col overflow-hidden bg-black">
             {/* Mobile Menu Header */}
             <div className="flex h-20 flex-shrink-0 items-center justify-between px-4">
-              <Logo variant="white" />
+              <Logo href="/" size="lg" tone="white" />
               <button
                 onClick={toggleMobile}
                 className="p-2 text-white transition-colors hover:text-secondary"

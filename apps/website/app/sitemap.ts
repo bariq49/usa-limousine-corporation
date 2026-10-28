@@ -8,6 +8,9 @@ const baseUrl = getAppUrl();
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const routes = [
     '',
+    '/services',
+    '/about-us',
+    '/blog',
     '/contact-us',
   ];
 

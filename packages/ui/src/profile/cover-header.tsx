@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/avatar";
 import { Card, CardContent } from "../components/card";
 import { Mail } from "../svg";
+import { ASSETS } from "../assets/images";
 
 export interface CoverHeaderProps {
   name: string;
@@ -22,7 +23,7 @@ export function CoverHeader({ name, email, avatar, aside }: CoverHeaderProps) {
           className="relative h-[180px] w-full rounded-t-lg bg-cover bg-center bg-no-repeat lg:h-[200px]"
           style={{
             backgroundImage:
-              "linear-gradient(to top, rgb(0 0 0 / 0.75), rgb(0 0 0 / 0.2), transparent), url(/assets/images/profile/user-cover.png)",
+              `linear-gradient(to top, rgb(0 0 0 / 0.75), rgb(0 0 0 / 0.2), transparent), url(${ASSETS.profile.cover.src})`,
           }}
         >
           <div className="pointer-events-none absolute inset-x-0 -bottom-7 px-6 pb-5 lg:px-8">

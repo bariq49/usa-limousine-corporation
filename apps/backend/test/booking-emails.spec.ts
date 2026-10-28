@@ -6,8 +6,8 @@ import {
   bookingConfirmed,
   bookingReceived,
   newBookingAdmin,
-} from "../src/modules/booking/emails/templates";
-import type { BookingEmail, EmailContext } from "../src/modules/booking/emails/types";
+} from "../src/infrastructure/email/templates/booking/templates";
+import type { BookingEmail, EmailContext } from "../src/infrastructure/email/templates/booking/types";
 
 const booking: BookingEmail = {
   id: "book-1",
@@ -73,7 +73,7 @@ describe("booking email templates", () => {
       "https://res.cloudinary.com/cloud/image/upload/usa-limousine/email/mapPin.png",
     );
     expect(html).toContain(
-      "https://res.cloudinary.com/cloud/image/upload/usa-limousine/email/logo-white.png",
+      "https://res.cloudinary.com/cloud/image/upload/w_440/usa-limousine/email/white-logo.png",
     );
     expect(html).toContain("Booking Received");
     expect(html).not.toContain("View booking");

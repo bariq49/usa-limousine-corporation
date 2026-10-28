@@ -15,6 +15,7 @@ import { BookingEmailService } from "./services/booking-email.service";
 import { BookingSmsService } from "./services/booking-sms.service";
 import { BookingService } from "./services/booking.service";
 import { QuoteService } from "./services/quote.service";
+import { ReceiptService } from "./services/receipt.service";
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { QuoteService } from "./services/quote.service";
     BookingSmsService,
     BookingService,
     QuoteService,
+    ReceiptService,
   ],
   exports: [
     BookingService,
@@ -41,6 +43,7 @@ import { QuoteService } from "./services/quote.service";
     BookingEmailService,
     BookingSmsService,
     QuoteService,
+    ReceiptService,
   ],
 })
 export class BookingModule {}
