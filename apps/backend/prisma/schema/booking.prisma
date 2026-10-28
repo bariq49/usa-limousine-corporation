@@ -13,37 +13,43 @@ enum BookingType {
 }
 
 model Booking {
-  id                  String        @id @default(cuid())
-  userId              String?
-  vehicleCategoryId   String
-  bookingNumber       String        @unique
-  status              BookingStatus @default(DRAFT)
-  bookingType         BookingType   @default(ONE_WAY)
-  vehicleCount        Int           @default(1)
-  totalPrice          Decimal       @db.Decimal(12, 2)
-  squareOrderId       String?       @unique
-  squarePaymentLinkId String?
-  paymentMode         PaymentMode?
-  pricing             Json
-  address             Json
-  passenger           Json
-  bookingTime         Json
-  flightDetails       Json?
-  meetAndGreet        Json?
-  notes               String?
-  confirmedAt         DateTime?
-  completedAt         DateTime?
-  cancelledAt         DateTime?
-  cancellationReason  String?
-  createdAt           DateTime      @default(now())
-  updatedAt           DateTime      @updatedAt
-  deletedAt           DateTime?
+  id                   String        @id @default(cuid())
+  userId               String?
+  vehicleCategoryId    String
+  bookingNumber        String        @unique
+  status               BookingStatus @default(DRAFT)
+  bookingType          BookingType   @default(ONE_WAY)
+  vehicleCount         Int           @default(1)
+  totalPrice           Decimal       @db.Decimal(12, 2)
+  squareOrderId        String?       @unique
+  squarePaymentLinkId  String?
+  squarePaymentLinkUrl String?
+  paymentMode          PaymentMode?
+  quoteId              String?       @unique
+  pricing              Json
+  address              Json
+  passenger            Json
+  bookingTime          Json
+  flightDetails        Json?
+  meetAndGreet         Json?
+  notes                String?
+  returnNotes          String?
+  notifyByEmail        Boolean       @default(true)
+  notifyBySms          Boolean       @default(true)
+  confirmedAt          DateTime?
+  completedAt          DateTime?
+  cancelledAt          DateTime?
+  cancellationReason   String?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  deletedAt            DateTime?
 
   user            User?                 @relation(fields: [userId], references: [id], onDelete: SetNull)
   vehicleCategory VehicleCategory       @relation(fields: [vehicleCategoryId], references: [id], onDelete: Restrict)
   luggage         BookingLuggage[]
   extraServices   BookingExtraService[]
   payment         Payment?
+  quote           Quote?                @relation(fields: [quoteId], references: [id], onDelete: SetNull)
 
   @@index([userId, createdAt])
   @@index([deletedAt, createdAt])
@@ -79,4 +85,20 @@ model BookingExtraService {
 
   @@unique([bookingId, extraServiceId])
   @@index([extraServiceId])
+}
+
+model Quote {
+  id                String   @id @default(cuid())
+  vehicleCategoryId String
+  inputHash         String
+  input             Json
+  pricing           Json
+  total             Decimal  @db.Decimal(12, 2)
+  expiresAt         DateTime
+  createdAt         DateTime @default(now())
+
+  vehicleCategory VehicleCategory @relation(fields: [vehicleCategoryId], references: [id], onDelete: Cascade)
+  booking         Booking?
+
+  @@index([expiresAt])
 }

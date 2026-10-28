@@ -13,6 +13,8 @@ export type PlatformSettings = {
   airportPickupFee: number;
   stopFee: number;
   meetAndGreetFee: number;
+  emailNotificationFee: number;
+  smsNotificationFee: number;
   minBookingNotice: number;
   minBookingNoticeUnit: NoticeUnit;
   minBookingMinutes: number;

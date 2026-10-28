@@ -1,4 +1,4 @@
-import { BookingStatus, PaymentMode, PaymentStatus } from "@prisma/client";
+import { BookingStatus, PaymentMode, PaymentStatus, Prisma } from "@prisma/client";
 import { PaymentService } from "../src/modules/payment/services/payment.service";
 
 const body = {
@@ -7,7 +7,7 @@ const body = {
   address: { pickup: { address: "A" }, dropoff: { address: "B" }, distance: 10, duration: 20 },
   passenger: { passengerCount: 1, name: "Ada", phone: "+17322898928", email: "ada@example.com" },
   bookingTime: { pickupDate: "2030-09-11", pickupTime: "14:00" },
-  pricing: { basePrice: 1, total: 1 },
+  quoteId: "quote-1",
 } as never;
 const request = { headers: {} } as never;
 const passenger = { name: "Ada", email: "ada@example.com", phone: "+17322898928" };
@@ -31,11 +31,21 @@ function setup(
     recorded?: boolean;
     createLink?: jest.Mock;
     customerId?: string | null;
+    existing?: Record<string, unknown> | null;
+    createError?: unknown;
   } = {},
 ) {
+  const quoteService = {
+    find: jest.fn(async () => ({ id: "quote-1" })),
+    pricingFor: jest.fn(async () => ({ basePrice: 100, total: 110 })),
+  };
   const bookingRepository = {
     findCustomerIdByEmail: jest.fn(async () => options.customerId ?? null),
-    create: jest.fn(async () => ({ id: "book-1", bookingNumber: "BK-1" })),
+    create: jest.fn(async () => {
+      if (options.createError) throw options.createError;
+      return { id: "book-1", bookingNumber: "BK-1" };
+    }),
+    findByQuoteId: jest.fn(async () => options.existing ?? null),
     attachPaymentLink: jest.fn(async () => undefined),
     delete: jest.fn(async () => undefined),
     findByOrderId: jest.fn(async () => ({
@@ -80,7 +90,7 @@ function setup(
   };
 
   const service = new PaymentService(
-    { priceForCustomer: jest.fn(async () => ({ basePrice: 100, total: 110 })) } as never,
+    quoteService as never,
     bookingRepository as never,
     paymentRepository as never,
     { nextBooking: async () => 1 } as never,
@@ -99,7 +109,16 @@ function setup(
     { error: jest.fn() } as never,
   );
 
-  return { service, bookingRepository, paymentRepository, square, notifications, emails, sms };
+  return {
+    service,
+    bookingRepository,
+    paymentRepository,
+    square,
+    notifications,
+    emails,
+    sms,
+    quoteService,
+  };
 }
 
 const flush = () => new Promise((resolve) => setImmediate(resolve));
@@ -141,6 +160,73 @@ describe("PaymentService.startCheckout", () => {
       orderId: ORDER_ID,
       bookingNumber: "BK-000001",
     });
+  });
+
+  it("charges the quote's price and records the quote on the booking", async () => {
+    const { service, quoteService, bookingRepository, square } = setup();
+
+    await service.startCheckout(body, request);
+
+    expect(quoteService.pricingFor).toHaveBeenCalledWith({ id: "quote-1" }, body);
+    expect(bookingRepository.create).toHaveBeenCalledWith(
+      expect.objectContaining({ quoteId: "quote-1", pricing: { basePrice: 100, total: 110 } }),
+    );
+    expect(bookingRepository.attachPaymentLink).toHaveBeenCalledWith(
+      "book-1",
+      expect.objectContaining({ url: "https://square.link/u/abc" }),
+      PaymentMode.TEST,
+    );
+    expect(square.createPaymentLink).toHaveBeenCalledWith(expect.objectContaining({ amount: 110 }));
+  });
+
+  it("returns the same payment page when the quote is submitted again", async () => {
+    const { service, bookingRepository, square } = setup({
+      existing: {
+        id: "book-1",
+        status: BookingStatus.PENDING,
+        bookingNumber: "BK-000001",
+        squareOrderId: ORDER_ID,
+        squarePaymentLinkUrl: "https://square.link/u/abc",
+      },
+    });
+
+    const result = await service.startCheckout(body, request);
+
+    expect(result).toEqual({
+      url: "https://square.link/u/abc",
+      orderId: ORDER_ID,
+      bookingNumber: "BK-000001",
+    });
+    expect(bookingRepository.create).not.toHaveBeenCalled();
+    expect(square.createPaymentLink).not.toHaveBeenCalled();
+  });
+
+  it("refuses a quote whose booking was already paid or cancelled", async () => {
+    const { service } = setup({
+      existing: {
+        id: "book-1",
+        status: BookingStatus.CONFIRMED,
+        bookingNumber: "BK-000001",
+        squareOrderId: ORDER_ID,
+        squarePaymentLinkUrl: "https://square.link/u/abc",
+      },
+    });
+
+    await expect(service.startCheckout(body, request)).rejects.toThrow(
+      "This price was already used",
+    );
+  });
+
+  it("refuses a second checkout that raced the first one for the same quote", async () => {
+    const { service, square } = setup({
+      createError: new Prisma.PrismaClientKnownRequestError("Unique constraint failed", {
+        code: "P2002",
+        clientVersion: "6",
+      }),
+    });
+
+    await expect(service.startCheckout(body, request)).rejects.toThrow("already being prepared");
+    expect(square.createPaymentLink).not.toHaveBeenCalled();
   });
 
   it("files the booking under the rider's account when their email has one", async () => {

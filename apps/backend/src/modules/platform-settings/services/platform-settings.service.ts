@@ -21,6 +21,8 @@ function toRates(row: PlatformSettings): PlatformRates {
     airportPickupFee: toAmount(row.airportPickupFee),
     stopFee: toAmount(row.stopFee),
     meetAndGreetFee: toAmount(row.meetAndGreetFee),
+    emailNotificationFee: toAmount(row.emailNotificationFee),
+    smsNotificationFee: toAmount(row.smsNotificationFee),
     minBookingNotice: row.minBookingNotice,
     minBookingNoticeUnit: row.minBookingNoticeUnit,
     minBookingMinutes:

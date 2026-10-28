@@ -35,7 +35,6 @@ export type BookingTime = {
 export type Pricing = {
   total: number;
   basePrice?: number | undefined;
-  /** Platform fees charged at booking time (customer bookings priced by the server). */
   fuelSurchargePrice?: number | undefined;
   gratuityPrice?: number | undefined;
   taxPrice?: number | undefined;
@@ -45,11 +44,22 @@ export type Pricing = {
   stopsPrice?: number | undefined;
   airportPickupPrice?: number | undefined;
   extraServicesPrice?: number | undefined;
+  notificationsPrice?: number | undefined;
   subtotal?: number | undefined;
   currency?: string | undefined;
-  /** Outbound and return leg amounts on return trips. */
   legs?: { oneWay: LegPricing; returnTrip: LegPricing } | undefined;
+  items?: PricedLine[] | undefined;
   rates?: PricingRates | undefined;
+};
+
+export type PricedLine = {
+  type: "EXTRA_SERVICE" | "LUGGAGE";
+  id: string;
+  name: string;
+  quantity: number;
+  returnQuantity: number;
+  unitPrice: number;
+  total: number;
 };
 
 export type LegPricing = {
@@ -74,7 +84,6 @@ export type PricingRates = {
 };
 
 export type FlightDetails = {
-  flightName?: string | undefined;
   flightNumber?: string | undefined;
 };
 
@@ -84,7 +93,6 @@ export type MeetAndGreet = {
   signName?: string | undefined;
 };
 
-/** Extra service on a booking; `unitPrice` is the price charged at booking time. */
 export type ExtraServiceItem = {
   id: string;
   extraServiceId: string;
@@ -94,7 +102,6 @@ export type ExtraServiceItem = {
   extraService?: { id: string; name: string; type: string } | null;
 };
 
-/** Luggage on a booking; `unitPrice` is the price charged at booking time. */
 export type BookingLuggageItem = {
   id: string;
   quantity: number;
@@ -132,6 +139,7 @@ export type Item = {
   extraServices?: ExtraServiceItem[] | null | undefined;
   payment?: Payment | null | undefined;
   notes?: string | null | undefined;
+  returnNotes?: string | null | undefined;
   confirmedAt?: string | null | undefined;
   completedAt?: string | null | undefined;
   cancelledAt?: string | null | undefined;
@@ -162,7 +170,6 @@ export type Item = {
 };
 
 export type Query = {
-  /** Admin only: one customer's bookings. */
   userId?: string | undefined;
   page?: number | undefined;
   limit?: number | undefined;
@@ -183,7 +190,6 @@ export type ListResponse = {
   hasPrevPage: boolean;
 };
 
-/** Body for creating a booking (customer `POST /customers/bookings`). */
 export type CreateInput = {
   vehicleCategoryId: string;
   vehicleCount?: number | undefined;
@@ -196,10 +202,10 @@ export type CreateInput = {
   extraServices?: { extraServiceId: string; quantity: number }[] | undefined;
   luggage?: { luggageTypeId: string; quantity: number }[] | undefined;
   notes?: string | undefined;
+  returnNotes?: string | undefined;
   pricing: Pricing;
 };
 
-/** One booking on the calendar, placed on its pickup date (`GET .../bookings/calendar`). */
 export type CalendarEvent = {
   id: string;
   bookingNumber: string;
@@ -215,7 +221,6 @@ export type CalendarEvent = {
   dropoffAddress: string | null;
 };
 
-/** Calendar request: inclusive YYYY-MM-DD range plus optional filters. */
 export type CalendarQuery = {
   start: string;
   end: string;

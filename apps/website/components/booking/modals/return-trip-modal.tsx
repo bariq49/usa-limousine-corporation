@@ -28,14 +28,14 @@ interface ReturnTripModalProps {
 }
 
 export function ReturnTripModal({ isOpen, onClose }: ReturnTripModalProps) {
-  const { step1, step3, setReturnTrip } = useBookingStore();
+  const { step1, returnTrip, setReturnTrip } = useBookingStore();
   const isMobile = useMediaQuery("(max-width: 639px)");
   const hourCycle = useTimeFormat((state) => state.hourCycle);
 
   const form = useForm<ReturnTripFormValues>({
     defaultValues: {
-      returnDate: step3?.returnDate ?? "",
-      returnTime: step3?.returnTime ?? "",
+      returnDate: returnTrip?.returnDate ?? "",
+      returnTime: returnTrip?.returnTime ?? "",
     },
   });
 
@@ -57,11 +57,11 @@ export function ReturnTripModal({ isOpen, onClose }: ReturnTripModalProps) {
   useEffect(() => {
     if (isOpen) {
       form.reset({
-        returnDate: step3?.returnDate ?? "",
-        returnTime: step3?.returnTime ?? "",
+        returnDate: returnTrip?.returnDate ?? "",
+        returnTime: returnTrip?.returnTime ?? "",
       });
     }
-  }, [isOpen, form, step3?.returnDate, step3?.returnTime]);
+  }, [isOpen, form, returnTrip?.returnDate, returnTrip?.returnTime]);
 
   const onSubmit = (values: ReturnTripFormValues) => {
     const pickup = `${step1?.pickupDate ?? ""} ${step1?.pickupTime ?? ""}`;

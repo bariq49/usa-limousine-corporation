@@ -276,7 +276,7 @@ export function Input(props: InputProps) {
                 <SelectValue placeholder={placeholder ?? "Select an option"} />
               </SelectTrigger>
             </FormControl>
-            <SelectContent>
+            <SelectContent className="w-(--radix-select-trigger-width) min-w-(--radix-select-trigger-width)">
               {options.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}

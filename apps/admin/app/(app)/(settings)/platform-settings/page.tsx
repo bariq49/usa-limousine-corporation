@@ -15,7 +15,7 @@ import { Form } from "@usa-limousine-corporation/ui/components/form";
 import { Input, type InputOption } from "@usa-limousine-corporation/ui/components/input";
 import { LayoutLoader } from "@usa-limousine-corporation/ui/layout/layout-loader";
 import { APP_CURRENCY } from "@usa-limousine-corporation/ui/constants";
-import { Clock, DollarSign, Percent, SlidersHorizontal } from "@usa-limousine-corporation/ui/svg";
+import { Bell, Clock, DollarSign, Percent, SlidersHorizontal } from "@usa-limousine-corporation/ui/svg";
 import {
   usePlatformSettings,
   useUpdatePlatformSettings,
@@ -45,6 +45,8 @@ const defaultValues: FormValues = {
   airportPickupFee: 0,
   stopFee: 0,
   meetAndGreetFee: 0,
+  emailNotificationFee: 0,
+  smsNotificationFee: 0,
   minBookingNotice: 0,
   minBookingNoticeUnit: "HOUR",
   cancellationNotice: 0,
@@ -64,6 +66,8 @@ function toFormValues(settings: PlatformSettings): FormValues {
     airportPickupFee: settings.airportPickupFee,
     stopFee: settings.stopFee,
     meetAndGreetFee: settings.meetAndGreetFee,
+    emailNotificationFee: settings.emailNotificationFee,
+    smsNotificationFee: settings.smsNotificationFee,
     minBookingNotice: settings.minBookingNotice,
     minBookingNoticeUnit: settings.minBookingNoticeUnit,
     cancellationNotice: settings.cancellationNotice,
@@ -141,6 +145,8 @@ export default function PlatformSettingsPage() {
       airportPickupFee: values.airportPickupFee,
       stopFee: values.stopFee,
       meetAndGreetFee: values.meetAndGreetFee,
+      emailNotificationFee: values.emailNotificationFee,
+      smsNotificationFee: values.smsNotificationFee,
       minBookingNotice: values.minBookingNotice,
       minBookingNoticeUnit: values.minBookingNoticeUnit,
       cancellationNotice: values.cancellationNotice,
@@ -280,6 +286,25 @@ export default function PlatformSettingsPage() {
                   description="Fixed fee charged per leg for trips to or from an airport."
                 >
                   {numberInput("airportPickupFee")}
+                </SettingRow>
+              </SettingsSection>
+
+              <SettingsSection
+                icon={Bell}
+                title="Notification Fees"
+                description={`Charged in ${APP_CURRENCY} when a rider turns the notification on at booking. Set 0 to make it free.`}
+              >
+                <SettingRow
+                  label="Email & App Notifications"
+                  description="Booking confirmations and updates by email."
+                >
+                  {numberInput("emailNotificationFee")}
+                </SettingRow>
+                <SettingRow
+                  label="SMS Notifications"
+                  description="Booking confirmations and updates by text message."
+                >
+                  {numberInput("smsNotificationFee")}
                 </SettingRow>
               </SettingsSection>
 

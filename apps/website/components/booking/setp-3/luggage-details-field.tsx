@@ -34,11 +34,6 @@ export const LuggageDetailsField = () => {
 
     return (
         <div className="space-y-3">
-            <div className="px-1">
-                <h3 className="text-xl font-semibold text-gray-900 tracking-tight px-1">
-                    Select Luggage
-                </h3>
-            </div>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {luggageTypes.map((type) => {

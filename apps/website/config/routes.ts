@@ -1,6 +1,7 @@
 export const API_ROUTES = {
     VEHICLE_CATEGORIES: `/public/vehicle-categories`,
-    VEHICLE_PRICING: `/public/vehicle-categories/pricing`,
+    QUOTES: `/public/quotes`,
+    QUOTE_ESTIMATES: `/public/quotes/estimates`,
     LUGGAGE: `/public/luggage`,
     EXTRA_SERVICES: `/public/extra-services`,
     SETTINGS: `/public/settings`,

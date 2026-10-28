@@ -1,7 +1,9 @@
 import { BookingEmailService } from "../src/modules/booking/services/booking-email.service";
 import { BookingSmsService } from "../src/modules/booking/services/booking-sms.service";
 
-const row = (userId: string | null) => ({
+const row = (userId: string | null, choices = { notifyByEmail: true, notifyBySms: true }) => ({
+  notifyByEmail: choices.notifyByEmail,
+  notifyBySms: choices.notifyBySms,
   id: "book-1",
   userId,
   bookingNumber: "BK-000001",
@@ -20,9 +22,13 @@ const row = (userId: string | null) => ({
   pricing: { total: 110 },
 });
 
-function repository(userId: string | null, prefs = { email: true, sms: true }) {
+function repository(
+  userId: string | null,
+  prefs = { email: true, sms: true },
+  choices = { notifyByEmail: true, notifyBySms: true },
+) {
   return {
-    findById: jest.fn(async () => row(userId)),
+    findById: jest.fn(async () => row(userId, choices)),
     contactPreferences: jest.fn(async () => prefs),
   };
 }
@@ -53,6 +59,16 @@ describe("BookingSmsService", () => {
     expect(sms.send).not.toHaveBeenCalled();
   });
 
+  it("skips SMS when the rider did not choose SMS notifications for the booking", async () => {
+    const sms = twilio();
+    const repo = repository("user-1", undefined, { notifyByEmail: true, notifyBySms: false });
+    const service = new BookingSmsService(repo as never, sms as never, {} as never);
+
+    await service.sendPaid("book-1");
+
+    expect(sms.send).not.toHaveBeenCalled();
+  });
+
   it("does nothing when Twilio is not set up", async () => {
     const repo = repository(null);
     const service = new BookingSmsService(
@@ -68,10 +84,13 @@ describe("BookingSmsService", () => {
 });
 
 describe("BookingEmailService preferences", () => {
-  const setup = (prefs: { email: boolean; sms: boolean }) => {
+  const setup = (
+    prefs: { email: boolean; sms: boolean },
+    choices = { notifyByEmail: true, notifyBySms: true },
+  ) => {
     const email = { send: jest.fn(async () => ({ messageId: "m1" })) };
     const service = new BookingEmailService(
-      repository("user-1", prefs) as never,
+      repository("user-1", prefs, choices) as never,
       email as never,
       {
         get: (key: string) => (key === "DEFAULT_ADMIN_EMAIL" ? "admin@example.com" : undefined),
@@ -92,6 +111,18 @@ describe("BookingEmailService preferences", () => {
 
   it("skips customer emails when email is turned off but still tells the admin", async () => {
     const { service, email } = setup({ email: false, sms: true });
+
+    await service.sendPaid("book-1");
+
+    expect(email.send).toHaveBeenCalledTimes(1);
+    expect(email.send).toHaveBeenCalledWith(expect.objectContaining({ to: "admin@example.com" }));
+  });
+
+  it("skips customer emails when the rider turned email notifications off for the booking", async () => {
+    const { service, email } = setup(
+      { email: true, sms: true },
+      { notifyByEmail: false, notifyBySms: true },
+    );
 
     await service.sendPaid("book-1");
 

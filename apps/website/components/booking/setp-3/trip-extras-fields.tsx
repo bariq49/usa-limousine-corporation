@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { useFormContext, useWatch } from "react-hook-form";
 import { Input } from "@usa-limousine-corporation/ui/components/input";
-import { formatPrice } from "@/lib/utils";
+import { Close, Plus } from "@usa-limousine-corporation/ui/svg";
+import { cn, formatPrice } from "@/lib/utils";
 import { useExtraServices } from "@/hooks/queries/use-extra-services";
 import { ChildSeatSkeleton } from "@/components/skeletons/child-seat-skeleton";
 import type { Step3ChildSeatSelection, Step3FormValues } from "@/types/booking.types";
@@ -13,7 +14,8 @@ type Props = {
   childSeatsField?: "childSeats" | "returnChildSeats";
   childSeatsEnabledField?: "childSeatsEnabled" | "returnChildSeatsEnabled";
   childSeatsLabel?: string;
-  /** Driver notes are only offered for the outbound trip. */
+  notesField?: "notes" | "returnNotes";
+  notesLabel?: string;
   showNotes?: boolean;
 };
 
@@ -21,7 +23,9 @@ export const TripExtrasFields = (props: Props = {}) => {
   const {
     childSeatsField = "childSeats",
     childSeatsEnabledField = "childSeatsEnabled",
-    childSeatsLabel = "Child Seats",
+    childSeatsLabel = "Need a child or booster seat?",
+    notesField = "notes",
+    notesLabel = "Add notes for the driver",
     showNotes = true,
   } = props;
 
@@ -33,6 +37,7 @@ export const TripExtrasFields = (props: Props = {}) => {
   );
 
   const childSeatsEnabled = useWatch({ control, name: childSeatsEnabledField });
+  const [isNotesOpen, setIsNotesOpen] = useState(() => Boolean(getValues(notesField)));
 
   const showChildSeats = isLoading || seats.length > 0;
   const seatsReady = !isLoading && seats.length > 0;
@@ -53,81 +58,130 @@ export const TripExtrasFields = (props: Props = {}) => {
     }));
 
     const aligned =
-      current.length === next.length &&
-      next.every((seat, index) => seat.id === current[index]?.id);
+      current.length === next.length && next.every((seat, index) => seat.id === current[index]?.id);
 
     if (!aligned) {
       setValue(childSeatsField, next, { shouldDirty: false });
     }
   }, [childSeatsEnabled, childSeatsField, seats, seatsReady, getValues, setValue]);
 
+  const pillClassName = (isActive: boolean) =>
+    cn(
+      "inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-medium transition-colors",
+      isActive
+        ? "border-black bg-black text-white hover:bg-black/90"
+        : "border-border bg-white text-black hover:bg-gray-50",
+    );
+
+  const toggleNotes = () => {
+    if (isNotesOpen) setValue(notesField, "", { shouldDirty: true });
+    setIsNotesOpen(!isNotesOpen);
+  };
+
   return (
     <div className="space-y-3">
-      {showChildSeats ? (
-        <Input
-          name={childSeatsEnabledField}
-          type="switch"
-          className="rounded-sm border border-border p-3"
-          label={
-            <span className="text-sm font-medium uppercase tracking-wide text-gray-900">
-              {childSeatsLabel}
-            </span>
-          }
-        />
-      ) : null}
+      <div className="flex flex-wrap gap-2">
+        {showChildSeats ? (
+          <button
+            type="button"
+            aria-pressed={Boolean(childSeatsEnabled)}
+            onClick={() =>
+              setValue(childSeatsEnabledField, !childSeatsEnabled, { shouldDirty: true })
+            }
+            className={pillClassName(Boolean(childSeatsEnabled))}
+          >
+            {childSeatsEnabled ? <Close width={14} height={14} /> : <Plus width={16} height={16} />}
+            {childSeatsLabel}
+          </button>
+        ) : null}
+        {showNotes ? (
+          <button
+            type="button"
+            aria-pressed={isNotesOpen}
+            onClick={toggleNotes}
+            className={pillClassName(isNotesOpen)}
+          >
+            {isNotesOpen ? <Close width={14} height={14} /> : <Plus width={16} height={16} />}
+            {notesLabel}
+          </button>
+        ) : null}
+      </div>
 
       {showChildSeats && childSeatsEnabled ? (
         <div className="space-y-3">
-          {seatsReady
-            ? seats.map((seat, index) => (
+          {seatsReady ? (
+            <div className="divide-y divide-border overflow-hidden rounded-sm border border-border bg-white">
+              {seats.map((seat, index) => (
                 <div
                   key={seat.id}
-                  className="relative flex flex-col gap-4 rounded-sm border border-border bg-white px-3 py-4 sm:flex-row sm:items-center sm:gap-3 sm:py-3"
+                  className="flex flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center"
                 >
-                  <span className="absolute right-0 top-0 rounded-bl-sm rounded-tr-sm bg-secondary px-2.5 py-1 text-xs font-semibold leading-none text-white">
-                    {seat.price === 0 ? "Free" : formatPrice(seat.price)}
-                  </span>
-
-                  <div className="flex min-w-0 flex-1 items-center gap-3">
-                    <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-sm bg-gray-100 sm:h-16 sm:w-16">
+                  <div className="flex min-w-0 flex-1 items-center gap-4">
+                    <div className="relative h-14 w-14 shrink-0 overflow-hidden">
                       {seat.image ? (
-                        <Image src={seat.image} alt={seat.name} fill className="object-contain" sizes="64px" />
+                        <Image
+                          src={seat.image}
+                          alt={seat.name}
+                          fill
+                          className="object-contain"
+                          sizes="56px"
+                        />
                       ) : null}
                     </div>
 
-                    <div className="min-w-0 flex-1 pr-12 leading-snug">
-                      <p className="text-sm font-semibold text-gray-900">{seat.name}</p>
+                    <div className="min-w-0 flex-1 leading-snug">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-base text-black">{seat.name}</p>
+                        <span
+                          className={cn(
+                            "rounded-sm border px-1.5 py-0.5 text-xs font-semibold leading-none",
+                            seat.price === 0
+                              ? "border-success text-success"
+                              : "border-border text-black",
+                          )}
+                        >
+                          {seat.price === 0 ? "Free" : formatPrice(seat.price)}
+                        </span>
+                      </div>
                       {seat.description ? (
-                        <p className="mt-0.5 text-xs text-gray-500 sm:text-sm">{seat.description}</p>
+                        <p className="mt-1.5 text-sm text-gray-700">{seat.description}</p>
                       ) : null}
                     </div>
                   </div>
 
                   <Input
                     name={`${childSeatsField}.${index}.quantity`}
-                    type="counter"
-                    min={0}
-                    max={10}
-                    className="w-full shrink-0 sm:w-30"
-                    inputClassName="h-9 2xl:h-10"
+                    type="select"
+                    valueAsNumber
+                    options={[{ value: "0", label: "No" }].concat(
+                      Array.from({ length: Math.max(seat.maxQuantity, 1) }, (_, count) => ({
+                        value: String(count + 1),
+                        label: String(count + 1),
+                      })),
+                    )}
+                    className="w-full shrink-0 sm:w-28"
                   />
                 </div>
-              ))
-            : Array.from({ length: 2 }, (_, index) => (
-                <ChildSeatSkeleton key={`child-seat-skeleton-${index}`} />
               ))}
+            </div>
+          ) : (
+            Array.from({ length: 2 }, (_, index) => (
+              <ChildSeatSkeleton key={`child-seat-skeleton-${index}`} />
+            ))
+          )}
         </div>
       ) : null}
 
-      {showNotes ? (
-        <Input
-          name="notes"
-          type="textarea"
-          label="Notes"
-          placeholder="Notes for the driver (optional)"
-          rows={5}
-          inputClassName="min-h-30 rounded-sm border-gray-100 bg-gray-50/50 p-4"
-        />
+      {showNotes && isNotesOpen ? (
+        <div className="space-y-3">
+          <Input
+            name={notesField}
+            type="textarea"
+            placeholder="Driver notes"
+            rows={5}
+            inputClassName="min-h-30 rounded-md bg-white p-4"
+          />
+        </div>
       ) : null}
     </div>
   );

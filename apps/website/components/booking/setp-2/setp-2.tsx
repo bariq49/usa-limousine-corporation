@@ -1,45 +1,54 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronRight } from "@usa-limousine-corporation/ui/svg";
 import { Button } from "@usa-limousine-corporation/ui/components/button";
 import { useBookingStore } from "@/store/use-booking-store";
-import { useCategories, useCategoriesByDistance } from "@/hooks/queries/use-fleet";
-import { TRIP_TYPES } from "@/constants/booking-constants";
+import { useCategories } from "@/hooks/queries/use-fleet";
+import { useSyncQuote, useVehicleEstimates } from "@/hooks/queries/use-quotes";
+import type { ApiError } from "@/lib/api/client";
+import { PICKUP_TIME_ERRORS, TRIP_TYPES } from "@/constants/booking-constants";
 import VehicleCategoryCard from "./VehicleCategoryCard";
 import BookingStepActions from "../booking-step-actions";
 import MobileSummary from "../mobile-summary";
 import { VehicleCategoryCardSkeleton } from "../../skeletons/VehicleCategoryCardSkeleton";
 import { useHasHydrated } from "@/hooks/use-has-hydrated";
-import type { VehicleCategory } from "@/types/booking.types";
+import type { QuoteEstimate, VehicleCategory } from "@/types/booking.types";
 
 const SKELETON_COUNT = 10;
 
 function Step2() {
   const hasHydrated = useHasHydrated();
   const router = useRouter();
-  const { step1, step2, setStep2Data } = useBookingStore();
+  const { step1, step2, quote: selectedQuote, setStep2Data } = useBookingStore();
   const [isNavigating, setIsNavigating] = useState(false);
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
 
   const isHourly = step1?.tripType === TRIP_TYPES.HOURLY;
-  const distanceQuery = useCategoriesByDistance({
-    distance: step1?.distance ?? 0,
-    isAirport: Boolean(step1?.isAirportSelected),
-    enabled: !isHourly,
-  });
+  const vehicleEstimates = useVehicleEstimates();
+  const syncQuote = useSyncQuote();
+  const quoteError = syncQuote.error as ApiError | null;
+  const priceError =
+    (vehicleEstimates.error as ApiError | null)?.message ??
+    (quoteError?.code && PICKUP_TIME_ERRORS.includes(quoteError.code)
+      ? undefined
+      : quoteError?.message);
   const hourlyQuery = useCategories(isHourly);
-  const { data: categories = [], isLoading } = isHourly ? hourlyQuery : distanceQuery;
+  const estimates = vehicleEstimates.data ?? [];
+  const estimateByCategory = new Map(
+    estimates.map((estimate) => [estimate.vehicleCategory.id, estimate]),
+  );
+  const categories = isHourly
+    ? (hourlyQuery.data ?? [])
+    : estimates.map((estimate) => estimate.vehicleCategory);
+  const isLoading = isHourly ? hourlyQuery.isLoading : vehicleEstimates.isLoading;
 
   const selectedId = step2?.vehicleCategory?.id;
   const showSkeletons = isLoading && categories.length === 0;
 
   const handleSelect = (vehicleCategory: VehicleCategory) => {
-    if (selectedId === vehicleCategory.id) {
-      setStep2Data(null);
-      return;
-    }
+    if (selectedId === vehicleCategory.id) return;
 
     setStep2Data({
       vehicleCategory,
@@ -49,7 +58,6 @@ function Step2() {
     });
   };
 
-  /** Changing a counter selects the vehicle; fewer vehicles cap passengers and bags to match. */
   const handleCountsChange = (
     vehicleCategory: VehicleCategory,
     vehicleCount: number,
@@ -64,9 +72,21 @@ function Step2() {
     });
   };
 
+  const firstCategory = categories[0];
+  const selectedInList = categories.some((category) => category.id === selectedId);
+
+  useEffect(() => {
+    if (!firstCategory || selectedInList) return;
+    setStep2Data({
+      vehicleCategory: firstCategory,
+      vehicleCount: 1,
+      passengers: 1,
+      bags: 0,
+    });
+  }, [firstCategory, selectedInList, setStep2Data]);
+
   const handleContinue = () => {
     if (!step2 || isNavigating) return;
-
     setIsNavigating(true);
     router.push(isHourly ? "/contact-us" : "/book-ride/passenger-details");
   };
@@ -88,9 +108,14 @@ function Step2() {
 
   return (
     <>
-      <h1 className="mb-4 hidden text-2xl font-bold tracking-tight text-black md:block">
+      <h1 className="mb-5 hidden text-3xl font-bold tracking-tight text-black md:block">
         Choose your vehicle
       </h1>
+      {priceError ? (
+        <div className="mb-3 rounded-sm border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+          {priceError}
+        </div>
+      ) : null}
       <div className="flex w-full flex-col gap-1.5 md:gap-2">
         {showSkeletons &&
           Array.from({ length: SKELETON_COUNT }, (_, index) => (
@@ -105,11 +130,17 @@ function Step2() {
           const vehicleCount = isSelected ? (step2?.vehicleCount ?? 1) : 1;
           const passengers = isSelected ? (step2?.passengers ?? 1) : 1;
           const bags = isSelected ? (step2?.bags ?? 0) : 0;
+          const estimate = estimateByCategory.get(vehicleCategory.id) ?? null;
+          const hasSelectedQuote =
+            isSelected && selectedQuote?.vehicleCategory.id === vehicleCategory.id;
+          const cardQuote: QuoteEstimate | null = hasSelectedQuote ? selectedQuote : estimate;
 
           return (
             <VehicleCategoryCard
               key={vehicleCategory.id}
               vehicleCategory={vehicleCategory}
+              quote={cardQuote}
+              isPricing={isSelected && !hasSelectedQuote && vehicleCount > 1}
               isSelected={isSelected}
               vehicleCount={vehicleCount}
               passengers={passengers}

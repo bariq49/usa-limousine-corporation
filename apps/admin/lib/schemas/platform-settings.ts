@@ -20,6 +20,8 @@ export const platformSettingsSchema = z.object({
   airportPickupFee: amount,
   stopFee: amount,
   meetAndGreetFee: amount,
+  emailNotificationFee: amount,
+  smsNotificationFee: amount,
   minBookingNotice: z.coerce.number().int("Whole numbers only").min(0, "Cannot be negative"),
   minBookingNoticeUnit: z.enum(["HOUR", "MINUTE"] as const),
   cancellationNotice: z.coerce.number().int("Whole numbers only").min(0, "Cannot be negative"),

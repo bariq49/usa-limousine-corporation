@@ -74,7 +74,7 @@ export class BookingSmsService {
       if (!row || !phone) return;
 
       const prefs = await this.bookingRepository.contactPreferences(row.userId);
-      if (!prefs.sms) return;
+      if (!prefs.sms || !row.notifyBySms) return;
 
       const time = row.bookingTime as TimeInput;
       await this.twilio.send({

@@ -347,7 +347,7 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
                         </div>
                       </div>
                     )}
-                    {loading || locating ? (
+                    {isMobile && (loading || locating) ? (
                       <div className="mx-4 mt-3 h-1 shrink-0 overflow-hidden rounded-full bg-default-100">
                         <motion.div
                           className="h-full w-1/3 rounded-full bg-default-900"

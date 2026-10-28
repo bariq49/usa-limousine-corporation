@@ -286,7 +286,7 @@ function createCalloutOverlay({
         overflow: hidden;
         box-shadow: 0 3px 12px -2px rgba(0,0,0,0.18), 0 1px 4px -1px rgba(0,0,0,0.08);
         border: 1px solid rgba(0,0,0,0.08);
-        font-family: system-ui, -apple-system, sans-serif;
+        font-family: inherit;
         white-space: nowrap;
       `;
       badgeCardEl.innerHTML = `

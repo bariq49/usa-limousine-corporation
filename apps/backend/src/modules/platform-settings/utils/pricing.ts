@@ -5,7 +5,6 @@ import type {
   LegPricing,
   LegQuote,
   PlatformRates,
-  PriceBreakdown,
 } from "../types/platform-settings";
 
 function percentOf(amount: number, rate: number): number {
@@ -43,46 +42,6 @@ export function quoteLeg(
   };
 }
 
-export function priceBreakdown(
-  basePrice: number,
-  rates: PlatformRates,
-  isAirport: boolean,
-): PriceBreakdown {
-  const oneWay = quoteLeg(basePrice, rates.oneWayDiscountRate, rates, isAirport);
-  const back = quoteLeg(basePrice, rates.returnDiscountRate, rates, isAirport);
-
-  return {
-    oneWayBasePrice: oneWay.basePrice,
-    oneWaySurchargePercentage: rates.fuelSurchargeRate,
-    oneWaySurchargeAmount: oneWay.fuelSurchargeAmount,
-    oneWayGratuityPercentage: rates.gratuityRate,
-    oneWayGratuityAmount: oneWay.gratuityAmount,
-    oneWayTaxPercentage: rates.taxRate,
-    oneWayTaxAmount: oneWay.taxAmount,
-    oneWayTransactionFeePercentage: rates.transactionFeeRate,
-    oneWayTransactionFeeAmount: oneWay.transactionFeeAmount,
-    oneWayDiscountPercentage: rates.oneWayDiscountRate,
-    oneWayDiscountAmount: oneWay.discountAmount,
-    oneWayAirportFeeAmount: oneWay.airportFeeAmount,
-    oneWayPriceBeforeDiscount: oneWay.priceBeforeDiscount,
-    oneWayTotalPrice: oneWay.total,
-    returnBasePrice: back.basePrice,
-    returnSurchargePercentage: rates.fuelSurchargeRate,
-    returnSurchargeAmount: back.fuelSurchargeAmount,
-    returnGratuityPercentage: rates.gratuityRate,
-    returnGratuityAmount: back.gratuityAmount,
-    returnTaxPercentage: rates.taxRate,
-    returnTaxAmount: back.taxAmount,
-    returnTransactionFeePercentage: rates.transactionFeeRate,
-    returnTransactionFeeAmount: back.transactionFeeAmount,
-    returnDiscountPercentage: rates.returnDiscountRate,
-    returnDiscountAmount: back.discountAmount,
-    returnAirportFeeAmount: back.airportFeeAmount,
-    returnPriceBeforeDiscount: back.priceBeforeDiscount,
-    returnTotalPrice: back.total,
-  };
-}
-
 export function bookingPricing(input: BookingPricingInput): BookingPricing {
   const { rates } = input;
   const oneWay = quoteLeg(input.basePrice, rates.oneWayDiscountRate, rates, input.isAirport);
@@ -112,6 +71,7 @@ export function bookingPricing(input: BookingPricingInput): BookingPricing {
       (Number(input.meetAndGreetOneWay) + Number(input.isReturn && input.meetAndGreetReturn)),
   );
   const extraServicesPrice = roundAmount(input.extraServicesPrice);
+  const notificationsPrice = roundAmount(input.notificationsPrice ?? 0);
   const legsTotal = sum((leg) => leg.total);
 
   const pricing: BookingPricing = {
@@ -125,7 +85,10 @@ export function bookingPricing(input: BookingPricingInput): BookingPricing {
     stopsPrice,
     meetAndGreetPrice,
     extraServicesPrice,
-    total: roundAmount(legsTotal + stopsPrice + meetAndGreetPrice + extraServicesPrice),
+    notificationsPrice,
+    total: roundAmount(
+      legsTotal + stopsPrice + meetAndGreetPrice + extraServicesPrice + notificationsPrice,
+    ),
     rates: {
       fuelSurchargeRate: rates.fuelSurchargeRate,
       gratuityRate: rates.gratuityRate,
@@ -135,6 +98,9 @@ export function bookingPricing(input: BookingPricingInput): BookingPricing {
       returnDiscountRate: rates.returnDiscountRate,
     },
   };
+  if (input.items?.length) {
+    pricing.items = input.items;
+  }
   if (input.isReturn) {
     pricing.legs = {
       oneWay: legPricing(oneWay, input.meetAndGreetOneWay),

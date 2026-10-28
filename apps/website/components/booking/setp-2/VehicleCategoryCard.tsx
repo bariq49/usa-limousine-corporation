@@ -9,12 +9,13 @@ import {
 } from "@usa-limousine-corporation/ui/svg";
 import { cn, formatPrice } from "@/lib/utils";
 import { Stepper } from "@usa-limousine-corporation/ui/components/stepper";
-import { resolveVehicleCategoryPrice, useBookingStore } from "@/store/use-booking-store";
 import { MAX_VEHICLES } from "@/constants/booking-constants";
-import type { VehicleCategory } from "@/types/booking.types";
+import type { QuoteEstimate, VehicleCategory } from "@/types/booking.types";
 
 interface VehicleCategoryCardProps {
   vehicleCategory: VehicleCategory;
+  quote: QuoteEstimate | null;
+  isPricing?: boolean;
   isSelected?: boolean;
   vehicleCount: number;
   passengers: number;
@@ -28,6 +29,8 @@ interface VehicleCategoryCardProps {
 
 export default function VehicleCategoryCard({
   vehicleCategory,
+  quote,
+  isPricing = false,
   isSelected = false,
   vehicleCount,
   passengers,
@@ -38,24 +41,13 @@ export default function VehicleCategoryCard({
   onBagsChange,
   onShowSummary,
 }: VehicleCategoryCardProps) {
-  const breakdown = vehicleCategory.priceBreakdown;
-  const isQuote = !breakdown;
-  const returnEnabled = useBookingStore((state) => Boolean(state.step3?.returnEnabled));
-  const returnPrice = returnEnabled ? (breakdown?.returnTotalPrice ?? 0) : 0;
-  const totalPrice = (resolveVehicleCategoryPrice(vehicleCategory) + returnPrice) * vehicleCount;
-  const priceBeforeDiscount =
-    ((breakdown?.oneWayPriceBeforeDiscount ?? 0) +
-      (returnEnabled ? (breakdown?.returnPriceBeforeDiscount ?? 0) : 0)) *
-      vehicleCount || totalPrice;
-  const discountAmount =
-    ((breakdown?.oneWayDiscountAmount ?? 0) +
-      (returnEnabled ? (breakdown?.returnDiscountAmount ?? 0) : 0)) *
-    vehicleCount;
-  const oneWayDiscountPercentage = breakdown?.oneWayDiscountPercentage ?? 0;
+  const pricing = quote?.pricing;
+  const isQuote = !quote && !isPricing;
+  const totalPrice = quote?.total ?? 0;
+  const discountAmount = pricing?.discountPrice ?? 0;
+  const priceBeforeDiscount = totalPrice + discountAmount;
   const discountPercentage =
-    returnEnabled && (breakdown?.returnDiscountPercentage ?? 0) !== oneWayDiscountPercentage
-      ? Math.round((discountAmount / priceBeforeDiscount) * 100)
-      : oneWayDiscountPercentage;
+    priceBeforeDiscount > 0 ? Math.round((discountAmount / priceBeforeDiscount) * 100) : 0;
   const hasDiscount = discountPercentage > 0 && discountAmount > 0;
 
   return (
@@ -122,7 +114,9 @@ export default function VehicleCategoryCard({
 
             <div className="flex flex-shrink-0 flex-col items-end justify-center">
               <div className="text-right">
-                {isQuote ? (
+                {isPricing ? (
+                  <div className="h-8 w-24 animate-pulse rounded-sm bg-gray-100" aria-label="Pricing" />
+                ) : isQuote ? (
                   <span className="text-sm font-semibold text-secondary">Request Quote</span>
                 ) : (
                   <div className="flex flex-col items-end gap-1">

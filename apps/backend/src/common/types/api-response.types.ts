@@ -11,6 +11,7 @@ export type ApiErrorBody = {
   statusCode: number;
   message: string | string[];
   error: string;
+  details?: Record<string, unknown>;
   timestamp: string;
   path: string;
 };

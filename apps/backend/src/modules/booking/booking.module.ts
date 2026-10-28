@@ -8,10 +8,13 @@ import { PlatformSettingsModule } from "../platform-settings/platform-settings.m
 import { VehicleCategoryModule } from "../vehicle-categories/vehicle-category.module";
 import { BookingController } from "./controllers/booking.controller";
 import { CustomerBookingController } from "./controllers/customer-booking.controller";
+import { QuoteController } from "./controllers/quote.controller";
 import { BookingRepository } from "./repositories/booking.repository";
+import { QuoteRepository } from "./repositories/quote.repository";
 import { BookingEmailService } from "./services/booking-email.service";
 import { BookingSmsService } from "./services/booking-sms.service";
 import { BookingService } from "./services/booking.service";
+import { QuoteService } from "./services/quote.service";
 
 @Module({
   imports: [
@@ -23,8 +26,21 @@ import { BookingService } from "./services/booking.service";
     PlatformSettingsModule,
     VehicleCategoryModule,
   ],
-  controllers: [CustomerBookingController, BookingController],
-  providers: [BookingRepository, BookingEmailService, BookingSmsService, BookingService],
-  exports: [BookingService, BookingRepository, BookingEmailService, BookingSmsService],
+  controllers: [CustomerBookingController, BookingController, QuoteController],
+  providers: [
+    BookingRepository,
+    QuoteRepository,
+    BookingEmailService,
+    BookingSmsService,
+    BookingService,
+    QuoteService,
+  ],
+  exports: [
+    BookingService,
+    BookingRepository,
+    BookingEmailService,
+    BookingSmsService,
+    QuoteService,
+  ],
 })
 export class BookingModule {}

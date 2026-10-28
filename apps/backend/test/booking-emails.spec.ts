@@ -31,11 +31,12 @@ const booking: BookingEmail = {
     ccEmail: "assistant@example.com",
     passengerCount: 6,
   },
-  flight: { airline: "United", number: "UA100" },
+  flight: { number: "UA100" },
   meetAndGreet: { enabled: true, returnEnabled: false, signName: "Lovelace" },
   luggage: [{ name: "Large Bag", quantity: 2 }],
   extras: [{ name: "Baby Seat", quantity: 1, returnQuantity: 0, unitPrice: 10 }],
   notes: "Call on arrival",
+  returnNotes: "Wait at arrivals door 3",
   pricing: {
     basePrice: 200,
     gratuityPrice: 20,
@@ -76,6 +77,9 @@ describe("booking email templates", () => {
     );
     expect(html).toContain("Booking Received");
     expect(html).not.toContain("View booking");
+    expect(html).toContain("Call on arrival");
+    expect(html).toContain("Return Driver Notes");
+    expect(html).toContain("Wait at arrivals door 3");
   });
 
   it("confirms paid bookings", () => {

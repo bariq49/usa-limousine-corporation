@@ -28,11 +28,12 @@ export type BookingEmail = {
     ccEmail: string | null;
     passengerCount: number;
   };
-  flight: { airline: string | null; number: string | null };
+  flight: { number: string | null };
   meetAndGreet: { enabled: boolean; returnEnabled: boolean; signName: string | null };
   luggage: { name: string; quantity: number }[];
   extras: { name: string; quantity: number; returnQuantity: number; unitPrice: number }[];
   notes: string | null;
+  returnNotes: string | null;
   pricing: Partial<BookingPricing> & { total: number };
 };
 

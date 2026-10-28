@@ -62,7 +62,7 @@ export default function PageBanner(props: PageBannerProps) {
 
         <div className="relative z-20 flex min-h-inherit items-center justify-center px-4 py-20 md:py-24">
           {title ? (
-            <h1 className="text-center font-serif text-4xl font-bold text-white md:text-5xl">
+            <h1 className="text-center text-4xl font-bold text-white md:text-5xl">
               {renderTitle(title)}
             </h1>
           ) : null}

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Roboto_Slab } from "next/font/google";
+import { Archivo } from "next/font/google";
 import "./globals.css";
 import Script from "next/script";
 import Providers from "@/providers/query-provider";
@@ -9,13 +9,8 @@ import {
   SOCIAL_LINKS,
 } from "@/constants/app-default";
 import { getAppUrl } from "@/lib/api/base-url";
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-});
-
-const robotoSlab = Roboto_Slab({
-  variable: "--font-roboto-slab",
+const archivo = Archivo({
+  variable: "--font-archivo",
   subsets: ["latin"],
 });
 
@@ -75,7 +70,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${robotoSlab.variable} h-full antialiased`}
+      className={`${archivo.variable} h-full antialiased`}
     >
       <head>
         {GTM_ID ? (

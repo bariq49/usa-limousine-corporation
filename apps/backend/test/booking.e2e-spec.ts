@@ -72,6 +72,38 @@ describe("Booking (e2e)", () => {
     await prisma.userRole.create({ data: { userId: user.id, roleId: role.id } });
   }
 
+  it("estimates vehicles without saving, then saves the chosen vehicle's quote", async () => {
+    const fixtures = await seedBookingFixtures(prisma);
+    const payload = buildBookingPayload({ vehicleCategoryId: fixtures.vehicleCategoryId });
+    const trip = {
+      bookingType: payload.bookingType,
+      address: payload.address,
+      bookingTime: {
+        pickupDate: payload.bookingTime.pickupDate,
+        pickupTime: payload.bookingTime.pickupTime,
+      },
+    };
+
+    const estimates = await request(app.getHttpServer())
+      .post(`${basePath}/public/quotes/estimates`)
+      .send(trip)
+      .expect(200);
+    const estimate = estimates.body.data.find(
+      (option: { vehicleCategory: { id: string } }) =>
+        option.vehicleCategory.id === fixtures.vehicleCategoryId,
+    );
+    expect(estimate.total).toBeGreaterThan(0);
+    expect(await prisma.quote.count()).toBe(0);
+
+    const response = await request(app.getHttpServer())
+      .post(`${basePath}/public/quotes`)
+      .send(Object.assign({ vehicleCategoryId: fixtures.vehicleCategoryId }, trip))
+      .expect(200);
+
+    const saved = await prisma.quote.findUniqueOrThrow({ where: { id: response.body.data.id } });
+    expect(saved.total.toNumber()).toBe(estimate.total);
+  });
+
   it("creates a pending booking as a logged-in customer", async () => {
     const stamp = Date.now();
     const email = `customer-booking-${stamp}@example.com`;

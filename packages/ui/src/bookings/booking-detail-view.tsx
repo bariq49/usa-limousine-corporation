@@ -284,11 +284,6 @@ export function BookingDetailView(props: Props) {
                       {item.extraService?.name || "Extra"}: {item.quantity}
                     </DetailItem>
                   ))}
-                  {flight?.flightName ? (
-                    <DetailItem icon={preferenceIcon(Globe)}>
-                      Airline: {flight.flightName}
-                    </DetailItem>
-                  ) : null}
                   {flight?.flightNumber ? (
                     <DetailItem icon={preferenceIcon(Globe)}>
                       Flight Number: {flight.flightNumber}
@@ -312,7 +307,17 @@ export function BookingDetailView(props: Props) {
               {booking.notes ? (
                 <section className="rounded-md bg-default-100 p-4">
                   <h3 className="font-bold text-default-900">Notes & Special Instructions</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-default-700">{booking.notes}</p>
+                  <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-default-700">
+                    {booking.notes}
+                  </p>
+                </section>
+              ) : null}
+              {booking.returnNotes ? (
+                <section className="rounded-md bg-default-100 p-4">
+                  <h3 className="font-bold text-default-900">Return Driver Notes</h3>
+                  <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-default-700">
+                    {booking.returnNotes}
+                  </p>
                 </section>
               ) : null}
 

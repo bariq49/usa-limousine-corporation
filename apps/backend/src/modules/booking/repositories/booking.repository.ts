@@ -164,10 +164,32 @@ export class BookingRepository {
     });
   }
 
-  attachPaymentLink(id: string, link: { orderId: string; id: string }, mode: PaymentMode) {
+  attachPaymentLink(
+    id: string,
+    link: { orderId: string; id: string; url: string },
+    mode: PaymentMode,
+  ) {
     return this.prisma.booking.update({
       where: { id },
-      data: { squareOrderId: link.orderId, squarePaymentLinkId: link.id, paymentMode: mode },
+      data: {
+        squareOrderId: link.orderId,
+        squarePaymentLinkId: link.id,
+        squarePaymentLinkUrl: link.url,
+        paymentMode: mode,
+      },
+    });
+  }
+
+  findByQuoteId(quoteId: string) {
+    return this.prisma.booking.findUnique({
+      where: { quoteId },
+      select: {
+        id: true,
+        status: true,
+        bookingNumber: true,
+        squareOrderId: true,
+        squarePaymentLinkUrl: true,
+      },
     });
   }
 
@@ -266,16 +288,18 @@ export class BookingRepository {
           isActive: true,
           deletedAt: null,
         },
-        select: { id: true, price: true },
+        select: { id: true, name: true, price: true },
       }),
       client.luggageType.findMany({
         where: { id: { in: luggage.map((item) => item.luggageTypeId) }, isActive: true },
-        select: { id: true, price: true },
+        select: { id: true, name: true, price: true },
       }),
     ]);
 
     const servicePrice = new Map(services.map((row) => [row.id, row.price]));
     const luggagePrice = new Map(luggageTypes.map((row) => [row.id, row.price]));
+    const serviceName = new Map(services.map((row) => [row.id, row.name]));
+    const luggageName = new Map(luggageTypes.map((row) => [row.id, row.name]));
 
     const unknownServices = extraServices.filter((item) => !servicePrice.has(item.extraServiceId));
     const unknownLuggage = luggage.filter((item) => !luggagePrice.has(item.luggageTypeId));
@@ -294,11 +318,13 @@ export class BookingRepository {
         quantity: item.quantity,
         returnQuantity: item.returnQuantity ?? 0,
         unitPrice: servicePrice.get(item.extraServiceId) as Prisma.Decimal,
+        name: serviceName.get(item.extraServiceId) ?? "",
       })),
       luggage: luggage.map((item) => ({
         luggageTypeId: item.luggageTypeId,
         quantity: item.quantity,
         unitPrice: luggagePrice.get(item.luggageTypeId) ?? new Prisma.Decimal(0),
+        name: luggageName.get(item.luggageTypeId) ?? "",
       })),
     };
   }
@@ -322,17 +348,30 @@ export class BookingRepository {
         flightDetails: data.flightDetails as Prisma.InputJsonValue,
         meetAndGreet: data.meetAndGreet as Prisma.InputJsonValue,
         notes: data.notes ?? null,
+        returnNotes: data.returnNotes ?? null,
+        notifyByEmail: data.notifyByEmail ?? true,
+        notifyBySms: data.notifyBySms ?? true,
         confirmedAt: data.confirmedAt ?? null,
-        luggage: { create: items.luggage },
-        extraServices: { create: items.extraServices },
+        quoteId: data.quoteId ?? null,
+        luggage: {
+          create: items.luggage.map((item) => ({
+            luggageTypeId: item.luggageTypeId,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+          })),
+        },
+        extraServices: {
+          create: items.extraServices.map((item) => ({
+            extraServiceId: item.extraServiceId,
+            quantity: item.quantity,
+            returnQuantity: item.returnQuantity,
+            unitPrice: item.unitPrice,
+          })),
+        },
       },
     });
   }
 
-  /**
-   * Count + `totalPrice` per (month, status) for one calendar year in APP_TIMEZONE (US Eastern);
-   * one customer's when `userId` is set.
-   */
   analyticsRows(year: number, userId?: string): Promise<AnalyticsRow[]> {
     const from =
       wallClock(APP_TIMEZONE, `${year}-01-01`, "00:00") ?? new Date(Date.UTC(year, 0, 1));
@@ -432,6 +471,9 @@ export class BookingRepository {
       }
       if (data.notes !== undefined) {
         bookingUpdate.notes = data.notes ?? null;
+      }
+      if (data.returnNotes !== undefined) {
+        bookingUpdate.returnNotes = data.returnNotes ?? null;
       }
 
       return tx.booking.update({

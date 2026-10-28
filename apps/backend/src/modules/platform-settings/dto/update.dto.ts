@@ -70,6 +70,18 @@ export class UpdateDto {
 
   @IsOptional()
   @Type(() => Number)
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  emailNotificationFee?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  smsNotificationFee?: number;
+
+  @IsOptional()
+  @Type(() => Number)
   @IsInt()
   @Min(0)
   @Max(10_000)

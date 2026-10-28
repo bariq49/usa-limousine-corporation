@@ -1,6 +1,5 @@
 import type { NoticeUnit, PaymentMode } from "@prisma/client";
 
-/** Platform settings as plain numbers, ready for pricing and API responses. */
 export type PlatformRates = {
   paymentMode: PaymentMode;
   fuelSurchargeRate: number;
@@ -12,18 +11,17 @@ export type PlatformRates = {
   airportPickupFee: number;
   stopFee: number;
   meetAndGreetFee: number;
+  emailNotificationFee: number;
+  smsNotificationFee: number;
   minBookingNotice: number;
   minBookingNoticeUnit: NoticeUnit;
-  /** `minBookingNotice` converted to minutes. */
   minBookingMinutes: number;
   cancellationNotice: number;
   cancellationNoticeUnit: NoticeUnit;
-  /** `cancellationNotice` converted to minutes. */
   cancellationMinutes: number;
   cancellationRefundRate: number;
 };
 
-/** One leg of a trip priced from its base fare. */
 export type LegQuote = {
   basePrice: number;
   fuelSurchargeAmount: number;
@@ -37,39 +35,16 @@ export type LegQuote = {
   total: number;
 };
 
-/** Per-leg breakdown returned with vehicle prices so the website can show the fare. */
-export type PriceBreakdown = {
-  oneWayBasePrice: number;
-  oneWaySurchargePercentage: number;
-  oneWaySurchargeAmount: number;
-  oneWayGratuityPercentage: number;
-  oneWayGratuityAmount: number;
-  oneWayTaxPercentage: number;
-  oneWayTaxAmount: number;
-  oneWayTransactionFeePercentage: number;
-  oneWayTransactionFeeAmount: number;
-  oneWayDiscountPercentage: number;
-  oneWayDiscountAmount: number;
-  oneWayAirportFeeAmount: number;
-  oneWayPriceBeforeDiscount: number;
-  oneWayTotalPrice: number;
-  returnBasePrice: number;
-  returnSurchargePercentage: number;
-  returnSurchargeAmount: number;
-  returnGratuityPercentage: number;
-  returnGratuityAmount: number;
-  returnTaxPercentage: number;
-  returnTaxAmount: number;
-  returnTransactionFeePercentage: number;
-  returnTransactionFeeAmount: number;
-  returnDiscountPercentage: number;
-  returnDiscountAmount: number;
-  returnAirportFeeAmount: number;
-  returnPriceBeforeDiscount: number;
-  returnTotalPrice: number;
+export type PricedLine = {
+  type: "EXTRA_SERVICE" | "LUGGAGE";
+  id: string;
+  name: string;
+  quantity: number;
+  returnQuantity: number;
+  unitPrice: number;
+  total: number;
 };
 
-/** Amounts charged for one leg across all booked vehicles. */
 export type LegPricing = {
   basePrice: number;
   fuelSurchargePrice: number;
@@ -82,7 +57,6 @@ export type LegPricing = {
   total: number;
 };
 
-/** Pricing stored on a booking: the amounts charged and the rates used at booking time. */
 export type BookingPricing = {
   basePrice: number;
   fuelSurchargePrice: number;
@@ -94,9 +68,10 @@ export type BookingPricing = {
   stopsPrice: number;
   meetAndGreetPrice: number;
   extraServicesPrice: number;
+  notificationsPrice: number;
   total: number;
-  /** Outbound and return leg amounts, stored for return trips only. */
   legs?: { oneWay: LegPricing; returnTrip: LegPricing };
+  items?: PricedLine[];
   rates: {
     fuelSurchargeRate: number;
     gratuityRate: number;
@@ -108,16 +83,15 @@ export type BookingPricing = {
 };
 
 export type BookingPricingInput = {
-  /** Base fare for one leg, from the distance pricing. */
   basePrice: number;
   rates: PlatformRates;
   isAirport: boolean;
   isReturn: boolean;
-  /** Vehicles booked; each one pays its own fare legs. Defaults to 1. */
   vehicleCount?: number;
   stopsCount: number;
   meetAndGreetOneWay: boolean;
   meetAndGreetReturn: boolean;
-  /** Child seats, luggage and other selected extras. */
   extraServicesPrice: number;
+  notificationsPrice?: number;
+  items?: PricedLine[];
 };

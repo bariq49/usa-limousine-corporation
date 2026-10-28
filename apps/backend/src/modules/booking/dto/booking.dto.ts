@@ -16,6 +16,7 @@ import {
   Min,
   ValidateNested,
 } from "class-validator";
+import { OmitType } from "@nestjs/swagger";
 import { BookingStatus, BookingType } from "@prisma/client";
 import { ApiFeatureQueryDto } from "../../../common/api-feature/api-feature-query.dto";
 
@@ -55,7 +56,6 @@ export class AddressDto {
   @ArrayMaxSize(10)
   stops?: LocationDto[];
 
-  /** Trip distance in miles. */
   @IsNumber()
   @Min(0)
   distance!: number;
@@ -90,7 +90,6 @@ export class PassengerDto {
   @MaxLength(320)
   email!: string;
 
-  /** Extra address that receives a copy of booking emails. */
   @IsOptional()
   @IsEmail()
   @MaxLength(320)
@@ -116,7 +115,6 @@ export class TimeDto {
   returnTime?: string;
 }
 
-/** Client totals; customer bookings are re-priced on the server and only keep the breakdown it builds. */
 export class PricingDto {
   @IsNumber()
   @Min(0)
@@ -130,11 +128,6 @@ export class PricingDto {
 export class FlightDetailsDto {
   @IsOptional()
   @IsString()
-  @MaxLength(100)
-  flightName?: string;
-
-  @IsOptional()
-  @IsString()
   @MaxLength(50)
   flightNumber?: string;
 }
@@ -144,7 +137,6 @@ export class MeetAndGreetDto {
   @IsBoolean()
   enabled?: boolean;
 
-  /** Meet & greet on the return leg as well. */
   @IsOptional()
   @IsBoolean()
   returnEnabled?: boolean;
@@ -153,6 +145,14 @@ export class MeetAndGreetDto {
   @IsString()
   @MaxLength(200)
   signName?: string;
+}
+
+export class NotificationsDto {
+  @IsBoolean()
+  email!: boolean;
+
+  @IsBoolean()
+  sms!: boolean;
 }
 
 export class ExtraServiceItemDto {
@@ -234,6 +234,11 @@ export class CreateDto {
   @MaxLength(1000)
   notes?: string;
 
+  @IsOptional()
+  @IsString()
+  @MaxLength(1000)
+  returnNotes?: string;
+
   @ValidateNested()
   @Type(() => PricingDto)
   pricing!: PricingDto;
@@ -244,6 +249,68 @@ export class CreateDto {
   @Type(() => LuggageItemDto)
   @ArrayMaxSize(20)
   luggage?: LuggageItemDto[];
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => NotificationsDto)
+  notifications?: NotificationsDto;
+}
+
+export class TripPriceDto {
+  @IsOptional()
+  @IsEnum(BookingType)
+  bookingType?: BookingType;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(10)
+  vehicleCount?: number;
+
+  @ValidateNested()
+  @Type(() => AddressDto)
+  address!: AddressDto;
+
+  @ValidateNested()
+  @Type(() => TimeDto)
+  bookingTime!: TimeDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => MeetAndGreetDto)
+  meetAndGreet?: MeetAndGreetDto;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ExtraServiceItemDto)
+  @ArrayMaxSize(10)
+  extraServices?: ExtraServiceItemDto[];
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => LuggageItemDto)
+  @ArrayMaxSize(20)
+  luggage?: LuggageItemDto[];
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => NotificationsDto)
+  notifications?: NotificationsDto;
+}
+
+export class QuoteDto extends TripPriceDto {
+  @IsString()
+  @IsNotEmpty()
+  vehicleCategoryId!: string;
+}
+
+export class CheckoutDto extends OmitType(CreateDto, ["pricing"] as const) {
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(64)
+  quoteId!: string;
 }
 
 export class UpdateDto {
@@ -294,6 +361,11 @@ export class UpdateDto {
   notes?: string;
 
   @IsOptional()
+  @IsString()
+  @MaxLength(1000)
+  returnNotes?: string;
+
+  @IsOptional()
   @ValidateNested()
   @Type(() => PricingDto)
   pricing?: PricingDto;
@@ -322,14 +394,12 @@ export class QueryDto extends ApiFeatureQueryDto {
   @IsEnum(BookingType)
   bookingType?: BookingType;
 
-  /** Admin only: one customer's bookings (by user id). Ignored on the customer endpoint. */
   @IsOptional()
   @IsString()
   userId?: string;
 }
 
 export class AnalyticsQueryDto {
-  /** Calendar year to report on; defaults to the current year. */
   @IsOptional()
   @Type(() => Number)
   @IsInt()
@@ -337,13 +407,11 @@ export class AnalyticsQueryDto {
   @Max(2100)
   year?: number;
 
-  /** Admin only: stats for one customer (by user id). Ignored on the customer endpoint. */
   @IsOptional()
   @IsString()
   userId?: string;
 }
 
-/** Accepts `a,b`, `?x=a&x=b` or a single value and returns an array. */
 function toList({ value }: { value: unknown }): unknown {
   if (value === undefined || value === null || value === "") return undefined;
   if (Array.isArray(value)) return value;
@@ -354,11 +422,9 @@ function toList({ value }: { value: unknown }): unknown {
 }
 
 export class CalendarQueryDto {
-  /** First day shown (YYYY-MM-DD), inclusive. */
   @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: "start must be YYYY-MM-DD" })
   start!: string;
 
-  /** Last day shown (YYYY-MM-DD), inclusive. */
   @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: "end must be YYYY-MM-DD" })
   end!: string;
 
@@ -368,7 +434,6 @@ export class CalendarQueryDto {
   @IsEnum(BookingType, { each: true })
   bookingType?: BookingType[];
 
-  /** Defaults to pending, confirmed and completed bookings. */
   @IsOptional()
   @Transform(toList)
   @IsArray()

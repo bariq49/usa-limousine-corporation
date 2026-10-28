@@ -14,6 +14,7 @@ import {
   cn,
 } from "@/lib/utils";
 import { PriceRow } from "@usa-limousine-corporation/ui/bookings/price-row";
+import type { LegPricing } from "@usa-limousine-corporation/ui/bookings/types";
 import {
   Amex,
   ApplePay,
@@ -48,12 +49,14 @@ type Props = {
   className?: string;
 };
 
+type SummaryLine = { id: string; name: string; quantity: number; total: number };
+
 function SummaryDetails({ className }: Props = {}) {
   const hasHydrated = useHasHydrated();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
   const [isPriceDetailsOpen, setIsPriceDetailsOpen] = useState(false);
-  const { step1, step2, step3, setReturnTrip } = useBookingStore();
+  const { step1, returnTrip, step2, setReturnTrip } = useBookingStore();
   const hourCycle = useTimeFormat((state) => state.hourCycle);
   const pricing = usePricing();
   const { data: settings } = useSettings();
@@ -99,7 +102,7 @@ function SummaryDetails({ className }: Props = {}) {
     [isHourly, step1?.travelDuration],
   );
 
-  const returnEnabled = Boolean(step3?.returnEnabled);
+  const returnEnabled = Boolean(returnTrip);
   const stopCount = stops.length;
   const cancellationRefundRate = settings?.cancellationRefundRate ?? 0;
   const pickupDateTime = fromZonedTime(`${pickupDate} ${pickupTime}`, DEFAULT_TIMEZONE);
@@ -110,12 +113,8 @@ function SummaryDetails({ className }: Props = {}) {
         hourCycle === "24h" ? "d MMMM yyyy HH:mm" : "d MMMM yyyy hh:mm a",
       )
     : null;
-  const oneWayChildSeats = (step3?.childSeats ?? []).filter((seat) => seat.quantity > 0);
-  const returnChildSeats = returnEnabled
-    ? (step3?.returnChildSeats ?? []).filter((seat) => seat.quantity > 0)
-    : [];
-  const returnTime = (step3?.returnTime || "").trim();
-  const parsedReturnDate = parseISO((step3?.returnDate || "").trim());
+  const returnTime = (returnTrip?.returnTime || "").trim();
+  const parsedReturnDate = parseISO((returnTrip?.returnDate || "").trim());
   const formattedReturnDate = isValid(parsedReturnDate)
     ? format(parsedReturnDate, "dd MMM yyyy")
     : "—";
@@ -124,6 +123,95 @@ function SummaryDetails({ className }: Props = {}) {
     time: returnTime,
     durationMinutes: step1?.travelDuration,
   });
+
+  const rates = pricing?.rates;
+  const extraLines = (pricing?.items ?? []).filter((line) => line.type === "EXTRA_SERVICE");
+  const oneWayExtras: SummaryLine[] = extraLines
+    .filter((line) => line.quantity > 0)
+    .map((line) => ({
+      id: line.id,
+      name: line.name,
+      quantity: line.quantity,
+      total: line.unitPrice * line.quantity,
+    }));
+  const returnExtras: SummaryLine[] = extraLines
+    .filter((line) => line.returnQuantity > 0)
+    .map((line) => ({
+      id: line.id,
+      name: line.name,
+      quantity: line.returnQuantity,
+      total: line.unitPrice * line.returnQuantity,
+    }));
+  const luggageLines: SummaryLine[] = (pricing?.items ?? [])
+    .filter((line) => line.type === "LUGGAGE")
+    .map((line) => ({ id: line.id, name: line.name, quantity: line.quantity, total: line.total }));
+
+  const lineRows = (prefix: string, lines: SummaryLine[]) =>
+    lines.map((line) => (
+      <div
+        key={`${prefix}${line.id}`}
+        className="flex items-center justify-between gap-3 font-medium text-gray-600"
+      >
+        <span className="flex min-w-0 items-center gap-2">
+          <span className="truncate">
+            {prefix}
+            {getChildSeatLabel(line.name)}
+          </span>
+          <span className="inline-flex shrink-0 items-center rounded-full bg-secondary/10 px-2 py-0.5 text-2xs font-semibold leading-none text-secondary">
+            ×{line.quantity}
+          </span>
+        </span>
+        <span className="shrink-0 font-medium text-black">{formatPrice(line.total)}</span>
+      </div>
+    ));
+
+  const legRows = (
+    prefix: string,
+    leg: LegPricing,
+    discountRate: number | undefined,
+    extras: SummaryLine[],
+  ) => (
+    <>
+      <PriceRow format={formatPrice} label={`${prefix}Base Price`} value={leg.basePrice} />
+      <PriceRow
+        format={formatPrice}
+        label={`${prefix}Fuel Surcharge (${rates?.fuelSurchargeRate ?? 0}%)`}
+        value={leg.fuelSurchargePrice}
+      />
+      <PriceRow
+        format={formatPrice}
+        label={`${prefix}Gratuity (${rates?.gratuityRate ?? 0}%)`}
+        value={leg.gratuityPrice}
+      />
+      <PriceRow
+        format={formatPrice}
+        label={`${prefix}Tax (${rates?.taxRate ?? 0}%)`}
+        value={leg.taxPrice}
+      />
+      <PriceRow
+        format={formatPrice}
+        label={`${prefix}Transaction Fee (${rates?.transactionFeeRate ?? 0}%)`}
+        value={leg.transactionFeePrice}
+      />
+      <PriceRow
+        format={formatPrice}
+        label={`${prefix}Discount (${discountRate ?? 0}%)`}
+        value={leg.discountPrice}
+        destructive
+      />
+      <PriceRow
+        format={formatPrice}
+        label={`${prefix}Airport Pickup`}
+        value={leg.airportPickupPrice}
+      />
+      <PriceRow
+        format={formatPrice}
+        label={`${prefix}Meet & Greet Service`}
+        value={leg.meetAndGreetPrice ?? 0}
+      />
+      {lineRows(prefix, extras)}
+    </>
+  );
 
   if (!hasHydrated) return null;
 
@@ -241,134 +329,45 @@ function SummaryDetails({ className }: Props = {}) {
 
               {isPriceDetailsOpen ? (
                 <div className="mt-1.5 space-y-1 text-caption animate-in fade-in slide-in-from-top-1 duration-200">
-                  <PriceRow
-                    format={formatPrice}
-                    label="Base Price"
-                    value={pricing.oneWayBasePrice}
-                  />
-                  <PriceRow
-                    format={formatPrice}
-                    label={`Discount (${pricing.oneWayDiscountPercentage}%)`}
-                    value={pricing.oneWayDiscountAmount}
-                    destructive
-                  />
-                  {pricing.oneWaySurchargeAmount > 0 && (
-                    <PriceRow
-                      format={formatPrice}
-                      label={`Fuel Surcharge (${pricing.oneWaySurchargePercentage}%)`}
-                      value={pricing.oneWaySurchargeAmount}
-                    />
+                  {pricing.legs ? (
+                    <>
+                      {legRows("", pricing.legs.oneWay, rates?.oneWayDiscountRate, oneWayExtras)}
+                      {legRows(
+                        "Return ",
+                        pricing.legs.returnTrip,
+                        rates?.returnDiscountRate,
+                        returnExtras,
+                      )}
+                    </>
+                  ) : (
+                    legRows(
+                      "",
+                      {
+                        basePrice: pricing.basePrice ?? 0,
+                        fuelSurchargePrice: pricing.fuelSurchargePrice ?? 0,
+                        gratuityPrice: pricing.gratuityPrice ?? 0,
+                        taxPrice: pricing.taxPrice ?? 0,
+                        transactionFeePrice: pricing.transactionFeePrice ?? 0,
+                        discountPrice: pricing.discountPrice ?? 0,
+                        airportPickupPrice: pricing.airportPickupPrice ?? 0,
+                        meetAndGreetPrice: pricing.meetAndGreetPrice ?? 0,
+                        total: pricing.total,
+                      },
+                      rates?.oneWayDiscountRate,
+                      oneWayExtras,
+                    )
                   )}
-                  <PriceRow
-                    format={formatPrice}
-                    label={`Gratuity (${pricing.oneWayGratuityPercentage}%)`}
-                    value={pricing.oneWayGratuityAmount}
-                  />
-                  <PriceRow
-                    format={formatPrice}
-                    label={`Tax (${pricing.oneWayTaxPercentage}%)`}
-                    value={pricing.oneWayTaxAmount}
-                  />
-                  <PriceRow
-                    format={formatPrice}
-                    label={`Transaction Fee (${pricing.oneWayTransactionFeePercentage}%)`}
-                    value={pricing.oneWayTransactionFeeAmount}
-                  />
-                  <PriceRow
-                    format={formatPrice}
-                    label="Airport Pickup"
-                    value={pricing.oneWayAirportFeeAmount}
-                  />
-                  <PriceRow
-                    format={formatPrice}
-                    label="Return Base Price"
-                    value={pricing.returnBasePrice}
-                  />
-                  <PriceRow
-                    format={formatPrice}
-                    label={`Return Discount (${pricing.returnDiscountPercentage}%)`}
-                    value={pricing.returnDiscountAmount}
-                    destructive
-                  />
-                  {pricing.returnSurchargeAmount > 0 && (
-                    <PriceRow
-                      format={formatPrice}
-                      label={`Return Fuel Surcharge (${pricing.returnSurchargePercentage}%)`}
-                      value={pricing.returnSurchargeAmount}
-                    />
-                  )}
-                  <PriceRow
-                    format={formatPrice}
-                    label={`Return Gratuity (${pricing.returnGratuityPercentage}%)`}
-                    value={pricing.returnGratuityAmount}
-                  />
-                  <PriceRow
-                    format={formatPrice}
-                    label={`Return Tax (${pricing.returnTaxPercentage}%)`}
-                    value={pricing.returnTaxAmount}
-                  />
-                  <PriceRow
-                    format={formatPrice}
-                    label={`Return Transaction Fee (${pricing.returnTransactionFeePercentage}%)`}
-                    value={pricing.returnTransactionFeeAmount}
-                  />
-                  <PriceRow
-                    format={formatPrice}
-                    label="Return Airport Pickup"
-                    value={pricing.returnAirportFeeAmount}
-                  />
                   <PriceRow
                     format={formatPrice}
                     label={`Additional Stops (${stopCount})`}
-                    value={pricing.stopFeeAmount}
+                    value={pricing.stopsPrice ?? 0}
                   />
+                  {lineRows("", luggageLines)}
                   <PriceRow
                     format={formatPrice}
-                    label="Extra Luggage"
-                    value={pricing.luggageFeeAmount}
+                    label="Notifications"
+                    value={pricing.notificationsPrice ?? 0}
                   />
-                  <PriceRow
-                    format={formatPrice}
-                    label="Meet & Greet Service"
-                    value={pricing.oneWayMeetAndGreetFeeAmount}
-                  />
-                  {oneWayChildSeats.map((seat) => (
-                    <div
-                      key={seat.id}
-                      className="flex items-center justify-between gap-3 font-medium text-gray-600"
-                    >
-                      <span className="flex min-w-0 items-center gap-2">
-                        <span className="truncate">{getChildSeatLabel(seat.name)}</span>
-                        <span className="inline-flex shrink-0 items-center rounded-full bg-secondary/10 px-2 py-0.5 text-2xs font-semibold leading-none text-secondary">
-                          ×{seat.quantity}
-                        </span>
-                      </span>
-                      <span className="shrink-0 font-medium text-black">
-                        {formatPrice(seat.price * seat.quantity)}
-                      </span>
-                    </div>
-                  ))}
-                  <PriceRow
-                    format={formatPrice}
-                    label="Return Meet & Greet Service"
-                    value={pricing.returnMeetAndGreetFeeAmount}
-                  />
-                  {returnChildSeats.map((seat) => (
-                    <div
-                      key={`return-${seat.id}`}
-                      className="flex items-center justify-between gap-3 font-medium text-gray-600"
-                    >
-                      <span className="flex min-w-0 items-center gap-2">
-                        <span className="truncate">Return {getChildSeatLabel(seat.name)}</span>
-                        <span className="inline-flex shrink-0 items-center rounded-full bg-secondary/10 px-2 py-0.5 text-2xs font-semibold leading-none text-secondary">
-                          ×{seat.quantity}
-                        </span>
-                      </span>
-                      <span className="shrink-0 font-medium text-black">
-                        {formatPrice(seat.price * seat.quantity)}
-                      </span>
-                    </div>
-                  ))}
 
                   <div className="flex items-end justify-between border-t border-gray-100 pt-2">
                     <span className="text-sm font-semibold text-black">Total price</span>
@@ -416,7 +415,10 @@ function SummaryDetails({ className }: Props = {}) {
                 </span>
               </div>
 
-              <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-gray-600" aria-label="Accepted payment methods">
+              <div
+                className="mt-4 flex flex-wrap items-center justify-between gap-2 text-gray-600"
+                aria-label="Accepted payment methods"
+              >
                 <Visa className="h-7 w-11" aria-label="Visa" />
                 <Mastercard className="h-7 w-11" aria-label="Mastercard" />
                 <Amex className="h-7 w-11" aria-label="American Express" />

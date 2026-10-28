@@ -43,7 +43,7 @@ export function PhoneInput({
       inputProps={{ name }}
       containerClass={cn("!w-full", className)}
       inputClass={cn(
-        "!w-full !h-12 sm:!h-10 !pl-12 !pr-3 !text-sm !bg-card !text-default-500 !rounded-md !border",
+        "!w-full !h-12 sm:!h-10 !pl-12 !pr-3 !text-base sm:!text-sm !bg-card !text-default-500 !rounded-md !border",
         "2xl:!h-12 2xl:!text-base",
         hasError ? "!border-destructive" : "!border-default-300",
         "focus:!border-primary focus:!outline-none focus:!shadow-none",

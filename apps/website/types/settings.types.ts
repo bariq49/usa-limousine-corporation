@@ -13,4 +13,6 @@ export interface BookingSettings {
     /** Notice before pickup, in minutes, that a cancellation still gets a refund. */
     cancellationMinutes?: number;
     cancellationRefundRate?: number;
+    emailNotificationFee?: number;
+    smsNotificationFee?: number;
 }

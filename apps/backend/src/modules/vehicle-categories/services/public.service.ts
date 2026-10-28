@@ -1,9 +1,6 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { PricingType } from "@prisma/client";
 import { roundAmount } from "../../../common/utils/money";
-import { PlatformSettingsService } from "../../platform-settings/services/platform-settings.service";
-import { priceBreakdown } from "../../platform-settings/utils/pricing";
-import type { DistanceQueryDto } from "../dto/distance-query.dto";
 import type { LuggageQueryDto } from "../dto/luggage-query.dto";
 import type { VehicleCategoryQueryDto } from "../dto/query.dto";
 import { CategoriesRepository } from "../repositories/categories.repository";
@@ -23,8 +20,6 @@ export class PublicService {
     private readonly luggageRepository: LuggageRepository,
     @Inject(PricingRepository)
     private readonly pricingRepository: PricingRepository,
-    @Inject(PlatformSettingsService)
-    private readonly platformSettingsService: PlatformSettingsService,
   ) {}
 
   async findCategories(query: VehicleCategoryQueryDto) {
@@ -39,9 +34,7 @@ export class PublicService {
     return this.luggageRepository.findPublicMany(query);
   }
 
-  async findCategoriesForDistance(query: DistanceQueryDto) {
-    const distance = query.distance;
-    const rates = await this.platformSettingsService.get();
+  async pricedForDistance(distance: number) {
     const categories = await this.categoriesRepository.findPublicActive();
     const pricings = await this.pricingRepository.findAllForDistance(
       distance,
@@ -59,38 +52,20 @@ export class PublicService {
       .filter((category) => bestByCategory.has(category.id))
       .map((category) => {
         const pricing = bestByCategory.get(category.id)!;
-        const price = this.computePrice({
-          pricingType: pricing.pricingType,
-          basePrice: pricing.basePrice.toNumber(),
-          perUnitRate: pricing.perUnitRate?.toNumber() ?? null,
-          percentageRate: pricing.percentageRate?.toNumber() ?? null,
-          distance,
-        });
-
         return {
           id: category.id,
           name: category.name,
           description: category.description,
           image: category.image,
           passengerCount: category.passengerCount,
-          isActive: category.isActive,
-          createdAt: category.createdAt,
-          updatedAt: category.updatedAt,
-          deletedAt: category.deletedAt,
-          luggageCapacity: category.luggageCapacity,
           luggageCount: luggageCount(category.luggageCapacity),
-          distance,
-          pricing: {
-            id: pricing.id,
-            minimumDistance: pricing.minimumDistance,
-            maximumDistance: pricing.maximumDistance,
+          basePrice: this.computePrice({
             pricingType: pricing.pricingType,
-            basePrice: pricing.basePrice,
-            perUnitRate: pricing.perUnitRate,
-            percentageRate: pricing.percentageRate,
-          },
-          price,
-          priceBreakdown: priceBreakdown(price, rates, Boolean(query.isAirport)),
+            basePrice: pricing.basePrice.toNumber(),
+            perUnitRate: pricing.perUnitRate?.toNumber() ?? null,
+            percentageRate: pricing.percentageRate?.toNumber() ?? null,
+            distance,
+          }),
         };
       });
   }

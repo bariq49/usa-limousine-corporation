@@ -2,8 +2,15 @@ import axios, { AxiosError } from "axios";
 import { getApiBaseUrl } from "@/lib/api/base-url";
 
 type ApiErrorBody = {
-    error?: { message?: string | string[] };
+    error?: { message?: string | string[]; error?: string; details?: Record<string, unknown> };
     message?: string | string[];
+};
+
+export type ApiError = {
+    message: string;
+    status?: number | undefined;
+    code?: string | undefined;
+    details?: Record<string, unknown> | undefined;
 };
 
 const toText = (value: string | string[] | undefined) =>
@@ -16,7 +23,6 @@ export const api = axios.create({
     },
 });
 
-// The backend wraps payloads as { success, data, meta }; resolve with that body.
 api.interceptors.response.use(
     (response) => {
         return response.data;
@@ -27,9 +33,12 @@ api.interceptors.response.use(
             toText(error.response?.data?.message) ||
             error.message ||
             "Something went wrong";
-        return Promise.reject({
+        const rejection: ApiError = {
             message,
             status: error.response?.status,
-        });
+            code: error.response?.data?.error?.error,
+            details: error.response?.data?.error?.details,
+        };
+        return Promise.reject(rejection);
     }
 );

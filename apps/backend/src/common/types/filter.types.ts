@@ -15,6 +15,7 @@ export type NormalizedException = {
   statusCode: number;
   message: string | string[];
   error: string;
+  details?: Record<string, unknown>;
 };
 
 export type WriteErrorResponseParams = {

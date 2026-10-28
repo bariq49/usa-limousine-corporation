@@ -44,7 +44,7 @@ export function toBookingEmail(row: BookingRow): BookingEmail {
       ccEmail: passenger.ccEmail ?? null,
       passengerCount: passenger.passengerCount,
     },
-    flight: { airline: flight.flightName ?? null, number: flight.flightNumber ?? null },
+    flight: { number: flight.flightNumber ?? null },
     meetAndGreet: {
       enabled: Boolean(meetAndGreet.enabled),
       returnEnabled: Boolean(meetAndGreet.returnEnabled),
@@ -58,6 +58,7 @@ export function toBookingEmail(row: BookingRow): BookingEmail {
       unitPrice: item.unitPrice.toNumber(),
     })),
     notes: row.notes,
+    returnNotes: row.returnNotes,
     pricing: row.pricing as BookingEmail["pricing"],
   };
 }

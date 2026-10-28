@@ -1,8 +1,4 @@
-import {
-  bookingPricing,
-  priceBreakdown,
-  quoteLeg,
-} from "../src/modules/platform-settings/utils/pricing";
+import { bookingPricing, quoteLeg } from "../src/modules/platform-settings/utils/pricing";
 import type { PlatformRates } from "../src/modules/platform-settings/types/platform-settings";
 
 const rates: PlatformRates = {
@@ -16,6 +12,8 @@ const rates: PlatformRates = {
   airportPickupFee: 12,
   stopFee: 10,
   meetAndGreetFee: 25,
+  emailNotificationFee: 0,
+  smsNotificationFee: 1.49,
   minBookingNotice: 2,
   minBookingNoticeUnit: "HOUR",
   minBookingMinutes: 120,
@@ -48,11 +46,29 @@ describe("platform pricing", () => {
   });
 
   it("uses the one-way discount outbound and the return discount on the way back", () => {
-    const breakdown = priceBreakdown(100, rates, false);
+    const outbound = quoteLeg(100, rates.oneWayDiscountRate, rates, false);
+    const back = quoteLeg(100, rates.returnDiscountRate, rates, false);
 
-    expect(breakdown.oneWayTotalPrice).toBe(117.9);
-    expect(breakdown.returnTotalPrice).toBe(104.8);
-    expect(breakdown.oneWayTaxAmount).toBe(8);
+    expect(outbound.total).toBe(117.9);
+    expect(back.total).toBe(104.8);
+    expect(outbound.taxAmount).toBe(8);
+  });
+
+  it("adds the chosen notification fees to the total", () => {
+    const pricing = bookingPricing({
+      basePrice: 100,
+      rates,
+      isAirport: false,
+      isReturn: false,
+      stopsCount: 0,
+      meetAndGreetOneWay: false,
+      meetAndGreetReturn: false,
+      extraServicesPrice: 0,
+      notificationsPrice: 1.49,
+    });
+
+    expect(pricing.notificationsPrice).toBe(1.49);
+    expect(pricing.total).toBe(117.9 + 1.49);
   });
 
   it("adds stops, meet & greet per leg and extras to a return booking", () => {

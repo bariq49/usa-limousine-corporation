@@ -152,21 +152,24 @@ export const tripDetailsCard = (booking: BookingEmail, assetsUrl: string) => {
   if (booking.meetAndGreet.returnEnabled) {
     rows.push(iconRow(icon(assetsUrl, "badgeCheck"), "Return Meet & Greet"));
   }
-  if (booking.flight.airline) {
-    rows.push(iconRow(icon(assetsUrl, "tags"), `Airline: ${booking.flight.airline}`));
-  }
   if (booking.flight.number) {
     rows.push(iconRow(icon(assetsUrl, "hash"), `Flight Number: ${booking.flight.number}`));
   }
 
-  const notes = booking.notes
-    ? `<div style="margin-top:12px;padding-top:12px;border-top:1px solid ${EMAIL_BRAND.border};">
-        <p style="margin:0;font-size:12px;color:${EMAIL_BRAND.muted};font-weight:600;text-transform:uppercase;">Driver Notes</p>
-        <p style="margin:4px 0 0;font-size:14px;line-height:1.5;color:${EMAIL_BRAND.text};white-space:pre-wrap;">${escapeHtml(booking.notes)}</p>
+  const notesBlock = (title: string, text: string | null) =>
+    text
+      ? `<div style="margin-top:12px;padding-top:12px;border-top:1px solid ${EMAIL_BRAND.border};">
+        <p style="margin:0;font-size:12px;color:${EMAIL_BRAND.muted};font-weight:600;text-transform:uppercase;">${title}</p>
+        <p style="margin:4px 0 0;font-size:14px;line-height:1.5;color:${EMAIL_BRAND.text};white-space:pre-wrap;">${escapeHtml(text)}</p>
       </div>`
-    : "";
+      : "";
 
-  return infoCard("Trip Details", rows.join("") + notes);
+  return infoCard(
+    "Trip Details",
+    rows.join("") +
+      notesBlock("Driver Notes", booking.notes) +
+      notesBlock("Return Driver Notes", booking.returnNotes),
+  );
 };
 
 export const passengerCard = (booking: BookingEmail, assetsUrl: string) =>
@@ -254,6 +257,7 @@ export const paymentSummaryCard = (booking: BookingEmail) => {
   const lines = charges.concat([
     ["Additional Stops", pricing.stopsPrice],
     ["Luggage", luggagePrice],
+    ["Notifications", pricing.notificationsPrice],
   ]);
 
   return infoCard(

@@ -1,4 +1,7 @@
-import type { BookingPricing } from "../../platform-settings/types/platform-settings";
+import type {
+  BookingPricing,
+  BookingPricingInput,
+} from "../../platform-settings/types/platform-settings";
 import type { BookingStatus, BookingType, Prisma } from "@prisma/client";
 
 export type LocationInput = {
@@ -36,7 +39,6 @@ export type PricingInput = {
 };
 
 export type FlightDetailsInput = {
-  flightName?: string | undefined;
   flightNumber?: string | undefined;
 };
 
@@ -57,15 +59,15 @@ export type LuggageItemInput = {
   quantity: number;
 };
 
-/** Items with the catalog unit price captured at booking time. */
 export type PricedItems = {
   extraServices: {
     extraServiceId: string;
     quantity: number;
     returnQuantity: number;
     unitPrice: Prisma.Decimal;
+    name: string;
   }[];
-  luggage: { luggageTypeId: string; quantity: number; unitPrice: Prisma.Decimal }[];
+  luggage: { luggageTypeId: string; quantity: number; unitPrice: Prisma.Decimal; name: string }[];
 };
 
 export type CreateData = {
@@ -76,7 +78,6 @@ export type CreateData = {
   vehicleCount?: number | undefined;
   status: BookingStatus;
   confirmedAt?: Date | undefined;
-  /** Admin bookings keep the entered pricing; customer bookings store the server-built breakdown. */
   pricing: PricingInput | BookingPricing;
   address: AddressInput;
   passenger: PassengerInput;
@@ -85,7 +86,11 @@ export type CreateData = {
   meetAndGreet?: MeetAndGreetInput | undefined;
   extraServices?: ExtraServiceItemInput[] | undefined;
   notes?: string | null | undefined;
+  returnNotes?: string | null | undefined;
   luggage: LuggageItemInput[];
+  quoteId?: string | undefined;
+  notifyByEmail?: boolean | undefined;
+  notifyBySms?: boolean | undefined;
 };
 
 export type UpdateData = {
@@ -99,6 +104,7 @@ export type UpdateData = {
   meetAndGreet?: MeetAndGreetInput | undefined;
   extraServices?: ExtraServiceItemInput[] | undefined;
   notes?: string | null | undefined;
+  returnNotes?: string | null | undefined;
   luggage?: LuggageItemInput[] | undefined;
 };
 
@@ -124,11 +130,9 @@ export type MonthlySeries = {
   cancelled: number[];
 };
 
-/** Booking totals for one year plus 12 monthly buckets (Jan..Dec), by booking creation month. */
 export type Analytics = {
   year: number;
   totalBookings: number;
-  /** Sum of `pricing.total` over completed bookings. */
   totalRevenue: number;
   completedBookings: number;
   confirmedBookings: number;
@@ -145,7 +149,6 @@ export type AnalyticsRow = {
   amount: number;
 };
 
-/** One booking on the calendar, placed on its pickup date. */
 export type CalendarEvent = {
   id: string;
   bookingNumber: string;
@@ -160,3 +163,21 @@ export type CalendarEvent = {
   pickupAddress: string;
   dropoffAddress: string | null;
 };
+
+export type TripPricing = Omit<BookingPricingInput, "basePrice" | "vehicleCount">;
+
+export type QuoteEstimate = {
+  vehicleCategory: {
+    id: string;
+    name: string;
+    description: string | null;
+    image: string | null;
+    passengerCount: number;
+    luggageCount: number;
+  };
+  vehicleCount: number;
+  pricing: BookingPricing;
+  total: number;
+};
+
+export type SavedQuote = QuoteEstimate & { id: string; expiresAt: Date };

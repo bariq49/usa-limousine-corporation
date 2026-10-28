@@ -6,7 +6,12 @@ import { useFormContext, useWatch } from "react-hook-form";
 import { Input } from "@usa-limousine-corporation/ui/components/input";
 import type { Step3FormValues } from "@/types/booking.types";
 
-export const CcEmailField = () => {
+type Props = {
+  className?: string;
+  fieldClassName?: string;
+};
+
+export const CcEmailField = ({ className = "space-y-3", fieldClassName }: Props = {}) => {
   const { control, setValue } = useFormContext<Step3FormValues>();
   const isEnabled = useWatch({ control, name: "ccEmailEnabled" });
 
@@ -17,11 +22,11 @@ export const CcEmailField = () => {
   }, [isEnabled, setValue]);
 
   return (
-    <div className="space-y-3">
+    <div className={className}>
       <Input
         name="ccEmailEnabled"
         type="switch"
-        className="rounded-sm border border-border p-3"
+        className="flex h-12 items-center rounded-md border border-default-300 bg-card px-3 sm:h-10 2xl:h-12"
         label={
           <span className="text-sm font-medium uppercase tracking-wide text-gray-900">
             CC Email
@@ -36,6 +41,7 @@ export const CcEmailField = () => {
           label="CC Email"
           placeholder="Email to receive a copy of the booking"
           icon={<Mail width={16} height={16} className="text-gray-400" />}
+          className={fieldClassName}
           required
         />
       ) : null}

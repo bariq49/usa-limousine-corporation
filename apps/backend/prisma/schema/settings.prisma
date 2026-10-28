@@ -24,6 +24,8 @@ model PlatformSettings {
   airportPickupFee       Decimal     @default(0) @db.Decimal(12, 2)
   stopFee                Decimal     @default(0) @db.Decimal(12, 2)
   meetAndGreetFee        Decimal     @default(0) @db.Decimal(12, 2)
+  emailNotificationFee   Decimal     @default(0) @db.Decimal(12, 2)
+  smsNotificationFee     Decimal     @default(0) @db.Decimal(12, 2)
   /// Earliest a trip can be booked ahead of pickup.
   minBookingNotice       Int         @default(0)
   minBookingNoticeUnit   NoticeUnit  @default(HOUR)

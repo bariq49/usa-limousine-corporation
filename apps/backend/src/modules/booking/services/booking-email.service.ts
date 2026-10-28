@@ -113,7 +113,11 @@ export class BookingEmailService {
     try {
       const row = await this.bookingRepository.findById(bookingId);
       if (!row) return;
-      const prefs = await this.bookingRepository.contactPreferences(row.userId);
+      const account = await this.bookingRepository.contactPreferences(row.userId);
+      const prefs = {
+        email: account.email && row.notifyByEmail,
+        sms: account.sms && row.notifyBySms,
+      };
       await send(toBookingEmail(row), this.context(), prefs);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown error";

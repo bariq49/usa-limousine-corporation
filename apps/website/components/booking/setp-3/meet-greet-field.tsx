@@ -14,6 +14,8 @@ type Props = {
   label?: string;
   namePlaceholder?: string;
   nameLabel?: string;
+  className?: string;
+  fieldClassName?: string;
 };
 
 export const MeetGreetField = (props: Props = {}) => {
@@ -23,6 +25,8 @@ export const MeetGreetField = (props: Props = {}) => {
     label = "Meet & Greet",
     namePlaceholder = "Name for Meet & Greet sign",
     nameLabel = "Sign Name",
+    className = "space-y-3",
+    fieldClassName,
   } = props;
 
   const { control, setValue } = useFormContext<Step3FormValues>();
@@ -40,11 +44,11 @@ export const MeetGreetField = (props: Props = {}) => {
   if (!(meetGreetFee > 0)) return null;
 
   return (
-    <div className="space-y-3">
+    <div className={className}>
       <Input
         name={enabledField}
         type="switch"
-        className="rounded-sm border border-border p-3"
+        className="flex h-12 items-center rounded-md border border-default-300 bg-card px-3 sm:h-10 2xl:h-12"
         label={
           <span className="flex flex-wrap items-center gap-2">
             <span className="text-sm font-medium uppercase tracking-wide text-gray-900">
@@ -63,6 +67,7 @@ export const MeetGreetField = (props: Props = {}) => {
           label={nameLabel}
           placeholder={namePlaceholder}
           icon={<User width={16} height={16} className="text-gray-400" />}
+          className={fieldClassName}
           required
         />
       ) : null}

@@ -12,15 +12,17 @@ import { PrismaService } from "../../../infrastructure/database/prisma.service";
 import { SequenceService } from "../../../infrastructure/sequence/sequence.service";
 import { NotificationService } from "../../notification/services/notification.service";
 import { PlatformSettingsService } from "../../platform-settings/services/platform-settings.service";
-import type { BookingPricing } from "../../platform-settings/types/platform-settings";
+import type { BookingPricing, PricedLine } from "../../platform-settings/types/platform-settings";
 import { bookingPricing } from "../../platform-settings/utils/pricing";
 import { PublicService as VehiclePricingService } from "../../vehicle-categories/services/public.service";
 import type {
   AnalyticsQueryDto,
   CalendarQueryDto,
   CancelDto,
+  CheckoutDto,
   CreateDto,
   QueryDto,
+  TripPriceDto,
   UpdateDto,
 } from "../dto/booking.dto";
 import { BookingRepository } from "../repositories/booking.repository";
@@ -33,6 +35,7 @@ import type {
   CalendarEvent,
   PassengerInput,
   TimeInput,
+  TripPricing,
   UpdateData,
 } from "../types/booking";
 
@@ -52,7 +55,7 @@ export class BookingService {
     @Inject(SquareService) private readonly square: SquareService,
   ) {}
 
-  async priceForCustomer(body: CreateDto): Promise<BookingPricing> {
+  async tripPricing(body: TripPriceDto, checkNotice = true): Promise<TripPricing> {
     const bookingType = body.bookingType ?? BookingType.ONE_WAY;
     if (bookingType !== BookingType.ONE_WAY && bookingType !== BookingType.RETURN) {
       throw new BadRequestException("Hourly hire is quoted on request; please contact us");
@@ -61,6 +64,93 @@ export class BookingService {
       throw new BadRequestException("A drop-off location is required");
     }
 
+    const rates = await this.platformSettingsService.get();
+    const pickupAt = wallClock(
+      APP_TIMEZONE,
+      body.bookingTime.pickupDate,
+      body.bookingTime.pickupTime,
+    );
+    if (!pickupAt) {
+      throw new BadRequestException("Pickup date or time is invalid");
+    }
+    if (checkNotice && pickupAt.getTime() <= Date.now()) {
+      throw new BadRequestException({
+        message: "The pickup time has already passed. Please choose a later time.",
+        error: "PICKUP_PASSED",
+      });
+    }
+    if (checkNotice && pickupAt.getTime() < Date.now() + rates.minBookingMinutes * 60_000) {
+      throw new BadRequestException({
+        message: `Bookings need at least ${rates.minBookingNotice} ${rates.minBookingNoticeUnit === "HOUR" ? "hour(s)" : "minute(s)"} notice. Please choose a later time.`,
+        error: "PICKUP_TOO_SOON",
+      });
+    }
+
+    const isReturn = bookingType === BookingType.RETURN;
+    if (isReturn) {
+      const { returnDate, returnTime } = body.bookingTime;
+      const returnAt =
+        returnDate && returnTime ? wallClock(APP_TIMEZONE, returnDate, returnTime) : null;
+      if (!returnAt) {
+        throw new BadRequestException("Return date and time are required for a return trip");
+      }
+      if (returnAt.getTime() <= pickupAt.getTime()) {
+        throw new BadRequestException("The return must be after the pickup");
+      }
+    }
+
+    const items = await this.bookingRepository.priceItems(
+      body.extraServices ?? [],
+      body.luggage ?? [],
+    );
+    const lines: PricedLine[] = items.extraServices
+      .map((item): PricedLine => {
+        const returnQuantity = isReturn ? item.returnQuantity : 0;
+        const unitPrice = item.unitPrice.toNumber();
+        return {
+          type: "EXTRA_SERVICE",
+          id: item.extraServiceId,
+          name: item.name,
+          quantity: item.quantity,
+          returnQuantity,
+          unitPrice,
+          total: roundAmount(unitPrice * (item.quantity + returnQuantity)),
+        };
+      })
+      .concat(
+        items.luggage.map((item): PricedLine => {
+          const unitPrice = item.unitPrice.toNumber();
+          return {
+            type: "LUGGAGE",
+            id: item.luggageTypeId,
+            name: item.name,
+            quantity: item.quantity,
+            returnQuantity: 0,
+            unitPrice,
+            total: roundAmount(unitPrice * item.quantity),
+          };
+        }),
+      )
+      .filter((line) => line.total > 0);
+    const extraServicesPrice = lines.reduce((total, line) => total + line.total, 0);
+
+    return {
+      rates,
+      isAirport: isAirportTrip(body.address.pickup.address, body.address.dropoff.address),
+      isReturn,
+      stopsCount: (body.address.stops ?? []).length,
+      meetAndGreetOneWay: Boolean(body.meetAndGreet?.enabled),
+      meetAndGreetReturn: isReturn && Boolean(body.meetAndGreet?.returnEnabled),
+      extraServicesPrice: roundAmount(extraServicesPrice),
+      notificationsPrice: roundAmount(
+        (body.notifications?.email ? rates.emailNotificationFee : 0) +
+          (body.notifications?.sms ? rates.smsNotificationFee : 0),
+      ),
+      items: lines,
+    };
+  }
+
+  async priceForCustomer(body: CreateDto | CheckoutDto): Promise<BookingPricing> {
     const vehicleCount = body.vehicleCount ?? 1;
     const capacity = await this.bookingRepository.vehicleCapacity(body.vehicleCategoryId);
     if (!capacity) {
@@ -78,33 +168,7 @@ export class BookingService {
       );
     }
 
-    const rates = await this.platformSettingsService.get();
-    const pickupAt = wallClock(
-      APP_TIMEZONE,
-      body.bookingTime.pickupDate,
-      body.bookingTime.pickupTime,
-    );
-    if (!pickupAt) {
-      throw new BadRequestException("Pickup date or time is invalid");
-    }
-    if (pickupAt.getTime() < Date.now() + rates.minBookingMinutes * 60_000) {
-      throw new BadRequestException(
-        `Bookings need at least ${rates.minBookingNotice} ${rates.minBookingNoticeUnit === "HOUR" ? "hour(s)" : "minute(s)"} notice`,
-      );
-    }
-
-    if (bookingType === BookingType.RETURN) {
-      const { returnDate, returnTime } = body.bookingTime;
-      const returnAt =
-        returnDate && returnTime ? wallClock(APP_TIMEZONE, returnDate, returnTime) : null;
-      if (!returnAt) {
-        throw new BadRequestException("Return date and time are required for a return trip");
-      }
-      if (returnAt.getTime() <= pickupAt.getTime()) {
-        throw new BadRequestException("The return must be after the pickup");
-      }
-    }
-
+    const trip = await this.tripPricing(body);
     const basePrice = await this.vehiclePricingService.basePriceFor(
       body.vehicleCategoryId,
       body.address.distance,
@@ -113,34 +177,7 @@ export class BookingService {
       throw new BadRequestException("This vehicle is not available for the trip distance");
     }
 
-    const items = await this.bookingRepository.priceItems(
-      body.extraServices ?? [],
-      body.luggage ?? [],
-    );
-    const lineTotal = (
-      total: number,
-      item: { unitPrice: { toNumber(): number }; quantity: number },
-    ) => total + item.unitPrice.toNumber() * item.quantity;
-    const isReturn = bookingType === BookingType.RETURN;
-    const extraServicesPrice =
-      items.extraServices.reduce(
-        (total, item) =>
-          total +
-          item.unitPrice.toNumber() * (item.quantity + (isReturn ? item.returnQuantity : 0)),
-        0,
-      ) + items.luggage.reduce(lineTotal, 0);
-
-    return bookingPricing({
-      basePrice,
-      rates,
-      isAirport: isAirportTrip(body.address.pickup.address, body.address.dropoff?.address),
-      isReturn,
-      vehicleCount: body.vehicleCount ?? 1,
-      stopsCount: (body.address.stops ?? []).length,
-      meetAndGreetOneWay: Boolean(body.meetAndGreet?.enabled),
-      meetAndGreetReturn: isReturn && Boolean(body.meetAndGreet?.returnEnabled),
-      extraServicesPrice: roundAmount(extraServicesPrice),
-    });
+    return bookingPricing(Object.assign({ basePrice, vehicleCount }, trip));
   }
 
   async create(body: CreateDto, request: Request) {
@@ -168,6 +205,9 @@ export class BookingService {
           meetAndGreet: body.meetAndGreet,
           extraServices: body.extraServices,
           notes: body.notes ?? null,
+          returnNotes: body.returnNotes ?? null,
+          notifyByEmail: body.notifications?.email,
+          notifyBySms: body.notifications?.sms,
           luggage: body.luggage ?? [],
         },
         tx,
@@ -235,6 +275,7 @@ export class BookingService {
       meetAndGreet: body.meetAndGreet,
       extraServices: body.extraServices,
       notes: body.notes ?? null,
+      returnNotes: body.returnNotes ?? null,
       luggage: body.luggage ?? [],
     });
 
@@ -257,17 +298,14 @@ export class BookingService {
     return (await this.bookingRepository.findById(booking.id)) ?? booking;
   }
 
-  /** Platform-wide booking calendar for admins. */
   calendar(query: CalendarQueryDto) {
     return this.buildCalendar(query);
   }
 
-  /** The signed-in customer's own bookings on the calendar. */
   calendarForCustomer(query: CalendarQueryDto, request: Request) {
     return this.buildCalendar(query, requireUserId(toRequestContext(request)));
   }
 
-  /** Bookings in the range as calendar events; pending, confirmed and completed by default. */
   async buildCalendar(query: CalendarQueryDto, userId?: string): Promise<CalendarEvent[]> {
     const days = (Date.parse(query.end) - Date.parse(query.start)) / 86_400_000;
     if (!Number.isFinite(days) || days < 0 || days > 62) {
@@ -313,7 +351,6 @@ export class BookingService {
     return this.buildAnalytics(query.year ?? new Date().getUTCFullYear(), query.userId);
   }
 
-  /** The signed-in customer's own booking analytics. */
   analyticsForCustomer(query: AnalyticsQueryDto, request: Request) {
     const userId = requireUserId(toRequestContext(request));
     return this.buildAnalytics(query.year ?? new Date().getUTCFullYear(), userId);
@@ -486,6 +523,9 @@ export class BookingService {
     }
     if (body.notes !== undefined) {
       updateData.notes = body.notes;
+    }
+    if (body.returnNotes !== undefined) {
+      updateData.returnNotes = body.returnNotes;
     }
     if (body.luggage !== undefined) {
       updateData.luggage = body.luggage;

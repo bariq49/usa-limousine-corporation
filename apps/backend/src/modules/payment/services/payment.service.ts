@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Inject,
   Injectable,
   NotFoundException,
@@ -8,7 +9,7 @@ import {
   ServiceUnavailableException,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { BookingStatus, BookingType, NotificationType, PaymentMode } from "@prisma/client";
+import { BookingStatus, BookingType, NotificationType, PaymentMode, Prisma } from "@prisma/client";
 import type { Request } from "express";
 import { AppLogger } from "../../../common/logger/app.logger";
 import { allocateCode } from "../../../common/utils/allocate-sequence-code";
@@ -17,11 +18,11 @@ import { toRequestContext } from "../../../common/utils/to-request-context";
 import { PrismaService } from "../../../infrastructure/database/prisma.service";
 import { SequenceService } from "../../../infrastructure/sequence/sequence.service";
 import { SquareService } from "../../../infrastructure/square/square.service";
-import type { CreateDto } from "../../booking/dto/booking.dto";
+import type { CheckoutDto } from "../../booking/dto/booking.dto";
 import { BookingRepository } from "../../booking/repositories/booking.repository";
 import { BookingEmailService } from "../../booking/services/booking-email.service";
 import { BookingSmsService } from "../../booking/services/booking-sms.service";
-import { BookingService } from "../../booking/services/booking.service";
+import { QuoteService } from "../../booking/services/quote.service";
 import type { PassengerInput } from "../../booking/types/booking";
 import { NotificationService } from "../../notification/services/notification.service";
 import { PlatformSettingsService } from "../../platform-settings/services/platform-settings.service";
@@ -42,7 +43,7 @@ export class PaymentService implements OnModuleInit, OnModuleDestroy {
   private sweepTimer: NodeJS.Timeout | null = null;
 
   constructor(
-    @Inject(BookingService) private readonly bookingService: BookingService,
+    @Inject(QuoteService) private readonly quoteService: QuoteService,
     @Inject(BookingRepository) private readonly bookingRepository: BookingRepository,
     @Inject(PaymentRepository) private readonly paymentRepository: PaymentRepository,
     @Inject(SequenceService) private readonly sequenceService: SequenceService,
@@ -66,7 +67,7 @@ export class PaymentService implements OnModuleInit, OnModuleDestroy {
     if (this.sweepTimer) clearInterval(this.sweepTimer);
   }
 
-  async startCheckout(body: CreateDto, request: Request) {
+  async startCheckout(body: CheckoutDto, request: Request) {
     const { paymentMode } = await this.platformSettingsService.get();
     if (!this.square.isConfigured(paymentMode)) {
       throw new ServiceUnavailableException(
@@ -74,29 +75,63 @@ export class PaymentService implements OnModuleInit, OnModuleDestroy {
       );
     }
 
-    const pricing = await this.bookingService.priceForCustomer(body);
+    const quote = await this.quoteService.find(body);
+    const existing = await this.bookingRepository.findByQuoteId(quote.id);
+    if (existing) {
+      if (
+        existing.status === BookingStatus.PENDING &&
+        existing.squareOrderId &&
+        existing.squarePaymentLinkUrl
+      ) {
+        return {
+          url: existing.squarePaymentLinkUrl,
+          orderId: existing.squareOrderId,
+          bookingNumber: existing.bookingNumber,
+        };
+      }
+      throw new ConflictException({
+        message: "This price was already used for a booking. Please review your trip.",
+        error: "QUOTE_USED",
+      });
+    }
+
+    const pricing = await this.quoteService.pricingFor(quote, body);
     const bookingType = body.bookingType ?? BookingType.ONE_WAY;
     const bookingNumber = await allocateCode({
       prefix: "BK",
       nextSequence: () => this.sequenceService.nextBooking(),
     });
-    const booking = await this.bookingRepository.create({
-      userId: await this.bookingRepository.findCustomerIdByEmail(body.passenger.email),
-      vehicleCategoryId: body.vehicleCategoryId,
-      bookingNumber,
-      bookingType,
-      vehicleCount: body.vehicleCount,
-      status: BookingStatus.PENDING,
-      pricing,
-      address: body.address,
-      passenger: body.passenger,
-      bookingTime: body.bookingTime,
-      flightDetails: body.flightDetails,
-      meetAndGreet: body.meetAndGreet,
-      extraServices: body.extraServices,
-      notes: body.notes ?? null,
-      luggage: body.luggage ?? [],
-    });
+    const booking = await this.bookingRepository
+      .create({
+        userId: await this.bookingRepository.findCustomerIdByEmail(body.passenger.email),
+        vehicleCategoryId: body.vehicleCategoryId,
+        bookingNumber,
+        bookingType,
+        vehicleCount: body.vehicleCount,
+        status: BookingStatus.PENDING,
+        pricing,
+        address: body.address,
+        passenger: body.passenger,
+        bookingTime: body.bookingTime,
+        flightDetails: body.flightDetails,
+        meetAndGreet: body.meetAndGreet,
+        extraServices: body.extraServices,
+        notes: body.notes ?? null,
+        returnNotes: body.returnNotes ?? null,
+        notifyByEmail: body.notifications?.email,
+        notifyBySms: body.notifications?.sms,
+        luggage: body.luggage ?? [],
+        quoteId: quote.id,
+      })
+      .catch((error: unknown) => {
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+          throw new ConflictException({
+            message: "Your checkout is already being prepared. Please try again in a moment.",
+            error: "CHECKOUT_IN_PROGRESS",
+          });
+        }
+        throw error;
+      });
 
     const websiteUrl = this.configService.getOrThrow<string>("WEBSITE_URL").replace(/\/+$/, "");
 
@@ -116,7 +151,7 @@ export class PaymentService implements OnModuleInit, OnModuleDestroy {
         event: "booking.checkout_started",
         result: "success",
         context: toRequestContext(request),
-        metadata: { bookingId: booking.id, bookingNumber, paymentMode },
+        metadata: { bookingId: booking.id, bookingNumber, paymentMode, quoteId: quote.id },
       });
 
       return { url: link.url, orderId: link.orderId, bookingNumber };

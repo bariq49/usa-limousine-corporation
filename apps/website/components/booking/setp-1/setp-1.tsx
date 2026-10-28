@@ -115,7 +115,9 @@ function Step1() {
       });
       if (!pickupValidation.isValid) {
         toast.error(
-          `Booking can't be added within ${pickupValidation.timeDisplay} of pickup time, choose another time.`,
+            pickupValidation.isPast
+            ? "The pickup time has already passed. Please choose a later time."
+            : `Booking can't be added within ${pickupValidation.timeDisplay} of pickup time, choose another time.`,
         );
         return;
       }

@@ -128,6 +128,7 @@ export function BookingPaymentSummary(props: Props) {
             </div>
           );
         })}
+        {row("Notifications", Number(pricing.notificationsPrice ?? 0))}
         {pricing.subtotal != null && Number(pricing.subtotal) !== Number(pricing.total)
           ? row("Subtotal", Number(pricing.subtotal))
           : null}

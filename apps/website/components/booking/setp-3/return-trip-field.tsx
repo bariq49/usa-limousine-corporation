@@ -1,72 +1,42 @@
 "use client";
 
-import { ArrowLeftRight, ArrowRight, Calendar, Clock } from "@usa-limousine-corporation/ui/svg";
-import { useEffect, useRef } from "react";
-import { useFormContext, useWatch } from "react-hook-form";
+import { ArrowLeftRight, ArrowRight, Plane } from "@usa-limousine-corporation/ui/svg";
+import { useState } from "react";
+import { useFormContext } from "react-hook-form";
+import { format, isValid, parseISO } from "date-fns";
+import { useTimeFormat } from "@usa-limousine-corporation/ui/store/time-format";
 import { Button } from "@usa-limousine-corporation/ui/components/button";
-import { Input } from "@usa-limousine-corporation/ui/components/input";
 import { MeetGreetField } from "./meet-greet-field";
 import { TripExtrasFields } from "./trip-extras-fields";
-import { AirportPickupField } from "./airport-pickup-field";
+import { Input } from "@usa-limousine-corporation/ui/components/input";
 import { useBookingStore } from "@/store/use-booking-store";
-import { cn, formatPrice } from "@/lib/utils";
+import { cn, formatPrice, formatTime } from "@/lib/utils";
+import { ReturnTripModal } from "../modals/return-trip-modal";
 import type { Step3FormValues } from "@/types/booking.types";
 
 export const ReturnTripField = () => {
-  const { control, setValue } = useFormContext<Step3FormValues>();
-  const { step1, step2, step3 } = useBookingStore();
+  const { setValue } = useFormContext<Step3FormValues>();
+  const { step1, returnTrip, quote, setReturnTrip } = useBookingStore();
+  const hourCycle = useTimeFormat((state) => state.hourCycle);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const returnEnabled = useWatch({ control, name: "returnEnabled" });
-  const pickupDate = step1?.pickupDate;
-  const returnTotalPrice = step2?.vehicleCategory?.priceBreakdown?.returnTotalPrice ?? 0;
+  const returnEnabled = Boolean(returnTrip);
+  const returnTotalPrice = quote?.pricing.legs?.returnTrip.total;
   const showReturnAirport = Boolean(step1?.isAirportSelected);
+  const returnDate = returnTrip ? parseISO(returnTrip.returnDate) : null;
 
   const pickupAddress = step1?.pickupAddress?.trim() || "";
   const deliveryAddress = step1?.deliveryAddress?.trim() || "";
 
-  const addReturn = () => {
-    setValue("returnEnabled", true, { shouldDirty: true });
-  };
-
   const removeReturn = () => {
-    setValue("returnEnabled", false, { shouldDirty: true });
-    setValue("returnDate", "", { shouldDirty: true });
-    setValue("returnTime", "", { shouldDirty: true });
-    setValue("returnAirlineName", "", { shouldDirty: true });
+    setReturnTrip(null);
     setValue("returnFlightNumber", "", { shouldDirty: true });
     setValue("returnMeetGreetEnabled", false, { shouldDirty: true });
     setValue("returnMeetGreet", "", { shouldDirty: true });
     setValue("returnChildSeatsEnabled", false, { shouldDirty: true });
     setValue("returnChildSeats", [], { shouldDirty: true });
+    setValue("returnNotes", "", { shouldDirty: true });
   };
-
-  const storeReturnEnabled = Boolean(step3?.returnEnabled);
-  const storeReturnDate = step3?.returnDate ?? "";
-  const storeReturnTime = step3?.returnTime ?? "";
-  const storeReturnKey = `${storeReturnEnabled}|${storeReturnDate}|${storeReturnTime}`;
-  const lastStoreReturnKey = useRef(storeReturnKey);
-
-  useEffect(() => {
-    if (lastStoreReturnKey.current === storeReturnKey) return;
-    lastStoreReturnKey.current = storeReturnKey;
-    if (storeReturnEnabled) {
-      setValue("returnEnabled", true, { shouldDirty: true });
-      setValue("returnDate", storeReturnDate, { shouldDirty: true });
-      setValue("returnTime", storeReturnTime, { shouldDirty: true });
-      return;
-    }
-    if (!returnEnabled) return;
-    setValue("returnEnabled", false, { shouldDirty: true });
-    setValue("returnDate", "", { shouldDirty: true });
-    setValue("returnTime", "", { shouldDirty: true });
-    setValue("returnAirlineName", "", { shouldDirty: true });
-    setValue("returnFlightNumber", "", { shouldDirty: true });
-    setValue("returnMeetGreetEnabled", false, { shouldDirty: true });
-    setValue("returnMeetGreet", "", { shouldDirty: true });
-    setValue("returnChildSeatsEnabled", false, { shouldDirty: true });
-    setValue("returnChildSeats", [], { shouldDirty: true });
-  }, [storeReturnKey, storeReturnEnabled, storeReturnDate, storeReturnTime, returnEnabled, setValue]);
-
 
   return (
     <div className="rounded-sm border border-border bg-white">
@@ -90,24 +60,45 @@ export const ReturnTripField = () => {
       </div>
 
       <div className="flex items-center justify-between gap-3 border-t border-border px-4 py-3">
-        <div>
-          <p className="text-xs text-gray-500">Additional cost</p>
-          <p className="text-xl font-bold text-secondary sm:text-2xl">
-            {formatPrice(returnTotalPrice)}
-          </p>
-        </div>
-        <Button
-          type="button"
-          onClick={returnEnabled ? removeReturn : addReturn}
-          className={cn(
-            "rounded-sm px-5 font-semibold",
-            returnEnabled
-              ? "border border-gray-900 bg-white text-gray-900 hover:bg-gray-50"
-              : "bg-gray-900 text-white hover:bg-gray-800"
+        <div className="min-w-0">
+          {returnTrip && returnDate && isValid(returnDate) ? (
+            <>
+              <p className="text-xs text-gray-500">
+                {format(returnDate, "EEE d MMM yyyy")} · {formatTime(returnTrip.returnTime, hourCycle)}
+              </p>
+              <p className="text-xl font-bold text-secondary sm:text-2xl">
+                {returnTotalPrice === undefined ? "—" : formatPrice(returnTotalPrice)}
+              </p>
+            </>
+          ) : (
+            <p className="text-xs text-gray-500 sm:text-sm">
+              Choose a date and time to see the return price.
+            </p>
           )}
-        >
-          {returnEnabled ? "Remove" : "Add Return"}
-        </Button>
+        </div>
+        <div className="flex shrink-0 gap-2">
+          {returnEnabled ? (
+            <Button
+              type="button"
+              onClick={() => setIsModalOpen(true)}
+              className="rounded-sm border border-border bg-white px-4 font-semibold text-gray-900 hover:bg-gray-50"
+            >
+              Change
+            </Button>
+          ) : null}
+          <Button
+            type="button"
+            onClick={returnEnabled ? removeReturn : () => setIsModalOpen(true)}
+            className={cn(
+              "rounded-sm px-5 font-semibold",
+              returnEnabled
+                ? "border border-gray-900 bg-white text-gray-900 hover:bg-gray-50"
+                : "bg-gray-900 text-white hover:bg-gray-800"
+            )}
+          >
+            {returnEnabled ? "Remove" : "Add Return"}
+          </Button>
+        </div>
       </div>
 
       {returnEnabled ? (
@@ -119,36 +110,13 @@ export const ReturnTripField = () => {
             </h4>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <Input
-              name="returnDate"
-              type="date"
-              label="Return Date"
-              placeholder="Select Return Date"
-              icon={<Calendar width={16} height={16} className="text-gray-400" />}
-              disablePast
-              minDate={pickupDate || undefined}
-              required
-            />
-            <Input
-              name="returnTime"
-              type="time"
-              label="Return Time"
-              placeholder="Select Return Time"
-              icon={<Clock width={16} height={16} className="text-gray-400" />}
-              required
-            />
-          </div>
-
           {showReturnAirport ? (
-            <AirportPickupField
-              airlineField="returnAirlineName"
-              flightField="returnFlightNumber"
-              airlinePlaceholder="Return Airline Name (e.g. Emirates)"
-              flightPlaceholder="Return Flight Number (e.g. EK001)"
-              airlineLabel="Return Airline Name"
-              flightLabel="Return Flight Number"
-              requireAirport={false}
+            <Input
+              name="returnFlightNumber"
+              label="Return Flight Number"
+              placeholder="e.g. LH1868"
+              icon={<Plane width={16} height={16} className="text-gray-400" />}
+              className="sm:max-w-sm"
             />
           ) : null}
 
@@ -163,11 +131,14 @@ export const ReturnTripField = () => {
           <TripExtrasFields
             childSeatsField="returnChildSeats"
             childSeatsEnabledField="returnChildSeatsEnabled"
-            childSeatsLabel="Return Child Seats"
-            showNotes={false}
+            childSeatsLabel="Need a child seat for the return?"
+            notesField="returnNotes"
+            notesLabel="Add notes for the return driver"
           />
         </div>
       ) : null}
+
+      <ReturnTripModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </div>
   );
 };

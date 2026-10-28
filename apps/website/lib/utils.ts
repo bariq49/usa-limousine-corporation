@@ -177,13 +177,17 @@ export const validateBookingTime = ({
     date,
     time,
     minBookingMinutes,
-}: ValidateBookingTimeParams): { isValid: boolean; timeDisplay?: string } => {
-    if (!date || !time || !minBookingMinutes) return { isValid: true };
+}: ValidateBookingTimeParams): { isValid: boolean; isPast?: boolean; timeDisplay?: string } => {
+    if (!date || !time) return { isValid: true };
 
     try {
         const pickupDateTime = fromZonedTime(`${date} ${time}`, DEFAULT_TIMEZONE);
         const now = new Date();
         const minNoticeMs = minBookingMinutes * 60 * 1000;
+
+        if (pickupDateTime.getTime() <= now.getTime()) {
+            return { isValid: false, isPast: true };
+        }
 
         if (pickupDateTime.getTime() - now.getTime() < minNoticeMs) {
             const hours = minBookingMinutes / 60;

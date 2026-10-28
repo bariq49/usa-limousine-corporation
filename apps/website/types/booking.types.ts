@@ -1,5 +1,6 @@
 import type { VehicleCategory } from './vehicle-category.types';
 import type { BookingSettings } from './settings.types';
+import type { Pricing as BookingPricing } from '@usa-limousine-corporation/ui/bookings/types';
 
 export type { BookingSettings };
 
@@ -7,42 +8,24 @@ export type TripType = "one-way" | "return" | "hourly";
 
 export type { VehicleCategory };
 
-export type Pricing = {
-    oneWayBasePrice: number;
-    oneWaySurchargePercentage: number;
-    oneWaySurchargeAmount: number;
-    oneWayGratuityPercentage: number;
-    oneWayGratuityAmount: number;
-    oneWayTaxPercentage: number;
-    oneWayTaxAmount: number;
-    oneWayTransactionFeePercentage: number;
-    oneWayTransactionFeeAmount: number;
-    oneWayDiscountPercentage: number;
-    oneWayDiscountAmount: number;
-    oneWayAirportFeeAmount: number;
-    oneWayTotalPrice: number;
-    returnBasePrice: number;
-    returnSurchargePercentage: number;
-    returnSurchargeAmount: number;
-    returnGratuityPercentage: number;
-    returnGratuityAmount: number;
-    returnTaxPercentage: number;
-    returnTaxAmount: number;
-    returnTransactionFeePercentage: number;
-    returnTransactionFeeAmount: number;
-    returnDiscountPercentage: number;
-    returnDiscountAmount: number;
-    returnAirportFeeAmount: number;
-    returnTotalPrice: number;
-    stopFeeAmount: number;
-    luggageFeeAmount: number;
-    oneWayMeetAndGreetFeeAmount: number;
-    returnMeetAndGreetFeeAmount: number;
-    oneWayChildSeatFeeAmount: number;
-    returnChildSeatFeeAmount: number;
-    subtotal: number;
+export type Pricing = BookingPricing;
+
+export interface ReturnTrip {
+    returnDate: string;
+    returnTime: string;
+}
+
+export interface QuoteEstimate {
+    vehicleCategory: VehicleCategory;
+    vehicleCount: number;
+    pricing: Pricing;
     total: number;
-};
+}
+
+export interface Quote extends QuoteEstimate {
+    id: string;
+    expiresAt: string;
+}
 
 export interface BookingStep1PersistedData {
     tripType: TripType;
@@ -59,7 +42,6 @@ export interface BookingStep1PersistedData {
 
 export interface BookingStep2PersistedData {
     vehicleCategory: VehicleCategory;
-    /** Vehicles of the category booked; capacity and fare scale with it. */
     vehicleCount: number;
     passengers: number;
     bags: number;
@@ -86,16 +68,14 @@ export interface BookingStep3PersistedData {
     email: string;
     ccEmail?: string;
     notes?: string;
-    airlineName?: string;
+    returnNotes?: string;
+    notifyByEmail?: boolean;
+    notifyBySms?: boolean;
     flightNumber?: string;
     meetGreetEnabled?: boolean;
     meetGreet?: string;
     luggage?: Step3LuggageSelection[];
     childSeats?: Step3ChildSeatSelection[];
-    returnEnabled?: boolean;
-    returnDate?: string;
-    returnTime?: string;
-    returnAirlineName?: string;
     returnFlightNumber?: string;
     returnMeetGreetEnabled?: boolean;
     returnMeetGreet?: string;
@@ -121,18 +101,16 @@ export interface Step3FormValues {
     email: string;
     ccEmailEnabled: boolean;
     ccEmail: string;
-    airlineName: string;
     flightNumber: string;
     notes: string;
+    returnNotes: string;
+    notifyByEmail: boolean;
+    notifyBySms: boolean;
     luggage: Step3LuggageSelection[];
     meetGreetEnabled: boolean;
     meetGreet: string;
     childSeatsEnabled: boolean;
     childSeats: Step3ChildSeatSelection[];
-    returnEnabled: boolean;
-    returnDate: string;
-    returnTime: string;
-    returnAirlineName: string;
     returnFlightNumber: string;
     returnMeetGreetEnabled: boolean;
     returnMeetGreet: string;
@@ -142,7 +120,18 @@ export interface Step3FormValues {
 
 export type BookingType = "ONE_WAY" | "RETURN" | "HOURLY";
 
-/** Booking request in the backend's create shape, sent to start Square checkout. */
+export interface QuoteRequest {
+    vehicleCategoryId?: string | undefined;
+    vehicleCount?: number;
+    bookingType: BookingType;
+    address: BookingDraft["address"];
+    bookingTime: BookingDraft["bookingTime"];
+    meetAndGreet?: BookingDraft["meetAndGreet"];
+    extraServices?: BookingDraft["extraServices"];
+    luggage?: BookingDraft["luggage"];
+    notifications?: BookingDraft["notifications"];
+}
+
 export interface BookingDraft {
     vehicleCategoryId: string;
     vehicleCount: number;
@@ -168,15 +157,14 @@ export interface BookingDraft {
         returnDate?: string;
         returnTime?: string;
     };
-    flightDetails?: { flightName?: string; flightNumber?: string };
+    flightDetails?: { flightNumber?: string };
     meetAndGreet?: { enabled: boolean; signName?: string; returnEnabled?: boolean };
     extraServices?: { extraServiceId: string; quantity: number; returnQuantity: number }[];
     luggage?: { luggageTypeId: string; quantity: number }[];
     notes?: string;
-    pricing: {
-        basePrice: number;
-        total: number;
-    };
+    returnNotes?: string;
+    notifications?: { email: boolean; sms: boolean };
+    quoteId: string;
 }
 
 export type CheckoutStart = {
@@ -185,7 +173,6 @@ export type CheckoutStart = {
     bookingNumber: string;
 };
 
-/** Square checkout the rider was sent to, kept so the cancel page can show and resume it. */
 export type CheckoutSession = {
     orderId: string;
     url: string;

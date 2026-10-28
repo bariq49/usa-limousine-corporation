@@ -1,22 +1,34 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 import { AnimatedRouteMap } from "@usa-limousine-corporation/ui/bookings/animated-route-map";
 import SummaryDetails from "@/components/booking/summary-details";
 import { IMAGES } from "@/constants/image-constants";
 import { useBookingStore } from "@/store/use-booking-store";
+import { useSyncQuote } from "@/hooks/queries/use-quotes";
 import { cn } from "@/lib/utils";
+import { PICKUP_TIME_ERRORS } from "@/constants/booking-constants";
+import type { ApiError } from "@/lib/api/client";
 
-/** How far the step content sheet overlaps the map on small screens (matches -mt-10). */
 const MOBILE_SHEET_OVERLAP = 40;
 
 type Props = {
   children: ReactNode;
-  /** Show the route map on small screens too; the passenger form shows it on desktop only. */
   showMobileMap?: boolean;
 };
 
 export default function BookingStepLayout({ children, showMobileMap = true }: Props) {
+  const router = useRouter();
+  const quoteError = useSyncQuote().error as ApiError | null;
+
+  useEffect(() => {
+    if (quoteError?.code && PICKUP_TIME_ERRORS.includes(quoteError.code)) {
+      toast.error(quoteError.message, { id: "pickup-time" });
+      router.push("/");
+    }
+  }, [quoteError, router]);
   const step1 = useBookingStore((s) => s.step1);
   const pickupTime = useBookingStore((s) => s.step1?.pickupTime);
   const hasMap = Boolean(step1?.pickupAddress?.trim()) && Boolean(step1?.deliveryAddress?.trim());
@@ -24,8 +36,8 @@ export default function BookingStepLayout({ children, showMobileMap = true }: Pr
 
   return (
     <div className="flex min-h-screen w-full items-start justify-center max-xl:pb-2 xl:px-5 xl:pt-6 xl:pb-10">
-      <div className="flex w-full flex-col items-start gap-4 xl:flex-row xl:gap-2">
-        <div className="flex w-full min-w-0 flex-1 flex-col items-start xl:flex-row xl:gap-2">
+      <div className="flex w-full flex-col items-start gap-4 xl:flex-row xl:gap-5">
+        <div className="flex w-full min-w-0 flex-1 flex-col items-start xl:flex-row xl:gap-5">
           {hasMap ? (
             <div
               className={cn(

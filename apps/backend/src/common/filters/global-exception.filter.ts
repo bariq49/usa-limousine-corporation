@@ -156,23 +156,25 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         : exception.message;
 
     const error = typeof rawError === "string" ? rawError : (HttpStatus[statusCode] ?? "Error");
+    const rawDetails = responseObject["details"];
+    const details =
+      !hideDetails && typeof rawDetails === "object" && rawDetails !== null
+        ? (rawDetails as Record<string, unknown>)
+        : undefined;
 
-    return { statusCode, message, error };
+    return details ? { statusCode, message, error, details } : { statusCode, message, error };
   }
 
   private writeErrorResponse(params: WriteErrorResponseParams): void {
     const { response, path, normalized } = params;
-    const { statusCode, message, error } = normalized;
+    const { statusCode, message, error, details } = normalized;
 
     const body: ApiErrorResponse = {
       success: false,
-      error: {
-        statusCode,
-        message,
-        error,
-        timestamp: new Date().toISOString(),
-        path,
-      },
+      error: Object.assign(
+        { statusCode, message, error, timestamp: new Date().toISOString(), path },
+        details ? { details } : {},
+      ),
     };
 
     response.status(statusCode).json(body);

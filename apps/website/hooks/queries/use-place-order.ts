@@ -1,58 +1,54 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import type { BookingDraft } from "@/types/booking.types";
-import { useBookingStore, calculatePricing } from "@/store/use-booking-store";
-import { TRIP_TYPES } from "@/constants/booking-constants";
+import type { BookingDraft, Quote } from "@/types/booking.types";
+import type { ApiError } from "@/lib/api/client";
+import { useBookingStore } from "@/store/use-booking-store";
 import { startCheckout } from "@/lib/api/checkout";
+import { formatPrice } from "@/lib/utils";
+import { quoteRequest } from "./use-quotes";
 
-export const usePlaceOrder = () => {
+type PlaceOrderOptions = {
+    onPriceChanged?: (previousTotal: number, quote: Quote) => void;
+};
+
+export const usePlaceOrder = ({ onPriceChanged }: PlaceOrderOptions = {}) => {
+    const queryClient = useQueryClient();
+
     return useMutation({
         mutationFn: async () => {
-            const state = useBookingStore.getState();
-            const { step1, step2, step3 } = state;
-            const pricing = calculatePricing(state);
+            const { step1, returnTrip, step2, step3, quote } = useBookingStore.getState();
+            const request =
+                step2 &&
+                quoteRequest({
+                    step1,
+                    returnTrip,
+                    step3,
+                    vehicleCategoryId: step2.vehicleCategory.id,
+                    vehicleCount: step2.vehicleCount,
+                });
 
-            if (!step1 || !step2 || !step3 || !pricing) {
+            if (!step2 || !step3 || !request) {
                 throw new Error("Missing booking details.");
             }
+            if (!quote) {
+                throw new Error("We are still pricing your trip. Please try again in a moment.");
+            }
 
-            const isHourly = step1.tripType === TRIP_TYPES.HOURLY;
-            const returnEnabled = Boolean(step3.returnEnabled);
-            const deliveryAddress = step1.deliveryAddress.trim();
-
-            const seatCounts = new Map<string, { quantity: number; returnQuantity: number }>();
-            (step3.childSeats ?? []).forEach((seat) => {
-                const counts = seatCounts.get(seat.id) ?? { quantity: 0, returnQuantity: 0 };
-                counts.quantity += seat.quantity;
-                seatCounts.set(seat.id, counts);
-            });
-            (returnEnabled ? (step3.returnChildSeats ?? []) : []).forEach((seat) => {
-                const counts = seatCounts.get(seat.id) ?? { quantity: 0, returnQuantity: 0 };
-                counts.returnQuantity += seat.quantity;
-                seatCounts.set(seat.id, counts);
-            });
-
-            const returnDetails = returnEnabled
+            const returnDetails = returnTrip
                 ? [
-                      step3.returnAirlineName && `Return airline: ${step3.returnAirlineName}`,
                       step3.returnFlightNumber && `Return flight: ${step3.returnFlightNumber}`,
                       step3.returnMeetGreet && `Return meet & greet sign: ${step3.returnMeetGreet}`,
                   ].filter(Boolean)
                 : [];
-            const notes = [step3.notes, returnDetails.join("\n")].filter(Boolean).join("\n\n");
+            const returnNotes = [step3.returnNotes, returnDetails.join("\n")]
+                .filter(Boolean)
+                .join("\n\n");
 
             const draft: BookingDraft = {
                 vehicleCategoryId: step2.vehicleCategory.id,
                 vehicleCount: step2.vehicleCount,
-                bookingType: isHourly ? "HOURLY" : returnEnabled ? "RETURN" : "ONE_WAY",
-                address: {
-                    pickup: { address: step1.pickupAddress },
-                    dropoff: deliveryAddress ? { address: deliveryAddress } : undefined,
-                    stops: step1.stops,
-                    distance: step1.distance ?? 0,
-                    duration: isHourly ? (step1.duration ?? 0) * 60 : (step1.travelDuration ?? 0),
-                    travelDuration: step1.travelDuration,
-                },
+                bookingType: request.bookingType,
+                address: request.address,
                 passenger: {
                     passengerCount: step2.passengers,
                     name: `${step3.title} ${step3.fullName.trim()}`,
@@ -60,37 +56,19 @@ export const usePlaceOrder = () => {
                     email: step3.email.trim(),
                     ccEmail: step3.ccEmail,
                 },
-                bookingTime: {
-                    pickupDate: step1.pickupDate,
-                    pickupTime: step1.pickupTime,
-                    returnDate: returnEnabled ? step3.returnDate : undefined,
-                    returnTime: returnEnabled ? step3.returnTime : undefined,
-                },
-                flightDetails: step1.isAirportSelected
-                    ? { flightName: step3.airlineName, flightNumber: step3.flightNumber }
+                bookingTime: request.bookingTime,
+                flightDetails: step1?.isAirportSelected
+                    ? { flightNumber: step3.flightNumber }
                     : undefined,
-                meetAndGreet:
-                    step3.meetGreetEnabled || step3.returnMeetGreetEnabled
-                        ? {
-                              enabled: Boolean(step3.meetGreetEnabled),
-                              signName: step3.meetGreet,
-                              returnEnabled: Boolean(step3.returnMeetGreetEnabled),
-                          }
-                        : undefined,
-                extraServices: Array.from(seatCounts, ([extraServiceId, counts]) => ({
-                    extraServiceId,
-                    quantity: counts.quantity,
-                    returnQuantity: counts.returnQuantity,
-                })),
-                luggage: (step3.luggage ?? []).map((item) => ({
-                    luggageTypeId: item.id,
-                    quantity: item.quantity,
-                })),
-                notes: notes || undefined,
-                pricing: {
-                    basePrice: pricing.subtotal,
-                    total: Math.round(pricing.total * 100) / 100,
-                },
+                meetAndGreet: request.meetAndGreet
+                    ? Object.assign({ signName: step3.meetGreet }, request.meetAndGreet)
+                    : undefined,
+                extraServices: request.extraServices,
+                luggage: request.luggage,
+                notifications: request.notifications,
+                notes: step3.notes || undefined,
+                returnNotes: returnNotes || undefined,
+                quoteId: quote.id,
             };
 
             const checkout = await startCheckout(draft);
@@ -98,7 +76,21 @@ export const usePlaceOrder = () => {
             window.location.assign(checkout.url);
             return checkout;
         },
-        onError: (error: { message?: string }) => {
+        onError: (error: ApiError) => {
+            const updated = error.details?.quote as Quote | undefined;
+            if (error.code === "PRICE_CHANGED" && updated) {
+                const previousTotal = useBookingStore.getState().quote?.total ?? 0;
+                useBookingStore.getState().setQuote(updated);
+                if (onPriceChanged) {
+                    onPriceChanged(previousTotal, updated);
+                    return;
+                }
+                toast.error(`${error.message} New total: ${formatPrice(updated.total)}.`);
+                return;
+            }
+            if (error.code === "QUOTE_INVALID" || error.code === "QUOTE_USED") {
+                void queryClient.invalidateQueries({ queryKey: ["quotes"] });
+            }
             toast.error(error.message || "We could not start the payment. Please try again.");
         },
     });

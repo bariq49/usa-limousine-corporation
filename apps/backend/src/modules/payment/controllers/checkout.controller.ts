@@ -13,7 +13,7 @@ import {
 } from "@nestjs/common";
 import { Throttle, ThrottlerGuard } from "@nestjs/throttler";
 import type { Request } from "express";
-import { CreateDto } from "../../booking/dto/booking.dto";
+import { CheckoutDto } from "../../booking/dto/booking.dto";
 import { CheckoutOrderParamDto } from "../dto/checkout.dto";
 import { PaymentService } from "../services/payment.service";
 
@@ -24,7 +24,7 @@ export class CheckoutController {
   @Post("public/bookings/checkout")
   @UseGuards(ThrottlerGuard)
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
-  start(@Body() body: CreateDto, @Req() request: Request) {
+  start(@Body() body: CheckoutDto, @Req() request: Request) {
     return this.paymentService.startCheckout(body, request);
   }
 
