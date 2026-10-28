@@ -4,7 +4,7 @@
 import * as React from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronLeft, Location, Plane, Train } from "../svg";
+import { ChevronLeft, Close, LocateFixed, Location, Plane, Train } from "../svg";
 import { cn } from "../utils/cn";
 import { isAirportAddress, isTrainAddress } from "../utils/places";
 import { loadGoogleMaps } from "../bookings/google-maps-loader";
@@ -16,6 +16,8 @@ export interface LocationInputProps {
   onChange: (value: string) => void;
   placeholder?: string | undefined;
   className?: string | undefined;
+  /** Shows a "Use my location" row; the caller fills in the address. */
+  onUseCurrentLocation?: (() => Promise<void> | void) | undefined;
 }
 
 const US_BOUNDS: google.maps.LatLngBoundsLiteral = {
@@ -32,12 +34,13 @@ type DropdownPosition = {
 };
 
 export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputProps>(
-  ({ value, onChange, placeholder, className }, ref) => {
+  ({ value, onChange, placeholder, className, onUseCurrentLocation }, ref) => {
     const [predictions, setPredictions] = React.useState<
       google.maps.places.AutocompletePrediction[]
     >([]);
     const [isOpen, setIsOpen] = React.useState(false);
     const [loading, setLoading] = React.useState(false);
+    const [locating, setLocating] = React.useState(false);
     const [mounted, setMounted] = React.useState(false);
     const [dropdownPosition, setDropdownPosition] = React.useState<DropdownPosition | null>(null);
     const [isMobile, setIsMobile] = React.useState(false);
@@ -160,6 +163,21 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
           },
         );
       }
+    };
+
+    const handleClear = () => {
+      onChange("");
+      setPredictions([]);
+      setLoading(false);
+    };
+
+    const handleUseCurrentLocation = () => {
+      if (!onUseCurrentLocation || locating) return;
+      setLocating(true);
+      void Promise.resolve(onUseCurrentLocation()).finally(() => {
+        setLocating(false);
+        closeDropdown(false);
+      });
     };
 
     const handleSelect = (prediction: google.maps.places.AutocompletePrediction) => {
@@ -314,13 +332,48 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
                             value={value}
                             onChange={handleInputChange}
                             placeholder="Address, airport, hotel, ..."
-                            className="w-full h-10 bg-default-100 border border-transparent rounded-md py-2 pl-9 pr-3 text-[15px] focus:outline-none"
+                            className="w-full h-10 bg-default-100 border border-transparent rounded-md py-2 pl-9 pr-9 text-[15px] focus:outline-none"
                           />
+                          {value ? (
+                            <button
+                              type="button"
+                              aria-label="Clear location"
+                              onClick={handleClear}
+                              className="absolute right-2 top-1/2 flex size-6 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-default-600"
+                            >
+                              <Close className="size-4" />
+                            </button>
+                          ) : null}
                         </div>
                       </div>
                     )}
+                    {loading || locating ? (
+                      <div className="mx-4 mt-3 h-1 shrink-0 overflow-hidden rounded-full bg-default-100">
+                        <motion.div
+                          className="h-full w-1/3 rounded-full bg-default-900"
+                          initial={{ x: "-100%" }}
+                          animate={{ x: "300%" }}
+                          transition={{ duration: 1.1, ease: "easeInOut", repeat: Infinity }}
+                        />
+                      </div>
+                    ) : null}
                     <div className="flex-1 overflow-y-auto py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                      {loading
+                      {isMobile && onUseCurrentLocation ? (
+                        <button
+                          type="button"
+                          onClick={handleUseCurrentLocation}
+                          disabled={locating}
+                          className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-default-50 disabled:opacity-60"
+                        >
+                          <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-default-100">
+                            <LocateFixed className="size-5 text-default-900" aria-hidden />
+                          </div>
+                          <span className="text-sm font-semibold text-default-900">
+                            {locating ? "Finding your location..." : "Use my location"}
+                          </span>
+                        </button>
+                      ) : null}
+                      {loading && !isMobile
                         ? Array.from({ length: 6 }).map((_, index) => (
                             <div
                               key={`location-skeleton-${index}`}

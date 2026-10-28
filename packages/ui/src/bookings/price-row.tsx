@@ -18,12 +18,12 @@ export function PriceRow(props: Props) {
 
   return (
     <div
-      className={`flex items-center justify-between font-normal ${
-        destructive ? "text-destructive" : "text-gray-500"
+      className={`flex items-center justify-between font-medium ${
+        destructive ? "text-destructive" : "text-gray-600"
       }`}
     >
       <span>{label}</span>
-      <span className={destructive ? "font-medium" : "font-medium text-gray-800"}>
+      <span className={destructive ? "font-medium" : "font-medium text-black"}>
         {destructive ? `- ${format(value)}` : format(value)}
       </span>
     </div>

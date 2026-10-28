@@ -10,4 +10,7 @@ export interface BookingSettings {
     stopFee?: number;
     meetAndGreetFee?: number;
     minBookingMinutes?: number;
+    /** Notice before pickup, in minutes, that a cancellation still gets a refund. */
+    cancellationMinutes?: number;
+    cancellationRefundRate?: number;
 }

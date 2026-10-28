@@ -12,6 +12,7 @@ export interface StepperProps {
   icon?: React.ReactNode;
   label?: string;
   className?: string;
+  labelClassName?: string;
 }
 
 /** Compact round minus / plus control with an optional label. */
@@ -23,6 +24,7 @@ export function Stepper({
   icon,
   label,
   className,
+  labelClassName,
 }: StepperProps) {
   const handleDecrement = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -35,14 +37,14 @@ export function Stepper({
   };
 
   return (
-    <div className={cn("flex items-center gap-1", className)}>
+    <div className={cn("flex items-center gap-2", className)}>
       {(icon || label) && (
-        <div className="flex items-center gap-1 text-primary">
+        <div className={cn("flex items-center gap-1 text-sm text-primary", labelClassName)}>
           {icon}
-          {label && <span className="text-sm font-semibold">{label}</span>}
+          {label && <span className="font-semibold">{label}</span>}
         </div>
       )}
-      <div className="flex items-center gap-1 sm:gap-2.5 ml-1">
+      <div className="flex items-center gap-1 sm:gap-2.5">
         <button
           type="button"
           onClick={handleDecrement}

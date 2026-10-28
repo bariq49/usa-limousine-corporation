@@ -34,15 +34,15 @@ interface BookingState {
     setStep1Data: (data: BookingStep1PersistedData) => void;
     setStep2Data: (data: Partial<BookingStep2PersistedData> | null) => void;
     setStep3Data: (data: Partial<BookingStep3PersistedData> | null) => void;
+    setReturnTrip: (returnTrip: { returnDate: string; returnTime: string } | null) => void;
     setBookingSettings: (settings: BookingSettings) => void;
     setCheckout: (checkout: CheckoutSession | null) => void;
-    /** Clears the trip once it has been booked and paid. */
     resetBooking: () => void;
 }
 
 // =============== STORE ===============
 
-const STORE_VERSION = 38;
+const STORE_VERSION = 39;
 
 export const resolveVehicleCategoryPrice = (vehicleCategory: VehicleCategory): number =>
     vehicleCategory.priceBreakdown?.oneWayTotalPrice ?? 0;
@@ -107,8 +107,6 @@ export const useBookingStore = create<BookingState>()(
                             phone: data.phone ?? state.step3?.phone ?? "",
                             email: data.email ?? state.step3?.email ?? "",
                             ccEmail: data.ccEmail,
-                            pickupDate: data.pickupDate ?? state.step3?.pickupDate ?? "",
-                            pickupTime: data.pickupTime ?? state.step3?.pickupTime ?? "",
                             notes: data.notes,
                             airlineName: data.airlineName,
                             flightNumber: data.flightNumber,
@@ -127,6 +125,35 @@ export const useBookingStore = create<BookingState>()(
                         },
                     };
                 }),
+
+            setReturnTrip: (returnTrip) =>
+                set((state) => ({
+                    step3: Object.assign(
+                        {
+                            title: PASSENGER_TITLES[0].value,
+                            fullName: "",
+                            phone: "",
+                            email: "",
+                        },
+                        state.step3,
+                        returnTrip
+                            ? {
+                                  returnEnabled: true,
+                                  returnDate: returnTrip.returnDate,
+                                  returnTime: returnTrip.returnTime,
+                              }
+                            : {
+                                  returnEnabled: false,
+                                  returnDate: undefined,
+                                  returnTime: undefined,
+                                  returnAirlineName: undefined,
+                                  returnFlightNumber: undefined,
+                                  returnMeetGreetEnabled: false,
+                                  returnMeetGreet: undefined,
+                                  returnChildSeats: [],
+                              },
+                    ),
+                })),
 
             setBookingSettings: (settings) =>
                 set({

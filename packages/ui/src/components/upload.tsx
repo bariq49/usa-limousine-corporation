@@ -152,7 +152,11 @@ export function Upload(props: UploadProps) {
           )}
         >
           {isImage ? (
-            <img src={value} alt="Upload preview" className="h-full w-full object-cover" />
+            <img
+              src={value}
+              alt="Upload preview"
+              className="absolute inset-0 h-full w-full object-contain"
+            />
           ) : (
             <div className="flex flex-col items-center justify-center gap-1.5 p-4 text-default-500">
               <ImageIcon className="h-8 w-8 text-default-400" />

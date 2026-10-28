@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef } from "react";
+import { useTimeFormat, type HourCycle } from "../store/time-format";
 import { cn } from "../utils/cn";
 import { isAirportAddress, isHotelAddress, isTrainAddress } from "../utils/places";
 import { loadGoogleMaps } from "./google-maps-loader";
@@ -168,7 +169,7 @@ function truncateTitle(title: string, maxLen: number = 26): string {
   return title.slice(0, maxLen - 1) + "…";
 }
 
-function formatBadgeTime(rawTime: string, addMinutesCount?: number): string {
+function formatBadgeTime(rawTime: string, hourCycle: HourCycle, addMinutesCount?: number): string {
   let hours = 13;
   let minutes = 45;
 
@@ -194,6 +195,9 @@ function formatBadgeTime(rawTime: string, addMinutesCount?: number): string {
     minutes = finalMinutes % 60;
   }
 
+  if (hourCycle === "24h") {
+    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+  }
   const period = hours >= 12 ? "PM" : "AM";
   const hour12 = hours % 12 === 0 ? 12 : hours % 12;
   return `${String(hour12).padStart(2, "0")}:${String(minutes).padStart(2, "0")} ${period}`;
@@ -486,6 +490,7 @@ export function AnimatedRouteMap({
   wrapperClassName,
   bottomInset = 0,
 }: AnimatedRouteMapProps) {
+  const hourCycle = useTimeFormat((state) => state.hourCycle);
   const mapRef = useRef<HTMLDivElement>(null);
   const bottomInsetRef = useRef(bottomInset);
   bottomInsetRef.current = bottomInset;
@@ -698,8 +703,8 @@ export function AnimatedRouteMap({
           activeRouteData = { bounds: routeBounds, distanceKm };
           fitBoundsWithPadding(map, routeBounds, distanceKm);
 
-          const startFormattedTime = formatBadgeTime(pickupTime);
-          const endFormattedTime = formatBadgeTime(pickupTime, legDurationMin);
+          const startFormattedTime = formatBadgeTime(pickupTime, hourCycle);
+          const endFormattedTime = formatBadgeTime(pickupTime, hourCycle, legDurationMin);
 
           const pickupTitle = getAddressTitle(pickupAddress) || "Pickup Location";
           const dropoffTitle = getAddressTitle(deliveryAddress) || "Drop-off Location";
@@ -861,6 +866,7 @@ export function AnimatedRouteMap({
     pickupAddress,
     deliveryAddress,
     pickupTime,
+    hourCycle,
     travelDuration,
     stopWaypoints,
     carMarkerSrc,
@@ -878,7 +884,7 @@ export function AnimatedRouteMap({
       >
         <div
           ref={mapRef}
-          className="h-full w-full [&_*:focus]:outline-none [&_*:focus-visible]:outline-none"
+          className="h-full w-full [&_*:focus]:outline-none [&_*:focus-visible]:outline-none [&_.gmnoprint>div]:overflow-hidden [&_.gmnoprint>div]:rounded-sm!"
         />
       </div>
     </div>

@@ -13,6 +13,7 @@ type Props = {
   nameField?: "meetGreet" | "returnMeetGreet";
   label?: string;
   namePlaceholder?: string;
+  nameLabel?: string;
 };
 
 export const MeetGreetField = (props: Props = {}) => {
@@ -21,6 +22,7 @@ export const MeetGreetField = (props: Props = {}) => {
     nameField = "meetGreet",
     label = "Meet & Greet",
     namePlaceholder = "Name for Meet & Greet sign",
+    nameLabel = "Sign Name",
   } = props;
 
   const { control, setValue } = useFormContext<Step3FormValues>();
@@ -58,6 +60,7 @@ export const MeetGreetField = (props: Props = {}) => {
       {isEnabled ? (
         <Input
           name={nameField}
+          label={nameLabel}
           placeholder={namePlaceholder}
           icon={<User width={16} height={16} className="text-gray-400" />}
           required

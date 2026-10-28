@@ -18,7 +18,7 @@ type Props = {
 
 export default function BookingStepLayout({ children, showMobileMap = true }: Props) {
   const step1 = useBookingStore((s) => s.step1);
-  const pickupTime = useBookingStore((s) => s.step3?.pickupTime);
+  const pickupTime = useBookingStore((s) => s.step1?.pickupTime);
   const hasMap = Boolean(step1?.pickupAddress?.trim()) && Boolean(step1?.deliveryAddress?.trim());
   const hasMobileMap = hasMap && showMobileMap;
 

@@ -33,6 +33,7 @@ export const CcEmailField = () => {
         <Input
           name="ccEmail"
           type="email"
+          label="CC Email"
           placeholder="Email to receive a copy of the booking"
           icon={<Mail width={16} height={16} className="text-gray-400" />}
           required

@@ -11,24 +11,21 @@ interface StopItemProps {
 
 export const StopItem: React.FC<StopItemProps> = ({ index, onRemove, stopFeePerStop = 0 }) => {
   return (
-    <div className="flex items-start gap-1">
-      <div className="flex flex-col items-center h-full">
-        <div className="h-6.25" />
-        <div className="w-5 h-5 rounded-full border-4 border-secondary bg-white z-10 flex-shrink-0" />
-      </div>
+    <div className="flex items-center gap-1">
+      <div className="w-5 h-5 rounded-full border-4 border-secondary bg-white z-10 flex-shrink-0" />
       <div className="flex-1 min-w-0">
-        <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 ml-1">
-          Stop {index + 1}
-          {stopFeePerStop > 0 ? (
-            <span className="text-secondary ml-1">({formatPrice(stopFeePerStop)} extra)</span>
-          ) : (
-            ""
-          )}
-        </div>
         <div className="relative">
           <Input
             name={`stops.${index}.address`}
             type="location"
+            label={
+              <>
+                Stop {index + 1}
+                {stopFeePerStop > 0 ? (
+                  <span className="text-secondary ml-1">({formatPrice(stopFeePerStop)} extra)</span>
+                ) : null}
+              </>
+            }
             placeholder="Enter Stop Location"
             className="flex-1"
           />

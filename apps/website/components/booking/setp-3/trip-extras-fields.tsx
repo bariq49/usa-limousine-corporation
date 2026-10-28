@@ -123,6 +123,7 @@ export const TripExtrasFields = (props: Props = {}) => {
         <Input
           name="notes"
           type="textarea"
+          label="Notes"
           placeholder="Notes for the driver (optional)"
           rows={5}
           inputClassName="min-h-30 rounded-sm border-gray-100 bg-gray-50/50 p-4"

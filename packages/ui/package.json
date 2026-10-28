@@ -16,6 +16,7 @@
     "./data-table/columns/*": "./src/data-table/columns/*.tsx",
     "./types/*": "./src/types/*.ts",
     "./lib/*": "./src/lib/*.ts",
+    "./store/*": "./src/store/*.ts",
     "./utils/*": "./src/utils/*.ts",
     "./constants": "./src/constants/index.ts",
     "./charts/*": "./src/charts/*.tsx",

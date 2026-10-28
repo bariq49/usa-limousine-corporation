@@ -39,6 +39,8 @@ export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 
   options?: InputOption[];
   rows?: number;
   onUpload?: ((file: File) => Promise<string>) | undefined;
+  /** Location inputs only: offers "Use my location" in the suggestions panel. */
+  onUseCurrentLocation?: (() => Promise<void> | void) | undefined;
   maxSizeMB?: number | undefined;
   hint?: string | undefined;
   disablePast?: boolean;

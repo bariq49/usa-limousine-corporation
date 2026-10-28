@@ -1,3 +1,4 @@
+import type { HourCycle } from "@usa-limousine-corporation/ui/store/time-format";
 export type LocationFieldName = "pickupAddress" | "deliveryAddress";
 
 export interface LocationFormAccessor {
@@ -17,6 +18,7 @@ export interface ReverseGeocodeParams {
 export interface CalculateArrivalTimeParams {
     time?: string;
     durationMinutes?: number;
+    hourCycle?: HourCycle;
 }
 
 export interface ValidateBookingTimeParams {

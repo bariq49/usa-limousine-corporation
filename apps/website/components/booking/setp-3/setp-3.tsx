@@ -2,8 +2,7 @@
 
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import toast from "react-hot-toast";
-import { Calendar, ChevronRight, Clock, Mail, User } from "@usa-limousine-corporation/ui/svg";
+import { ChevronRight, Mail, User } from "@usa-limousine-corporation/ui/svg";
 import { useBookingStore, useTotalPrice } from "@/store/use-booking-store";
 import { usePlaceOrder } from "@/hooks/queries/use-place-order";
 import { Button } from "@usa-limousine-corporation/ui/components/button";
@@ -16,7 +15,7 @@ import { MeetGreetField } from "./meet-greet-field";
 import { AirportPickupField } from "./airport-pickup-field";
 import { ReturnTripField } from "./return-trip-field";
 import BookingStepActions from "../booking-step-actions";
-import { formatPrice, validateBookingTime } from "@/lib/utils";
+import { formatPrice } from "@/lib/utils";
 import { useHasHydrated } from "@/hooks/use-has-hydrated";
 import { PASSENGER_TITLES, TRIP_TYPES } from "@/constants/booking-constants";
 import type { Step3FormValues } from "@/types/booking.types";
@@ -26,7 +25,7 @@ const PASSENGER_FORM_ID = "passenger-details-form";
 
 function Step3() {
   const hasHydrated = useHasHydrated();
-  const { step1, step3, bookingSettings, setStep3Data } = useBookingStore();
+  const { step1, step3, setStep3Data } = useBookingStore();
   const { mutate: placeOrder, isPending } = usePlaceOrder();
   const totalPrice = useTotalPrice();
 
@@ -40,8 +39,6 @@ function Step3() {
       email: step3?.email ?? "",
       ccEmailEnabled: Boolean(step3?.ccEmail),
       ccEmail: step3?.ccEmail ?? "",
-      pickupDate: step3?.pickupDate ?? "",
-      pickupTime: step3?.pickupTime ?? "",
       airlineName: step3?.airlineName ?? "",
       flightNumber: step3?.flightNumber ?? "",
       notes: step3?.notes ?? "",
@@ -77,8 +74,6 @@ function Step3() {
         phone: values.phone,
         email: values.email,
         ccEmail: values.ccEmailEnabled ? values.ccEmail.trim() || undefined : undefined,
-        pickupDate: values.pickupDate,
-        pickupTime: values.pickupTime,
         airlineName: values.airlineName.trim() || undefined,
         flightNumber: values.flightNumber.trim() || undefined,
         meetGreetEnabled: values.meetGreetEnabled,
@@ -116,19 +111,6 @@ function Step3() {
   }, [form, setStep3Data, showReturnTrip, step1?.isAirportSelected]);
 
   const handleSubmit = (values: Step3FormValues) => {
-    const pickupValidation = validateBookingTime({
-      date: values.pickupDate,
-      time: values.pickupTime,
-      minBookingMinutes: bookingSettings?.minBookingMinutes ?? 0,
-    });
-
-    if (!pickupValidation.isValid) {
-      toast.error(
-        `Booking can't be added within ${pickupValidation.timeDisplay} of pickup time, choose another time.`,
-      );
-      return;
-    }
-
     if (
       values.ccEmailEnabled &&
       values.ccEmail.trim().toLowerCase() === values.email.trim().toLowerCase()
@@ -160,13 +142,15 @@ function Step3() {
                 <Input
                   name="title"
                   type="select"
+                  label="Title"
                   placeholder="Title"
                   options={PASSENGER_TITLES}
                   className="w-28 shrink-0"
                 />
                 <Input
                   name="fullName"
-                  placeholder="Full Name"
+                  label="Full Name"
+                  placeholder="Enter Full Name"
                   icon={<User width={16} height={16} className="text-gray-400" />}
                   className="flex-1"
                   required
@@ -175,29 +159,16 @@ function Step3() {
               <Input
                 name="email"
                 type="email"
-                placeholder="Email Address"
+                label="Email Address"
+                placeholder="Enter Email Address"
                 icon={<Mail width={16} height={16} className="text-gray-400" />}
                 required
               />
               <Input
                 name="phone"
                 type="phone"
-                placeholder="Phone Number"
-                required
-              />
-              <Input
-                name="pickupDate"
-                type="date"
-                placeholder="Pickup Date"
-                icon={<Calendar width={16} height={16} className="text-gray-400" />}
-                disablePast
-                required
-              />
-              <Input
-                name="pickupTime"
-                type="time"
-                placeholder="Pickup Time"
-                icon={<Clock width={16} height={16} className="text-gray-400" />}
+                label="Phone Number"
+                placeholder="Enter Phone Number"
                 required
               />
             </div>

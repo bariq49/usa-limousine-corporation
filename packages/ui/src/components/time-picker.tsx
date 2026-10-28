@@ -2,7 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Clock } from "../svg";
+import { Clock, Close } from "../svg";
+import { useMediaQuery } from "../hooks/use-media-query";
+import { useTimeFormat, type HourCycle } from "../store/time-format";
 import { APP_TIMEZONE } from "../constants/index";
 import { cn } from "../utils/cn";
 import { Button } from "./button";
@@ -20,6 +22,8 @@ export type TimePickerProps = {
 };
 
 const HOURS_12 = Array.from({ length: 12 }, (_, i) => i + 1);
+const HOURS_24 = Array.from({ length: 24 }, (_, i) => i);
+const HOUR_CYCLES: HourCycle[] = ["12h", "24h"];
 const MINUTES = Array.from({ length: 60 }, (_, i) => i);
 const PERIODS: Period[] = ["AM", "PM"];
 
@@ -36,7 +40,10 @@ function from24Hour(hour24: number): { hour12: number; period: Period } {
   return { hour12, period };
 }
 
-function formatDisplay(hour24: number, minute: number): string {
+function formatDisplay(hour24: number, minute: number, hourCycle: HourCycle): string {
+  if (hourCycle === "24h") {
+    return `${hour24.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`;
+  }
   const { hour12, period } = from24Hour(hour24);
   return `${hour12}:${minute.toString().padStart(2, "0")} ${period}`;
 }
@@ -57,10 +64,12 @@ function nowInTimezone(timezone: string): { hour12: number; minute: number; peri
 export function TimePicker(props: TimePickerProps) {
   const { value, onChange, disabled, error, className, placeholder = "" } = props;
   const timezone = APP_TIMEZONE;
+  const { hourCycle, setHourCycle } = useTimeFormat();
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
+  const isDesktop = useMediaQuery("(min-width: 768px)");
   const [dropdownPos, setDropdownPos] = useState<{
     top: number;
     left: number;
@@ -114,8 +123,8 @@ export function TimePicker(props: TimePickerProps) {
     if (match?.[1] == null || match[2] == null) {
       return value;
     }
-    return formatDisplay(parseInt(match[1], 10), parseInt(match[2], 10));
-  }, [value, placeholder]);
+    return formatDisplay(parseInt(match[1], 10), parseInt(match[2], 10), hourCycle);
+  }, [value, placeholder, hourCycle]);
 
   const updatePosition = useCallback(() => {
     if (!containerRef.current) {
@@ -184,8 +193,8 @@ export function TimePicker(props: TimePickerProps) {
         {displayVal ? (
           <span
             className={cn(
-              "min-w-0 flex-1 truncate text-sm",
-              value ? "font-medium text-default-900" : "text-default-400",
+              "min-w-0 flex-1 truncate text-base sm:text-sm",
+              value ? "text-default-500" : "text-default-400",
             )}
           >
             {displayVal}
@@ -198,44 +207,125 @@ export function TimePicker(props: TimePickerProps) {
 
       {mounted && open && dropdownPos
         ? createPortal(
-            <div
-              ref={dropdownRef}
-              style={{
-                position: "fixed",
-                top: dropdownPos.top,
-                left: dropdownPos.left,
-                width: dropdownPos.width,
-                zIndex: 99999,
-              }}
-              className="rounded-lg border border-border bg-popover p-4 text-popover-foreground shadow-2xl animate-in fade-in zoom-in-95 duration-150"
-            >
-              <div className="grid grid-cols-3 gap-2.5">
-                <TimeColumn
-                  label="Hour"
-                  values={HOURS_12}
-                  selected={hour12}
-                  onSelect={setHour12}
-                  formatValue={(val) => String(val)}
+            <>
+              {isDesktop ? null : (
+                <div
+                  style={{ position: "fixed", inset: 0, zIndex: 99998, pointerEvents: "auto" }}
+                  data-picker-dropdown=""
+                  className="bg-black/40 animate-in fade-in duration-150"
                 />
-                <TimeColumn
-                  label="Minute"
-                  values={MINUTES}
-                  selected={minute}
-                  onSelect={setMinute}
-                />
-                <TimeColumn label="AM/PM" values={PERIODS} selected={period} onSelect={setPeriod} />
-              </div>
-
-              <Button
-                type="button"
-                color="primary"
-                onClick={() => setOpen(false)}
-                disabled={hour12 === null || minute === null || period === null}
-                className="mt-3 w-full py-2 text-xs font-semibold"
+              )}
+              <div
+                ref={dropdownRef}
+                data-picker-dropdown=""
+                style={
+                  isDesktop
+                    ? {
+                        position: "fixed",
+                        top: dropdownPos.top,
+                        left: dropdownPos.left,
+                        width: dropdownPos.width,
+                        zIndex: 99999,
+                        pointerEvents: "auto",
+                      }
+                    : { position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 99999, pointerEvents: "auto" }
+                }
+                className={cn(
+                  "border border-border bg-popover p-4 text-popover-foreground shadow-2xl animate-in",
+                  isDesktop
+                    ? "rounded-lg fade-in zoom-in-95 duration-150"
+                    : "rounded-t-sm pb-8 slide-in-from-bottom duration-200",
+                )}
               >
-                Done
-              </Button>
-            </div>,
+                {isDesktop ? null : (
+                  <div className="mb-4 flex items-center justify-between">
+                    <h3 className="text-base font-semibold text-default-900">
+                      {placeholder || "Select Time"}
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => setOpen(false)}
+                      aria-label="Close"
+                      className="cursor-pointer rounded-full p-2 text-default-600 transition-colors hover:bg-primary/10"
+                    >
+                      <Close width={18} height={18} />
+                    </button>
+                  </div>
+                )}
+                <div className="mb-3 grid grid-cols-2 rounded-md bg-default-100 p-1">
+                  {HOUR_CYCLES.map((cycle) => (
+                    <button
+                      key={cycle}
+                      type="button"
+                      onClick={() => setHourCycle(cycle)}
+                      className={cn(
+                        "cursor-pointer rounded-sm py-1.5 text-xs font-semibold transition-colors",
+                        hourCycle === cycle
+                          ? "bg-white text-default-900 shadow-sm"
+                          : "text-default-500 hover:text-default-900",
+                      )}
+                    >
+                      {cycle === "12h" ? "12-hour" : "24-hour"}
+                    </button>
+                  ))}
+                </div>
+                {hourCycle === "24h" ? (
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <TimeColumn
+                      label="Hour"
+                      values={HOURS_24}
+                      formatValue={(val) => String(val).padStart(2, "0")}
+                      selected={
+                        hour12 === null || period === null ? null : to24Hour(hour12, period)
+                      }
+                      onSelect={(hour24) => {
+                        const parsed = from24Hour(hour24);
+                        setHour12(parsed.hour12);
+                        setPeriod(parsed.period);
+                      }}
+                    />
+                    <TimeColumn
+                      label="Minute"
+                      values={MINUTES}
+                      selected={minute}
+                      onSelect={setMinute}
+                    />
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-3 gap-2.5">
+                    <TimeColumn
+                      label="Hour"
+                      values={HOURS_12}
+                      selected={hour12}
+                      onSelect={setHour12}
+                      formatValue={(val) => String(val)}
+                    />
+                    <TimeColumn
+                      label="Minute"
+                      values={MINUTES}
+                      selected={minute}
+                      onSelect={setMinute}
+                    />
+                    <TimeColumn
+                      label="AM/PM"
+                      values={PERIODS}
+                      selected={period}
+                      onSelect={setPeriod}
+                    />
+                  </div>
+                )}
+
+                <Button
+                  type="button"
+                  color="primary"
+                  onClick={() => setOpen(false)}
+                  disabled={hour12 === null || minute === null || period === null}
+                  className="mt-3 w-full py-2 text-xs font-semibold"
+                >
+                  Done
+                </Button>
+              </div>
+            </>,
             document.body,
           )
         : null}

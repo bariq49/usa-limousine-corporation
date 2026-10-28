@@ -61,8 +61,8 @@ export const usePlaceOrder = () => {
                     ccEmail: step3.ccEmail,
                 },
                 bookingTime: {
-                    pickupDate: step3.pickupDate,
-                    pickupTime: step3.pickupTime,
+                    pickupDate: step1.pickupDate,
+                    pickupTime: step1.pickupTime,
                     returnDate: returnEnabled ? step3.returnDate : undefined,
                     returnTime: returnEnabled ? step3.returnTime : undefined,
                 },

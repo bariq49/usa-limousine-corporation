@@ -3,7 +3,7 @@
 import React from "react";
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { Button } from "@usa-limousine-corporation/ui/components/button";
-import { Clock, LocateFixed, Location, Spinner } from "@usa-limousine-corporation/ui/svg";
+import { Calendar, Clock, LocateFixed, Location, Spinner } from "@usa-limousine-corporation/ui/svg";
 import { useRouter } from "next/navigation";
 import { useBookingStore } from "@/store/use-booking-store";
 import { AddStopButton } from "./AddStopButton";
@@ -15,6 +15,7 @@ import {
   getPickupLocation,
   swapPickupAndDelivery,
   formatHrs,
+  validateBookingTime,
 } from "@/lib/utils";
 import { useHasHydrated } from "@/hooks/use-has-hydrated";
 import { useSettings } from "@/hooks/queries/use-settings";
@@ -44,6 +45,8 @@ function Step1() {
       pickupAddress: step1?.pickupAddress ?? "",
       deliveryAddress: step1?.deliveryAddress ?? "",
       stops: step1?.stops ?? [],
+      pickupDate: step1?.pickupDate ?? "",
+      pickupTime: step1?.pickupTime ?? "",
       duration: step1?.duration,
     },
   });
@@ -74,7 +77,7 @@ function Step1() {
   const handleUseCurrentLocation = () => {
     if (isLocating) return;
     setIsLocating(true);
-    getPickupLocation()
+    return getPickupLocation()
       .then((resolvedAddress) => {
         form.setValue("pickupAddress", resolvedAddress, {
           shouldDirty: true,
@@ -102,6 +105,18 @@ function Step1() {
     try {
       if (isHourly && !data.duration) {
         toast.error("Please select how many hours you need");
+        return;
+      }
+
+      const pickupValidation = validateBookingTime({
+        date: data.pickupDate,
+        time: data.pickupTime,
+        minBookingMinutes: settings?.minBookingMinutes ?? 0,
+      });
+      if (!pickupValidation.isValid) {
+        toast.error(
+          `Booking can't be added within ${pickupValidation.timeDisplay} of pickup time, choose another time.`,
+        );
         return;
       }
 
@@ -133,6 +148,8 @@ function Step1() {
         pickupAddress,
         deliveryAddress,
         stops: normalizedStops,
+        pickupDate: data.pickupDate,
+        pickupTime: data.pickupTime,
         distance: routeResult?.totalDistanceMiles,
         travelDuration: routeResult?.totalDurationMinutes,
         duration: isHourly ? data.duration : undefined,
@@ -177,6 +194,7 @@ function Step1() {
               <div className="flex items-end gap-1 flex-1">
                 <Input
                   name="pickupAddress"
+                  onUseCurrentLocation={handleUseCurrentLocation}
                   type="location"
                   label="From"
                   placeholder="Enter Pickup Location"
@@ -187,7 +205,7 @@ function Step1() {
                   type="button"
                   onClick={handleUseCurrentLocation}
                   disabled={isLocating || calculateRoute.isPending}
-                  className="h-10 w-10 2xl:h-12 2xl:w-12 inline-flex shrink-0 items-center justify-center rounded-md border border-default-300 cursor-pointer bg-white text-secondary hover:bg-gray-50 transition-colors disabled:opacity-50"
+                  className="h-12 w-12 sm:h-10 sm:w-10 2xl:h-12 2xl:w-12 inline-flex shrink-0 items-center justify-center rounded-md border border-default-300 cursor-pointer bg-white text-secondary hover:bg-gray-50 transition-colors disabled:opacity-50"
                 >
                   {isLocating ? (
                     <Spinner className="w-4 h-4 animate-spin" />
@@ -224,6 +242,7 @@ function Step1() {
                   <Input
                     name="duration"
                     type="select"
+                    label="Duration"
                     placeholder="Select Hours"
                     options={durationOptions}
                     valueAsNumber
@@ -246,6 +265,26 @@ function Step1() {
               )}
             </div>
           </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <Input
+                name="pickupDate"
+                type="date"
+                label="Pickup Date"
+                placeholder="Select Pickup Date"
+                icon={<Calendar width={16} height={16} className="text-gray-400" />}
+                disablePast
+                required
+              />
+              <Input
+                name="pickupTime"
+                type="time"
+                label="Pickup Time"
+                placeholder="Select Pickup Time"
+                icon={<Clock width={16} height={16} className="text-gray-400" />}
+                required
+              />
+            </div>
 
           <Button type="submit" className="bg-secondary text-white hover:bg-secondary-600" isLoading={calculateRoute.isPending}>
             Find Ride

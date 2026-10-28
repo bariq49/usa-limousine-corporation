@@ -31,17 +31,17 @@ const fieldBaseClasses =
   "w-full rounded-md border border-default-300 bg-card px-3 text-sm text-default-500 transition duration-300 read-only:bg-background placeholder:text-accent-foreground/50 focus:outline-hidden focus:border-primary disabled:cursor-not-allowed disabled:opacity-50 disabled:focus:border-default-300 disabled:focus:outline-none read-only:focus:border-default-300 read-only:focus:outline-none read-only:cursor-default";
 
 const labelBaseClasses =
-  "absolute top-2 z-10 origin-[0] -translate-y-5 scale-75 transform bg-card px-2 text-sm text-default-600 duration-300 start-1 group-focus-within:top-2 group-focus-within:-translate-y-5 group-focus-within:scale-75 group-focus-within:px-2 group-focus-within:bg-card 2xl:text-base group-has-[[placeholder]:placeholder-shown]:top-1/2 group-has-[[placeholder]:placeholder-shown]:-translate-y-1/2 group-has-[[placeholder]:placeholder-shown]:scale-100 group-has-[[placeholder]:placeholder-shown]:bg-transparent";
+  "absolute top-2 z-10 origin-[0] -translate-y-5 scale-75 transform bg-card px-2 text-base text-default-600 duration-300 start-1 sm:text-sm group-focus-within:top-2 group-focus-within:-translate-y-5 group-focus-within:scale-75 group-focus-within:px-2 group-focus-within:bg-card 2xl:text-base group-has-[[placeholder]:placeholder-shown]:top-1/2 group-has-[[placeholder]:placeholder-shown]:-translate-y-1/2 group-has-[[placeholder]:placeholder-shown]:scale-100 group-has-[[placeholder]:placeholder-shown]:bg-transparent";
 
 const labelTextareaClasses =
-  "absolute top-2 z-10 origin-[0] -translate-y-5 scale-75 transform bg-card px-2 text-sm text-default-600 duration-300 start-1 group-focus-within:top-2 group-focus-within:-translate-y-5 group-focus-within:scale-75 group-focus-within:px-2 group-focus-within:bg-card 2xl:text-base group-has-[[placeholder]:placeholder-shown]:top-4 group-has-[[placeholder]:placeholder-shown]:translate-y-0 group-has-[[placeholder]:placeholder-shown]:scale-100 group-has-[[placeholder]:placeholder-shown]:bg-transparent";
+  "absolute top-2 z-10 origin-[0] -translate-y-5 scale-75 transform bg-card px-2 text-base text-default-600 duration-300 start-1 sm:text-sm group-focus-within:top-2 group-focus-within:-translate-y-5 group-focus-within:scale-75 group-focus-within:px-2 group-focus-within:bg-card 2xl:text-base group-has-[[placeholder]:placeholder-shown]:top-4 group-has-[[placeholder]:placeholder-shown]:translate-y-0 group-has-[[placeholder]:placeholder-shown]:scale-100 group-has-[[placeholder]:placeholder-shown]:bg-transparent";
 
 export const inputVariants = cva("", {
   variants: {
     element: {
       input: cn(
         fieldBaseClasses,
-        "h-10 read-only:leading-10 2xl:h-12 2xl:text-base 2xl:read-only:leading-[48px]",
+        "h-12 read-only:leading-[48px] sm:h-10 sm:read-only:leading-10 2xl:h-12 2xl:text-base 2xl:read-only:leading-[48px]",
       ),
       textarea: cn(
         fieldBaseClasses,
@@ -95,6 +95,7 @@ export function Input(props: InputProps) {
     options = [],
     rows = 4,
     onUpload,
+    onUseCurrentLocation,
     maxSizeMB,
     hint,
     disablePast = false,
@@ -304,7 +305,7 @@ export function Input(props: InputProps) {
                   disabled={disabled}
                   className={cn(
                     selectFieldClassName,
-                    "flex h-auto min-h-10 items-center justify-between gap-2 py-2 text-left 2xl:min-h-12",
+                    "flex h-auto min-h-12 items-center justify-between gap-2 py-2 text-left sm:min-h-10 2xl:min-h-12",
                     !selectedValues.size && "text-default-400",
                   )}
                 >
@@ -390,6 +391,7 @@ export function Input(props: InputProps) {
             onChange={field.onChange}
             placeholder={resolvedPlaceholder}
             className={fieldClassName}
+            onUseCurrentLocation={onUseCurrentLocation}
           />
         );
       case "counter":
@@ -472,13 +474,13 @@ export function Input(props: InputProps) {
           type === "multiselect" && (!Array.isArray(field.value) || field.value.length === 0);
         const treatAsEmpty = isEmptyValue || isMultiselectEmpty;
         // A label stays floated when a placeholder is shown under it.
+        const isDateOrTime = type === "date" || type === "time";
         const alwaysFloated =
           type === "select" ||
           type === "multiselect" ||
           type === "upload" ||
           type === "phone" ||
-          Boolean(label && placeholder && !isFloatingSelect);
-        const isDateOrTime = type === "date" || type === "time";
+          Boolean(label && placeholder && (!isFloatingSelect || isDateOrTime));
         const pickerLabelFloated =
           "group-has-[[data-picker-open]]:top-2 group-has-[[data-picker-open]]:-translate-y-5 group-has-[[data-picker-open]]:scale-75 group-has-[[data-picker-open]]:bg-card group-has-[[data-picker-open]]:px-2 group-has-[[data-picker-filled]]:top-2 group-has-[[data-picker-filled]]:-translate-y-5 group-has-[[data-picker-filled]]:scale-75 group-has-[[data-picker-filled]]:bg-card group-has-[[data-picker-filled]]:px-2 group-focus-within:top-2 group-focus-within:-translate-y-5 group-focus-within:scale-75 group-focus-within:bg-card group-focus-within:px-2";
 
@@ -525,6 +527,7 @@ export function Input(props: InputProps) {
                       "group-has-[[placeholder]:placeholder-shown]:top-2 group-has-[[placeholder]:placeholder-shown]:-translate-y-5 group-has-[[placeholder]:placeholder-shown]:scale-75 group-has-[[placeholder]:placeholder-shown]:bg-card",
                     isDateOrTime &&
                       treatAsEmpty &&
+                      !placeholder &&
                       cn(
                         "pointer-events-none top-1/2 -translate-y-1/2 scale-100 bg-transparent pe-10",
                         pickerLabelFloated,

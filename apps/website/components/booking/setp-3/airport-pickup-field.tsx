@@ -10,6 +10,8 @@ type Props = {
   flightField?: keyof Pick<Step3FormValues, "flightNumber" | "returnFlightNumber">;
   airlinePlaceholder?: string;
   flightPlaceholder?: string;
+  airlineLabel?: string;
+  flightLabel?: string;
   requireAirport?: boolean;
 };
 
@@ -19,6 +21,8 @@ export const AirportPickupField = (props: Props = {}) => {
     flightField = "flightNumber",
     airlinePlaceholder = "Airline Name (e.g. Emirates)",
     flightPlaceholder = "Flight Number (e.g. EK001)",
+    airlineLabel = "Airline Name",
+    flightLabel = "Flight Number",
     requireAirport = true,
   } = props;
 
@@ -33,6 +37,7 @@ export const AirportPickupField = (props: Props = {}) => {
           icon={<Plane width={16} height={16} className="text-gray-400" />}
           name={airlineField}
           type="text"
+          label={airlineLabel}
           placeholder={airlinePlaceholder}
           required
           className="bg-white border-border"
@@ -41,6 +46,7 @@ export const AirportPickupField = (props: Props = {}) => {
           icon={<Plane width={16} height={16} className="text-gray-400" />}
           name={flightField}
           type="text"
+          label={flightLabel}
           placeholder={flightPlaceholder}
           required
           className="bg-white border-border"

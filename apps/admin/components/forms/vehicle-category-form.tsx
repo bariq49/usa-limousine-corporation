@@ -125,7 +125,7 @@ export function VehicleCategoryForm(props: Props) {
                 });
                 return result.secureUrl || result.url;
               }}
-              className="h-full flex flex-col [&>div]:flex-1 [&>div]:flex [&>div]:min-h-0 [&>div]:flex-col"
+              className="h-full -mt-1.5 flex flex-col [&>div]:flex-1 [&>div]:flex [&>div]:min-h-0 [&>div]:flex-col"
               inputClassName="flex-1"
             />
           </div>

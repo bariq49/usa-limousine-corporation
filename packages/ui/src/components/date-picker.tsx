@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Calendar, ChevronRight } from "../svg";
+import { Calendar, ChevronRight, Close } from "../svg";
+import { useMediaQuery } from "../hooks/use-media-query";
 import { APP_TIMEZONE } from "../constants/index";
 import { cn } from "../utils/cn";
 
@@ -64,7 +65,7 @@ function isSameDay(a: Date, b: Date) {
 
 function getCalendarDays(currentMonth: Date) {
   const startMonth = startOfMonth(currentMonth);
-  const startDayOffset = (startMonth.getDay() + 6) % 7;
+  const startDayOffset = startMonth.getDay();
   const startDate = new Date(startMonth);
   startDate.setDate(startMonth.getDate() - startDayOffset);
 
@@ -91,6 +92,7 @@ export function DatePicker(props: DatePickerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
+  const isDesktop = useMediaQuery("(min-width: 768px)");
   const [dropdownPos, setDropdownPos] = useState<{
     top: number;
     left: number;
@@ -204,8 +206,8 @@ export function DatePicker(props: DatePickerProps) {
         {displayValue ? (
           <span
             className={cn(
-              "min-w-0 flex-1 truncate text-sm",
-              selectedDate ? "font-medium text-default-900" : "text-default-400",
+              "min-w-0 flex-1 truncate text-base sm:text-sm",
+              selectedDate ? "text-default-500" : "text-default-400",
             )}
           >
             {displayValue}
@@ -218,78 +220,113 @@ export function DatePicker(props: DatePickerProps) {
 
       {mounted && open && dropdownPos
         ? createPortal(
-            <div
-              ref={dropdownRef}
-              style={{
-                position: "fixed",
-                top: dropdownPos.top,
-                left: dropdownPos.left,
-                width: dropdownPos.width,
-                zIndex: 99999,
-              }}
-              className="rounded-xl border border-border bg-popover p-5 text-popover-foreground shadow-2xl animate-in fade-in zoom-in-95 duration-150"
-            >
-              <div className="mb-4 flex items-center justify-between">
-                <button
-                  type="button"
-                  disabled={disablePast && isSameMonth(currentMonth, startOfMonth(todayLocal))}
-                  onClick={() => setCurrentMonth(addMonths(currentMonth, -1))}
-                  className="cursor-pointer rounded-full p-2 transition-colors hover:bg-primary/10 disabled:pointer-events-none disabled:opacity-20"
-                >
-                  <ChevronRight width={18} height={18} className="rotate-180 text-default-600" />
-                </button>
-
-                <h3 className="text-sm font-bold text-default-900">
-                  {currentMonth.toLocaleDateString("en-US", {
-                    month: "long",
-                    year: "numeric",
-                  })}
-                </h3>
-
-                <button
-                  type="button"
-                  onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-                  className="cursor-pointer rounded-full p-2 transition-colors hover:bg-primary/10"
-                >
-                  <ChevronRight width={18} height={18} className="text-default-600" />
-                </button>
-              </div>
-
-              <div className="mb-3 grid grid-cols-7 text-center text-[10px] font-bold uppercase tracking-widest text-default-400">
-                {["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map((d) => (
-                  <div key={d}>{d}</div>
-                ))}
-              </div>
-
-              <div className="grid grid-cols-7 gap-1 text-sm">
-                {calendarDays.map((date, i) => {
-                  const inactive = !isSameMonth(date, currentMonth);
-                  const disabledDay = checkIsDisabled(date);
-                  const selected = selectedDate ? isSameDay(date, selectedDate) : false;
-
-                  return (
+            <>
+              {isDesktop ? null : (
+                <div
+                  style={{ position: "fixed", inset: 0, zIndex: 99998, pointerEvents: "auto" }}
+                  data-picker-dropdown=""
+                  className="bg-black/40 animate-in fade-in duration-150"
+                />
+              )}
+              <div
+                ref={dropdownRef}
+                data-picker-dropdown=""
+                style={
+                  isDesktop
+                    ? {
+                        position: "fixed",
+                        top: dropdownPos.top,
+                        left: dropdownPos.left,
+                        width: dropdownPos.width,
+                        zIndex: 99999,
+                        pointerEvents: "auto",
+                      }
+                    : { position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 99999, pointerEvents: "auto" }
+                }
+                className={cn(
+                  "border border-border bg-popover p-5 text-popover-foreground shadow-2xl animate-in",
+                  isDesktop
+                    ? "rounded-xl fade-in zoom-in-95 duration-150"
+                    : "rounded-t-sm pb-8 slide-in-from-bottom duration-200",
+                )}
+              >
+                {isDesktop ? null : (
+                  <div className="mb-4 flex items-center justify-between">
+                    <h3 className="text-base font-semibold text-default-900">
+                      {placeholder || "Select Date"}
+                    </h3>
                     <button
-                      key={i}
                       type="button"
-                      disabled={disabledDay}
-                      onClick={() => handleSelect(date)}
-                      className={cn(
-                        "relative rounded-md py-2 text-center transition-all focus:outline-none",
-                        disabledDay && "cursor-not-allowed text-default-200",
-                        !disabledDay && "cursor-pointer",
-                        inactive && !disabledDay && "text-default-400",
-                        !inactive && !disabledDay && "font-semibold text-default-800",
-                        selected
-                          ? "bg-primary font-bold text-primary-foreground shadow-md"
-                          : !disabledDay && "hover:bg-primary/10",
-                      )}
+                      onClick={() => setOpen(false)}
+                      aria-label="Close"
+                      className="cursor-pointer rounded-full p-2 text-default-600 transition-colors hover:bg-primary/10"
                     >
-                      {date.getDate()}
+                      <Close width={18} height={18} />
                     </button>
-                  );
-                })}
+                  </div>
+                )}
+                <div className="mb-4 flex items-center justify-between">
+                  <button
+                    type="button"
+                    disabled={disablePast && isSameMonth(currentMonth, startOfMonth(todayLocal))}
+                    onClick={() => setCurrentMonth(addMonths(currentMonth, -1))}
+                    className="cursor-pointer rounded-full p-2 transition-colors hover:bg-primary/10 disabled:pointer-events-none disabled:opacity-20"
+                  >
+                    <ChevronRight width={18} height={18} className="rotate-180 text-default-600" />
+                  </button>
+
+                  <h3 className="text-sm font-bold text-default-900">
+                    {currentMonth.toLocaleDateString("en-US", {
+                      month: "long",
+                      year: "numeric",
+                    })}
+                  </h3>
+
+                  <button
+                    type="button"
+                    onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+                    className="cursor-pointer rounded-full p-2 transition-colors hover:bg-primary/10"
+                  >
+                    <ChevronRight width={18} height={18} className="text-default-600" />
+                  </button>
+                </div>
+
+                <div className="mb-3 grid grid-cols-7 text-center text-[10px] font-bold uppercase tracking-widest text-default-400">
+                  {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((d) => (
+                    <div key={d}>{d}</div>
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-7 gap-1 text-sm">
+                  {calendarDays.map((date, i) => {
+                    const inactive = !isSameMonth(date, currentMonth);
+                    const disabledDay = checkIsDisabled(date);
+                    const selected = selectedDate ? isSameDay(date, selectedDate) : false;
+
+                    return (
+                      <button
+                        key={i}
+                        type="button"
+                        disabled={disabledDay}
+                        onClick={() => handleSelect(date)}
+                        className={cn(
+                          "relative rounded-md py-2 text-center transition-all focus:outline-none",
+                          disabledDay && "cursor-not-allowed text-default-200",
+                          !disabledDay && "cursor-pointer",
+                          inactive && !disabledDay && "text-default-400",
+                          !inactive && !disabledDay && "font-semibold text-default-800",
+                          selected
+                            ? "bg-primary font-bold text-primary-foreground shadow-md"
+                            : !disabledDay && "hover:bg-primary/10",
+                        )}
+                      >
+                        {date.getDate()}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>,
+            </>,
             document.body,
           )
         : null}

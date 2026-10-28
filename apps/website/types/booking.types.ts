@@ -49,6 +49,8 @@ export interface BookingStep1PersistedData {
     pickupAddress: string;
     deliveryAddress: string;
     stops: { address: string }[];
+    pickupDate: string;
+    pickupTime: string;
     distance?: number;
     travelDuration?: number;
     duration?: number;
@@ -83,8 +85,6 @@ export interface BookingStep3PersistedData {
     phone: string;
     email: string;
     ccEmail?: string;
-    pickupDate: string;
-    pickupTime: string;
     notes?: string;
     airlineName?: string;
     flightNumber?: string;
@@ -107,6 +107,8 @@ export interface Step1FormValues {
     pickupAddress: string;
     deliveryAddress: string;
     stops: { address: string }[];
+    pickupDate: string;
+    pickupTime: string;
     duration?: number;
 }
 
@@ -119,8 +121,6 @@ export interface Step3FormValues {
     email: string;
     ccEmailEnabled: boolean;
     ccEmail: string;
-    pickupDate: string;
-    pickupTime: string;
     airlineName: string;
     flightNumber: string;
     notes: string;

@@ -3,6 +3,7 @@ import { twMerge } from "tailwind-merge"
 import { addMinutes, parse, format, isValid, parseISO } from "date-fns";
 import { fromZonedTime } from "date-fns-tz";
 import { loadGoogleMaps } from "@usa-limousine-corporation/ui/bookings/google-maps-loader";
+import type { HourCycle } from "@usa-limousine-corporation/ui/store/time-format";
 import { isAirportAddress } from "@usa-limousine-corporation/ui/utils/places";
 import { CURRENCY_SYMBOL, DEFAULT_TIMEZONE, DISTANCE_UNIT } from "@/constants/app-default";
 import type { LocationFormAccessor, ReverseGeocodeParams, CalculateArrivalTimeParams, ValidateBookingTimeParams } from "@/types/utils.types";
@@ -150,13 +151,13 @@ export function formatDuration(durationMinutes: number | undefined | null): stri
 export const formatHrs = (hours: number) =>
   `${hours} ${hours === 1 ? "hr" : "hrs"}`;
 
-/** Formats a picker time ("14:30") as "02:30 PM". */
-export function formatTime(time: string): string {
+/** Formats a picker time ("14:30") as "02:30 PM", or "14:30" on a 24-hour clock. */
+export function formatTime(time: string, hourCycle: HourCycle = "12h"): string {
     const date = parse(time, "HH:mm", new Date());
-    return isValid(date) ? format(date, "hh:mm a") : time;
+    return isValid(date) ? format(date, hourCycle === "24h" ? "HH:mm" : "hh:mm a") : time;
 }
 
-export function calculateArrivalTime({ time, durationMinutes }: CalculateArrivalTimeParams): string {
+export function calculateArrivalTime({ time, durationMinutes, hourCycle = "12h" }: CalculateArrivalTimeParams): string {
     if (!time || typeof durationMinutes !== "number") return "—";
     try {
         let date = parse(time, "hh:mm a", new Date());
@@ -166,7 +167,7 @@ export function calculateArrivalTime({ time, durationMinutes }: CalculateArrival
         if (!isValid(date)) return "—";
 
         const arrivalDate = addMinutes(date, durationMinutes);
-        return format(arrivalDate, "hh:mm a");
+        return format(arrivalDate, hourCycle === "24h" ? "HH:mm" : "hh:mm a");
     } catch {
         return "—";
     }

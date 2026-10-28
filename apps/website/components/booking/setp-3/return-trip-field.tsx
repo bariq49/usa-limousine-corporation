@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowLeftRight, ArrowRight, Calendar, Clock } from "@usa-limousine-corporation/ui/svg";
+import { useEffect, useRef } from "react";
 import { useFormContext, useWatch } from "react-hook-form";
 import { Button } from "@usa-limousine-corporation/ui/components/button";
 import { Input } from "@usa-limousine-corporation/ui/components/input";
@@ -13,10 +14,10 @@ import type { Step3FormValues } from "@/types/booking.types";
 
 export const ReturnTripField = () => {
   const { control, setValue } = useFormContext<Step3FormValues>();
-  const { step1, step2 } = useBookingStore();
+  const { step1, step2, step3 } = useBookingStore();
 
   const returnEnabled = useWatch({ control, name: "returnEnabled" });
-  const pickupDate = useWatch({ control, name: "pickupDate" });
+  const pickupDate = step1?.pickupDate;
   const returnTotalPrice = step2?.vehicleCategory?.priceBreakdown?.returnTotalPrice ?? 0;
   const showReturnAirport = Boolean(step1?.isAirportSelected);
 
@@ -38,6 +39,33 @@ export const ReturnTripField = () => {
     setValue("returnChildSeatsEnabled", false, { shouldDirty: true });
     setValue("returnChildSeats", [], { shouldDirty: true });
   };
+
+  const storeReturnEnabled = Boolean(step3?.returnEnabled);
+  const storeReturnDate = step3?.returnDate ?? "";
+  const storeReturnTime = step3?.returnTime ?? "";
+  const storeReturnKey = `${storeReturnEnabled}|${storeReturnDate}|${storeReturnTime}`;
+  const lastStoreReturnKey = useRef(storeReturnKey);
+
+  useEffect(() => {
+    if (lastStoreReturnKey.current === storeReturnKey) return;
+    lastStoreReturnKey.current = storeReturnKey;
+    if (storeReturnEnabled) {
+      setValue("returnEnabled", true, { shouldDirty: true });
+      setValue("returnDate", storeReturnDate, { shouldDirty: true });
+      setValue("returnTime", storeReturnTime, { shouldDirty: true });
+      return;
+    }
+    if (!returnEnabled) return;
+    setValue("returnEnabled", false, { shouldDirty: true });
+    setValue("returnDate", "", { shouldDirty: true });
+    setValue("returnTime", "", { shouldDirty: true });
+    setValue("returnAirlineName", "", { shouldDirty: true });
+    setValue("returnFlightNumber", "", { shouldDirty: true });
+    setValue("returnMeetGreetEnabled", false, { shouldDirty: true });
+    setValue("returnMeetGreet", "", { shouldDirty: true });
+    setValue("returnChildSeatsEnabled", false, { shouldDirty: true });
+    setValue("returnChildSeats", [], { shouldDirty: true });
+  }, [storeReturnKey, storeReturnEnabled, storeReturnDate, storeReturnTime, returnEnabled, setValue]);
 
 
   return (
@@ -95,7 +123,8 @@ export const ReturnTripField = () => {
             <Input
               name="returnDate"
               type="date"
-              placeholder="Select return date"
+              label="Return Date"
+              placeholder="Select Return Date"
               icon={<Calendar width={16} height={16} className="text-gray-400" />}
               disablePast
               minDate={pickupDate || undefined}
@@ -104,7 +133,8 @@ export const ReturnTripField = () => {
             <Input
               name="returnTime"
               type="time"
-              placeholder="Select return time"
+              label="Return Time"
+              placeholder="Select Return Time"
               icon={<Clock width={16} height={16} className="text-gray-400" />}
               required
             />
@@ -116,6 +146,8 @@ export const ReturnTripField = () => {
               flightField="returnFlightNumber"
               airlinePlaceholder="Return Airline Name (e.g. Emirates)"
               flightPlaceholder="Return Flight Number (e.g. EK001)"
+              airlineLabel="Return Airline Name"
+              flightLabel="Return Flight Number"
               requireAirport={false}
             />
           ) : null}
@@ -125,6 +157,7 @@ export const ReturnTripField = () => {
             nameField="returnMeetGreet"
             label="Return Meet & Greet"
             namePlaceholder="Name for return Meet & Greet sign"
+            nameLabel="Return Sign Name"
           />
 
           <TripExtrasFields
