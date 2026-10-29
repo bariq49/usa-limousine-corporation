@@ -3,8 +3,10 @@ import { EventEmitter2 } from "@nestjs/event-emitter";
 import {
   HelpTicketCategory,
   HelpTicketPriority,
+  HelpTicketSource,
   HelpTicketStatus,
   NotificationType,
+  type Prisma,
 } from "@prisma/client";
 import type { Request } from "express";
 import { allocateCode } from "../../../common/utils/allocate-sequence-code";
@@ -17,8 +19,8 @@ import { RecipientType } from "../../notification/types/notification";
 import { TICKET_EVENT } from "../constants/ticket.events";
 import type { PriorityDto, QueryDto, ReplyDto, StatusDto } from "../dto/ticket.dto";
 import { TicketRepository } from "../repositories/ticket.repository";
-import type { Create } from "../types/ticket";
-import type { Created, Reply, StatusUpdated } from "../types/ticket.events";
+import type { Create, CreateData, WebsiteCreate } from "../types/ticket";
+import type { Created, PriorityUpdated, Reply, StatusUpdated } from "../types/ticket.events";
 import { replyNotify, statusNotify } from "../utils/ticket-notify";
 
 @Injectable()
@@ -40,12 +42,15 @@ export class TicketService {
       nextSequence: () => this.sequenceService.nextHelpTicket(),
     });
 
-    // Ticket + admin notifications commit together (transactional outbox).
     const created = await this.prisma.$transaction(async (tx) => {
       const ticket = await this.tickets.create(
         {
           ticketNumber,
           customerId: input.customerId,
+          source: HelpTicketSource.PORTAL,
+          contactName: null,
+          contactEmail: null,
+          contactPhone: null,
           subject: input.subject,
           description: input.description,
           attachment: input.attachment ?? null,
@@ -99,6 +104,81 @@ export class TicketService {
       subject: ticket.subject,
       category: ticket.category,
       status: ticket.status,
+      priority: ticket.priority,
+    };
+    this.events.emit(TICKET_EVENT.CREATED, payload);
+
+    return ticket;
+  }
+
+  async createFromWebsite(input: WebsiteCreate, request: Request) {
+    const context = toRequestContext(request);
+    const customer = await this.tickets.findCustomerIdByEmail(input.email);
+    const ticketNumber = await allocateCode({
+      prefix: "HC",
+      nextSequence: () => this.sequenceService.nextHelpTicket(),
+    });
+    const data: CreateData = {
+      ticketNumber,
+      customerId: customer?.id ?? null,
+      source: HelpTicketSource.WEBSITE,
+      contactName: input.name,
+      contactEmail: input.email,
+      contactPhone: input.phone,
+      subject: input.subject,
+      description: input.description,
+      attachment: null,
+      category: input.category,
+      priority: input.priority,
+      actorUserId: customer?.userId ?? null,
+    };
+    const isHigh = input.priority === HelpTicketPriority.HIGH;
+
+    const created = await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      const ticket = await this.tickets.create(data, tx);
+      const notifications = await this.notificationService.stageForAdmins(
+        {
+          type: NotificationType.TICKET_CREATED,
+          title: isHigh ? "High priority enquiry" : "New website enquiry",
+          body: `${ticket.ticketNumber}: ${ticket.subject} (${input.name})`,
+          data: {
+            type: "TICKET_CREATED",
+            ticketId: ticket.id,
+            ticketNumber: ticket.ticketNumber,
+            customerId: ticket.customerId,
+            source: HelpTicketSource.WEBSITE,
+          },
+          idempotencyKey: `TICKET_CREATED:${ticket.id}`,
+        },
+        tx,
+      );
+      return { ticket, notifications };
+    });
+    const ticket = created.ticket;
+    await this.notificationService.deliverStaged(created.notifications);
+
+    await auditLog({
+      prisma: this.prisma,
+      event: TICKET_EVENT.CREATED,
+      result: "success",
+      context,
+      metadata: {
+        ticketId: ticket.id,
+        ticketNumber: ticket.ticketNumber,
+        source: HelpTicketSource.WEBSITE,
+        customerId: ticket.customerId,
+      },
+    });
+
+    const payload: Created = {
+      customerId: ticket.customerId,
+      actorUserId: null,
+      ticketId: ticket.id,
+      ticketNumber: ticket.ticketNumber,
+      subject: ticket.subject,
+      category: ticket.category,
+      status: ticket.status,
+      priority: ticket.priority,
     };
     this.events.emit(TICKET_EVENT.CREATED, payload);
 
@@ -153,11 +233,14 @@ export class TicketService {
         ticketNumber: ticket.ticketNumber,
         subject: ticket.subject,
         messageId: message.id,
+        fromStaff: true,
       };
-      const owner = await tx.customer.findUnique({
-        where: { id: ticket.customerId },
-        select: { userId: true, settings: { select: { notification: true } } },
-      });
+      const owner = ticket.customerId
+        ? await tx.customer.findUnique({
+            where: { id: ticket.customerId },
+            select: { userId: true, settings: { select: { notification: true } } },
+          })
+        : null;
       // Customers who turned off notifications get no notification row (and so no push).
       const wantsNotification = owner !== null && owner.settings?.notification !== false;
       const notify = replyNotify(payload);
@@ -242,6 +325,7 @@ export class TicketService {
         ticketNumber: ticket.ticketNumber,
         subject: ticket.subject,
         messageId: message.id,
+        fromStaff: false,
       };
 
       return { message, payload, notifications };
@@ -294,10 +378,12 @@ export class TicketService {
         { ticketId: ticket.id, status: body.status, actorUserId, note: body.note },
         tx,
       );
-      const owner = await tx.customer.findUnique({
-        where: { id: ticket.customerId },
-        select: { userId: true, settings: { select: { notification: true } } },
-      });
+      const owner = ticket.customerId
+        ? await tx.customer.findUnique({
+            where: { id: ticket.customerId },
+            select: { userId: true, settings: { select: { notification: true } } },
+          })
+        : null;
       // Customers who turned off notifications get no notification row (and so no push).
       const wantsNotification = owner !== null && owner.settings?.notification !== false;
       const notify = statusNotify(payload);
@@ -349,10 +435,11 @@ export class TicketService {
       throw new BadRequestException(`Ticket priority is already ${ticket.priority}`);
     }
 
+    const actorUserId = requireUserId(context);
     const updated = await this.tickets.updatePriority({
       ticketId: id,
       priority: body.priority,
-      actorUserId: requireUserId(context),
+      actorUserId,
     });
 
     await auditLog({
@@ -367,6 +454,17 @@ export class TicketService {
         to: body.priority,
       },
     });
+
+    const payload: PriorityUpdated = {
+      customerId: ticket.customerId,
+      actorUserId,
+      ticketId: ticket.id,
+      ticketNumber: ticket.ticketNumber,
+      subject: ticket.subject,
+      from: ticket.priority,
+      to: body.priority,
+    };
+    this.events.emit(TICKET_EVENT.PRIORITY_UPDATED, payload);
 
     return updated;
   }

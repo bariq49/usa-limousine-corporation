@@ -62,3 +62,15 @@ Desktop.ini
 .cache/
 tmp/
 temp/
+
+# AI assistant instructions (local only, never push)
+AGENTS.md
+CLAUDE.md
+CLAUDE.local.md
+GEMINI.md
+.windsurfrules
+.cursorrules
+.cursor/
+.claude/
+.github/copilot-instructions.md
+.aider*

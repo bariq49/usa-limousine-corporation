@@ -9,7 +9,9 @@ import type { MiniMonthCalendarProps } from "../../types/bookings";
 const WEEKDAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
 function toDateKey(date: Date) {
-  return formatDate({ date, as: "value" });
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
 }
 
 function monthGrid(month: Date): Date[] {

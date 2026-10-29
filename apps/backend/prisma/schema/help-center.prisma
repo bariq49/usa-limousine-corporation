@@ -20,6 +20,11 @@ enum HelpTicketPriority {
   HIGH
 }
 
+enum HelpTicketSource {
+  PORTAL
+  WEBSITE
+}
+
 enum HelpTicketEventType {
   CREATED
   STATUS_CHANGED
@@ -30,7 +35,11 @@ enum HelpTicketEventType {
 model HelpTicket {
   id           String             @id @default(cuid())
   ticketNumber String             @unique
-  customerId   String
+  customerId   String?
+  source       HelpTicketSource   @default(PORTAL)
+  contactName  String?
+  contactEmail String?
+  contactPhone String?
   subject      String
   description  String
   attachment   String?
@@ -43,11 +52,13 @@ model HelpTicket {
   updatedAt    DateTime           @updatedAt
   deletedAt    DateTime?
 
-  customer Customer            @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customer Customer?           @relation(fields: [customerId], references: [id], onDelete: Cascade)
   messages HelpTicketMessage[]
   events   HelpTicketEvent[]
 
   @@index([customerId, createdAt])
+  @@index([source])
+  @@index([contactEmail])
   @@index([status])
   @@index([category])
   @@index([priority])
@@ -58,7 +69,6 @@ model HelpTicket {
 model HelpTicketMessage {
   id           String   @id @default(cuid())
   ticketId     String
-  /// Null once the author account is deleted (message is kept).
   authorUserId String?
   body         String
   createdAt    DateTime @default(now())
@@ -74,7 +84,6 @@ model HelpTicketEvent {
   id               String              @id @default(cuid())
   ticketId         String
   event            HelpTicketEventType
-  /// Null once the actor account is deleted (event is kept).
   actorUserId      String?
   previousStatus   HelpTicketStatus?
   newStatus        HelpTicketStatus?

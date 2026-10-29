@@ -26,7 +26,9 @@ const ALL_BOOKING_TYPES: BookingType[] = ["ONE_WAY", "RETURN", "HOURLY"];
 
 function toDateKey(date: Date | string) {
   if (typeof date === "string") return date.slice(0, 10);
-  return formatDate({ date, as: "value" });
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
 }
 
 function fromDateKey(key: string) {

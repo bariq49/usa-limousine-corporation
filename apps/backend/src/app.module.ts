@@ -35,6 +35,7 @@ import { PlatformSettingsModule } from "./modules/platform-settings/platform-set
 import { DriverModule } from "./modules/drivers/driver.module";
 import { DashboardModule } from "./modules/dashboard/dashboard.module";
 import { BlogModule } from "./modules/blogs/blog.module";
+import { ContactModule } from "./modules/contact/contact.module";
 
 @Module({
   imports: [
@@ -79,6 +80,7 @@ import { BlogModule } from "./modules/blogs/blog.module";
     DriverModule,
     DashboardModule,
     BlogModule,
+    ContactModule,
   ],
   providers: [
     {

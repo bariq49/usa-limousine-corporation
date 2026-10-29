@@ -6,6 +6,8 @@ import { Input } from "@usa-limousine-corporation/ui/components/input";
 import { Button } from "@usa-limousine-corporation/ui/components/button";
 import { CircleCheck, MoveRight, Spinner } from "@usa-limousine-corporation/ui/svg";
 import { useContactUs } from "@/hooks/queries/use-contact-us";
+import type { ApiError } from "@/lib/api/client";
+import type { ContactTopic } from "@/lib/api/contact";
 import toast from "react-hot-toast";
 
 interface ContactFormValues {
@@ -15,7 +17,16 @@ interface ContactFormValues {
     phone: string;
     subject: string;
     message: string;
+    category: ContactTopic;
+    website: string;
 }
+
+const TOPIC_OPTIONS = [
+    { label: "Booking or ride", value: "BOOKING" },
+    { label: "Payment or refund", value: "PAYMENTS" },
+    { label: "My account", value: "ACCOUNT" },
+    { label: "Something else", value: "OTHER" },
+];
 
 export default function ContactFormSection() {
     const { mutate: submitContact, isPending } = useContactUs();
@@ -28,6 +39,8 @@ export default function ContactFormSection() {
             phone: "",
             subject: "",
             message: "",
+            category: "BOOKING",
+            website: "",
         },
     });
 
@@ -37,7 +50,7 @@ export default function ContactFormSection() {
                 toast.success(result.message);
                 methods.reset();
             },
-            onError: (error: any) => {
+            onError: (error: ApiError) => {
                 toast.error(error?.message || "Something went wrong. Please try again.");
             }
         });
@@ -119,11 +132,19 @@ export default function ContactFormSection() {
                                     />
                                 </div>
 
-                                <Input
-                                    name="subject"
-                                    label="Subject"
-                                    required
-                                />
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <Input
+                                        name="category"
+                                        type="select"
+                                        label="Topic"
+                                        options={TOPIC_OPTIONS}
+                                    />
+                                    <Input
+                                        name="subject"
+                                        label="Subject"
+                                        required
+                                    />
+                                </div>
 
                                 <Input
                                     name="message"
@@ -132,6 +153,10 @@ export default function ContactFormSection() {
                                     rows={5}
                                     required
                                 />
+
+                                <div className="hidden" aria-hidden="true">
+                                    <Input name="website" label="Website" tabIndex={-1} autoComplete="off" />
+                                </div>
 
                                 <Button
                                     type="submit"

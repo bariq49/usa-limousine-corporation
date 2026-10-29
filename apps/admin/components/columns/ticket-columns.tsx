@@ -12,10 +12,11 @@ import { Trash } from "@usa-limousine-corporation/ui/svg";
 import { formatDate } from "@usa-limousine-corporation/ui/utils/date";
 import { Eye } from "lucide-react";
 import Link from "next/link";
-import type { Ticket, TicketPriority, TicketStatus } from "@/lib/types/tickets";
+import type { Ticket, TicketPriority, TicketSource, TicketStatus } from "@/lib/types/tickets";
 import {
   CATEGORY_LABELS,
   PRIORITY_LABELS,
+  SOURCE_LABELS,
   STATUS_LABELS,
   formatCategory,
   priorityBadgeColor,
@@ -111,6 +112,20 @@ export const getColumns = (options?: ColumnOptions): ColumnDef<Ticket>[] => [
     },
   },
   {
+    id: "Source",
+    accessorKey: "source",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Source" />,
+    cell: ({ row }) => (
+      <Badge
+        color={row.original.source === "WEBSITE" ? "info" : "secondary"}
+        variant="soft"
+        className="text-xs font-semibold"
+      >
+        {SOURCE_LABELS[row.original.source] ?? row.original.source}
+      </Badge>
+    ),
+  },
+  {
     id: "Category",
     accessorKey: "category",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Category" />,
@@ -180,6 +195,15 @@ export const getColumns = (options?: ColumnOptions): ColumnDef<Ticket>[] => [
 ];
 
 export const filter: DataTableFilterColumn[] = [
+  {
+    column: "Source",
+    title: "Source",
+    multiple: false,
+    options: (Object.keys(SOURCE_LABELS) as TicketSource[]).map((value) => ({
+      value,
+      label: SOURCE_LABELS[value],
+    })),
+  },
   {
     column: "Status",
     title: "Status",

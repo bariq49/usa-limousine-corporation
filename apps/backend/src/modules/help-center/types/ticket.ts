@@ -1,4 +1,9 @@
-import type { HelpTicketCategory, HelpTicketPriority, HelpTicketStatus } from "@prisma/client";
+import type {
+  HelpTicketCategory,
+  HelpTicketPriority,
+  HelpTicketSource,
+  HelpTicketStatus,
+} from "@prisma/client";
 
 export type Create = {
   customerId: string;
@@ -9,15 +14,29 @@ export type Create = {
   priority?: HelpTicketPriority | undefined;
 };
 
+export type WebsiteCreate = {
+  name: string;
+  email: string;
+  phone: string | null;
+  subject: string;
+  description: string;
+  category: HelpTicketCategory;
+  priority: HelpTicketPriority;
+};
+
 export type CreateData = {
   ticketNumber: string;
-  customerId: string;
+  customerId: string | null;
+  source: HelpTicketSource;
+  contactName: string | null;
+  contactEmail: string | null;
+  contactPhone: string | null;
   subject: string;
   description: string;
   attachment: string | null;
   category: HelpTicketCategory;
   priority: HelpTicketPriority;
-  actorUserId: string;
+  actorUserId: string | null;
 };
 
 export type MessageData = {

@@ -54,7 +54,7 @@ export class TicketRepository {
 
     const feature = new APIFeature(query, {
       initialFilter,
-      filterFields: ["status", "category", "priority", "customerId"],
+      filterFields: ["status", "category", "priority", "customerId", "source"],
       search: {
         searchFields: [
           "ticketNumber",
@@ -62,6 +62,8 @@ export class TicketRepository {
           "customer.user.email",
           "customer.user.firstName",
           "customer.user.lastName",
+          "contactName",
+          "contactEmail",
         ],
       },
       sort: {
@@ -107,6 +109,10 @@ export class TicketRepository {
       data: {
         ticketNumber: data.ticketNumber,
         customerId: data.customerId,
+        source: data.source,
+        contactName: data.contactName,
+        contactEmail: data.contactEmail,
+        contactPhone: data.contactPhone,
         subject: data.subject,
         description: data.description,
         attachment: data.attachment,
@@ -217,6 +223,42 @@ export class TicketRepository {
     return tx.helpTicket.findUniqueOrThrow({
       where: { id: ticket.id },
       include: ticketInclude,
+    });
+  }
+
+  findCustomerIdByEmail(email: string) {
+    return this.prisma.customer.findFirst({
+      where: { deletedAt: null, user: { email } },
+      select: { id: true, userId: true },
+    });
+  }
+
+  findMessage(id: string) {
+    return this.prisma.helpTicketMessage.findUnique({ where: { id }, select: { body: true } });
+  }
+
+  findContact(id: string) {
+    return this.prisma.helpTicket.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        ticketNumber: true,
+        subject: true,
+        description: true,
+        category: true,
+        priority: true,
+        source: true,
+        contactName: true,
+        contactEmail: true,
+        contactPhone: true,
+        createdAt: true,
+        customer: {
+          select: {
+            settings: { select: { email: true } },
+            user: { select: { firstName: true, lastName: true, email: true, phone: true } },
+          },
+        },
+      },
     });
   }
 

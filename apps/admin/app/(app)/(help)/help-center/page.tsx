@@ -9,7 +9,13 @@ import {
   type ColumnFiltersState,
 } from "@usa-limousine-corporation/ui/components/data-table/data-table";
 import { useBulkDeleteTickets, useDeleteTicket, useTickets } from "@/hooks/queries/use-tickets";
-import type { Ticket, TicketCategory, TicketPriority, TicketStatus } from "@/lib/types/tickets";
+import type {
+  Ticket,
+  TicketCategory,
+  TicketPriority,
+  TicketSource,
+  TicketStatus,
+} from "@/lib/types/tickets";
 import { getColumns, filter } from "@/components/columns/ticket-columns";
 
 function filterValue<T extends string>(
@@ -34,6 +40,7 @@ export default function HelpCenterPage() {
   const status = filterValue<TicketStatus>(columnFilters, "Status");
   const priority = filterValue<TicketPriority>(columnFilters, "Priority");
   const category = filterValue<TicketCategory>(columnFilters, "Category");
+  const source = filterValue<TicketSource>(columnFilters, "Source");
 
   const { data, isLoading, isFetching } = useTickets({
     page,
@@ -42,6 +49,7 @@ export default function HelpCenterPage() {
     status,
     priority,
     category,
+    source,
   });
 
   const deleteMutation = useDeleteTicket();
@@ -81,7 +89,8 @@ export default function HelpCenterPage() {
           <div className="mb-5">
             <h2 className="text-lg font-bold text-default-900">Help Center</h2>
             <p className="text-xs text-default-500 mt-1">
-              Review customer support tickets. Open a ticket to reply or update status.
+              Support tickets from the customer portal and the website contact form. Open a ticket
+              to reply or update status.
             </p>
           </div>
 

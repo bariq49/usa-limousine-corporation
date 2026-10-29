@@ -13,9 +13,11 @@ export class TicketActivityListener {
 
   @OnEvent(TICKET_EVENT.CREATED)
   async onCreated(payload: Created) {
+    const customerId = payload.customerId;
+    if (!customerId) return;
     try {
       await this.activities.record({
-        customerId: payload.customerId,
+        customerId,
         type: ACTIVITY_TYPE.TICKET_CREATED,
         actorUserId: payload.actorUserId,
         data: {
@@ -36,9 +38,11 @@ export class TicketActivityListener {
 
   @OnEvent(TICKET_EVENT.REPLIED)
   async onReplied(payload: Reply) {
+    const customerId = payload.customerId;
+    if (!customerId) return;
     try {
       await this.activities.record({
-        customerId: payload.customerId,
+        customerId,
         type: ACTIVITY_TYPE.TICKET_REPLIED,
         actorUserId: payload.actorUserId,
         data: {
@@ -58,9 +62,11 @@ export class TicketActivityListener {
 
   @OnEvent(TICKET_EVENT.STATUS_UPDATED)
   async onStatusUpdated(payload: StatusUpdated) {
+    const customerId = payload.customerId;
+    if (!customerId) return;
     try {
       await this.activities.record({
-        customerId: payload.customerId,
+        customerId,
         type: ACTIVITY_TYPE.TICKET_STATUS_UPDATED,
         actorUserId: payload.actorUserId,
         data: {

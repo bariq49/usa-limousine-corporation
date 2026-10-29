@@ -1,4 +1,10 @@
-import type { TicketCategory, TicketPriority, TicketStatus, Ticket } from "@/lib/types/tickets";
+import type {
+  TicketCategory,
+  TicketPriority,
+  TicketStatus,
+  Ticket,
+  TicketSource,
+} from "@/lib/types/tickets";
 
 export const STATUS_LABELS: Record<TicketStatus, string> = {
   PENDING: "Pending",
@@ -111,8 +117,19 @@ export function priorityBadgeColor(priority: TicketPriority) {
 }
 
 /** Owner display name and email, from the linked customer account. */
-export function ticketOwner(ticket: Pick<Ticket, "customer">) {
+export const SOURCE_LABELS: Record<TicketSource, string> = {
+  PORTAL: "Customer portal",
+  WEBSITE: "Website",
+};
+
+export function ticketOwner(
+  ticket: Pick<Ticket, "customer" | "contactName" | "contactEmail" | "contactPhone">,
+) {
   const user = ticket.customer?.user;
   const name = [user?.firstName, user?.lastName].filter(Boolean).join(" ").trim();
-  return { name: name || "—", email: user?.email || "—" };
+  return {
+    name: ticket.contactName || name || "—",
+    email: ticket.contactEmail || user?.email || "—",
+    phone: ticket.contactPhone || user?.phone || null,
+  };
 }

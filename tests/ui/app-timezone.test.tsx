@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { MiniMonthCalendar } from "../../packages/ui/src/bookings/mini-month-calendar";
+import { MiniMonthCalendar } from "../../packages/ui/src/components/bookings/mini-month-calendar";
 import { formatDate, formatDateTime } from "../../packages/ui/src/utils/date";
 
 describe("app timezone dates", () => {

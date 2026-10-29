@@ -4,6 +4,8 @@ export type TicketPriority = "LOW" | "MEDIUM" | "HIGH";
 
 export type TicketCategory = "ACCOUNT" | "BOOKING" | "PAYMENTS" | "APP" | "OTHER";
 
+export type TicketSource = "PORTAL" | "WEBSITE";
+
 /** Ticket owner; name/email/phone are read live from the customer's user. */
 export type TicketCustomer = {
   id: string;
@@ -48,8 +50,12 @@ export type Event = {
 export type Ticket = {
   id: string;
   ticketNumber: string;
-  customerId: string;
+  customerId: string | null;
   customer?: TicketCustomer | null;
+  source: TicketSource;
+  contactName?: string | null;
+  contactEmail?: string | null;
+  contactPhone?: string | null;
   subject: string;
   description: string;
   attachment?: string | null;
@@ -72,6 +78,7 @@ export type Query = {
   status?: TicketStatus | undefined;
   category?: TicketCategory | undefined;
   priority?: TicketPriority | undefined;
+  source?: TicketSource | undefined;
   customerId?: string | undefined;
   sortBy?: string | undefined;
   sortOrder?: "asc" | "desc" | undefined;

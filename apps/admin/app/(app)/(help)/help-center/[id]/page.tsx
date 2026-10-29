@@ -39,6 +39,7 @@ import type { TicketPriority, TicketStatus } from "@/lib/types/tickets";
 import { buildTicketActivity } from "@/lib/utils/ticket-activity";
 import {
   PRIORITY_LABELS,
+  SOURCE_LABELS,
   STATUS_LABELS,
   formatCategory,
   nextStatuses,
@@ -146,6 +147,7 @@ export default function HelpCenterTicketPage() {
   }
 
   const messages = ticket.messages ?? [];
+  const owner = ticketOwner(ticket);
 
   return (
     <div className="space-y-4">
@@ -257,7 +259,8 @@ export default function HelpCenterTicketPage() {
                     <div key={message.id} className="rounded-md border border-border px-3 py-2.5">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <span className="text-xs font-medium text-default-700">
-                          {message.author?.email || message.authorUserId}
+                          {message.author?.email ||
+                            (message.authorUserId ? message.authorUserId : owner.name)}
                         </span>
                         <span className="text-xs text-default-400">
                           {formatDate({ date: message.createdAt })}
@@ -376,9 +379,25 @@ export default function HelpCenterTicketPage() {
                 </DetailRow>
                 <DetailRow icon={<User className="h-4 w-4 shrink-0 text-primary" />} label="Owner">
                   <div className="break-words">
-                    <div className="text-xs text-default-500">Customer</div>
-                    <span className="font-medium text-default-900">{ticketOwner(ticket).name}</span>
-                    <div className="text-default-500">{ticketOwner(ticket).email}</div>
+                    <div className="text-xs text-default-500">
+                      {ticket.customer ? "Customer" : "Website visitor"} ·{" "}
+                      {SOURCE_LABELS[ticket.source] ?? ticket.source}
+                    </div>
+                    <span className="font-medium text-default-900">{owner.name}</span>
+                    <a
+                      href={`mailto:${owner.email}`}
+                      className="block text-default-500 hover:text-primary"
+                    >
+                      {owner.email}
+                    </a>
+                    {owner.phone ? (
+                      <a
+                        href={`tel:${owner.phone}`}
+                        className="block text-default-500 hover:text-primary"
+                      >
+                        {owner.phone}
+                      </a>
+                    ) : null}
                   </div>
                 </DetailRow>
                 <DetailRow

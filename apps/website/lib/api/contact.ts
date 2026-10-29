@@ -1,4 +1,7 @@
-import { PLATFORM } from "@usa-limousine-corporation/config";
+import API_ROUTES from "@/config/routes";
+import { api } from "./client";
+
+export type ContactTopic = "BOOKING" | "PAYMENTS" | "ACCOUNT" | "OTHER";
 
 export interface ContactPayload {
     firstName: string;
@@ -7,18 +10,11 @@ export interface ContactPayload {
     phone: string;
     subject: string;
     message: string;
+    category: ContactTopic;
+    website: string;
 }
 
-/** No contact endpoint yet: opens the visitor's email app addressed to our inbox. */
-export const contactUs = async (payload: ContactPayload) => {
-    const body = [
-        payload.message,
-        "",
-        `Name: ${payload.firstName} ${payload.lastName}`.trim(),
-        `Email: ${payload.email}`,
-        `Phone: ${payload.phone}`,
-    ].join("\n");
-    const query = new URLSearchParams({ subject: payload.subject || "Website enquiry", body });
-    window.location.href = `mailto:${PLATFORM.contact.email}?${query.toString().replace(/\+/g, "%20")}`;
-    return { message: "Your email app has opened with your message." };
+export const contactUs = async (payload: ContactPayload): Promise<{ message: string; ticketNumber: string | null }> => {
+    const response = await api.post(API_ROUTES.CONTACT, payload);
+    return response.data;
 };
