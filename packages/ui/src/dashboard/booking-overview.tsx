@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Card, CardContent, CardHeader } from "../components/card";
 import {
   Select,
@@ -24,7 +24,7 @@ export interface OverviewStat {
   /** Currency values are formatted as prices; counts as whole numbers. */
   kind: "currency" | "count";
   total: number;
-  /** Twelve values, January to December. */
+  /** One value per chart category; twelve months by default. */
   monthly: number[];
 }
 
@@ -37,6 +37,10 @@ export interface BookingOverviewProps {
   years?: number[] | undefined;
   onYearChange?: ((year: number) => void) | undefined;
   isLoading?: boolean | undefined;
+  categories?: string[] | undefined;
+  chartDescription?: string | undefined;
+  actions?: ReactNode;
+  statsClassName?: string | undefined;
 }
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -53,6 +57,10 @@ export function BookingOverview({
   years,
   onYearChange,
   isLoading,
+  categories = MONTHS,
+  chartDescription,
+  actions,
+  statsClassName,
 }: BookingOverviewProps) {
   const [selectedKey, setSelectedKey] = useState(stats[0]?.key ?? "");
   const selected = stats.find((item) => item.key === selectedKey) ?? stats[0];
@@ -77,15 +85,21 @@ export function BookingOverview({
               ))}
             </SelectContent>
           </Select>
-        ) : null}
+        ) : (
+          actions
+        )}
       </CardHeader>
       <CardContent className="p-4 md:p-5">
         <div
-          className={cn("grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:gap-6", {
-            "lg:grid-cols-4": stats.length === 4,
-            "lg:grid-cols-5": stats.length >= 5,
-            "lg:grid-cols-3": stats.length <= 3,
-          })}
+          className={cn(
+            "grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:gap-6",
+            {
+              "lg:grid-cols-4": stats.length === 4,
+              "lg:grid-cols-5": stats.length >= 5,
+              "lg:grid-cols-3": stats.length <= 3,
+            },
+            statsClassName,
+          )}
         >
           {stats.map((item) => (
             <button
@@ -134,9 +148,10 @@ export function BookingOverview({
                 {selected.label} Overview
               </h3>
               <p className="text-xs text-default-500">
-                {selected.kind === "currency"
-                  ? `Monthly amount from completed bookings in ${year}`
-                  : `Monthly booking count in ${year}`}
+                {chartDescription ??
+                  (selected.kind === "currency"
+                    ? `Monthly amount from completed bookings in ${year}`
+                    : `Monthly booking count in ${year}`)}
               </p>
             </div>
             {isLoading ? (
@@ -146,7 +161,7 @@ export function BookingOverview({
                 series={[{ name: selected.label, data: selected.monthly }]}
                 chartColor={selected.chartColor}
                 height={300}
-                categories={MONTHS}
+                categories={categories}
                 formatYAxisValue={(value) => formatValue(selected.kind, value)}
                 formatTooltipValue={(value) => formatValue(selected.kind, value)}
               />

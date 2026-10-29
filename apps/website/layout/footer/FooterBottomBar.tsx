@@ -1,19 +1,20 @@
 "use client";
 
+import { formatInTimeZone } from "date-fns-tz";
 import Link from "next/link";
 import { PLATFORM } from "@usa-limousine-corporation/config";
 import { Stagger, StaggerItem } from "@/components/animations";
 
 export default function FooterBottomBar() {
-  const year = new Date().getFullYear();
+  const year = formatInTimeZone(new Date(), PLATFORM.locale.timezone, "yyyy");
 
   return (
     <div className="border-t border-white/15 bg-black">
       <Stagger className="container mx-auto flex flex-col items-center justify-center gap-2 px-4 py-5 text-center text-sm text-gray-400 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:text-left">
         <StaggerItem soft>
           <p>
-            Copyright © {year} <span className="font-semibold text-secondary">{PLATFORM.name}</span>.
-            All Rights Reserved
+            Copyright © {year} <span className="font-semibold text-secondary">{PLATFORM.name}</span>
+            . All Rights Reserved
           </p>
         </StaggerItem>
         <StaggerItem soft>

@@ -1,5 +1,7 @@
 "use client";
 
+import { APP_TIMEZONE } from "../constants/index";
+import { formatInTimeZone } from "date-fns-tz";
 import { ChevronLeft, ChevronRight } from "../svg";
 import { cn } from "../utils/cn";
 
@@ -34,7 +36,7 @@ function monthGrid(month: Date): Date[] {
 
 /** Small month picker used to jump the booking calendar to a date. */
 export function MiniMonthCalendar({ month, selected, onMonthChange, onSelect }: Props) {
-  const today = new Date();
+  const today = new Date(`${formatInTimeZone(new Date(), APP_TIMEZONE, "yyyy-MM-dd")}T00:00:00`);
   const shiftMonth = (amount: number) =>
     onMonthChange(new Date(month.getFullYear(), month.getMonth() + amount, 1));
 

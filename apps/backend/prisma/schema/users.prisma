@@ -19,6 +19,7 @@ model User {
   passwordResetTokens     PasswordResetToken[]
   auditLogs               AuditLog[]
   customer                Customer?
+  driver                  Driver?
   bookings                Booking[]
   notifications           Notification[]
   helpTicketMessages      HelpTicketMessage[]

@@ -1,28 +1,30 @@
 "use client";
 
+import { APP_TIMEZONE } from "@usa-limousine-corporation/ui/constants";
+import { formatInTimeZone } from "date-fns-tz";
 import { useState } from "react";
 import {
   BookingOverview,
   type OverviewStat,
 } from "@usa-limousine-corporation/ui/dashboard/booking-overview";
+import { DashboardCalendarPanel } from "@/components/dashboard-calendar-panel";
+import { PeriodSelect } from "@/components/period-select";
+import { STATS_PERIODS } from "@/config/periods";
 import { useAuthMe } from "@/hooks/queries/use-auth";
-import { BookingCalendar } from "@usa-limousine-corporation/ui/bookings/booking-calendar";
-import type { CalendarQuery } from "@usa-limousine-corporation/ui/bookings/types";
-import { useBookingAnalytics, useBookingCalendar } from "@/hooks/queries/use-bookings";
-
-const CURRENT_YEAR = new Date().getFullYear();
-const YEARS = [CURRENT_YEAR, CURRENT_YEAR - 1, CURRENT_YEAR - 2, CURRENT_YEAR - 3];
-const EMPTY_MONTHS = Array<number>(12).fill(0);
+import { useDashboardOverview } from "@/hooks/queries/use-dashboard";
+import type { StatsPeriod } from "@/lib/types/drivers";
 
 const Analytics = () => {
   const { data: admin } = useAuthMe();
   const greetingName = admin?.firstName?.trim() || admin?.name?.trim() || "Admin";
-  const [year, setYear] = useState(CURRENT_YEAR);
-  const [calendarQuery, setCalendarQuery] = useState<CalendarQuery | null>(null);
-  const calendar = useBookingCalendar(calendarQuery);
-  const { data, isLoading } = useBookingAnalytics(year);
+  const [period, setPeriod] = useState<StatsPeriod>("monthly");
+  const { data, isLoading, isFetching } = useDashboardOverview(period);
+  const empty = (data?.labels ?? []).map(() => 0);
+  const subtitle = `${STATS_PERIODS.find((item) => item.value === period)?.description ?? ""}${
+    isFetching && !isLoading ? " · Updating..." : ""
+  }`;
 
-  const stats: OverviewStat[] = [
+  const bookingStats: OverviewStat[] = [
     {
       key: "revenue",
       label: "Total Revenue",
@@ -30,7 +32,7 @@ const Analytics = () => {
       chartColor: "#C9A84C",
       kind: "currency",
       total: data?.totalRevenue ?? 0,
-      monthly: data?.monthlyRevenue ?? EMPTY_MONTHS,
+      monthly: data?.revenueSeries ?? empty,
     },
     {
       key: "completed",
@@ -39,7 +41,7 @@ const Analytics = () => {
       chartColor: "#22c55e",
       kind: "count",
       total: data?.completedBookings ?? 0,
-      monthly: data?.monthlyBookings.completed ?? EMPTY_MONTHS,
+      monthly: data?.bookingSeries.completed ?? empty,
     },
     {
       key: "confirmed",
@@ -48,7 +50,7 @@ const Analytics = () => {
       chartColor: "#06b6d4",
       kind: "count",
       total: data?.confirmedBookings ?? 0,
-      monthly: data?.monthlyBookings.confirmed ?? EMPTY_MONTHS,
+      monthly: data?.bookingSeries.confirmed ?? empty,
     },
     {
       key: "pending",
@@ -57,7 +59,7 @@ const Analytics = () => {
       chartColor: "#f59e0b",
       kind: "count",
       total: data?.pendingBookings ?? 0,
-      monthly: data?.monthlyBookings.pending ?? EMPTY_MONTHS,
+      monthly: data?.bookingSeries.pending ?? empty,
     },
     {
       key: "cancelled",
@@ -66,37 +68,86 @@ const Analytics = () => {
       chartColor: "#ef4444",
       kind: "count",
       total: data?.cancelledBookings ?? 0,
-      monthly: data?.monthlyBookings.cancelled ?? EMPTY_MONTHS,
+      monthly: data?.bookingSeries.cancelled ?? empty,
+    },
+  ];
+
+  const assignmentStats: OverviewStat[] = [
+    {
+      key: "payout",
+      label: "Driver Payout",
+      color: "success",
+      chartColor: "#22c55e",
+      kind: "currency",
+      total: data?.totalDriverPayout ?? 0,
+      monthly: data?.assignmentSeries.driverPayout ?? empty,
+    },
+    {
+      key: "rides",
+      label: "Assigned Rides",
+      color: "warning",
+      chartColor: "#f59e0b",
+      kind: "count",
+      total: data?.assignedRides ?? 0,
+      monthly: data?.assignmentSeries.rides ?? empty,
+    },
+    {
+      key: "rideTotal",
+      label: "Assigned Ride Total",
+      color: "primary",
+      chartColor: "#C9A84C",
+      kind: "currency",
+      total: data?.assignedRideTotal ?? 0,
+      monthly: data?.assignmentSeries.rideTotal ?? empty,
+    },
+    {
+      key: "commission",
+      label: "Admin Commission",
+      color: "info",
+      chartColor: "#06b6d4",
+      kind: "currency",
+      total: data?.totalCommission ?? 0,
+      monthly: data?.assignmentSeries.commission ?? empty,
     },
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-medium text-default-800">Welcome back, {greetingName}</h1>
-          <p className="mt-1 text-sm text-default-500">
-            Here is an overview of your bookings and revenue performance.
-          </p>
-        </div>
+    <div className="w-full min-w-0 space-y-6">
+      <div>
+        <h1 className="text-2xl font-medium text-default-800">Welcome back, {greetingName}</h1>
+        <p className="mt-1 text-sm text-default-500">
+          Here is an overview of your bookings, drivers and revenue performance.
+        </p>
       </div>
 
       <BookingOverview
         title="Booking Overview"
-        description={`${data?.totalBookings ?? 0} bookings in ${year}, by month of booking.`}
-        stats={stats}
-        year={year}
-        years={YEARS}
-        onYearChange={setYear}
+        description={`${data?.totalBookings ?? 0} bookings by booking date · performance and booking metrics breakdown.`}
+        stats={bookingStats}
+        year={Number(formatInTimeZone(new Date(), APP_TIMEZONE, "yyyy"))}
+        categories={data?.labels ?? []}
+        chartDescription={subtitle}
         isLoading={isLoading}
+        actions={<PeriodSelect value={period} onChange={setPeriod} />}
       />
 
-      <BookingCalendar
-        events={calendar.data}
-        isFetching={calendar.isFetching}
-        onQueryChange={setCalendarQuery}
-        basePath="/bookings"
-      />
+      <div className="grid w-full min-w-0 grid-cols-1 gap-6 lg:grid-cols-12">
+        <div className="min-w-0 lg:col-span-7 xl:col-span-8">
+          <BookingOverview
+            title="Driver Assignment Overview"
+            description={`${data?.activeDrivers ?? 0} active drivers · assigned rides, admin commission and driver payout by pickup date.`}
+            stats={assignmentStats}
+            year={Number(formatInTimeZone(new Date(), APP_TIMEZONE, "yyyy"))}
+            categories={data?.labels ?? []}
+            chartDescription={subtitle}
+            isLoading={isLoading}
+            statsClassName="sm:grid-cols-2 lg:grid-cols-2 lg:gap-4"
+          />
+        </div>
+        <div className="min-w-0 lg:col-span-5 xl:col-span-4">
+          <DashboardCalendarPanel />
+        </div>
+      </div>
     </div>
   );
 };

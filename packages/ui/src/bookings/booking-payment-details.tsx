@@ -2,6 +2,7 @@
 
 import { BadgeCheck, BadgeX } from "lucide-react";
 import { Calendar, DollarSign, Hash, Tag } from "../svg";
+import { formatDateTime } from "../utils/date";
 import { DetailItem } from "./detail-item";
 import type { Payment } from "./types";
 
@@ -48,15 +49,13 @@ export function BookingPaymentDetails({ payment }: Props) {
         </DetailItem>
         {payment.paidAt ? (
           <DetailItem icon={<Calendar className="h-5 w-5" />}>
-            {new Date(payment.paidAt).toLocaleString("en-US")}
+            {formatDateTime({ date: payment.paidAt })}
           </DetailItem>
         ) : null}
         {payment.refundedAmount ? (
           <DetailItem icon={<DollarSign className="h-5 w-5" />}>
             Refunded {currency.format(Number(payment.refundedAmount))}
-            {payment.refundedAt
-              ? ` on ${new Date(payment.refundedAt).toLocaleString("en-US")}`
-              : ""}
+            {payment.refundedAt ? ` on ${formatDateTime({ date: payment.refundedAt })}` : ""}
           </DetailItem>
         ) : null}
       </div>

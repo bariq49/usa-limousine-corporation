@@ -74,6 +74,7 @@ type Props = {
   backHref?: string;
   heading?: { title: string; description: string };
   mapStickyClassName?: string;
+  children?: ReactNode;
 };
 
 export function BookingDetailView(props: Props) {
@@ -304,6 +305,7 @@ export function BookingDetailView(props: Props) {
             </div>
 
             <div className="flex flex-col gap-4 lg:col-span-2">
+              {props.children}
               {booking.notes ? (
                 <section className="rounded-md bg-default-100 p-4">
                   <h3 className="font-bold text-default-900">Notes & Special Instructions</h3>

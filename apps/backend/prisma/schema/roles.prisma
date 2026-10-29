@@ -1,6 +1,7 @@
 enum RoleKey {
   SUPER_ADMIN
   CUSTOMER
+  DRIVER
 }
 
 model Role {

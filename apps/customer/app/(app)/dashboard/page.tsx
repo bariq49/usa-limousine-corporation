@@ -1,5 +1,7 @@
 "use client";
 
+import { APP_TIMEZONE } from "@usa-limousine-corporation/ui/constants";
+import { formatInTimeZone } from "date-fns-tz";
 import { useState } from "react";
 import {
   BookingOverview,
@@ -11,7 +13,7 @@ import { BookingCalendar } from "@usa-limousine-corporation/ui/bookings/booking-
 import type { CalendarQuery } from "@usa-limousine-corporation/ui/bookings/types";
 import { useBookingAnalytics, useBookingCalendar } from "@/hooks/queries/use-bookings";
 
-const CURRENT_YEAR = new Date().getFullYear();
+const CURRENT_YEAR = Number(formatInTimeZone(new Date(), APP_TIMEZONE, "yyyy"));
 const YEARS = [CURRENT_YEAR, CURRENT_YEAR - 1, CURRENT_YEAR - 2];
 const EMPTY_MONTHS = Array<number>(12).fill(0);
 

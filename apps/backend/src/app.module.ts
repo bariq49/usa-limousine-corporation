@@ -31,6 +31,8 @@ import { ActivityModule } from "./modules/activity/activity.module";
 import { NotificationModule } from "./modules/notification/notification.module";
 import { ExtraServiceModule } from "./modules/extra-services/extra-service.module";
 import { PlatformSettingsModule } from "./modules/platform-settings/platform-settings.module";
+import { DriverModule } from "./modules/drivers/driver.module";
+import { DashboardModule } from "./modules/dashboard/dashboard.module";
 
 @Module({
   imports: [
@@ -71,6 +73,8 @@ import { PlatformSettingsModule } from "./modules/platform-settings/platform-set
     VehicleCategoryModule,
     ExtraServiceModule,
     PlatformSettingsModule,
+    DriverModule,
+    DashboardModule,
   ],
   providers: [
     {

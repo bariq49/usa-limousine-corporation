@@ -15,6 +15,7 @@ describe("admin navigation", () => {
       "/completed-bookings",
       "/confirmed-bookings",
       "/customers",
+      "/drivers",
       "/extra-services",
       "/help-center",
       "/notifications",

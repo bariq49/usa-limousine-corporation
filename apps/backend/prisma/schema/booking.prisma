@@ -49,6 +49,7 @@ model Booking {
   luggage         BookingLuggage[]
   extraServices   BookingExtraService[]
   payment         Payment?
+  assignments     BookingAssignment[]
   quote           Quote?                @relation(fields: [quoteId], references: [id], onDelete: SetNull)
 
   @@index([userId, createdAt])

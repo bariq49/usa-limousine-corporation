@@ -1,5 +1,14 @@
 import { escapeHtml } from "../layout";
-import { bookingSummary, formatPrice, googleReviewCard } from "./cards";
+import {
+  bookingSummary,
+  formatPrice,
+  googleReviewCard,
+  infoCard,
+  passengerCard,
+  routeCard,
+  tripDetailsCard,
+  vehicleCard,
+} from "./cards";
 import { emailLayout, emailParagraph } from "./layout";
 import type { BookingEmail, EmailContext } from "./types";
 
@@ -126,5 +135,35 @@ export const bookingCompleted = (booking: BookingEmail, context: EmailContext) =
       ${emailParagraph(`Your trip ${escapeHtml(booking.bookingNumber)} is complete. We hope you enjoyed the ride.`)}
       ${context.reviewUrl ? googleReviewCard(context.reviewUrl) : ""}
       ${bookingSummary(booking, context.assetsUrl)}
+    `,
+  });
+
+export const driverAssigned = (
+  booking: BookingEmail,
+  context: EmailContext,
+  assignment: { driverName: string; driverAmount: number; note: string | null },
+) =>
+  emailLayout({
+    siteUrl: context.siteUrl,
+    assetsUrl: context.assetsUrl,
+    title: "New Ride Assigned",
+    subtitle: booking.bookingNumber,
+    preheader: `You have been assigned ride ${booking.bookingNumber}.`,
+    body: `
+      ${emailParagraph(`Hello, ${escapeHtml(assignment.driverName)}.`, { strong: true })}
+      ${emailParagraph(
+        "A new ride has been assigned to you. Please review the trip details below and be on time for the pickup.",
+      )}
+      ${infoCard(
+        "Your Payout",
+        `${emailParagraph(escapeHtml(formatPrice(assignment.driverAmount)), { strong: true })}${
+          assignment.note ? emailParagraph(`Dispatcher note: ${escapeHtml(assignment.note)}`) : ""
+        }`,
+      )}
+      ${routeCard(booking, context.assetsUrl)}
+      ${tripDetailsCard(booking, context.assetsUrl)}
+      ${passengerCard(booking, context.assetsUrl)}
+      ${vehicleCard(booking, context.assetsUrl)}
+      ${helpLine}
     `,
   });

@@ -1,0 +1,48 @@
+enum DriverStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum AssignmentStatus {
+  ACTIVE
+  SUPERSEDED
+  UNASSIGNED
+}
+
+model Driver {
+  id                String       @id @default(cuid())
+  userId            String       @unique
+  vehicleCategoryId String
+  licenseNumber     String?
+  status            DriverStatus @default(ACTIVE)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  deletedAt         DateTime?
+
+  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicleCategory VehicleCategory     @relation(fields: [vehicleCategoryId], references: [id], onDelete: Restrict)
+  assignments     BookingAssignment[]
+
+  @@index([status])
+  @@index([vehicleCategoryId])
+  @@index([deletedAt, createdAt])
+}
+
+model BookingAssignment {
+  id               String           @id @default(cuid())
+  bookingId        String
+  driverId         String
+  commissionRate   Decimal          @db.Decimal(5, 2)
+  commissionAmount Decimal          @db.Decimal(12, 2)
+  driverAmount     Decimal          @db.Decimal(12, 2)
+  note             String?
+  status           AssignmentStatus @default(ACTIVE)
+  assignedAt       DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  driver  Driver  @relation(fields: [driverId], references: [id], onDelete: Restrict)
+
+  @@index([bookingId, status])
+  @@index([driverId, status])
+}

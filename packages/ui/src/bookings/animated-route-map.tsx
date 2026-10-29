@@ -1,5 +1,7 @@
 "use client";
 
+import { APP_TIMEZONE } from "../constants/index";
+import { formatInTimeZone } from "date-fns-tz";
 import { useEffect, useMemo, useRef } from "react";
 import { useTimeFormat, type HourCycle } from "../store/time-format";
 import { cn } from "../utils/cn";
@@ -184,9 +186,11 @@ function formatBadgeTime(rawTime: string, hourCycle: HourCycle, addMinutesCount?
       if (period === "AM" && hours === 12) hours = 0;
     }
   } else {
-    const now = new Date();
-    hours = now.getHours();
-    minutes = now.getMinutes();
+    const [nowHours = 0, nowMinutes = 0] = formatInTimeZone(new Date(), APP_TIMEZONE, "HH:mm")
+      .split(":")
+      .map(Number);
+    hours = nowHours;
+    minutes = nowMinutes;
   }
 
   if (typeof addMinutesCount === "number" && !isNaN(addMinutesCount)) {

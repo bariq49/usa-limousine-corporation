@@ -8,6 +8,7 @@ import type {
 import { APP_LOCALE, DATE_FORMAT, TIME_FORMAT } from "../constants/index";
 
 const TIME_ONLY_PATTERN = /^\d{1,2}:\d{2}(:\d{2})?$/;
+const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 function isTimeOnlyValue(date: FormatTimeProps["date"]): boolean {
   return typeof date === "string" && TIME_ONLY_PATTERN.test(date.trim());
@@ -43,7 +44,7 @@ export function toValidDate(props?: ToValidDateProps): Date | null {
     return Number.isNaN(parsedTime.getTime()) ? null : parsedTime;
   }
 
-  const parsed = new Date(value);
+  const parsed = new Date(DATE_ONLY_PATTERN.test(value) ? `${value}T00:00:00Z` : value);
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
@@ -51,9 +52,13 @@ export function formatDate(props?: FormatDateProps): string {
   const validDate = toValidDate({ date: props?.date });
   if (!validDate) return "—";
 
+  const options = props?.options ?? DATE_FORMAT;
+  const isCalendarDate =
+    typeof props?.date === "string" && DATE_ONLY_PATTERN.test(props.date.trim());
+
   return new Intl.DateTimeFormat(
     resolveLocale(props?.locale),
-    props?.options ?? DATE_FORMAT,
+    isCalendarDate ? Object.assign({}, options, { timeZone: "UTC" }) : options,
   ).format(validDate);
 }
 

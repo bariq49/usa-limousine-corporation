@@ -17,6 +17,8 @@ import {
   Tag,
   Support,
   UserList,
+  Users,
+  UserSign,
 } from "@usa-limousine-corporation/ui/svg";
 import { APP_CONFIG } from "./app";
 
@@ -155,6 +157,25 @@ export const navigation: MenuSection[] = [
             label: "Customers",
             href: "/customers",
             icon: UserList,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "driver",
+    label: "Driver",
+    icon: UserSign,
+    submenu: true,
+    groups: [
+      {
+        id: "driver-group",
+        items: [
+          {
+            id: "drivers",
+            label: "Drivers",
+            href: "/drivers",
+            icon: Users,
           },
         ],
       },

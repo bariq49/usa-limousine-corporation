@@ -1,5 +1,7 @@
 "use client";
 
+import { APP_TIMEZONE } from "../constants/index";
+import { formatInTimeZone } from "date-fns-tz";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import FullCalendar from "@fullcalendar/react";
@@ -44,8 +46,9 @@ export function BookingCalendar({ events, isFetching = false, onQueryChange, bas
   const router = useRouter();
   const calendarRef = useRef<FullCalendar | null>(null);
   const rangeRef = useRef<{ start: string; end: string } | null>(null);
-  const [displayMonth, setDisplayMonth] = useState<Date>(() => new Date());
-  const [selectedDate, setSelectedDate] = useState<Date>(() => new Date());
+  const today = formatInTimeZone(new Date(), APP_TIMEZONE, "yyyy-MM-dd");
+  const [displayMonth, setDisplayMonth] = useState<Date>(() => new Date(`${today}T00:00:00`));
+  const [selectedDate, setSelectedDate] = useState<Date>(() => new Date(`${today}T00:00:00`));
   const [bookingTypes, setBookingTypes] = useState<BookingType[]>(ALL_BOOKING_TYPES);
 
   const emitQuery = useCallback(
@@ -132,6 +135,8 @@ export function BookingCalendar({ events, isFetching = false, onQueryChange, bas
                 ref={calendarRef}
                 plugins={[dayGridPlugin, interactionPlugin]}
                 initialView="dayGridMonth"
+                initialDate={today}
+                now={today}
                 headerToolbar={{ left: "prev,next today", center: "title", right: "" }}
                 buttonText={{ today: "Today" }}
                 height="auto"

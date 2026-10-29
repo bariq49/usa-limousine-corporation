@@ -97,6 +97,8 @@ export async function seedBookingFixtures(prisma: PrismaService): Promise<Bookin
 
 export async function cleanupBookingTables(prisma: PrismaService): Promise<void> {
   await prisma.notification.deleteMany();
+  await prisma.bookingAssignment.deleteMany();
+  await prisma.driver.deleteMany();
   await prisma.bookingLuggage.deleteMany();
   await prisma.booking.deleteMany();
   await prisma.quote.deleteMany();
