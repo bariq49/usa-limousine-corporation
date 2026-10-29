@@ -10,11 +10,25 @@ import { useHasHydrated } from "@/hooks/use-has-hydrated";
 function PassengerDetailsPage() {
   const router = useRouter();
   const hasHydrated = useHasHydrated();
+  const step1 = useBookingStore((s) => s.step1);
+  const step2 = useBookingStore((s) => s.step2);
+
   useEffect(() => {
-    if (hasHydrated && useBookingStore.getState().checkout) {
+    if (!hasHydrated) return;
+    if (useBookingStore.getState().checkout) {
       router.replace("/book-ride/payment-cancel");
+      return;
     }
-  }, [hasHydrated, router]);
+    if (!step1) {
+      router.replace("/");
+      return;
+    }
+    if (!step2) {
+      router.replace("/book-ride/select-vehicle");
+    }
+  }, [hasHydrated, step1, step2, router]);
+
+  if (!hasHydrated || !step1 || !step2) return null;
 
   return (
     <BookingStepLayout showMobileMap={false}>

@@ -5,17 +5,7 @@ import { PrismaService } from "../../../infrastructure/database/prisma.service";
 import type { CreatePricingDto } from "../dto/create-pricing.dto";
 import type { PricingQueryDto } from "../dto/pricing-query.dto";
 import type { UpdatePricingDto } from "../dto/update-pricing.dto";
-
-const pricingInclude = {
-  vehicleCategory: {
-    select: {
-      id: true,
-      name: true,
-      image: true,
-      passengerCount: true,
-    },
-  },
-} as const;
+import { pricingInclude, type FindOverlappingParams } from "../types/pricing";
 
 @Injectable()
 export class PricingRepository {
@@ -28,13 +18,7 @@ export class PricingRepository {
     });
   }
 
-  /** Active tiers of the category whose [min, max) range intersects the given one (null max = open-ended). */
-  findOverlapping(params: {
-    vehicleCategoryId: string;
-    minimumDistance: number;
-    maximumDistance: number | null;
-    excludeId?: string | undefined;
-  }) {
+  findOverlapping(params: FindOverlappingParams) {
     const where: Prisma.VehicleCategoryPricingWhereInput = {
       vehicleCategoryId: params.vehicleCategoryId,
       status: "ACTIVE",

@@ -16,7 +16,8 @@ export type BookingEmail = {
   dropoffAddress: string | null;
   stops: string[];
   distance: number;
-  duration: number;
+  travelDuration: number;
+  hourlyDuration: number | null;
   pickupDate: string;
   pickupTime: string;
   returnDate: string | null;

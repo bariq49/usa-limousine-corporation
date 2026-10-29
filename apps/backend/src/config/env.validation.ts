@@ -217,10 +217,14 @@ export class EnvironmentVariables {
   @IsUrl({ require_tld: false })
   SQUARE_WEBHOOK_URL?: string;
 
-  /** Google review link shown in the ride completed email. */
   @IsOptional()
   @IsUrl()
   GOOGLE_REVIEW_URL?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  GOOGLE_MAPS_API_KEY?: string;
 
   @IsString()
   @IsNotEmpty()

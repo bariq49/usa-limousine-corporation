@@ -31,9 +31,9 @@ export default function HeroSection() {
       </div>
 
       <div className="relative z-20">
-        <div className="mx-auto grid max-w-screen-2xl gap-0 lg:grid-cols-2 lg:gap-8 lg:px-5 lg:pt-40 lg:pb-16 xl:grid-cols-3 xl:pb-20">
+        <div className="mx-auto grid max-w-screen-2xl gap-0 max-lg:landscape:grid-cols-2 max-lg:landscape:items-stretch lg:grid-cols-2 lg:gap-8 lg:px-5 lg:pt-40 lg:pb-16 xl:grid-cols-3 xl:pb-20">
           {/* Mobile image ends at the form; desktop uses full-bleed bg above */}
-          <div className="relative order-1 flex min-h-vh-58 w-full flex-col items-center justify-end overflow-hidden pt-safe-hero pb-14 text-center sm:min-h-vh-54 sm:pt-safe-hero-lg sm:pb-16 lg:min-h-0 lg:items-start lg:overflow-visible lg:bg-transparent lg:pt-0 lg:pb-4 lg:text-left xl:col-span-2">
+          <div className="relative order-1 flex min-h-vh-58 w-full flex-col items-center justify-end overflow-hidden pt-safe-hero pb-14 text-center sm:min-h-vh-54 sm:pt-safe-hero-lg sm:pb-16 max-lg:landscape:min-h-0 max-lg:landscape:justify-center max-lg:landscape:pb-6 max-lg:landscape:pt-safe-header lg:min-h-0 lg:items-start lg:overflow-visible lg:bg-transparent lg:pt-0 lg:pb-4 lg:text-left xl:col-span-2">
             <div className="absolute inset-0 lg:hidden">
               <Image
                 src={IMAGES.HOME_BANNER_MOBILE}
@@ -74,10 +74,10 @@ export default function HeroSection() {
 
           <div
             id="hero-booking"
-            className="order-2 relative z-10 -mt-6 flex w-full scroll-mt-24 items-center justify-center lg:mt-0 lg:items-start lg:justify-end lg:pr-2 lg:pt-6 xl:pr-4 xl:pt-10"
+            className="order-2 relative z-10 -mt-6 flex w-full scroll-mt-24 items-center justify-center max-lg:landscape:mt-0 max-lg:landscape:max-h-dvh max-lg:landscape:items-start max-lg:landscape:overflow-y-auto max-lg:landscape:py-3 lg:mt-0 lg:items-start lg:justify-end lg:pr-2 lg:pt-6 xl:pr-4 xl:pt-10"
           >
             <motion.div
-              className="w-full max-w-md rounded-t-md bg-white shadow-sheet-strong lg:rounded-none lg:bg-transparent lg:shadow-none"
+              className="w-full max-w-md rounded-t-md bg-white shadow-sheet-strong max-lg:landscape:rounded-md max-lg:landscape:shadow-xl lg:rounded-none lg:bg-transparent lg:shadow-none"
               initial={{ opacity: 0, y: 28 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2, ease: luxuryEase }}

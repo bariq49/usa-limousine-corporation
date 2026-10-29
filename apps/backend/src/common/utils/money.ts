@@ -15,10 +15,6 @@ export function toAmount(value: unknown): number {
   return roundAmount(parsed);
 }
 
-/**
- * Converts Prisma Decimal values (money columns) to numbers so JSON responses keep numeric
- * amounts instead of strings. Walks arrays and plain objects; leaves Dates and other classes alone.
- */
 export function decimalsToNumbers(value: unknown): unknown {
   if (Decimal.isDecimal(value)) {
     return (value as Decimal).toNumber();

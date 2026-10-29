@@ -4,7 +4,7 @@ import { PaymentService } from "../src/modules/payment/services/payment.service"
 const body = {
   vehicleCategoryId: "cat-1",
   vehicleCount: 1,
-  address: { pickup: { address: "A" }, dropoff: { address: "B" }, distance: 10, duration: 20 },
+  address: { pickup: { address: "A" }, dropoff: { address: "B" }, distance: 10, travelDuration: 20 },
   passenger: { passengerCount: 1, name: "Ada", phone: "+17322898928", email: "ada@example.com" },
   bookingTime: { pickupDate: "2030-09-11", pickupTime: "14:00" },
   quoteId: "quote-1",
@@ -79,8 +79,7 @@ function setup(
     verifyWebhook: jest.fn(async () => PaymentMode.TEST),
   };
   const notifications = {
-    stageForAdmins: jest.fn(async () => [{ id: "n-1" }]),
-    deliverStaged: jest.fn(async () => undefined),
+    paid: jest.fn(async () => undefined),
   };
   const emails = { sendPaid: jest.fn(async () => undefined) };
   const sms = { sendPaid: jest.fn(async () => undefined) };
@@ -273,7 +272,9 @@ describe("PaymentService.handleWebhook", () => {
       paidOrder,
       PaymentMode.TEST,
     );
-    expect(notifications.stageForAdmins).toHaveBeenCalled();
+    expect(notifications.paid).toHaveBeenCalledWith(
+      expect.objectContaining({ bookingId: "book-1", bookingNumber: expect.any(String) }),
+    );
     expect(emails.sendPaid).toHaveBeenCalledWith("book-1");
     expect(sms.sendPaid).toHaveBeenCalledWith("book-1");
   });

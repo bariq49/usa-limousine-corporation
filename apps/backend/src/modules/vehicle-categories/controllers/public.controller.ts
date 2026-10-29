@@ -15,6 +15,11 @@ export class PublicController {
     return this.publicService.findCategories(query);
   }
 
+  @Get("vehicle-categories/hourly-durations")
+  findHourlyDurations() {
+    return this.publicService.findHourlyDurations();
+  }
+
   @Get("luggage")
   findLuggage(@Query() query: LuggageQueryDto) {
     return this.publicService.findLuggage(query);

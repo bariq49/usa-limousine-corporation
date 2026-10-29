@@ -11,46 +11,49 @@ import {
   CreateDto,
   QueryDto,
 } from "../dto/booking.dto";
-import { BookingService } from "../services/booking.service";
+import { CustomerBookingService } from "../services/customer-booking.service";
 
 @Controller("customers/bookings")
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(RoleKey.CUSTOMER)
 export class CustomerBookingController {
-  constructor(@Inject(BookingService) private readonly bookingService: BookingService) {}
+  constructor(
+    @Inject(CustomerBookingService)
+    private readonly customerBookingService: CustomerBookingService,
+  ) {}
 
   @Post()
   create(@Body() body: CreateDto, @Req() request: Request) {
-    return this.bookingService.create(body, request);
+    return this.customerBookingService.create(body, request);
   }
 
   @Get()
   list(@Query() query: QueryDto, @Req() request: Request) {
-    return this.bookingService.listForCustomer(query, request);
+    return this.customerBookingService.list(query, request);
   }
 
   @Get("calendar")
   calendar(@Query() query: CalendarQueryDto, @Req() request: Request) {
-    return this.bookingService.calendarForCustomer(query, request);
+    return this.customerBookingService.calendar(query, request);
   }
 
   @Get("analytics")
   analytics(@Query() query: AnalyticsQueryDto, @Req() request: Request) {
-    return this.bookingService.analyticsForCustomer(query, request);
+    return this.customerBookingService.analytics(query, request);
   }
 
   @Get(":id")
   getOne(@Param("id") id: string, @Req() request: Request) {
-    return this.bookingService.getForCustomer(id, request);
+    return this.customerBookingService.getOne(id, request);
   }
 
   @Post(":id/complete")
   complete(@Param("id") id: string, @Req() request: Request) {
-    return this.bookingService.completeForCustomer(id, request);
+    return this.customerBookingService.complete(id, request);
   }
 
   @Post(":id/cancel")
   cancel(@Param("id") id: string, @Body() body: CancelDto, @Req() request: Request) {
-    return this.bookingService.cancelForCustomer(id, body, request);
+    return this.customerBookingService.cancel(id, body, request);
   }
 }

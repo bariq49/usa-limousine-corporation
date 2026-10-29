@@ -260,7 +260,7 @@ describe("Booking (e2e)", () => {
           pickup: { address: "A" },
           dropoff: { address: "B" },
           distance: 10,
-          duration: 20,
+          travelDuration: 20,
         },
         passenger: {
           passengerCount: 1,

@@ -1,4 +1,5 @@
 import { Prisma } from "@prisma/client";
+import { BookingEmailService } from "../src/modules/booking/services/booking-email.service";
 import { ReceiptService } from "../src/modules/booking/services/receipt.service";
 
 const booking = (payment: Record<string, unknown> | null) => ({
@@ -12,7 +13,7 @@ const booking = (payment: Record<string, unknown> | null) => ({
     pickup: { address: "JFK Airport" },
     dropoff: { address: "Times Square" },
     distance: 18,
-    duration: 40,
+    travelDuration: 40,
   },
   passenger: { passengerCount: 1, name: "Ada", email: "ada@example.com", phone: "+17322898928" },
   bookingTime: { pickupDate: "2030-09-11", pickupTime: "14:00" },
@@ -46,8 +47,15 @@ function setup(payment: Record<string, unknown> | null) {
     getOrThrow: (key: string) =>
       ({ WEBSITE_URL: "https://demo.usalimocorp.com", CLOUDINARY_CLOUD_NAME: "cloud" })[key],
   };
+  const emails = new BookingEmailService(
+    {} as never,
+    {} as never,
+    config as never,
+    { error: jest.fn() } as never,
+  );
   const service = new ReceiptService(
     repository as never,
+    emails,
     config as never,
     { error: jest.fn() } as never,
   );

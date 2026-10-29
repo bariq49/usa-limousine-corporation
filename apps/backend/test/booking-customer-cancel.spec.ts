@@ -1,5 +1,6 @@
 import { BookingStatus, PaymentMode, PaymentStatus } from "@prisma/client";
 import { BookingService } from "../src/modules/booking/services/booking.service";
+import { CustomerBookingService } from "../src/modules/booking/services/customer-booking.service";
 
 const request = { headers: {}, user: { sub: "customer-user", sid: "s1", roles: [] } } as never;
 const inHours = (hours: number) => {
@@ -62,34 +63,43 @@ function setup(options: { hoursToPickup: number; status?: BookingStatus; paid?: 
     sendCompleted: jest.fn(async () => undefined),
   };
   const notifications = {
-    stageForAdmins: jest.fn(async () => [{ id: "n-1" }]),
+    cancelled: jest.fn(async () => undefined),
+    stageCreated: jest.fn(async () => [{ id: "n-1" }]),
     deliverStaged: jest.fn(async () => undefined),
   };
   const prisma = {
     auditLog: { create: jest.fn(async () => undefined) },
     $transaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn({})),
   };
-  const service = new BookingService(
+  const bookingService = new BookingService(
+    repository as never,
+    {} as never,
+    prisma as never,
+    notifications as never,
+    emails as never,
+    sms as never,
+  );
+  const service = new CustomerBookingService(
     repository as never,
     {} as never,
     prisma as never,
     notifications as never,
     { get: async () => rates } as never,
     {} as never,
+    bookingService,
     emails as never,
-    sms as never,
     square as never,
   );
   return { service, repository, square, emails, sms, notifications };
 }
 
-describe("BookingService.cancelForCustomer", () => {
+describe("CustomerBookingService.cancel", () => {
   it("refunds the set percentage through Square and tells everyone", async () => {
     const { service, repository, square, emails, sms, notifications } = setup({
       hoursToPickup: 24,
     });
 
-    await service.cancelForCustomer("book-1", {}, request);
+    await service.cancel("book-1", {}, request);
 
     expect(square.refundPayment).toHaveBeenCalledWith(
       PaymentMode.TEST,
@@ -103,21 +113,25 @@ describe("BookingService.cancelForCustomer", () => {
       BookingStatus.CANCELLED,
       expect.anything(),
     );
-    expect(emails.sendCancelled).toHaveBeenCalledWith("book-1", null, {
+    expect(emails.sendCancelled).toHaveBeenCalledWith({
+      bookingId: "book-1",
+      reason: null,
       refundAmount: 150,
       byCustomer: true,
     });
     expect(sms.sendCancelled).toHaveBeenCalledWith("book-1", null, 150);
-    expect(notifications.stageForAdmins).toHaveBeenCalledWith(
-      expect.objectContaining({ idempotencyKey: "BOOKING_CANCELLED:book-1" }),
-      {},
+    expect(notifications.cancelled).toHaveBeenCalledWith(
+      expect.objectContaining({
+        bookingId: "book-1",
+        bookingNumber: "BK-000001",
+      }),
     );
   });
 
   it("refuses to cancel inside the cancellation window", async () => {
     const { service, square, repository } = setup({ hoursToPickup: 1 });
 
-    await expect(service.cancelForCustomer("book-1", {}, request)).rejects.toThrow(
+    await expect(service.cancel("book-1", {}, request)).rejects.toThrow(
       "up to 2 hours before pickup",
     );
     expect(square.refundPayment).not.toHaveBeenCalled();
@@ -127,29 +141,29 @@ describe("BookingService.cancelForCustomer", () => {
   it("cancels unpaid bookings without a refund", async () => {
     const { service, square, emails } = setup({ hoursToPickup: 24, paid: false });
 
-    await service.cancelForCustomer("book-1", {}, request);
+    await service.cancel("book-1", {}, request);
 
     expect(square.refundPayment).not.toHaveBeenCalled();
-    expect(emails.sendCancelled).toHaveBeenCalledWith("book-1", null, {
+    expect(emails.sendCancelled).toHaveBeenCalledWith({
+      bookingId: "book-1",
+      reason: null,
       refundAmount: 0,
       byCustomer: true,
     });
   });
 });
 
-describe("BookingService.completeForCustomer", () => {
+describe("CustomerBookingService.complete", () => {
   it("does not complete a ride before its pickup time", async () => {
     const { service } = setup({ hoursToPickup: 5 });
 
-    await expect(service.completeForCustomer("book-1", request)).rejects.toThrow(
-      "after the pickup time",
-    );
+    await expect(service.complete("book-1", request)).rejects.toThrow("after the pickup time");
   });
 
   it("completes a confirmed ride after pickup", async () => {
     const { service, repository } = setup({ hoursToPickup: -1 });
 
-    await service.completeForCustomer("book-1", request);
+    await service.complete("book-1", request);
 
     expect(repository.updateStatus).toHaveBeenCalledWith(
       "book-1",

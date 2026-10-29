@@ -8,6 +8,7 @@ import { LoggerModule } from "./common/logger/logger.module";
 import { AppConfigModule } from "./config/config.module";
 import { DatabaseModule } from "./infrastructure/database/database.module";
 import { EmailModule } from "./infrastructure/email/email.module";
+import { MapsModule } from "./infrastructure/maps/maps.module";
 import { SquareModule } from "./infrastructure/square/square.module";
 import { QueueRegistryModule } from "./infrastructure/queue/queue-registry";
 import { RedisModule } from "./infrastructure/redis/redis.module";
@@ -48,6 +49,7 @@ import { BlogModule } from "./modules/blogs/blog.module";
     FirebaseModule,
     TwilioModule,
     SquareModule,
+    MapsModule,
     EmailModule,
     ThrottlerModule.forRootAsync({
       inject: [ConfigService],

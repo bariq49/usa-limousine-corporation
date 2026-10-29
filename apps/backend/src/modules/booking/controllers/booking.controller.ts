@@ -75,7 +75,7 @@ export class BookingController {
 
   @Post(":id/cancel")
   cancel(@Param("id") id: string, @Body() body: CancelDto, @Req() request: Request) {
-    return this.bookingService.cancel(id, body, request);
+    return this.bookingService.cancel({ id, body, request });
   }
 
   @Delete("bulk")

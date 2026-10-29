@@ -1,11 +1,10 @@
 import { BadRequestException, Inject, Injectable } from "@nestjs/common";
 import {
   BookingStatus,
-  type BookingType,
-  type PaymentMode,
   PaymentStatus,
   Prisma,
   RoleKey,
+  type PaymentMode,
 } from "@prisma/client";
 import { APIFeature } from "../../../common/api-feature";
 import { wallClock } from "../../../common/utils/day-bounds";
@@ -16,35 +15,14 @@ import type {
   AnalyticsRow,
   CreateData,
   ExtraServiceItemInput,
+  FindForCalendarParams,
   LuggageItemInput,
   PricedItems,
   StatusUpdate,
   UpdateData,
   UpdateStatusData,
 } from "../types/booking";
-
-const paymentSelect = {
-  select: {
-    status: true,
-    transactionId: true,
-    amount: true,
-    currency: true,
-    cardBrand: true,
-    cardLast4: true,
-    paidAt: true,
-    refundedAmount: true,
-    refundedAt: true,
-  },
-} as const;
-
-const itemsInclude = {
-  luggage: {
-    include: { luggageType: { select: { id: true, name: true } } },
-  },
-  extraServices: {
-    include: { extraService: { select: { id: true, name: true, type: true } } },
-  },
-} as const;
+import { bookingItemsInclude, bookingPaymentSelect } from "../types/booking";
 
 @Injectable()
 export class BookingRepository {
@@ -96,13 +74,7 @@ export class BookingRepository {
     });
   }
 
-  findForCalendar(params: {
-    start: string;
-    end: string;
-    bookingTypes?: BookingType[] | undefined;
-    statuses: BookingStatus[];
-    userId?: string | undefined;
-  }) {
+  findForCalendar(params: FindForCalendarParams) {
     const where: Prisma.BookingWhereInput = {
       deletedAt: null,
       status: { in: params.statuses },
@@ -157,9 +129,9 @@ export class BookingRepository {
             passengerCount: true,
           },
         },
-        luggage: itemsInclude.luggage,
-        extraServices: itemsInclude.extraServices,
-        payment: paymentSelect,
+        luggage: bookingItemsInclude.luggage,
+        extraServices: bookingItemsInclude.extraServices,
+        payment: bookingPaymentSelect,
       },
     });
   }
@@ -407,9 +379,9 @@ export class BookingRepository {
             passengerCount: true,
           },
         },
-        luggage: itemsInclude.luggage,
-        extraServices: itemsInclude.extraServices,
-        payment: paymentSelect,
+        luggage: bookingItemsInclude.luggage,
+        extraServices: bookingItemsInclude.extraServices,
+        payment: bookingPaymentSelect,
       },
     });
   }

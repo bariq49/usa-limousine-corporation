@@ -72,8 +72,9 @@ function SummaryDetails(props: SummaryDetailsProps = {}) {
   const formattedPickupDate = useMemo(() => formatDate({ date: pickupDate }), [pickupDate]);
 
   const isHourly = step1?.tripType === TRIP_TYPES.HOURLY;
-  const hireDuration =
-    isHourly && step1?.duration ? formatHrs({ hours: step1.duration }) : null;
+  const hireDuration = isHourly && step1?.hourlyDuration
+    ? formatHrs({ hours: step1.hourlyDuration })
+    : undefined;
 
   const deliveryTime = useMemo(
     () =>
@@ -98,7 +99,7 @@ function SummaryDetails(props: SummaryDetailsProps = {}) {
   const estDuration = useMemo(
     () =>
       isHourly || !step1?.travelDuration
-        ? null
+        ? undefined
         : formatDuration({ minutes: step1.travelDuration }),
     [isHourly, step1?.travelDuration],
   );

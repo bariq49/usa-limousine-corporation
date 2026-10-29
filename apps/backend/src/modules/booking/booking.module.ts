@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { DatabaseModule } from "../../infrastructure/database/database.module";
 import { EmailModule } from "../../infrastructure/email/email.module";
+import { MapsModule } from "../../infrastructure/maps/maps.module";
 import { SequenceModule } from "../../infrastructure/sequence/sequence.module";
 import { AuthModule } from "../auth/auth.module";
 import { NotificationModule } from "../notification/notification.module";
@@ -12,8 +13,11 @@ import { QuoteController } from "./controllers/quote.controller";
 import { BookingRepository } from "./repositories/booking.repository";
 import { QuoteRepository } from "./repositories/quote.repository";
 import { BookingEmailService } from "./services/booking-email.service";
+import { NotificationService } from "./services/notification.service";
+import { BookingPricingService } from "./services/booking-pricing.service";
 import { BookingSmsService } from "./services/booking-sms.service";
 import { BookingService } from "./services/booking.service";
+import { CustomerBookingService } from "./services/customer-booking.service";
 import { QuoteService } from "./services/quote.service";
 import { ReceiptService } from "./services/receipt.service";
 
@@ -21,6 +25,7 @@ import { ReceiptService } from "./services/receipt.service";
   imports: [
     DatabaseModule,
     EmailModule,
+    MapsModule,
     SequenceModule,
     AuthModule,
     NotificationModule,
@@ -33,15 +38,21 @@ import { ReceiptService } from "./services/receipt.service";
     QuoteRepository,
     BookingEmailService,
     BookingSmsService,
+    NotificationService,
+    BookingPricingService,
     BookingService,
+    CustomerBookingService,
     QuoteService,
     ReceiptService,
   ],
   exports: [
     BookingService,
+    CustomerBookingService,
+    BookingPricingService,
     BookingRepository,
     BookingEmailService,
     BookingSmsService,
+    NotificationService,
     QuoteService,
     ReceiptService,
   ],

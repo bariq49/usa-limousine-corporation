@@ -9,7 +9,7 @@ import {
   ServiceUnavailableException,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { BookingStatus, BookingType, NotificationType, PaymentMode, Prisma } from "@prisma/client";
+import { BookingStatus, BookingType, PaymentMode, Prisma } from "@prisma/client";
 import type { Request } from "express";
 import { AppLogger } from "../../../common/logger/app.logger";
 import { allocateCode } from "../../../common/utils/allocate-sequence-code";
@@ -21,10 +21,10 @@ import { SquareService } from "../../../infrastructure/square/square.service";
 import type { CheckoutDto } from "../../booking/dto/booking.dto";
 import { BookingRepository } from "../../booking/repositories/booking.repository";
 import { BookingEmailService } from "../../booking/services/booking-email.service";
+import { NotificationService } from "../../booking/services/notification.service";
 import { BookingSmsService } from "../../booking/services/booking-sms.service";
 import { QuoteService } from "../../booking/services/quote.service";
 import type { PassengerInput } from "../../booking/types/booking";
-import { NotificationService } from "../../notification/services/notification.service";
 import { PlatformSettingsService } from "../../platform-settings/services/platform-settings.service";
 import { PaymentRepository } from "../repositories/payment.repository";
 import type { CheckoutBooking, SquareWebhookEvent } from "../types/payment";
@@ -48,7 +48,7 @@ export class PaymentService implements OnModuleInit, OnModuleDestroy {
     @Inject(PaymentRepository) private readonly paymentRepository: PaymentRepository,
     @Inject(SequenceService) private readonly sequenceService: SequenceService,
     @Inject(PrismaService) private readonly prisma: PrismaService,
-    @Inject(NotificationService) private readonly notificationService: NotificationService,
+    @Inject(NotificationService) private readonly notifications: NotificationService,
     @Inject(PlatformSettingsService)
     private readonly platformSettingsService: PlatformSettingsService,
     @Inject(SquareService) private readonly square: SquareService,
@@ -239,23 +239,10 @@ export class PaymentService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async onPaid(booking: CheckoutBooking) {
-    const notifications = await this.prisma.$transaction((tx) =>
-      this.notificationService.stageForAdmins(
-        {
-          type: NotificationType.BOOKING_CREATED,
-          title: "New paid booking",
-          body: `Booking ${booking.bookingNumber} was paid online.`,
-          data: {
-            type: "BOOKING_CREATED",
-            bookingId: booking.id,
-            bookingNumber: booking.bookingNumber,
-          },
-          idempotencyKey: `BOOKING_CREATED:${booking.id}`,
-        },
-        tx,
-      ),
-    );
-    await this.notificationService.deliverStaged(notifications);
+    await this.notifications.paid({
+      bookingId: booking.id,
+      bookingNumber: booking.bookingNumber,
+    });
     void this.bookingEmails.sendPaid(booking.id);
     void this.bookingSms.sendPaid(booking.id);
   }

@@ -8,8 +8,16 @@ import { bookingCancelled } from "../../../infrastructure/email/templates/bookin
 import { bookingCompleted } from "../../../infrastructure/email/templates/booking/completed";
 import { bookingConfirmed } from "../../../infrastructure/email/templates/booking/confirmed";
 import { bookingReceived } from "../../../infrastructure/email/templates/booking/received";
+import type { BookingEmail } from "../../../infrastructure/email/types/booking";
 import type { SendMailOptions } from "../../../infrastructure/email/types/mail";
 import { BookingRepository } from "../repositories/booking.repository";
+import type {
+  AddressInput,
+  FlightDetailsInput,
+  MeetAndGreetInput,
+  PassengerInput,
+  TimeInput,
+} from "../types/booking";
 import type {
   AdminMailProps,
   CancelEmailProps,
@@ -18,7 +26,8 @@ import type {
   DeliverProps,
   EmailContext,
 } from "../types/email";
-import { toBookingEmail } from "../utils/booking-email-view";
+
+type BookingRow = NonNullable<Awaited<ReturnType<BookingRepository["findById"]>>>;
 
 @Injectable()
 export class BookingEmailService {
@@ -28,6 +37,60 @@ export class BookingEmailService {
     @Inject(ConfigService) private readonly configService: ConfigService,
     @Inject(AppLogger) private readonly logger: AppLogger,
   ) {}
+
+  toBookingEmail(row: BookingRow): BookingEmail {
+    const address = row.address as AddressInput;
+    const passenger = row.passenger as PassengerInput;
+    const time = row.bookingTime as TimeInput;
+    const flight = (row.flightDetails ?? {}) as FlightDetailsInput;
+    const meetAndGreet = (row.meetAndGreet ?? {}) as MeetAndGreetInput;
+
+    return {
+      id: row.id,
+      bookingNumber: row.bookingNumber,
+      bookingType: row.bookingType,
+      vehicleCount: row.vehicleCount,
+      vehicle: {
+        name: row.vehicleCategory.name,
+        description: row.vehicleCategory.description,
+        image: row.vehicleCategory.image,
+        passengerCount: row.vehicleCategory.passengerCount,
+      },
+      pickupAddress: address.pickup.address,
+      dropoffAddress: address.dropoff?.address ?? null,
+      stops: (address.stops ?? []).map((stop) => stop.address),
+      distance: address.distance,
+      travelDuration: address.travelDuration,
+      hourlyDuration: address.hourlyDuration ?? null,
+      pickupDate: time.pickupDate,
+      pickupTime: time.pickupTime,
+      returnDate: time.returnDate ?? null,
+      returnTime: time.returnTime ?? null,
+      passenger: {
+        name: passenger.name,
+        email: passenger.email,
+        phone: passenger.phone,
+        ccEmail: passenger.ccEmail ?? null,
+        passengerCount: passenger.passengerCount,
+      },
+      flight: { number: flight.flightNumber ?? null },
+      meetAndGreet: {
+        enabled: Boolean(meetAndGreet.enabled),
+        returnEnabled: Boolean(meetAndGreet.returnEnabled),
+        signName: meetAndGreet.signName ?? null,
+      },
+      luggage: row.luggage.map((item) => ({ name: item.luggageType.name, quantity: item.quantity })),
+      extras: row.extraServices.map((item) => ({
+        name: item.extraService.name,
+        quantity: item.quantity,
+        returnQuantity: item.returnQuantity,
+        unitPrice: item.unitPrice.toNumber(),
+      })),
+      notes: row.notes,
+      returnNotes: row.returnNotes,
+      pricing: row.pricing as BookingEmail["pricing"],
+    };
+  }
 
   sendCreated(bookingId: string) {
     return this.deliver({
@@ -141,7 +204,7 @@ export class BookingEmailService {
         email: account.email && row.notifyByEmail,
         sms: account.sms && row.notifyBySms,
       };
-      await send({ booking: toBookingEmail(row), context: this.context(), prefs });
+      await send({ booking: this.toBookingEmail(row), context: this.context(), prefs });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown error";
       this.logger.error(

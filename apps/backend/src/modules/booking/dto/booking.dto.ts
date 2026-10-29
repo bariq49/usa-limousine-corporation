@@ -62,12 +62,13 @@ export class AddressDto {
 
   @IsNumber()
   @Min(0)
-  duration!: number;
+  travelDuration!: number;
 
   @IsOptional()
-  @IsNumber()
-  @Min(0)
-  travelDuration?: number;
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  hourlyDuration?: number;
 }
 
 export class PassengerDto {
@@ -200,6 +201,12 @@ export class CreateDto {
   @Max(10)
   vehicleCount?: number;
 
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  hourlyDuration?: number;
+
   @ValidateNested()
   @Type(() => AddressDto)
   address!: AddressDto;
@@ -266,6 +273,12 @@ export class TripPriceDto {
   @Min(1)
   @Max(10)
   vehicleCount?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  hourlyDuration?: number;
 
   @ValidateNested()
   @Type(() => AddressDto)

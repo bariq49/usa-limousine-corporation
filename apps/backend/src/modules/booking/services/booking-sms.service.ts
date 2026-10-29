@@ -1,20 +1,12 @@
 import { Inject, Injectable } from "@nestjs/common";
+import { PLATFORM } from "@usa-limousine-corporation/config";
 import { AppLogger } from "../../../common/logger/app.logger";
 import { TwilioService } from "../../../infrastructure/twilio/twilio.service";
-import { formatDate } from "../../../common/utils/format-date";
-import { formatTime } from "../../../common/utils/format-time";
 import { BookingRepository } from "../repositories/booking.repository";
-import type { PassengerInput, TimeInput } from "../types/booking";
-import { PLATFORM } from "@usa-limousine-corporation/config";
+import { sendBookingSms } from "../utils/send-booking-sms";
 
 const BRAND = PLATFORM.name;
 const SUPPORT_PHONE = PLATFORM.contact.phone;
-
-type SmsBooking = {
-  bookingNumber: string;
-  pickup: string;
-  total: string;
-};
 
 @Injectable()
 export class BookingSmsService {
@@ -25,75 +17,61 @@ export class BookingSmsService {
   ) {}
 
   sendPaid(bookingId: string) {
-    return this.deliver(
+    return sendBookingSms({
       bookingId,
-      "paid",
-      (booking) =>
+      kind: "paid",
+      text: (booking) =>
         `${BRAND}: your booking ${booking.bookingNumber} is confirmed and paid ($${booking.total}). ` +
         `Pickup ${booking.pickup}. Details are in your email. Questions? Call ${SUPPORT_PHONE}.`,
-    );
+      bookingRepository: this.bookingRepository,
+      twilio: this.twilio,
+      logger: this.logger,
+      context: BookingSmsService.name,
+    });
   }
 
   sendConfirmed(bookingId: string) {
-    return this.deliver(
+    return sendBookingSms({
       bookingId,
-      "confirmed",
-      (booking) =>
+      kind: "confirmed",
+      text: (booking) =>
         `${BRAND}: your booking ${booking.bookingNumber} is confirmed. Pickup ${booking.pickup}. ` +
         `Questions? Call ${SUPPORT_PHONE}.`,
-    );
+      bookingRepository: this.bookingRepository,
+      twilio: this.twilio,
+      logger: this.logger,
+      context: BookingSmsService.name,
+    });
   }
 
   sendCancelled(bookingId: string, reason: string | null, refundAmount = 0) {
-    return this.deliver(
+    return sendBookingSms({
       bookingId,
-      "cancelled",
-      (booking) =>
+      kind: "cancelled",
+      text: (booking) =>
         `${BRAND}: your booking ${booking.bookingNumber} has been cancelled.` +
         (reason ? ` Reason: ${reason}.` : "") +
         (refundAmount > 0
           ? ` A refund of $${refundAmount.toFixed(2)} is on its way to your card.`
           : "") +
         ` Questions? Call ${SUPPORT_PHONE}.`,
-    );
+      bookingRepository: this.bookingRepository,
+      twilio: this.twilio,
+      logger: this.logger,
+      context: BookingSmsService.name,
+    });
   }
 
   sendCompleted(bookingId: string) {
-    return this.deliver(
+    return sendBookingSms({
       bookingId,
-      "completed",
-      (booking) =>
+      kind: "completed",
+      text: (booking) =>
         `${BRAND}: thank you for riding with us. Your trip ${booking.bookingNumber} is complete.`,
-    );
-  }
-
-  private async deliver(bookingId: string, kind: string, text: (booking: SmsBooking) => string) {
-    if (!this.twilio.isConfigured()) return;
-
-    try {
-      const row = await this.bookingRepository.findById(bookingId);
-      const phone = row ? (row.passenger as PassengerInput).phone : null;
-      if (!row || !phone) return;
-
-      const prefs = await this.bookingRepository.contactPreferences(row.userId);
-      if (!prefs.sms || !row.notifyBySms) return;
-
-      const time = row.bookingTime as TimeInput;
-      await this.twilio.send({
-        to: phone,
-        body: text({
-          bookingNumber: row.bookingNumber,
-          pickup: `${formatDate({ date: time.pickupDate })} at ${formatTime({ date: time.pickupTime })}`,
-          total: row.totalPrice.toFixed(2),
-        }),
-      });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Unknown error";
-      this.logger.error(
-        `Booking ${kind} SMS failed for ${bookingId}: ${message}`,
-        undefined,
-        BookingSmsService.name,
-      );
-    }
+      bookingRepository: this.bookingRepository,
+      twilio: this.twilio,
+      logger: this.logger,
+      context: BookingSmsService.name,
+    });
   }
 }

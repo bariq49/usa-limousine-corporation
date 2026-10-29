@@ -12,7 +12,7 @@ import { EmailService } from "../../../infrastructure/email/email.service";
 import { driverAssigned } from "../../../infrastructure/email/templates/booking/driver-assigned";
 
 import { BookingRepository } from "../../booking/repositories/booking.repository";
-import { toBookingEmail } from "../../booking/utils/booking-email-view";
+import { BookingEmailService } from "../../booking/services/booking-email.service";
 import type { AssignDto } from "../dto/driver.dto";
 import { DriverRepository } from "../repositories/driver.repository";
 
@@ -21,6 +21,7 @@ export class AssignmentService {
   constructor(
     @Inject(DriverRepository) private readonly repository: DriverRepository,
     @Inject(BookingRepository) private readonly bookingRepository: BookingRepository,
+    @Inject(BookingEmailService) private readonly bookingEmails: BookingEmailService,
     @Inject(PrismaService) private readonly prisma: PrismaService,
     @Inject(EmailService) private readonly emailService: EmailService,
     @Inject(ConfigService) private readonly configService: ConfigService,
@@ -122,7 +123,7 @@ export class AssignmentService {
         to: user.email,
         subject: `New ride assigned · ${row.bookingNumber} - ${PLATFORM.shortName}`,
         html: driverAssigned({
-          booking: toBookingEmail(row),
+          booking: this.bookingEmails.toBookingEmail(row),
           siteUrl: this.configService.getOrThrow<string>("WEBSITE_URL").replace(/\/+$/, ""),
           assignment: {
             driverName,

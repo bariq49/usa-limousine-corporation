@@ -5,8 +5,6 @@ import { useForm } from "react-hook-form";
 import { ChevronRight, Mail, Plane, User } from "@usa-limousine-corporation/ui/svg";
 import { useBookingStore, useTotalPrice } from "@/store/use-booking-store";
 import { usePlaceOrder } from "@/hooks/queries/use-place-order";
-import { useSyncQuote } from "@/hooks/queries/use-quotes";
-import type { ApiError } from "@/lib/api/client";
 import { Button } from "@usa-limousine-corporation/ui/components/button";
 import { Form } from "@usa-limousine-corporation/ui/components/form";
 import { Input } from "@usa-limousine-corporation/ui/components/input";
@@ -19,7 +17,7 @@ import { NotificationsField } from "./notifications-field";
 import { PriceChangedModal } from "../modals/price-changed-modal";
 import BookingStepActions from "../booking-step-actions";
 import { useHasHydrated } from "@/hooks/use-has-hydrated";
-import { PASSENGER_TITLES, PICKUP_TIME_ERRORS, TRIP_TYPES } from "@/constants/booking-constants";
+import { PASSENGER_TITLES, TRIP_TYPES } from "@/constants/booking-constants";
 import type { Step3FormValues } from "@/types/booking.types";
 import { formatPrice } from "@usa-limousine-corporation/ui/utils/price";
 
@@ -35,11 +33,6 @@ function Step3() {
     onPriceChanged: (previousTotal, quote) => setPriceChange({ previousTotal, total: quote.total }),
   });
   const totalPrice = useTotalPrice();
-  const syncQuoteError = useSyncQuote().error as ApiError | null;
-  const quoteError =
-    syncQuoteError?.code && PICKUP_TIME_ERRORS.includes(syncQuoteError.code)
-      ? undefined
-      : syncQuoteError?.message;
 
   const showReturnTrip = step1?.tripType !== TRIP_TYPES.HOURLY;
   const showFlightDetails = showReturnTrip && Boolean(step1?.isAirportSelected);
@@ -209,12 +202,6 @@ function Step3() {
             {showReturnTrip ? <ReturnTripField /> : null}
 
             <NotificationsField />
-
-            {quoteError ? (
-              <div className="rounded-sm border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-                {quoteError}
-              </div>
-            ) : null}
 
             <BookingStepActions backHref="/book-ride/select-vehicle">
               <Button

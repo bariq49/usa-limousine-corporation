@@ -11,7 +11,7 @@ const row = (userId: string | null, choices = { notifyByEmail: true, notifyBySms
   vehicleCount: 1,
   totalPrice: { toFixed: () => "110.00" },
   vehicleCategory: { name: "Sedan", description: null, image: null, passengerCount: 4 },
-  address: { pickup: { address: "A" }, dropoff: { address: "B" }, distance: 10, duration: 20 },
+  address: { pickup: { address: "A" }, dropoff: { address: "B" }, distance: 10, travelDuration: 20 },
   passenger: { passengerCount: 1, name: "Ada", email: "ada@example.com", phone: "+17322898928" },
   bookingTime: { pickupDate: "2030-09-11", pickupTime: "14:00" },
   flightDetails: null,

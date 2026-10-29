@@ -1,8 +1,66 @@
+import type { Request } from "express";
 import type {
   BookingPricing,
   BookingPricingInput,
 } from "../../platform-settings/types/platform-settings";
 import type { BookingStatus, BookingType, Prisma } from "@prisma/client";
+import type { CancelDto } from "../dto/booking.dto";
+
+export type CancelParams = {
+  id: string;
+  body: CancelDto;
+  request: Request;
+  refundAmount?: number;
+  byCustomer?: boolean;
+};
+
+export const bookingPaymentSelect = {
+  select: {
+    status: true,
+    transactionId: true,
+    amount: true,
+    currency: true,
+    cardBrand: true,
+    cardLast4: true,
+    paidAt: true,
+    refundedAmount: true,
+    refundedAt: true,
+  },
+} as const;
+
+export const bookingItemsInclude = {
+  luggage: {
+    include: { luggageType: { select: { id: true, name: true } } },
+  },
+  extraServices: {
+    include: { extraService: { select: { id: true, name: true, type: true } } },
+  },
+} as const;
+
+export type FindForCalendarParams = {
+  start: string;
+  end: string;
+  bookingTypes?: BookingType[] | undefined;
+  statuses: BookingStatus[];
+  userId?: string | undefined;
+};
+
+export type CalendarRow = {
+  id: string;
+  bookingNumber: string;
+  bookingType: BookingType;
+  status: BookingStatus;
+  address: unknown;
+  passenger: unknown;
+  bookingTime: unknown;
+  vehicleCategory: { name: string };
+};
+
+export type SmsBooking = {
+  bookingNumber: string;
+  pickup: string;
+  total: string;
+};
 
 export type LocationInput = {
   address: string;
@@ -15,8 +73,8 @@ export type AddressInput = {
   dropoff?: LocationInput | null;
   stops?: LocationInput[];
   distance: number;
-  duration: number;
-  travelDuration?: number | null;
+  travelDuration: number;
+  hourlyDuration?: number | null;
 };
 
 export type PassengerInput = {

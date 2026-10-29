@@ -3,15 +3,19 @@ import { BookingType } from "@prisma/client";
 import type { TripPriceDto } from "../dto/booking.dto";
 
 export function quoteInput(body: TripPriceDto) {
-  const isReturn = body.bookingType === BookingType.RETURN;
+  const bookingType = body.bookingType ?? BookingType.ONE_WAY;
+  const isReturn = bookingType === BookingType.RETURN;
+  const isHourly = bookingType === BookingType.HOURLY;
 
   return {
-    bookingType: body.bookingType ?? BookingType.ONE_WAY,
+    bookingType,
     vehicleCount: body.vehicleCount ?? 1,
+    hourlyDuration: isHourly ? (body.hourlyDuration ?? null) : null,
     pickup: body.address.pickup.address.trim(),
     dropoff: body.address.dropoff?.address.trim() ?? null,
     stops: (body.address.stops ?? []).map((stop) => stop.address.trim()),
     distance: body.address.distance,
+    travelDuration: body.address.travelDuration ?? null,
     pickupDate: body.bookingTime.pickupDate,
     pickupTime: body.bookingTime.pickupTime,
     returnDate: isReturn ? (body.bookingTime.returnDate ?? null) : null,

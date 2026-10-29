@@ -33,7 +33,7 @@ export default defineConfig({
     env: {
       NEXT_PUBLIC_API_BASE_URL: "http://localhost:3000/api/v1",
     },
-    include: ["tests/{ui,admin,customer}/**/*.{test,spec}.{ts,tsx}"],
+    include: ["tests/{ui,admin,customer,website}/**/*.{test,spec}.{ts,tsx}"],
     exclude: [
       "**/node_modules/**",
       "**/.next/**",

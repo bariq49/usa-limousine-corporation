@@ -5,10 +5,9 @@ import { useRouter } from "next/navigation";
 import { ChevronRight } from "@usa-limousine-corporation/ui/svg";
 import { Button } from "@usa-limousine-corporation/ui/components/button";
 import { useBookingStore } from "@/store/use-booking-store";
-import { useCategories } from "@/hooks/queries/use-fleet";
 import { useSyncQuote, useVehicleEstimates } from "@/hooks/queries/use-quotes";
 import type { ApiError } from "@/lib/api/client";
-import { PICKUP_TIME_ERRORS, TRIP_TYPES } from "@/constants/booking-constants";
+import { PICKUP_TIME_ERRORS } from "@/constants/booking-constants";
 import VehicleCategoryCard from "./VehicleCategoryCard";
 import BookingStepActions from "../booking-step-actions";
 import MobileSummary from "../mobile-summary";
@@ -21,11 +20,10 @@ const SKELETON_COUNT = 10;
 function Step2() {
   const hasHydrated = useHasHydrated();
   const router = useRouter();
-  const { step1, step2, quote: selectedQuote, setStep2Data } = useBookingStore();
+  const { step2, quote: selectedQuote, setStep2Data } = useBookingStore();
   const [isNavigating, setIsNavigating] = useState(false);
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
 
-  const isHourly = step1?.tripType === TRIP_TYPES.HOURLY;
   const vehicleEstimates = useVehicleEstimates();
   const syncQuote = useSyncQuote();
   const quoteError = syncQuote.error as ApiError | null;
@@ -34,15 +32,12 @@ function Step2() {
     (quoteError?.code && PICKUP_TIME_ERRORS.includes(quoteError.code)
       ? undefined
       : quoteError?.message);
-  const hourlyQuery = useCategories(isHourly);
   const estimates = vehicleEstimates.data ?? [];
   const estimateByCategory = new Map(
     estimates.map((estimate) => [estimate.vehicleCategory.id, estimate]),
   );
-  const categories = isHourly
-    ? (hourlyQuery.data ?? [])
-    : estimates.map((estimate) => estimate.vehicleCategory);
-  const isLoading = isHourly ? hourlyQuery.isLoading : vehicleEstimates.isLoading;
+  const categories = estimates.map((estimate) => estimate.vehicleCategory);
+  const isLoading = vehicleEstimates.isLoading;
 
   const selectedId = step2?.vehicleCategory?.id;
   const showSkeletons = isLoading && categories.length === 0;
@@ -88,7 +83,7 @@ function Step2() {
   const handleContinue = () => {
     if (!step2 || isNavigating) return;
     setIsNavigating(true);
-    router.push(isHourly ? "/contact-us" : "/book-ride/passenger-details");
+    router.push("/book-ride/passenger-details");
   };
 
   const continueButton = (
@@ -99,7 +94,7 @@ function Step2() {
       isLoading={isNavigating}
       className="h-11 flex-1 gap-2 rounded-sm bg-black font-semibold text-white hover:bg-black/90"
     >
-      {isHourly ? "Request Quote" : "Continue"}
+      Continue
       <ChevronRight width={16} height={16} strokeWidth={2.5} />
     </Button>
   );
@@ -124,6 +119,12 @@ function Step2() {
               isExpanded
             />
           ))}
+
+        {!showSkeletons && !priceError && categories.length === 0 ? (
+          <div className="rounded-sm border border-border bg-muted/30 px-4 py-8 text-center text-sm text-muted-foreground">
+            No vehicles are available for this trip. Try a different duration, route, or time.
+          </div>
+        ) : null}
 
         {categories.map((vehicleCategory: VehicleCategory) => {
           const isSelected = selectedId === vehicleCategory.id;

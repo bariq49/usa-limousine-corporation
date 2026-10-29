@@ -2,9 +2,9 @@ import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { PaymentStatus } from "@prisma/client";
 import { AppLogger } from "../../../common/logger/app.logger";
-import { toBookingEmail } from "../utils/booking-email-view";
 import { renderReceiptPdf } from "../../../infrastructure/email/templates/booking/receipt-pdf";
 import { BookingRepository } from "../repositories/booking.repository";
+import { BookingEmailService } from "./booking-email.service";
 
 const LOGO_TIMEOUT_MS = 3000;
 
@@ -14,6 +14,7 @@ export class ReceiptService {
 
   constructor(
     @Inject(BookingRepository) private readonly bookingRepository: BookingRepository,
+    @Inject(BookingEmailService) private readonly bookingEmails: BookingEmailService,
     @Inject(ConfigService) private readonly configService: ConfigService,
     @Inject(AppLogger) private readonly logger: AppLogger,
   ) {}
@@ -31,7 +32,7 @@ export class ReceiptService {
     }
 
     const pdf = await renderReceiptPdf({
-      booking: toBookingEmail(booking),
+      booking: this.bookingEmails.toBookingEmail(booking),
       payment: {
         status: payment.status,
         amount: payment.amount.toNumber(),

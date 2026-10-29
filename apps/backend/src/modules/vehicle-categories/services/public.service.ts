@@ -4,12 +4,10 @@ import { roundAmount } from "../../../common/utils/money";
 import type { LuggageQueryDto } from "../dto/luggage-query.dto";
 import type { VehicleCategoryQueryDto } from "../dto/query.dto";
 import { CategoriesRepository } from "../repositories/categories.repository";
+import { HourlyPricingRepository } from "../repositories/hourly-pricing.repository";
 import { LuggageRepository } from "../repositories/luggage.repository";
 import { PricingRepository } from "../repositories/pricing.repository";
-
-function luggageCount(capacity: { quantity: number }[]): number {
-  return capacity.reduce((total, item) => total + item.quantity, 0);
-}
+import { hourlyPrice, type PricedVehicle } from "../types/pricing";
 
 @Injectable()
 export class PublicService {
@@ -20,12 +18,16 @@ export class PublicService {
     private readonly luggageRepository: LuggageRepository,
     @Inject(PricingRepository)
     private readonly pricingRepository: PricingRepository,
+    @Inject(HourlyPricingRepository)
+    private readonly hourlyPricingRepository: HourlyPricingRepository,
   ) {}
 
   async findCategories(query: VehicleCategoryQueryDto) {
     const page = await this.categoriesRepository.findPublicCatalog(query);
     page.data.forEach((category) =>
-      Object.assign(category, { luggageCount: luggageCount(category.luggageCapacity) }),
+      Object.assign(category, {
+        luggageCount: category.luggageCapacity.reduce((total, item) => total + item.quantity, 0),
+      }),
     );
     return page;
   }
@@ -34,13 +36,20 @@ export class PublicService {
     return this.luggageRepository.findPublicMany(query);
   }
 
-  async pricedForDistance(distance: number) {
+  async findHourlyDurations() {
+    const categories = await this.categoriesRepository.findPublicActive();
+    const rows = await this.hourlyPricingRepository.findActiveDurations(
+      categories.map((category) => category.id),
+    );
+    return rows.map((row) => row.durationHours);
+  }
+
+  async pricedForDistance(distance: number): Promise<PricedVehicle[]> {
     const categories = await this.categoriesRepository.findPublicActive();
     const pricings = await this.pricingRepository.findAllForDistance(
       distance,
-      categories.map((c) => c.id),
+      categories.map((category) => category.id),
     );
-
     const bestByCategory = new Map<string, (typeof pricings)[number]>();
     for (const row of pricings) {
       if (!bestByCategory.has(row.vehicleCategoryId)) {
@@ -52,20 +61,54 @@ export class PublicService {
       .filter((category) => bestByCategory.has(category.id))
       .map((category) => {
         const pricing = bestByCategory.get(category.id)!;
+        const basePrice = pricing.basePrice.toNumber();
+        const perUnitRate = pricing.perUnitRate?.toNumber() ?? 0;
+        const percentageRate = pricing.percentageRate?.toNumber() ?? 0;
+        let amount = basePrice;
+        if (pricing.pricingType === PricingType.PER_UNIT) {
+          amount = basePrice + distance * perUnitRate;
+        } else if (pricing.pricingType === PricingType.PERCENTAGE) {
+          amount = basePrice * (1 + percentageRate / 100);
+        }
         return {
           id: category.id,
           name: category.name,
           description: category.description,
           image: category.image,
           passengerCount: category.passengerCount,
-          luggageCount: luggageCount(category.luggageCapacity),
-          basePrice: this.computePrice({
-            pricingType: pricing.pricingType,
-            basePrice: pricing.basePrice.toNumber(),
-            perUnitRate: pricing.perUnitRate?.toNumber() ?? null,
-            percentageRate: pricing.percentageRate?.toNumber() ?? null,
+          luggageCount: category.luggageCapacity.reduce((total, item) => total + item.quantity, 0),
+          basePrice: roundAmount(amount),
+        };
+      });
+  }
+
+  async pricedForHours(hours: number, distance = 0): Promise<PricedVehicle[]> {
+    const categories = await this.categoriesRepository.findPublicActive();
+    const rows = await this.hourlyPricingRepository.findActiveByDuration(
+      hours,
+      categories.map((category) => category.id),
+    );
+    const pricingByCategory = new Map(rows.map((row) => [row.vehicleCategoryId, row]));
+
+    return categories
+      .filter((category) => pricingByCategory.has(category.id))
+      .map((category) => {
+        const pricing = pricingByCategory.get(category.id)!;
+        return {
+          id: category.id,
+          name: category.name,
+          description: category.description,
+          image: category.image,
+          passengerCount: category.passengerCount,
+          luggageCount: category.luggageCapacity.reduce((total, item) => total + item.quantity, 0),
+          basePrice: hourlyPrice(
+            {
+              basePrice: pricing.basePrice.toNumber(),
+              includedDistance: pricing.includedDistance,
+              extraDistanceRate: pricing.extraDistanceRate,
+            },
             distance,
-          }),
+          ),
         };
       });
   }
@@ -81,28 +124,40 @@ export class PublicService {
     if (!pricing) {
       return null;
     }
-    return this.computePrice({
-      pricingType: pricing.pricingType,
-      basePrice: pricing.basePrice.toNumber(),
-      perUnitRate: pricing.perUnitRate?.toNumber() ?? null,
-      percentageRate: pricing.percentageRate?.toNumber() ?? null,
-      distance,
-    });
+    const basePrice = pricing.basePrice.toNumber();
+    const perUnitRate = pricing.perUnitRate?.toNumber() ?? 0;
+    const percentageRate = pricing.percentageRate?.toNumber() ?? 0;
+    if (pricing.pricingType === PricingType.PER_UNIT) {
+      return roundAmount(basePrice + distance * perUnitRate);
+    }
+    if (pricing.pricingType === PricingType.PERCENTAGE) {
+      return roundAmount(basePrice * (1 + percentageRate / 100));
+    }
+    return roundAmount(basePrice);
   }
 
-  private computePrice(params: {
-    pricingType: PricingType;
-    basePrice: number;
-    perUnitRate: number | null;
-    percentageRate: number | null;
-    distance: number;
-  }): number {
-    if (params.pricingType === PricingType.PER_UNIT) {
-      return roundAmount(params.basePrice + params.distance * (params.perUnitRate ?? 0));
+  async basePriceForHours(
+    vehicleCategoryId: string,
+    hours: number,
+    distance = 0,
+  ): Promise<number | null> {
+    const categories = await this.categoriesRepository.findPublicActive();
+    if (!categories.some((category) => category.id === vehicleCategoryId)) {
+      return null;
     }
-    if (params.pricingType === PricingType.PERCENTAGE) {
-      return roundAmount(params.basePrice * (1 + (params.percentageRate ?? 0) / 100));
+    const [pricing] = await this.hourlyPricingRepository.findActiveByDuration(hours, [
+      vehicleCategoryId,
+    ]);
+    if (!pricing) {
+      return null;
     }
-    return roundAmount(params.basePrice);
+    return hourlyPrice(
+      {
+        basePrice: pricing.basePrice.toNumber(),
+        includedDistance: pricing.includedDistance,
+        extraDistanceRate: pricing.extraDistanceRate,
+      },
+      distance,
+    );
   }
 }

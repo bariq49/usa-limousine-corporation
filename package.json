@@ -17,7 +17,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "turbo run typecheck",
-    "test": "turbo run test --filter=@usa-limousine-corporation/ui --filter=@usa-limousine-corporation/admin --filter=@usa-limousine-corporation/customer",
+    "test": "turbo run test --filter=@usa-limousine-corporation/ui --filter=@usa-limousine-corporation/admin --filter=@usa-limousine-corporation/customer --filter=@usa-limousine-corporation/website",
     "test:e2e": "playwright test",
     "clean": "rm -rf node_modules .turbo"
   },

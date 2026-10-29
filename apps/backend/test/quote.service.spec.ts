@@ -1,7 +1,10 @@
 import { ConflictException } from "@nestjs/common";
 import { BookingType, Prisma } from "@prisma/client";
+import { BookingPricingService } from "../src/modules/booking/services/booking-pricing.service";
 import { QuoteService } from "../src/modules/booking/services/quote.service";
 import { quoteHash, quoteInput } from "../src/modules/booking/utils/quote-input";
+
+const totals = new BookingPricingService({} as never, {} as never, {} as never, {} as never);
 
 const trip = {
   vehicleCount: 1,
@@ -9,15 +12,17 @@ const trip = {
     pickup: { address: "JFK Airport" },
     dropoff: { address: "Times Square" },
     distance: 18,
-    duration: 40,
+    travelDuration: 40
   },
   bookingTime: { pickupDate: "2030-09-11", pickupTime: "14:00" },
 };
-const checkout = Object.assign({}, trip, {
-  vehicleCategoryId: "sedan",
-  quoteId: "quote-1",
-  passenger: { passengerCount: 1, name: "Ada", phone: "+17322898928", email: "ada@example.com" },
-}) as never;
+const checkoutBody = () =>
+  Object.assign({}, trip, {
+    vehicleCategoryId: "sedan",
+    quoteId: "quote-1",
+    address: Object.assign({}, trip.address),
+    passenger: { passengerCount: 1, name: "Ada", phone: "+17322898928", email: "ada@example.com" },
+  }) as never;
 
 const tripPricing = {
   rates: {
@@ -37,6 +42,8 @@ const tripPricing = {
   meetAndGreetOneWay: false,
   meetAndGreetReturn: false,
   extraServicesPrice: 0,
+  notificationsPrice: 0,
+  items: [],
 };
 
 const vehicle = (id: string, basePrice: number) => ({
@@ -49,10 +56,21 @@ const vehicle = (id: string, basePrice: number) => ({
   basePrice,
 });
 
-function setup(options: { currentTotal?: number } = {}) {
-  const bookingService = {
-    tripPricing: jest.fn(async () => tripPricing),
-    priceForCustomer: jest.fn(async () => ({ total: options.currentTotal ?? 100 })),
+function setup(options: { currentTotal?: number; liveDistance?: number } = {}) {
+  const pricingService = {
+    tripPricing: jest.fn(async (body: { address: { distance: number } }) => {
+      if (options.liveDistance != null) {
+        body.address.distance = options.liveDistance;
+      }
+      return tripPricing;
+    }),
+    priceForCustomer: jest.fn(async (body: { address: { distance: number } }) => {
+      if (options.liveDistance != null) {
+        body.address.distance = options.liveDistance;
+      }
+      return { total: options.currentTotal ?? 100 };
+    }),
+    bookingPricing: totals.bookingPricing.bind(totals),
   };
   const quoteRepository = {
     create: jest.fn(async (data: { vehicleCategoryId: string; expiresAt: Date }) => ({
@@ -63,23 +81,26 @@ function setup(options: { currentTotal?: number } = {}) {
   };
   const vehiclePricing = {
     pricedForDistance: jest.fn(async () => [vehicle("sedan", 100), vehicle("suv", 150)]),
+    pricedForHours: jest.fn(async () => [vehicle("sedan", 240), vehicle("suv", 360)]),
   };
   const service = new QuoteService(
-    bookingService as never,
+    pricingService as never,
     quoteRepository as never,
     vehiclePricing as never,
     { get: () => "test" } as never,
     { error: jest.fn() } as never,
   );
-  return { service, bookingService, quoteRepository, vehiclePricing };
+  return { service, bookingService: pricingService, quoteRepository, vehiclePricing };
 }
 
-const storedQuote = (overrides: Record<string, unknown> = {}) =>
-  Object.assign(
+const storedQuote = (overrides: Record<string, unknown> = {}) => {
+  const input = quoteInput(checkoutBody());
+  return Object.assign(
     {
       id: "quote-1",
       vehicleCategoryId: "sedan",
-      inputHash: quoteHash(quoteInput(checkout)),
+      inputHash: quoteHash(input),
+      input,
       pricing: { total: 100, saved: true },
       total: new Prisma.Decimal(100),
       expiresAt: new Date(Date.now() + 60_000),
@@ -88,6 +109,7 @@ const storedQuote = (overrides: Record<string, unknown> = {}) =>
     },
     overrides,
   ) as never;
+};
 
 describe("QuoteService.estimate", () => {
   it("prices every vehicle on the server without saving anything", async () => {
@@ -102,6 +124,24 @@ describe("QuoteService.estimate", () => {
       ["suv", 150],
     ]);
     expect(quoteRepository.create).not.toHaveBeenCalled();
+  });
+
+  it("prices hourly hire by hours instead of distance", async () => {
+    const { service, vehiclePricing } = setup();
+    const hourly = Object.assign({}, trip, {
+      bookingType: BookingType.HOURLY,
+      hourlyDuration: 3,
+      address: Object.assign({}, trip.address, { distance: 0, dropoff: undefined }),
+    });
+
+    const options = await service.estimate(hourly as never);
+
+    expect(vehiclePricing.pricedForHours).toHaveBeenCalledWith(3, 0);
+    expect(vehiclePricing.pricedForDistance).not.toHaveBeenCalled();
+    expect(options.map((option) => [option.vehicleCategory.id, option.total])).toEqual([
+      ["sedan", 240],
+      ["suv", 360],
+    ]);
   });
 });
 
@@ -129,16 +169,37 @@ describe("QuoteService.create", () => {
       service.create(Object.assign({ vehicleCategoryId: "limo" }, trip) as never),
     ).rejects.toThrow("not available for the trip distance");
   });
+
+  it("saves an hourly quote priced from the matching hourly rate", async () => {
+    const { service, quoteRepository, vehiclePricing } = setup();
+    const hourly = Object.assign({}, trip, {
+      bookingType: BookingType.HOURLY,
+      hourlyDuration: 4,
+      vehicleCategoryId: "sedan",
+    });
+
+    const quote = await service.create(hourly as never);
+
+    expect(vehiclePricing.pricedForHours).toHaveBeenCalledWith(4, hourly.address.distance);
+    expect(quoteRepository.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        vehicleCategoryId: "sedan",
+        total: 240,
+        inputHash: quoteHash(quoteInput(hourly as never)),
+      }),
+    );
+    expect(quote.total).toBe(240);
+  });
 });
 
 describe("QuoteService.find", () => {
   it("refuses an unknown quote or one for another vehicle", async () => {
     const { service, quoteRepository } = setup();
     quoteRepository.findById.mockResolvedValueOnce(null);
-    await expect(service.find(checkout)).rejects.toThrow(ConflictException);
+    await expect(service.find(checkoutBody())).rejects.toThrow(ConflictException);
 
     quoteRepository.findById.mockResolvedValueOnce(storedQuote({ vehicleCategoryId: "suv" }));
-    await expect(service.find(checkout)).rejects.toThrow("no longer available");
+    await expect(service.find(checkoutBody())).rejects.toThrow("no longer available");
   });
 });
 
@@ -146,7 +207,7 @@ describe("QuoteService.pricingFor", () => {
   it("charges the saved price while the quote is valid, even if rates changed", async () => {
     const { service } = setup({ currentTotal: 120 });
 
-    await expect(service.pricingFor(storedQuote(), checkout)).resolves.toEqual({
+    await expect(service.pricingFor(storedQuote(), checkoutBody())).resolves.toEqual({
       total: 100,
       saved: true,
     });
@@ -156,7 +217,7 @@ describe("QuoteService.pricingFor", () => {
     const { service } = setup({ currentTotal: 100 });
 
     await expect(
-      service.pricingFor(storedQuote({ expiresAt: new Date(Date.now() - 1) }), checkout),
+      service.pricingFor(storedQuote({ expiresAt: new Date(Date.now() - 1) }), checkoutBody()),
     ).resolves.toEqual({ total: 100 });
   });
 
@@ -164,7 +225,7 @@ describe("QuoteService.pricingFor", () => {
     const { service } = setup({ currentTotal: 120 });
 
     const error = await service
-      .pricingFor(storedQuote({ expiresAt: new Date(Date.now() - 1) }), checkout)
+      .pricingFor(storedQuote({ expiresAt: new Date(Date.now() - 1) }), checkoutBody())
       .catch((caught: ConflictException) => caught);
 
     expect(error).toBeInstanceOf(ConflictException);
@@ -179,9 +240,31 @@ describe("QuoteService.pricingFor", () => {
   it("re-prices when the trip no longer matches what was quoted", async () => {
     const { service } = setup();
 
-    await expect(service.pricingFor(storedQuote({ inputHash: "other" }), checkout)).rejects.toThrow(
-      "Your trip changed since it was priced",
+    await expect(
+      service.pricingFor(storedQuote({ inputHash: "other" }), checkoutBody()),
+    ).rejects.toThrow("Your trip changed since it was priced");
+  });
+
+  it("returns PRICE_CHANGED when the server route drifts beyond tolerance", async () => {
+    const { service } = setup({ liveDistance: 25 });
+
+    const error = await service
+      .pricingFor(storedQuote(), checkoutBody())
+      .catch((caught: ConflictException) => caught);
+
+    expect(error).toBeInstanceOf(ConflictException);
+    expect((error as ConflictException).getResponse()).toEqual(
+      expect.objectContaining({ error: "PRICE_CHANGED" }),
     );
+  });
+
+  it("keeps the locked quote when route drift stays within tolerance", async () => {
+    const { service } = setup({ currentTotal: 120, liveDistance: 18.2 });
+
+    await expect(service.pricingFor(storedQuote(), checkoutBody())).resolves.toEqual({
+      total: 100,
+      saved: true,
+    });
   });
 });
 
@@ -212,5 +295,16 @@ describe("quoteInput", () => {
     );
 
     expect(quoteHash(oneWay)).toBe(quoteHash(withReturnTime));
+  });
+
+  it("includes hire hours on hourly quotes", () => {
+    const input = quoteInput(
+      Object.assign({}, trip, {
+        bookingType: BookingType.HOURLY,
+        hourlyDuration: 5,
+      }) as never,
+    );
+    expect(input.hourlyDuration).toBe(5);
+    expect(input.bookingType).toBe(BookingType.HOURLY);
   });
 });

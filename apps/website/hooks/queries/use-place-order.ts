@@ -4,7 +4,7 @@ import type { BookingDraft, Quote } from "@/types/booking.types";
 import type { ApiError } from "@/lib/api/client";
 import { useBookingStore } from "@/store/use-booking-store";
 import { startCheckout } from "@/lib/api/checkout";
-import { quoteRequest } from "./use-quotes";
+import { quoteRequest } from "@/lib/booking/quote-request";
 import { formatPrice } from "@usa-limousine-corporation/ui/utils/price";
 
 type PlaceOrderOptions = {
@@ -48,6 +48,7 @@ export const usePlaceOrder = ({ onPriceChanged }: PlaceOrderOptions = {}) => {
                 vehicleCategoryId: step2.vehicleCategory.id,
                 vehicleCount: step2.vehicleCount,
                 bookingType: request.bookingType,
+                hourlyDuration: request.hourlyDuration,
                 address: request.address,
                 passenger: {
                     passengerCount: step2.passengers,

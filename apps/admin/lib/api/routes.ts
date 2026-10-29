@@ -11,6 +11,7 @@ const API_ROUTES = {
 
   VEHICLE_CATEGORIES: "/admin/vehicle-categories",
   VEHICLE_CATEGORY_PRICING: "/admin/vehicle-category-pricing",
+  HOURLY_PRICING: "/admin/vehicle-category-hourly-pricing",
   LUGGAGE: "/admin/luggage",
   BOOKINGS: "/admin/bookings",
   EXTRA_SERVICES: "/admin/extra-services",

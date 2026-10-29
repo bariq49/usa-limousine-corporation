@@ -5,6 +5,12 @@ import { Breadcrumbs } from "@usa-limousine-corporation/ui/layout/breadcrumbs";
 import { Card, CardContent } from "@usa-limousine-corporation/ui/components/card";
 import { Button } from "@usa-limousine-corporation/ui/components/button";
 import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@usa-limousine-corporation/ui/components/tabs";
+import {
   DataTable,
   type ColumnFiltersState,
 } from "@usa-limousine-corporation/ui/data-table/data-table";
@@ -18,6 +24,7 @@ import { useCategories } from "@/hooks/queries/use-vehicle-categories";
 import type { Item, Status, Type } from "@/lib/types/vehicle-pricing";
 import { getColumns, getFilters } from "@/components/columns/vehicle-pricing-columns";
 import { PricingModal } from "@/components/modals/pricing-modal";
+import { HourlyPricing } from "@/components/pricing/hourly-pricing";
 
 export default function VehiclePricingPage() {
   const [page, setPage] = useState(1);
@@ -110,53 +117,66 @@ export default function VehiclePricingPage() {
         items={[{ label: "Home", href: "/analytics" }, { label: "Vehicle" }, { label: "Pricing" }]}
       />
 
-      <Card className="shadow-xs border border-border bg-card">
-        <CardContent className="p-6">
-          <div className="mb-5 flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-bold text-default-900">Vehicle Pricing</h2>
-              <p className="text-xs text-default-500 mt-1">
-                Overview and management of distance-based vehicle pricing tiers.
-              </p>
-            </div>
-            <Button size="sm" className="gap-2" onClick={handleAdd}>
-              <Plus className="h-4 w-4" />
-              <span>Add Pricing</span>
-            </Button>
-          </div>
+      <Tabs defaultValue="distance" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="distance">Distance</TabsTrigger>
+          <TabsTrigger value="hourly">Hourly</TabsTrigger>
+        </TabsList>
 
-          <DataTable
-            columns={columns}
-            data={data?.data ?? []}
-            searchKey="vehicleCategory"
-            searchValue={search}
-            onSearchChange={(value) => {
-              setSearch(value);
-              setPage(1);
-            }}
-            searchPlaceholder="Search pricing..."
-            filterColumns={filters}
-            columnFilters={columnFilters}
-            onColumnFiltersChange={(updater) => {
-              setColumnFilters(updater);
-              setPage(1);
-            }}
-            manualFiltering={true}
-            loading={isLoading}
-            fetching={isFetching}
-            onBulkDelete={handleBulkDelete}
-            isDeleting={bulkDeleteMutation.isPending || deleteMutation.isPending}
-            pagination={{
-              page,
-              pageSize,
-              total: data?.total ?? 0,
-              totalPages: data?.pages ?? 1,
-            }}
-            onPageChange={setPage}
-            onPageSizeChange={setPageSize}
-          />
-        </CardContent>
-      </Card>
+        <TabsContent value="distance" className="mt-0">
+          <Card className="shadow-xs border border-border bg-card">
+            <CardContent className="p-6">
+              <div className="mb-5 flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-bold text-default-900">Vehicle Pricing</h2>
+                  <p className="text-xs text-default-500 mt-1">
+                    Overview and management of distance-based vehicle pricing tiers.
+                  </p>
+                </div>
+                <Button size="sm" className="gap-2" onClick={handleAdd}>
+                  <Plus className="h-4 w-4" />
+                  <span>Add Pricing</span>
+                </Button>
+              </div>
+
+              <DataTable
+                columns={columns}
+                data={data?.data ?? []}
+                searchKey="vehicleCategory"
+                searchValue={search}
+                onSearchChange={(value) => {
+                  setSearch(value);
+                  setPage(1);
+                }}
+                searchPlaceholder="Search pricing..."
+                filterColumns={filters}
+                columnFilters={columnFilters}
+                onColumnFiltersChange={(updater) => {
+                  setColumnFilters(updater);
+                  setPage(1);
+                }}
+                manualFiltering={true}
+                loading={isLoading}
+                fetching={isFetching}
+                onBulkDelete={handleBulkDelete}
+                isDeleting={bulkDeleteMutation.isPending || deleteMutation.isPending}
+                pagination={{
+                  page,
+                  pageSize,
+                  total: data?.total ?? 0,
+                  totalPages: data?.pages ?? 1,
+                }}
+                onPageChange={setPage}
+                onPageSizeChange={setPageSize}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="hourly" className="mt-0">
+          <HourlyPricing />
+        </TabsContent>
+      </Tabs>
 
       <PricingModal
         open={modalOpen}

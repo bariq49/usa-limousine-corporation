@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { BookingDetailView } from "@usa-limousine-corporation/ui/bookings/booking-detail-view";
 import { BookingDetailSkeleton } from "@usa-limousine-corporation/ui/bookings/booking-detail-skeleton";
 import { Button } from "@usa-limousine-corporation/ui/components/button";
@@ -11,14 +12,26 @@ import PaymentNotFound from "./payment-not-found";
 
 export default function PaymentCancel() {
   const hasHydrated = useHasHydrated();
+  const searchParams = useSearchParams();
   const checkout = useBookingStore((s) => s.checkout);
   const setCheckout = useBookingStore((s) => s.setCheckout);
-  const { data: booking, isLoading, isError } = useCheckoutBooking(checkout?.orderId);
+  const orderId = checkout?.orderId ?? searchParams.get("orderId");
+  const { data: booking, isLoading, isError } = useCheckoutBooking(orderId);
 
   if (!hasHydrated || isLoading) return <BookingDetailSkeleton />;
-  if (!checkout || isError || !booking) return <PaymentNotFound />;
+  if (!orderId || isError || !booking) {
+    return (
+      <PaymentNotFound
+        title="Payment was cancelled"
+        description="No charges were made. Start a new booking when you are ready."
+        actionHref="/"
+        actionLabel="Start a new booking"
+      />
+    );
+  }
 
   const isPending = booking.status === "PENDING";
+  const paymentUrl = checkout?.url;
 
   return (
     <BookingDetailView
@@ -35,9 +48,9 @@ export default function PaymentCancel() {
       }
       actions={
         <>
-          {isPending ? (
+          {isPending && paymentUrl ? (
             <Button asChild className="h-10 bg-black px-4 text-white hover:bg-black/90">
-              <a href={checkout.url}>Complete Payment</a>
+              <a href={paymentUrl}>Complete Payment</a>
             </Button>
           ) : null}
           <Button asChild variant="outline" className="h-10 px-4">

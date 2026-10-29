@@ -36,12 +36,12 @@ export default function BookingStepLayout({ children, showMobileMap = true }: Pr
   return (
     <div className="flex min-h-screen w-full items-start justify-center max-xl:pb-2 xl:px-5 xl:pt-6 xl:pb-10">
       <div className="flex w-full flex-col items-start gap-4 xl:flex-row xl:gap-5">
-        <div className="flex w-full min-w-0 flex-1 flex-col items-start xl:flex-row xl:gap-5">
+        <div className="flex w-full min-w-0 flex-1 flex-col items-start max-xl:landscape:flex-row max-xl:landscape:items-stretch max-xl:landscape:gap-0 xl:flex-row xl:gap-5">
           {hasMap ? (
             <div
               className={cn(
-                "z-0 order-1 w-full shrink-0 max-xl:sticky max-xl:top-safe-header xl:sticky xl:top-24 xl:w-135 xl:min-w-130 xl:max-w-140 xl:self-start 2xl:w-170 2xl:min-w-160 2xl:max-w-180 3xl:w-215 3xl:min-w-200 3xl:max-w-215",
-                !showMobileMap && "max-xl:hidden",
+                "z-0 order-1 w-full shrink-0 max-xl:sticky max-xl:top-safe-header max-xl:landscape:w-1/2 max-xl:landscape:self-stretch xl:sticky xl:top-24 xl:w-135 xl:min-w-130 xl:max-w-140 xl:self-start 2xl:w-170 2xl:min-w-160 2xl:max-w-180 3xl:w-215 3xl:min-w-200 3xl:max-w-215",
+                !showMobileMap && "max-xl:hidden max-xl:landscape:block",
               )}
             >
               <AnimatedRouteMap
@@ -52,7 +52,7 @@ export default function BookingStepLayout({ children, showMobileMap = true }: Pr
                 travelDuration={step1?.travelDuration}
                 bottomInset={MOBILE_SHEET_OVERLAP}
                 wrapperClassName="h-full"
-                className="max-xl:rounded-none max-xl:border-0 max-xl:shadow-none xl:h-map-panel xl:min-h-130 xl:rounded-sm xl:border xl:border-border xl:shadow-sm"
+                className="max-xl:rounded-none max-xl:border-0 max-xl:shadow-none max-xl:landscape:h-full max-xl:landscape:min-h-dvh max-xl:landscape:rounded-none xl:h-map-panel xl:min-h-130 xl:rounded-sm xl:border xl:border-border xl:shadow-sm"
               />
             </div>
           ) : null}
@@ -61,8 +61,9 @@ export default function BookingStepLayout({ children, showMobileMap = true }: Pr
             className={cn(
               "relative z-10 order-2 flex w-full min-w-0 flex-1 flex-col bg-white md:rounded-sm md:px-1 md:py-2.5",
               hasMobileMap
-                ? "max-xl:-mt-10 max-xl:rounded-t-md max-xl:pt-2 max-xl:shadow-sheet"
+                ? "max-xl:-mt-10 max-xl:rounded-t-md max-xl:pt-2 max-xl:shadow-sheet max-xl:landscape:mt-0 max-xl:landscape:max-h-dvh max-xl:landscape:overflow-y-auto max-xl:landscape:rounded-none max-xl:landscape:shadow-none"
                 : "max-md:pt-3",
+              hasMap && "max-xl:landscape:w-1/2",
             )}
           >
             {hasMobileMap ? (

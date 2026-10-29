@@ -32,10 +32,8 @@ const TRIP_TYPE_LABELS: Record<BookingType, string> = {
 export const formatPrice = (amount: number) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
 
-const formatHours = (minutes: number) => {
-  const hours = Math.round((minutes / 60) * 10) / 10;
-  return `${hours} ${hours === 1 ? "hr" : "hrs"}`;
-};
+const formatHourlyDuration = (hours: number) =>
+  `${hours} ${hours === 1 ? "hr" : "hrs"}`;
 
 const icon = (name: IconName, size = 20) =>
   `<img src="${escapeHtml(emailAssetsUrl())}/${name}.png" width="${size}" height="${size}" alt="" style="display:block;border:0;outline:none;" />`;
@@ -70,7 +68,9 @@ export const routeCard = (booking: BookingEmail) => {
     isHourly
       ? routeStop(
           "Hourly Duration",
-          formatHours(booking.duration),
+          booking.hourlyDuration != null
+            ? formatHourlyDuration(booking.hourlyDuration)
+            : "—",
           "Dedicated chauffeur for your selected hours",
         )
       : routeStop("Drop-off Location", booking.dropoffAddress ?? "—"),

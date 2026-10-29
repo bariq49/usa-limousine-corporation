@@ -1,4 +1,4 @@
-import { bookingPricing, quoteLeg } from "../src/modules/platform-settings/utils/pricing";
+import { BookingPricingService } from "../src/modules/booking/services/booking-pricing.service";
 import type { PlatformRates } from "../src/modules/platform-settings/types/platform-settings";
 
 const rates: PlatformRates = {
@@ -23,9 +23,11 @@ const rates: PlatformRates = {
   cancellationRefundRate: 100,
 };
 
-describe("platform pricing", () => {
+const pricing = new BookingPricingService({} as never, {} as never, {} as never, {} as never);
+
+describe("BookingPricingService totals", () => {
   it("prices a leg: fees on the base, discount on the subtotal, then the airport fee", () => {
-    const leg = quoteLeg(100, rates.oneWayDiscountRate, rates, true);
+    const leg = pricing.quoteLeg(100, rates.oneWayDiscountRate, rates, true);
 
     expect(leg).toEqual({
       basePrice: 100,
@@ -42,12 +44,12 @@ describe("platform pricing", () => {
   });
 
   it("skips the airport fee away from airports", () => {
-    expect(quoteLeg(100, 0, rates, false).airportFeeAmount).toBe(0);
+    expect(pricing.quoteLeg(100, 0, rates, false).airportFeeAmount).toBe(0);
   });
 
   it("uses the one-way discount outbound and the return discount on the way back", () => {
-    const outbound = quoteLeg(100, rates.oneWayDiscountRate, rates, false);
-    const back = quoteLeg(100, rates.returnDiscountRate, rates, false);
+    const outbound = pricing.quoteLeg(100, rates.oneWayDiscountRate, rates, false);
+    const back = pricing.quoteLeg(100, rates.returnDiscountRate, rates, false);
 
     expect(outbound.total).toBe(117.9);
     expect(back.total).toBe(104.8);
@@ -55,7 +57,7 @@ describe("platform pricing", () => {
   });
 
   it("adds the chosen notification fees to the total", () => {
-    const pricing = bookingPricing({
+    const result = pricing.bookingPricing({
       basePrice: 100,
       rates,
       isAirport: false,
@@ -67,12 +69,12 @@ describe("platform pricing", () => {
       notificationsPrice: 1.49,
     });
 
-    expect(pricing.notificationsPrice).toBe(1.49);
-    expect(pricing.total).toBe(117.9 + 1.49);
+    expect(result.notificationsPrice).toBe(1.49);
+    expect(result.total).toBe(117.9 + 1.49);
   });
 
   it("adds stops, meet & greet per leg and extras to a return booking", () => {
-    const pricing = bookingPricing({
+    const result = pricing.bookingPricing({
       basePrice: 100,
       rates,
       isAirport: false,
@@ -83,16 +85,16 @@ describe("platform pricing", () => {
       extraServicesPrice: 15,
     });
 
-    expect(pricing.basePrice).toBe(200);
-    expect(pricing.discountPrice).toBe(39.3);
-    expect(pricing.stopsPrice).toBe(20);
-    expect(pricing.meetAndGreetPrice).toBe(50);
-    expect(pricing.total).toBe(117.9 + 104.8 + 20 + 50 + 15);
-    expect(pricing.rates.taxRate).toBe(8);
-    expect(pricing.legs?.oneWay).toEqual(
+    expect(result.basePrice).toBe(200);
+    expect(result.discountPrice).toBe(39.3);
+    expect(result.stopsPrice).toBe(20);
+    expect(result.meetAndGreetPrice).toBe(50);
+    expect(result.total).toBe(117.9 + 104.8 + 20 + 50 + 15);
+    expect(result.rates.taxRate).toBe(8);
+    expect(result.legs?.oneWay).toEqual(
       expect.objectContaining({ basePrice: 100, discountPrice: 13.1, total: 117.9 }),
     );
-    expect(pricing.legs?.returnTrip).toEqual(
+    expect(result.legs?.returnTrip).toEqual(
       expect.objectContaining({
         basePrice: 100,
         discountPrice: 26.2,
@@ -114,9 +116,9 @@ describe("platform pricing", () => {
       extraServicesPrice: 0,
     };
 
-    expect(bookingPricing(Object.assign({ isReturn: true }, input)).legs?.returnTrip.total).toBe(
-      209.6,
-    );
-    expect(bookingPricing(Object.assign({ isReturn: false }, input)).legs).toBeUndefined();
+    expect(
+      pricing.bookingPricing(Object.assign({ isReturn: true }, input)).legs?.returnTrip.total,
+    ).toBe(209.6);
+    expect(pricing.bookingPricing(Object.assign({ isReturn: false }, input)).legs).toBeUndefined();
   });
 });

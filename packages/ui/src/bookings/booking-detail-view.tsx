@@ -29,7 +29,7 @@ import { DetailItem } from "./detail-item";
 import { getLuggageIcon } from "./luggage-icon";
 import { calculateArrivalTime, formatDate, formatTime } from "../utils/date";
 import { formatDistance } from "../utils/distance";
-import { formatDuration } from "../utils/duration";
+import { formatDuration, formatHrs } from "../utils/duration";
 import type { Item } from "./types";
 import type { BookingDetailViewProps } from "../types/bookings";
 import {
@@ -80,8 +80,7 @@ export function BookingDetailView(props: BookingDetailViewProps) {
   const flight = booking.flightDetails;
   const title = `Booking Details - ${booking.bookingNumber}`;
   const pickupTime = booking.bookingTime?.pickupTime;
-  const travelMinutes =
-    booking.address?.travelDuration ?? (isHourly ? undefined : booking.address?.duration);
+  const travelMinutes = isHourly ? undefined : booking.address?.travelDuration ?? undefined;
   const arrivalTime =
     !isHourly && pickupTime && travelMinutes != null
       ? calculateArrivalTime({ time: pickupTime, durationMinutes: travelMinutes })
@@ -195,7 +194,13 @@ export function BookingDetailView(props: BookingDetailViewProps) {
                 dropoffLocation={booking.address?.dropoff?.address}
                 stops={(booking.address?.stops ?? []).map((stop) => stop.address)}
                 isHourly={isHourly}
-                durationLabel={formatDuration({ minutes: booking.address?.duration })}
+                durationLabel={
+                  isHourly && booking.address?.hourlyDuration != null
+                    ? formatHrs({ hours: booking.address.hourlyDuration })
+                    : booking.address?.travelDuration != null
+                      ? formatDuration({ minutes: booking.address.travelDuration })
+                      : undefined
+                }
                 pickupTime={pickupTime ? formatTime({ date: pickupTime }) : undefined}
                 dropoffTime={arrivalTime && arrivalTime !== "—" ? arrivalTime : undefined}
               />
@@ -226,9 +231,9 @@ export function BookingDetailView(props: BookingDetailViewProps) {
                   <DetailItem icon={preferenceIcon(Tag)}>
                     Trip Type: {BOOKING_TYPE_LABELS[booking.bookingType]}
                   </DetailItem>
-                  {isHourly && booking.address?.duration != null ? (
+                  {isHourly && booking.address?.hourlyDuration != null ? (
                     <DetailItem icon={preferenceIcon(CalendarClock)}>
-                      Hourly Duration: {formatDuration({ minutes: booking.address.duration })}
+                      Hourly Duration: {formatHrs({ hours: booking.address.hourlyDuration })}
                     </DetailItem>
                   ) : null}
                   {booking.address?.distance != null ? (

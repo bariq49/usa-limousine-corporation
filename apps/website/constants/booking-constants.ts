@@ -6,8 +6,6 @@ export const TRIP_TYPES = {
   HOURLY: 'hourly',
 } as const satisfies Record<string, TripType>
 
-export const HOURLY_DURATIONS = [2, 3, 4, 5, 6, 8, 10, 12]
-
 export const PASSENGER_TITLES = [
   { value: 'Mr.', label: 'Mr.' },
   { value: 'Mrs.', label: 'Mrs.' },

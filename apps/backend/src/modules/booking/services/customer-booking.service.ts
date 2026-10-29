@@ -1,0 +1,185 @@
+import { BadRequestException, Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { BookingStatus, BookingType, PaymentStatus } from "@prisma/client";
+import type { Request } from "express";
+import { auditLog } from "../../../common/utils/audit-log";
+import { allocateCode } from "../../../common/utils/allocate-sequence-code";
+import { wallClock } from "../../../common/utils/day-bounds";
+import { APP_TIMEZONE } from "../../../common/utils/format-time";
+import { roundAmount } from "../../../common/utils/money";
+import { requireUserId, toRequestContext } from "../../../common/utils/to-request-context";
+import { PrismaService } from "../../../infrastructure/database/prisma.service";
+import { SequenceService } from "../../../infrastructure/sequence/sequence.service";
+import { SquareService } from "../../../infrastructure/square/square.service";
+import { PlatformSettingsService } from "../../platform-settings/services/platform-settings.service";
+import type {
+  AnalyticsQueryDto,
+  CalendarQueryDto,
+  CancelDto,
+  CreateDto,
+  QueryDto,
+} from "../dto/booking.dto";
+import { BookingRepository } from "../repositories/booking.repository";
+import type { Analytics, CalendarEvent, TimeInput } from "../types/booking";
+import { BookingEmailService } from "./booking-email.service";
+import { NotificationService } from "./notification.service";
+import { BookingPricingService } from "./booking-pricing.service";
+import { BookingService } from "./booking.service";
+
+@Injectable()
+export class CustomerBookingService {
+  constructor(
+    @Inject(BookingRepository) private readonly bookingRepository: BookingRepository,
+    @Inject(SequenceService) private readonly sequenceService: SequenceService,
+    @Inject(PrismaService) private readonly prisma: PrismaService,
+    @Inject(NotificationService) private readonly notifications: NotificationService,
+    @Inject(PlatformSettingsService)
+    private readonly platformSettingsService: PlatformSettingsService,
+    @Inject(BookingPricingService) private readonly pricingService: BookingPricingService,
+    @Inject(BookingService) private readonly bookingService: BookingService,
+    @Inject(BookingEmailService) private readonly bookingEmails: BookingEmailService,
+    @Inject(SquareService) private readonly square: SquareService,
+  ) {}
+
+  async create(body: CreateDto, request: Request) {
+    const context = toRequestContext(request);
+    const userId = requireUserId(context);
+    const pricing = await this.pricingService.priceForCustomer(body);
+    const bookingNumber = await allocateCode({
+      prefix: "BK",
+      nextSequence: () => this.sequenceService.nextBooking(),
+    });
+    const created = await this.prisma.$transaction(async (tx) => {
+      const booking = await this.bookingRepository.create(
+        {
+          userId,
+          vehicleCategoryId: body.vehicleCategoryId,
+          bookingNumber,
+          bookingType: body.bookingType ?? BookingType.ONE_WAY,
+          vehicleCount: body.vehicleCount,
+          status: BookingStatus.PENDING,
+          pricing,
+          address: body.address,
+          passenger: body.passenger,
+          bookingTime: body.bookingTime,
+          flightDetails: body.flightDetails,
+          meetAndGreet: body.meetAndGreet,
+          extraServices: body.extraServices,
+          notes: body.notes ?? null,
+          returnNotes: body.returnNotes ?? null,
+          notifyByEmail: body.notifications?.email,
+          notifyBySms: body.notifications?.sms,
+          luggage: body.luggage ?? [],
+        },
+        tx,
+      );
+
+      const notifications = await this.notifications.stageCreated(
+        {
+          bookingId: booking.id,
+          bookingNumber: booking.bookingNumber,
+          excludeUserId: userId,
+        },
+        tx,
+      );
+
+      return { booking, notifications };
+    });
+    const booking = created.booking;
+    await this.notifications.deliverStaged(created.notifications);
+    void this.bookingEmails.sendCreated(booking.id);
+
+    await auditLog({
+      prisma: this.prisma,
+      event: "booking.created",
+      result: "success",
+      context,
+      userId,
+      metadata: {
+        bookingId: booking.id,
+        bookingNumber: booking.bookingNumber,
+        status: booking.status,
+      },
+    });
+
+    return (await this.bookingRepository.findOwnedByUser(booking.id, userId)) ?? booking;
+  }
+
+  list(query: QueryDto, request: Request) {
+    const userId = requireUserId(toRequestContext(request));
+    return this.bookingRepository.findMany(query, userId);
+  }
+
+  async getOne(id: string, request: Request) {
+    const userId = requireUserId(toRequestContext(request));
+    const booking = await this.bookingRepository.findOwnedByUser(id, userId);
+    if (!booking) {
+      throw new NotFoundException("Booking not found");
+    }
+    return booking;
+  }
+
+  calendar(query: CalendarQueryDto, request: Request): Promise<CalendarEvent[]> {
+    return this.bookingService.buildCalendar(query, requireUserId(toRequestContext(request)));
+  }
+
+  analytics(query: AnalyticsQueryDto, request: Request): Promise<Analytics> {
+    const userId = requireUserId(toRequestContext(request));
+    return this.bookingService.buildAnalytics(query.year ?? new Date().getUTCFullYear(), userId);
+  }
+
+  async cancel(id: string, body: CancelDto, request: Request) {
+    const booking = await this.getOne(id, request);
+    if (booking.status !== BookingStatus.PENDING && booking.status !== BookingStatus.CONFIRMED) {
+      throw new BadRequestException("This booking cannot be cancelled");
+    }
+
+    const rates = await this.platformSettingsService.get();
+    const time = booking.bookingTime as TimeInput;
+    const pickupAt = wallClock(APP_TIMEZONE, time.pickupDate, time.pickupTime);
+    if (pickupAt && pickupAt.getTime() - Date.now() < rates.cancellationMinutes * 60_000) {
+      const unit = rates.cancellationNoticeUnit === "HOUR" ? "hour" : "minute";
+      const plural = rates.cancellationNotice === 1 ? "" : "s";
+      throw new BadRequestException(
+        `Bookings can only be cancelled up to ${rates.cancellationNotice} ${unit}${plural} before pickup. Please contact us.`,
+      );
+    }
+
+    let refundAmount = 0;
+    const payment = await this.bookingRepository.findPaymentForRefund(id);
+    if (payment?.status === PaymentStatus.PAID && payment.squarePaymentId) {
+      refundAmount = roundAmount((payment.amount.toNumber() * rates.cancellationRefundRate) / 100);
+      if (refundAmount > 0) {
+        const refundId = await this.square.refundPayment(
+          payment.mode,
+          payment.squarePaymentId,
+          refundAmount,
+          `Booking ${booking.bookingNumber} cancelled by the customer`,
+        );
+        await this.bookingRepository.recordRefund(payment.id, refundAmount, refundId);
+      }
+    }
+
+    return this.bookingService.cancel({
+      id,
+      body,
+      request,
+      refundAmount,
+      byCustomer: true,
+    });
+  }
+
+  async complete(id: string, request: Request) {
+    const booking = await this.getOne(id, request);
+    if (booking.status !== BookingStatus.CONFIRMED) {
+      throw new BadRequestException("Only confirmed bookings can be completed");
+    }
+
+    const time = booking.bookingTime as TimeInput;
+    const pickupAt = wallClock(APP_TIMEZONE, time.pickupDate, time.pickupTime);
+    if (pickupAt && pickupAt.getTime() > Date.now()) {
+      throw new BadRequestException("You can mark the ride completed after the pickup time");
+    }
+
+    return this.bookingService.complete(id, request);
+  }
+}

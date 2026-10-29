@@ -10,7 +10,9 @@ import { MoveRight } from "@usa-limousine-corporation/ui/svg";
 import { cn } from "@usa-limousine-corporation/ui/utils/cn";
 import type { PageBannerProps } from "@/types/page-banner.types";
 
-export default function PageBanner(props: PageBannerProps) {
+type Props = PageBannerProps;
+
+export default function PageBanner(props: Props) {
   const {
     image,
     imageAlt = "Hero image",
@@ -185,7 +187,7 @@ export default function PageBanner(props: PageBannerProps) {
               </div>
 
               {showBookingForm && (
-                <div className="w-full">
+                <div className="w-full max-lg:landscape:max-h-[calc(100dvh-6rem)] max-lg:landscape:overflow-y-auto">
                   <Step1 />
                 </div>
               )}

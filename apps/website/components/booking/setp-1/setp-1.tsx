@@ -2,12 +2,24 @@
 
 import React from "react";
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
-import { Button } from "@usa-limousine-corporation/ui/components/button";
-import { Calendar, Clock, LocateFixed, Location, Spinner } from "@usa-limousine-corporation/ui/svg";
 import { useRouter } from "next/navigation";
-import { useBookingStore } from "@/store/use-booking-store";
-import { AddStopButton } from "./AddStopButton";
-import { StopItem } from "./StopItem";
+import toast from "react-hot-toast";
+import { Button } from "@usa-limousine-corporation/ui/components/button";
+import { Form } from "@usa-limousine-corporation/ui/components/form";
+import { Input } from "@usa-limousine-corporation/ui/components/input";
+import {
+  ArrowDownUp,
+  Calendar,
+  Clock,
+  Close,
+  LocateFixed,
+  Location,
+  Plus,
+  Spinner,
+} from "@usa-limousine-corporation/ui/svg";
+import { cn } from "@usa-limousine-corporation/ui/utils/cn";
+import { formatPrice } from "@usa-limousine-corporation/ui/utils/price";
+import { validateBookingTime } from "@usa-limousine-corporation/ui/utils/date";
 import {
   getCurrentLocationErrorMessage,
   getPickupLocation,
@@ -15,29 +27,29 @@ import {
   isGeolocationError,
   swapPickupAndDelivery,
 } from "@usa-limousine-corporation/ui/utils/location";
-import { validateBookingTime } from "@usa-limousine-corporation/ui/utils/date";
-import { formatHrs } from "@usa-limousine-corporation/ui/utils/duration";
+import { useBookingStore } from "@/store/use-booking-store";
 import { useHasHydrated } from "@/hooks/use-has-hydrated";
 import { useSettings } from "@/hooks/queries/use-settings";
 import { useCalculateRouteDistance } from "@/hooks/queries/use-calculate-distance";
-import { SwapButton } from "./SwapButton";
-import { TripTypeTabs } from "./TripTypeTabs";
-import { Form } from "@usa-limousine-corporation/ui/components/form";
-import { Input } from "@usa-limousine-corporation/ui/components/input";
-import toast from "react-hot-toast";
-import type { HeroFormValues } from "@/types/booking.types";
-import { HOURLY_DURATIONS, TRIP_TYPES } from "@/constants/booking-constants";
+import { useHourlyDurations } from "@/hooks/queries/use-hourly-durations";
 import { Step1FormSkeleton } from "@/components/skeletons/step-1-form-skeleton";
+import { TRIP_TYPES } from "@/constants/booking-constants";
+import type { HeroFormValues, TripType } from "@/types/booking.types";
+
+const TRIP_TABS = [
+  { value: TRIP_TYPES.ONE_WAY, label: "One Way" },
+  { value: TRIP_TYPES.HOURLY, label: "By the Hour" },
+] as const;
 
 function Step1() {
   const router = useRouter();
   const calculateRoute = useCalculateRouteDistance();
-  const [isSwapping, setIsSwapping] = React.useState(false);
-  const [isLocating, setIsLocating] = React.useState(false);
   const hasHydrated = useHasHydrated();
-
   const { setStep1Data, setBookingSettings, step1 } = useBookingStore();
   const { data: settings, isLoading: isSettingsLoading } = useSettings();
+
+  const [isSwapping, setIsSwapping] = React.useState(false);
+  const [isLocating, setIsLocating] = React.useState(false);
 
   const form = useForm<HeroFormValues>({
     defaultValues: {
@@ -47,23 +59,18 @@ function Step1() {
       stops: step1?.stops ?? [],
       pickupDate: step1?.pickupDate ?? "",
       pickupTime: step1?.pickupTime ?? "",
-      duration: step1?.duration,
+      hourlyDuration: step1?.hourlyDuration,
     },
   });
 
   const tripType = useWatch({ control: form.control, name: "tripType" });
   const isHourly = tripType === TRIP_TYPES.HOURLY;
-  const durationOptions = HOURLY_DURATIONS.map((hours) => ({
-    label: formatHrs({ hours }),
-    value: String(hours),
-  }));
-
-  const isFormLoading = !hasHydrated || isSettingsLoading;
-
+  const { data: durationOptions = [] } = useHourlyDurations(isHourly);
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "stops",
   });
+  const stopFeePerStop = settings?.stopFee || 0;
 
   const handleSwapLocations = () => {
     setIsSwapping(true);
@@ -103,63 +110,55 @@ function Step1() {
       });
   };
 
-  const onSubmit = async (data: HeroFormValues) => {
+  const onSubmit = async (values: HeroFormValues) => {
     try {
-      if (isHourly && !data.duration) {
-        toast.error("Please select how many hours you need");
-        return;
-      }
-
       const pickupValidation = validateBookingTime({
-        date: data.pickupDate,
-        time: data.pickupTime,
+        date: values.pickupDate,
+        time: values.pickupTime,
         minBookingMinutes: settings?.minBookingMinutes ?? 0,
       });
       if (!pickupValidation.isValid) {
         toast.error(
-            pickupValidation.isPast
+          pickupValidation.isPast
             ? "The pickup time has already passed. Please choose a later time."
             : `Booking can't be added within ${pickupValidation.timeDisplay} of pickup time, choose another time.`,
         );
         return;
       }
 
-      const pickupAddress = data.pickupAddress.trim();
-      const deliveryAddress = isHourly ? "" : data.deliveryAddress.trim();
-      const normalizedStops = data.stops
+      const pickupAddress = values.pickupAddress.trim();
+      const deliveryAddress = isHourly ? "" : values.deliveryAddress.trim();
+      const stops = values.stops
         .map((stop) => ({ address: stop.address.trim() }))
         .filter((stop) => stop.address.length > 0);
 
-      const addresses: string[] = [pickupAddress];
-      normalizedStops.forEach((stop) => {
-        if (stop.address) {
-          addresses.push(stop.address);
+      let distance: number | undefined;
+      let travelDuration: number | undefined;
+      if (!isHourly) {
+        const addresses = [
+          pickupAddress,
+          ...stops.map((stop) => stop.address),
+          ...(deliveryAddress ? [deliveryAddress] : []),
+        ];
+        if (addresses.length > 1) {
+          const route = await calculateRoute.mutateAsync(addresses);
+          distance = route.totalDistanceMiles;
+          travelDuration = route.totalDurationMinutes;
         }
-      });
-      if (deliveryAddress) {
-        addresses.push(deliveryAddress);
       }
-
-      let routeResult = null;
-      if (addresses.length > 1) {
-        routeResult = await calculateRoute.mutateAsync(addresses);
-      }
-
-      const isAirportSelected = isAirportPickupRequired({ pickupAddress, deliveryAddress });
 
       setStep1Data({
         tripType,
         pickupAddress,
         deliveryAddress,
-        stops: normalizedStops,
-        pickupDate: data.pickupDate,
-        pickupTime: data.pickupTime,
-        distance: routeResult?.totalDistanceMiles,
-        travelDuration: routeResult?.totalDurationMinutes,
-        duration: isHourly ? data.duration : undefined,
-        isAirportSelected,
+        stops,
+        pickupDate: values.pickupDate,
+        pickupTime: values.pickupTime,
+        distance,
+        travelDuration,
+        hourlyDuration: isHourly ? values.hourlyDuration : undefined,
+        isAirportSelected: isAirportPickupRequired({ pickupAddress, deliveryAddress }),
       });
-
       if (settings) {
         setBookingSettings(settings);
       }
@@ -169,7 +168,7 @@ function Step1() {
     }
   };
 
-  if (isFormLoading) {
+  if (!hasHydrated || isSettingsLoading) {
     return (
       <div className="flex flex-col w-full max-w-screen-sm mx-auto" id="booking">
         <Step1FormSkeleton />
@@ -184,18 +183,36 @@ function Step1() {
           onSubmit={form.handleSubmit(onSubmit)}
           className="relative z-10 flex flex-col items-stretch gap-4 rounded-t-md rounded-b-none bg-white p-5 shadow-none sm:p-6 md:rounded-md md:shadow-xl"
         >
-          <TripTypeTabs
-            value={tripType}
-            onChange={(value) => form.setValue("tripType", value)}
-            className="-mx-5 -mt-5 mb-1 rounded-t-md border-b border-border sm:-mx-6 sm:-mt-6 md:rounded-t-md"
-          />
+          <div
+            role="tablist"
+            className="-mx-5 -mt-5 mb-1 grid grid-cols-2 overflow-hidden rounded-t-md border-b border-border bg-white sm:-mx-6 sm:-mt-6 md:rounded-t-md"
+          >
+            {TRIP_TABS.map((tab) => {
+              const isActive = tripType === tab.value;
+              return (
+                <button
+                  key={tab.value}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  onClick={() => form.setValue("tripType", tab.value as TripType)}
+                  className={cn(
+                    "cursor-pointer py-3.5 text-sm font-bold uppercase tracking-wide transition-colors",
+                    isActive ? "bg-secondary text-white" : "text-black hover:bg-gray-50",
+                  )}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
 
-          <div className="relative mb-2 md:mb-0 space-y-4 flex-1">
-            <div className="absolute left-2 top-9 bottom-5 w-1 bg-border" />
+          <div className="relative mb-2 flex-1 space-y-4 md:mb-0">
+            <div className="absolute bottom-5 left-2 top-9 w-1 bg-border" />
 
             <div className="flex items-center gap-1">
-              <div className="w-5 h-5 rounded-full border-4 border-secondary bg-white z-10 flex-shrink-0" />
-              <div className="flex items-end gap-1 flex-1">
+              <div className="z-10 h-5 w-5 flex-shrink-0 rounded-full border-4 border-secondary bg-white" />
+              <div className="flex flex-1 items-end gap-1">
                 <Input
                   name="pickupAddress"
                   onUseCurrentLocation={handleUseCurrentLocation}
@@ -209,54 +226,103 @@ function Step1() {
                   type="button"
                   onClick={handleUseCurrentLocation}
                   disabled={isLocating || calculateRoute.isPending}
-                  className="h-12 w-12 sm:h-10 sm:w-10 2xl:h-12 2xl:w-12 inline-flex shrink-0 items-center justify-center rounded-md border border-default-300 cursor-pointer bg-white text-secondary hover:bg-gray-50 transition-colors disabled:opacity-50"
+                  className="inline-flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-md border border-default-300 bg-white text-secondary transition-colors hover:bg-gray-50 disabled:opacity-50 sm:h-10 sm:w-10 2xl:h-12 2xl:w-12"
                 >
                   {isLocating ? (
-                    <Spinner className="w-4 h-4 animate-spin" />
+                    <Spinner className="h-4 w-4 animate-spin" />
                   ) : (
-                    <LocateFixed className="w-5 h-5" />
+                    <LocateFixed className="h-5 w-5" />
                   )}
                 </button>
               </div>
             </div>
+
             {fields.map((field, index) => (
-              <StopItem
-                key={field.id}
-                index={index}
-                onRemove={remove}
-                stopFeePerStop={settings?.stopFee || 0}
-              />
+              <div key={field.id} className="flex items-center gap-1">
+                <div className="z-10 h-5 w-5 flex-shrink-0 rounded-full border-4 border-secondary bg-white" />
+                <div className="min-w-0 flex-1">
+                  <div className="relative">
+                    <Input
+                      name={`stops.${index}.address`}
+                      type="location"
+                      label={
+                        <>
+                          Stop {index + 1}
+                          {stopFeePerStop > 0 ? (
+                            <span className="ml-1 text-secondary">
+                              ({formatPrice({ price: stopFeePerStop })} extra)
+                            </span>
+                          ) : null}
+                        </>
+                      }
+                      placeholder="Enter Stop Location"
+                      className="flex-1"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => remove(index)}
+                      aria-label={`Remove stop ${index + 1}`}
+                      className="absolute -right-2 -top-2 z-20 flex h-5 w-5 cursor-pointer items-center justify-center rounded-full bg-secondary text-white"
+                    >
+                      <Close width={12} height={12} />
+                    </button>
+                  </div>
+                </div>
+              </div>
             ))}
 
-            <div className="relative flex items-center justify-between left-px">
-              <AddStopButton onAdd={() => append({ address: "" })} label="Add Stop" />
+            <div className="relative left-px flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => append({ address: "" })}
+                className="group inline-flex cursor-pointer items-center gap-2 py-1 transition-all"
+                aria-label="Add a stop to your journey"
+              >
+                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-secondary text-white shadow-sm transition-transform group-hover:scale-110">
+                  <Plus className="h-3.5 w-3.5 stroke-3" />
+                </div>
+                <span className="text-sm font-bold uppercase tracking-wide text-secondary transition-transform group-hover:translate-x-1">
+                  Add Stop
+                </span>
+              </button>
               {!isHourly ? (
-                <SwapButton
-                  onSwap={handleSwapLocations}
-                  isSwapping={isSwapping}
-                  className="self-center"
-                />
+                <button
+                  type="button"
+                  onClick={handleSwapLocations}
+                  className="cursor-pointer self-center rounded p-1 transition-all duration-300 focus-visible:outline-secondary"
+                  aria-label="Swap locations"
+                >
+                  <ArrowDownUp
+                    className={cn(
+                      "h-5 w-5 text-secondary transition-transform duration-300",
+                      isSwapping && "rotate-180",
+                    )}
+                  />
+                </button>
               ) : null}
             </div>
 
             <div className="flex items-center gap-1">
               {isHourly ? (
                 <>
-                  <Clock className="w-5 h-5 text-secondary z-10 flex-shrink-0" />
+                  <Clock className="z-10 h-5 w-5 flex-shrink-0 text-secondary" />
                   <Input
-                    name="duration"
+                    name="hourlyDuration"
                     type="select"
-                    label="Duration"
-                    placeholder="Select Hours"
+                    label="Hourly Duration"
+                    placeholder={
+                      durationOptions.length ? "Select Hours" : "No hourly options available"
+                    }
                     options={durationOptions}
                     valueAsNumber
                     className="flex-1"
                     required
+                    disabled={!durationOptions.length}
                   />
                 </>
               ) : (
                 <>
-                  <Location className="w-5 h-5 text-secondary z-10 flex-shrink-0" />
+                  <Location className="z-10 h-5 w-5 flex-shrink-0 text-secondary" />
                   <Input
                     name="deliveryAddress"
                     type="location"
@@ -268,29 +334,40 @@ function Step1() {
                 </>
               )}
             </div>
+
+            {isHourly && durationOptions.length === 0 ? (
+              <p className="pl-6 text-sm text-destructive">
+                Hourly hire is not available right now. Please choose one-way or try again later.
+              </p>
+            ) : null}
           </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <Input
-                name="pickupDate"
-                type="date"
-                label="Pickup Date"
-                placeholder="Select Pickup Date"
-                icon={<Calendar width={16} height={16} className="text-gray-400" />}
-                disablePast
-                required
-              />
-              <Input
-                name="pickupTime"
-                type="time"
-                label="Pickup Time"
-                placeholder="Select Pickup Time"
-                icon={<Clock width={16} height={16} className="text-gray-400" />}
-                required
-              />
-            </div>
+          <div className="grid grid-cols-2 gap-3">
+            <Input
+              name="pickupDate"
+              type="date"
+              label="Pickup Date"
+              placeholder="Select Pickup Date"
+              icon={<Calendar width={16} height={16} className="text-gray-400" />}
+              disablePast
+              required
+            />
+            <Input
+              name="pickupTime"
+              type="time"
+              label="Pickup Time"
+              placeholder="Select Pickup Time"
+              icon={<Clock width={16} height={16} className="text-gray-400" />}
+              required
+            />
+          </div>
 
-          <Button type="submit" className="bg-secondary text-white hover:bg-secondary-600" isLoading={calculateRoute.isPending}>
+          <Button
+            type="submit"
+            className="bg-secondary text-white hover:bg-secondary-600"
+            isLoading={calculateRoute.isPending}
+            disabled={isHourly && durationOptions.length === 0}
+          >
             Find Ride
           </Button>
         </form>

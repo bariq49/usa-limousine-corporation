@@ -28,7 +28,7 @@ export function buildBookingPayload(
       },
       stops: [],
       distance: 18.5,
-      duration: 32,
+      travelDuration: 32,
     },
     passenger: {
       passengerCount: 2,

@@ -187,7 +187,7 @@ export function PricingModal({ open, onOpenChange, initialData, onSuccess }: Pri
                 step="0.01"
                 min="0"
               />
-              {pricingType === "PER_UNIT" && (
+              {pricingType === "PER_UNIT" ? (
                 <Input
                   name="perUnitRate"
                   label={`Per ${APP_DISTANCE_UNIT} (${APP_CURRENCY})`}
@@ -195,11 +195,13 @@ export function PricingModal({ open, onOpenChange, initialData, onSuccess }: Pri
                   step="0.01"
                   min="0"
                 />
-              )}
+              ) : null}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input name="percentageRate" label="Increase %" type="number" step="0.1" min="0" />
+              {pricingType === "PERCENTAGE" ? (
+                <Input name="percentageRate" label="Increase %" type="number" step="0.1" min="0" />
+              ) : null}
               <Input name="status" label="Status" type="select" options={statusOptions} />
             </div>
 

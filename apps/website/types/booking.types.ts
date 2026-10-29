@@ -36,7 +36,7 @@ export interface BookingStep1PersistedData {
     pickupTime: string;
     distance?: number;
     travelDuration?: number;
-    duration?: number;
+    hourlyDuration?: number;
     isAirportSelected?: boolean;
 }
 
@@ -89,7 +89,7 @@ export interface Step1FormValues {
     stops: { address: string }[];
     pickupDate: string;
     pickupTime: string;
-    duration?: number;
+    hourlyDuration?: number;
 }
 
 export type HeroFormValues = Step1FormValues;
@@ -124,6 +124,7 @@ export interface QuoteRequest {
     vehicleCategoryId?: string | undefined;
     vehicleCount?: number;
     bookingType: BookingType;
+    hourlyDuration?: number;
     address: BookingDraft["address"];
     bookingTime: BookingDraft["bookingTime"];
     meetAndGreet?: BookingDraft["meetAndGreet"];
@@ -136,13 +137,13 @@ export interface BookingDraft {
     vehicleCategoryId: string;
     vehicleCount: number;
     bookingType: BookingType;
+    hourlyDuration?: number;
     address: {
         pickup: { address: string };
         dropoff?: { address: string };
         stops?: { address: string }[];
         distance: number;
-        duration: number;
-        travelDuration?: number;
+        travelDuration: number;
     };
     passenger: {
         passengerCount: number;

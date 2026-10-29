@@ -13,8 +13,8 @@ export type Address = {
   dropoff?: Location | undefined;
   stops?: Location[] | undefined;
   distance?: number | undefined;
-  duration?: number | undefined;
   travelDuration?: number | null | undefined;
+  hourlyDuration?: number | null | undefined;
 };
 
 export type Passenger = {
@@ -194,7 +194,7 @@ export type CreateInput = {
   vehicleCategoryId: string;
   vehicleCount?: number | undefined;
   bookingType?: BookingType | undefined;
-  address: Address & { distance: number; duration: number };
+  address: Address & { distance: number; travelDuration: number };
   passenger: Passenger & { passengerCount: number; phone: string; email: string };
   bookingTime: BookingTime;
   flightDetails?: FlightDetails | undefined;
