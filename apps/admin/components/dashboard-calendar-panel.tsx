@@ -1,7 +1,5 @@
 "use client";
 
-import { APP_TIMEZONE } from "@usa-limousine-corporation/ui/constants";
-import { formatInTimeZone } from "date-fns-tz";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Button } from "@usa-limousine-corporation/ui/components/button";
@@ -19,11 +17,12 @@ const toDateKey = (date: Date) =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 
 export function DashboardCalendarPanel() {
-  const [displayMonth, setDisplayMonth] = useState(
-    () => new Date(`${formatInTimeZone(new Date(), APP_TIMEZONE, "yyyy-MM")}-01T00:00:00`),
-  );
+  const [displayMonth, setDisplayMonth] = useState(() => {
+    const key = formatDate({ date: new Date(), as: "value" }).slice(0, 7);
+    return new Date(`${key}-01T00:00:00`);
+  });
   const [selectedDate, setSelectedDate] = useState(
-    () => new Date(`${formatInTimeZone(new Date(), APP_TIMEZONE, "yyyy-MM-dd")}T00:00:00`),
+    () => new Date(`${formatDate({ date: new Date(), as: "value" })}T00:00:00`),
   );
 
   const query = useMemo(

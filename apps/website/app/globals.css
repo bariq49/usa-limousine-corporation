@@ -1,4 +1,9 @@
 @import "tailwindcss";
+@import "@usa-limousine-corporation/ui/rich-content.css";
+@import "swiper/css";
+@import "swiper/css/navigation";
+@import "swiper/css/pagination";
+@import "@usa-limousine-corporation/ui/slider.css";
 
 /* Shared UI package components (forms, icons) */
 @source "../../../packages/ui/src";

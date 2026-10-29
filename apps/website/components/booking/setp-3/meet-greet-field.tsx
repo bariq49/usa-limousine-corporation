@@ -4,9 +4,9 @@ import { useEffect } from "react";
 import { User } from "@usa-limousine-corporation/ui/svg";
 import { useFormContext, useWatch } from "react-hook-form";
 import { Input } from "@usa-limousine-corporation/ui/components/input";
-import { formatPrice } from "@/lib/utils";
 import { useSettings } from "@/hooks/queries/use-settings";
 import type { Step3FormValues } from "@/types/booking.types";
+import { formatPrice } from "@usa-limousine-corporation/ui/utils/price";
 
 type Props = {
   enabledField?: "meetGreetEnabled" | "returnMeetGreetEnabled";
@@ -55,7 +55,7 @@ export const MeetGreetField = (props: Props = {}) => {
               {label}
             </span>
             <span className="text-sm font-medium text-secondary">
-              ({formatPrice(meetGreetFee)})
+              ({formatPrice({ price: meetGreetFee })})
             </span>
           </span>
         }

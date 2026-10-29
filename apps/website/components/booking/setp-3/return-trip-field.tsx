@@ -3,16 +3,17 @@
 import { ArrowLeftRight, ArrowRight, Plane } from "@usa-limousine-corporation/ui/svg";
 import { useState } from "react";
 import { useFormContext } from "react-hook-form";
-import { format, isValid, parseISO } from "date-fns";
+import { formatDate, formatTime } from "@usa-limousine-corporation/ui/utils/date";
 import { useTimeFormat } from "@usa-limousine-corporation/ui/store/time-format";
 import { Button } from "@usa-limousine-corporation/ui/components/button";
 import { MeetGreetField } from "./meet-greet-field";
 import { TripExtrasFields } from "./trip-extras-fields";
 import { Input } from "@usa-limousine-corporation/ui/components/input";
 import { useBookingStore } from "@/store/use-booking-store";
-import { cn, formatPrice, formatTime } from "@/lib/utils";
+import { cn } from "@usa-limousine-corporation/ui/utils/cn";
 import { ReturnTripModal } from "../modals/return-trip-modal";
 import type { Step3FormValues } from "@/types/booking.types";
+import { formatPrice } from "@usa-limousine-corporation/ui/utils/price";
 
 export const ReturnTripField = () => {
   const { setValue } = useFormContext<Step3FormValues>();
@@ -23,7 +24,12 @@ export const ReturnTripField = () => {
   const returnEnabled = Boolean(returnTrip);
   const returnTotalPrice = quote?.pricing.legs?.returnTrip.total;
   const showReturnAirport = Boolean(step1?.isAirportSelected);
-  const returnDate = returnTrip ? parseISO(returnTrip.returnDate) : null;
+  const formattedReturnDate = returnTrip
+    ? formatDate({
+        date: returnTrip.returnDate,
+        options: { weekday: "short", day: "numeric", month: "short", year: "numeric" },
+      })
+    : "—";
 
   const pickupAddress = step1?.pickupAddress?.trim() || "";
   const deliveryAddress = step1?.deliveryAddress?.trim() || "";
@@ -61,13 +67,13 @@ export const ReturnTripField = () => {
 
       <div className="flex items-center justify-between gap-3 border-t border-border px-4 py-3">
         <div className="min-w-0">
-          {returnTrip && returnDate && isValid(returnDate) ? (
+          {returnTrip && formattedReturnDate !== "—" ? (
             <>
               <p className="text-xs text-gray-500">
-                {format(returnDate, "EEE d MMM yyyy")} · {formatTime(returnTrip.returnTime, hourCycle)}
+                {formattedReturnDate} · {formatTime({ date: returnTrip.returnTime, hourCycle })}
               </p>
               <p className="text-xl font-bold text-secondary sm:text-2xl">
-                {returnTotalPrice === undefined ? "—" : formatPrice(returnTotalPrice)}
+                {returnTotalPrice === undefined ? "—" : formatPrice({ price: returnTotalPrice })}
               </p>
             </>
           ) : (

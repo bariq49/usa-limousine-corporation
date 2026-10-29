@@ -1,7 +1,5 @@
 "use client";
 
-import { APP_TIMEZONE } from "@usa-limousine-corporation/ui/constants";
-import { formatInTimeZone } from "date-fns-tz";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMemo, useState, type ReactNode } from "react";
@@ -216,7 +214,7 @@ export default function DriverDetailPage() {
             title="Driver Stats"
             description={`${data?.totalRides ?? 0} rides · ${driver._count.assignments} assigned all time`}
             stats={overview}
-            year={Number(formatInTimeZone(new Date(), APP_TIMEZONE, "yyyy"))}
+            year={Number(formatDate({ date: new Date(), options: { year: "numeric" } }))}
             categories={data?.labels ?? []}
             chartDescription={selectedPeriod?.description}
             isLoading={stats.isLoading}

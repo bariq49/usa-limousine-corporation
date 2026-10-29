@@ -18,6 +18,10 @@ const API_ROUTES = {
   CUSTOMERS: "/admin/customers",
   DRIVERS: "/admin/drivers",
   DASHBOARD: "/admin/dashboard",
+  BLOGS: "/admin/blogs",
+  BLOG_CATEGORIES: "/admin/blog-categories",
+  BLOG_TAGS: "/admin/blog-tags",
+  BLOG_COMMENTS: "/admin/blog-comments",
   PLATFORM_SETTINGS: "/admin/settings/platform",
   NOTIFICATIONS: "/notifications",
 } as const;

@@ -1,32 +1,22 @@
 "use client";
 
-import { APP_TIMEZONE } from "../constants/index";
-import { formatInTimeZone } from "date-fns-tz";
 import { ChevronLeft, ChevronRight } from "../svg";
 import { cn } from "../utils/cn";
+import { formatDate } from "../utils/date";
+import type { MiniMonthCalendarProps } from "../types/bookings";
 
-type Props = {
-  month: Date;
-  selected: Date;
-  onMonthChange: (date: Date) => void;
-  onSelect: (date: Date) => void;
-};
 
 const WEEKDAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
-function isSameDay(a: Date, b: Date) {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-  );
+function toDateKey(date: Date) {
+  return formatDate({ date, as: "value" });
 }
 
-/** Six weeks of days covering `month`, starting on Sunday. */
 function monthGrid(month: Date): Date[] {
   const first = new Date(month.getFullYear(), month.getMonth(), 1);
   const start = new Date(first);
   start.setDate(first.getDate() - first.getDay());
+
   return Array.from({ length: 42 }, (_, index) => {
     const day = new Date(start);
     day.setDate(start.getDate() + index);
@@ -34,11 +24,14 @@ function monthGrid(month: Date): Date[] {
   });
 }
 
-/** Small month picker used to jump the booking calendar to a date. */
-export function MiniMonthCalendar({ month, selected, onMonthChange, onSelect }: Props) {
-  const today = new Date(`${formatInTimeZone(new Date(), APP_TIMEZONE, "yyyy-MM-dd")}T00:00:00`);
-  const shiftMonth = (amount: number) =>
+export function MiniMonthCalendar(props: MiniMonthCalendarProps) {
+  const { month, selected, onMonthChange, onSelect } = props;
+  const todayKey = formatDate({ date: new Date(), as: "value" });
+  const selectedKey = toDateKey(selected);
+
+  const shiftMonth = (amount: number) => {
     onMonthChange(new Date(month.getFullYear(), month.getMonth() + amount, 1));
+  };
 
   return (
     <div className="w-full">
@@ -75,17 +68,19 @@ export function MiniMonthCalendar({ month, selected, onMonthChange, onSelect }: 
         ))}
 
         {monthGrid(month).map((day) => {
+          const key = toDateKey(day);
           const inMonth = day.getMonth() === month.getMonth();
-          const active = isSameDay(day, selected);
-          const isToday = isSameDay(day, today);
+          const active = key === selectedKey;
+          const isToday = key === todayKey;
 
           return (
             <button
-              key={day.toISOString()}
+              key={key}
               type="button"
+              aria-pressed={active}
               onClick={() => onSelect(day)}
               className={cn(
-                "flex h-9 cursor-pointer items-center justify-center rounded-md text-sm font-medium",
+                "flex h-9 cursor-pointer items-center justify-center rounded-md text-sm font-medium transition-colors",
                 !inMonth && "text-default-300",
                 inMonth && !active && "text-default-700 hover:bg-primary/10",
                 isToday && !active && "bg-default-100 font-semibold",

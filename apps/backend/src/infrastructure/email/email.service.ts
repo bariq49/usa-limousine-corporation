@@ -3,11 +3,10 @@ import { ConfigService } from "@nestjs/config";
 import { AppLogger } from "../../common/logger/app.logger";
 import { getEmailConfig } from "./email.config";
 import { NodemailerEmailProvider } from "./providers/nodemailer.provider";
-import { passwordReset } from "./templates/password-reset";
-import { verification } from "./templates/verification";
+import { passwordReset } from "./templates/auth/password-reset";
+import { verification } from "./templates/auth/verification";
+import type { PasswordReset, Verification } from "./types/auth";
 import type { SendMailOptions } from "./types/mail";
-import type { PasswordReset } from "./types/password-reset";
-import type { Verification } from "./types/verification";
 import { PLATFORM } from "@usa-limousine-corporation/config";
 
 @Injectable()

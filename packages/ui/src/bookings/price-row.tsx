@@ -1,17 +1,9 @@
 "use client";
 
 import { formatPrice } from "../utils/price";
+import type { PriceRowProps } from "../types/price-row";
 
-type Props = {
-  label: string;
-  value: number;
-  destructive?: boolean;
-  /** Formats the amount; defaults to the shared price format. */
-  format?: (value: number) => string;
-};
-
-/** One line of a price breakdown; hidden when the amount is zero. */
-export function PriceRow(props: Props) {
+export function PriceRow(props: PriceRowProps) {
   const { label, value, destructive, format = (amount) => formatPrice({ price: amount }) } = props;
 
   if (!value) return null;

@@ -1,7 +1,8 @@
 "use client";
 
 import { loadGoogleMaps } from "@usa-limousine-corporation/ui/bookings/google-maps-loader";
-import { PLATFORM } from "@usa-limousine-corporation/config";
+import { formatDistance } from "@usa-limousine-corporation/ui/utils/distance";
+import { formatDuration } from "@usa-limousine-corporation/ui/utils/duration";
 
 const METERS_PER_MILE = 1609.344;
 
@@ -24,19 +25,6 @@ export interface TotalDistanceResult {
 
 function milesToKm(miles: number): number {
     return miles / 0.621371;
-}
-
-function formatDistanceLabel(value: number): string {
-    return `${value.toFixed(1)} ${PLATFORM.locale.distanceUnitShort}`;
-}
-
-function formatDuration(minutes: number): string {
-    if (minutes < 60) {
-        return `${Math.round(minutes)} mins`;
-    }
-    const hrs = Math.floor(minutes / 60);
-    const mins = Math.round(minutes % 60);
-    return mins > 0 ? `${hrs} hr ${mins} mins` : `${hrs} hr`;
 }
 
 export async function calculateDistance(
@@ -84,9 +72,9 @@ export async function calculateDistance(
                 resolve({
                     distanceMiles: Math.round(distanceMiles * 10) / 10,
                     distanceKm: Math.round(distanceKm * 10) / 10,
-                    distanceText: formatDistanceLabel(distanceMiles),
+                    distanceText: formatDistance({ distance: distanceMiles }),
                     durationMinutes: Math.round(durationMinutes),
-                    durationText: formatDuration(durationMinutes),
+                    durationText: formatDuration({ minutes: durationMinutes }),
                 });
             }
         );
@@ -118,9 +106,9 @@ export async function calculateTotalDistance(
     return {
         totalDistanceMiles: Math.round(totalDistanceMiles * 10) / 10,
         totalDistanceKm: Math.round(totalDistanceKm * 10) / 10,
-        totalDistanceText: formatDistanceLabel(totalDistanceMiles),
+        totalDistanceText: formatDistance({ distance: totalDistanceMiles }),
         totalDurationMinutes: Math.round(totalDurationMinutes),
-        totalDurationText: formatDuration(totalDurationMinutes),
+        totalDurationText: formatDuration({ minutes: totalDurationMinutes }),
         legs,
     };
 }

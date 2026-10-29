@@ -1,13 +1,11 @@
 import { BookingType } from "@prisma/client";
-import {
-  bookingCancelled,
-  bookingCancelledAdmin,
-  bookingCompleted,
-  bookingConfirmed,
-  bookingReceived,
-  newBookingAdmin,
-} from "../src/infrastructure/email/templates/booking/templates";
-import type { BookingEmail, EmailContext } from "../src/infrastructure/email/templates/booking/types";
+import { bookingCancelled } from "../src/infrastructure/email/templates/booking/cancelled";
+
+import { bookingCompleted } from "../src/infrastructure/email/templates/booking/completed";
+import { bookingConfirmed } from "../src/infrastructure/email/templates/booking/confirmed";
+import { bookingReceived } from "../src/infrastructure/email/templates/booking/received";
+
+import type { BookingEmail } from "../src/infrastructure/email/types/booking";
 
 const booking: BookingEmail = {
   id: "book-1",
@@ -47,15 +45,12 @@ const booking: BookingEmail = {
   },
 };
 
-const context: EmailContext = {
-  siteUrl: "https://demo.usalimocorp.com",
-  assetsUrl: "https://res.cloudinary.com/cloud/image/upload/usa-limousine/email",
-  reviewUrl: "https://g.page/r/example/review",
-};
+const siteUrl = "https://demo.usalimocorp.com";
+const reviewUrl = "https://g.page/r/example/review";
 
 describe("booking email templates", () => {
   it("renders the full booking summary", () => {
-    const html = bookingReceived(booking, context);
+    const html = bookingReceived({ booking, siteUrl });
 
     expect(html).toContain("BK-1001");
     expect(html).toContain("Sedan × 2");
@@ -83,7 +78,7 @@ describe("booking email templates", () => {
   });
 
   it("confirms paid bookings", () => {
-    const html = bookingConfirmed(booking, context, true);
+    const html = bookingConfirmed({ booking, siteUrl, paid: true });
 
     expect(html).toContain("Booking Confirmed");
     expect(html).toContain("We have received your payment");
@@ -101,10 +96,12 @@ describe("booking email templates", () => {
       meetAndGreetPrice: 25,
       total: 112.5,
     };
-    const html = bookingConfirmed(
-      Object.assign({}, booking, {
+    const html = bookingConfirmed({
+      booking: {
+        ...booking,
         extras: [{ name: "Baby Seat", quantity: 1, returnQuantity: 2, unitPrice: 10 }],
-        pricing: Object.assign({}, booking.pricing, {
+        pricing: {
+          ...booking.pricing,
           legs: { oneWay: leg, returnTrip: leg },
           rates: {
             fuelSurchargeRate: 0,
@@ -114,10 +111,10 @@ describe("booking email templates", () => {
             oneWayDiscountRate: 2,
             returnDiscountRate: 3,
           },
-        }),
-      }),
-      context,
-    );
+        },
+      },
+      siteUrl,
+    });
 
     expect(html).toContain("Return Base Price");
     expect(html).toContain("Return Gratuity (10%)");
@@ -129,27 +126,27 @@ describe("booking email templates", () => {
   });
 
   it("escapes customer-entered text", () => {
-    const html = bookingReceived(booking, context);
+    const html = bookingReceived({ booking, siteUrl });
 
     expect(html).toContain("Mr. &lt;Ada&gt; Lovelace");
     expect(html).not.toContain("<Ada>");
   });
 
   it("renders every lifecycle email", () => {
-    expect(newBookingAdmin(booking, context)).toContain("New booking request");
-    expect(bookingConfirmed(booking, context)).toContain("Your booking is confirmed");
-    expect(bookingCancelled(booking, context, "Flight cancelled", 0)).toContain(
-      "Reason: Flight cancelled",
-    );
-    expect(bookingCancelled(booking, context, null, 55.5)).toContain(
-      "A refund of $55.50 has been issued",
-    );
-    expect(bookingCancelledAdmin(booking, context, null, 55.5)).toContain(
-      "$55.50 was refunded to the customer",
-    );
-    expect(bookingCompleted(booking, context)).toContain("Leave a Google review");
+    expect(bookingConfirmed({ booking, siteUrl, admin: true })).toContain("New booking request");
+    expect(bookingConfirmed({ booking, siteUrl })).toContain("Your booking is confirmed");
+
     expect(
-      bookingCompleted(booking, { siteUrl: context.siteUrl, assetsUrl: context.assetsUrl }),
-    ).not.toContain("Leave a Google review");
+      bookingCancelled({ booking, siteUrl, reason: "Flight cancelled", refundAmount: 0 }),
+    ).toContain("Reason: Flight cancelled");
+    expect(
+      bookingCancelled({ booking, siteUrl, reason: null, refundAmount: 55.5 }),
+    ).toContain("A refund of $55.50 has been issued");
+    expect(
+      bookingCancelled({ booking, siteUrl, reason: null, refundAmount: 55.5, admin: true }),
+    ).toContain("$55.50 was refunded to the customer");
+
+    expect(bookingCompleted({ booking, siteUrl, reviewUrl })).toContain("Leave a Google review");
+    expect(bookingCompleted({ booking, siteUrl })).not.toContain("Leave a Google review");
   });
 });

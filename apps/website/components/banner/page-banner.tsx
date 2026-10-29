@@ -7,7 +7,7 @@ import Link from "next/link";
 import { Button } from "@usa-limousine-corporation/ui/components/button";
 import Step1 from "@/components/booking/setp-1/setp-1";
 import { MoveRight } from "@usa-limousine-corporation/ui/svg";
-import { cn } from "@/lib/utils";
+import { cn } from "@usa-limousine-corporation/ui/utils/cn";
 import type { PageBannerProps } from "@/types/page-banner.types";
 
 export default function PageBanner(props: PageBannerProps) {

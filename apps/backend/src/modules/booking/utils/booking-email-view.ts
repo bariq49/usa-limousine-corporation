@@ -6,7 +6,7 @@ import type {
   PassengerInput,
   TimeInput,
 } from "../types/booking";
-import type { BookingEmail } from "../../../infrastructure/email/templates/booking/types";
+import type { BookingEmail } from "../../../infrastructure/email/types/booking";
 
 type BookingRow = NonNullable<Awaited<ReturnType<BookingRepository["findById"]>>>;
 

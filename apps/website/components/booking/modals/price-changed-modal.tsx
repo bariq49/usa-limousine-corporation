@@ -3,7 +3,7 @@
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@usa-limousine-corporation/ui/components/button";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice } from "@usa-limousine-corporation/ui/utils/price";
 
 const SHEET_EASE = [0.32, 0.72, 0, 1] as const;
 
@@ -47,10 +47,10 @@ export function PriceChangedModal({ change, onClose, onConfirm, isConfirming }: 
 
                 <div className="mt-4 flex items-center justify-between rounded-sm bg-gray-50 px-4 py-3">
                   <span className="text-sm text-gray-400 line-through">
-                    {formatPrice(change.previousTotal)}
+                    {formatPrice({ price: change.previousTotal })}
                   </span>
                   <span className="text-xl font-semibold text-black">
-                    {formatPrice(change.total)}
+                    {formatPrice({ price: change.total })}
                   </span>
                 </div>
 
@@ -68,7 +68,7 @@ export function PriceChangedModal({ change, onClose, onConfirm, isConfirming }: 
                     isLoading={isConfirming}
                     className="h-11 flex-1 rounded-sm bg-black font-semibold text-white hover:bg-black/90"
                   >
-                    Book at {formatPrice(change.total)}
+                    Book at {formatPrice({ price: change.total })}
                   </Button>
                 </div>
               </motion.div>

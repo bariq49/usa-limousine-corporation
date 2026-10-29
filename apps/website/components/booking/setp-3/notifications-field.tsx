@@ -4,8 +4,9 @@ import { useEffect } from "react";
 import { useFormContext } from "react-hook-form";
 import { Input } from "@usa-limousine-corporation/ui/components/input";
 import { useSettings } from "@/hooks/queries/use-settings";
-import { cn, formatPrice } from "@/lib/utils";
+import { cn } from "@usa-limousine-corporation/ui/utils/cn";
 import type { Step3FormValues } from "@/types/booking.types";
+import { formatPrice } from "@usa-limousine-corporation/ui/utils/price";
 
 const CHANNELS = [
   {
@@ -61,7 +62,7 @@ export const NotificationsField = () => {
                     : "bg-success/10 text-success",
                 )}
               >
-                {fee > 0 ? `+ ${formatPrice(fee)}` : "Free"}
+                {fee > 0 ? `+ ${formatPrice({ price: fee })}` : "Free"}
               </span>
             </div>
           );

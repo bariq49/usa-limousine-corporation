@@ -20,7 +20,7 @@ const shiftDays = (date: Date, days: number) =>
 const dayLabel = (date: Date) => `${MONTHS[date.getUTCMonth()]} ${date.getUTCDate()}`;
 
 export function periodBuckets(period: StatsPeriod): StatsBucket[] {
-  const today = new Date(`${formatDate()}T00:00:00Z`);
+  const today = new Date(`${formatDate({ as: "value" })}T00:00:00Z`);
   const year = today.getUTCFullYear();
 
   if (period === "daily") {

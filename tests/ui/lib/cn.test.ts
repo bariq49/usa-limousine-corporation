@@ -12,4 +12,12 @@ describe("isLocationMatch", () => {
     expect(isLocationMatch("/profile", "/profile/settings")).toBe(true);
     expect(isLocationMatch("/dashboard", "/profile")).toBe(false);
   });
+
+  it("prefers the longest matching sibling href", () => {
+    const siblings = ["/blogs", "/blogs/create", "/blogs/drafts", "/blogs/scheduled"];
+    expect(isLocationMatch("/blogs", "/blogs/scheduled", siblings)).toBe(false);
+    expect(isLocationMatch("/blogs/scheduled", "/blogs/scheduled", siblings)).toBe(true);
+    expect(isLocationMatch("/blogs", "/blogs/abc/edit", siblings)).toBe(true);
+  });
 });
+

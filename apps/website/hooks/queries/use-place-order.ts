@@ -4,8 +4,8 @@ import type { BookingDraft, Quote } from "@/types/booking.types";
 import type { ApiError } from "@/lib/api/client";
 import { useBookingStore } from "@/store/use-booking-store";
 import { startCheckout } from "@/lib/api/checkout";
-import { formatPrice } from "@/lib/utils";
 import { quoteRequest } from "./use-quotes";
+import { formatPrice } from "@usa-limousine-corporation/ui/utils/price";
 
 type PlaceOrderOptions = {
     onPriceChanged?: (previousTotal: number, quote: Quote) => void;
@@ -85,7 +85,7 @@ export const usePlaceOrder = ({ onPriceChanged }: PlaceOrderOptions = {}) => {
                     onPriceChanged(previousTotal, updated);
                     return;
                 }
-                toast.error(`${error.message} New total: ${formatPrice(updated.total)}.`);
+                toast.error(`${error.message} New total: ${formatPrice({ price: updated.total })}.`);
                 return;
             }
             if (error.code === "QUOTE_INVALID" || error.code === "QUOTE_USED") {

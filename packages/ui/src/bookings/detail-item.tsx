@@ -1,12 +1,6 @@
-import type { ReactNode } from "react";
+import type { DetailItemProps } from "../types/bookings";
 
-type Props = {
-  icon: ReactNode;
-  children: ReactNode;
-  className?: string;
-};
-
-export function DetailItem(props: Props) {
+export function DetailItem(props: DetailItemProps) {
   const { icon, children, className } = props;
 
   return (

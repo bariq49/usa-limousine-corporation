@@ -10,6 +10,7 @@ import { RedisModule } from "./infrastructure/redis/redis.module";
 import { TwilioModule } from "./infrastructure/twilio/twilio.module";
 import { WebsocketCoreModule } from "./infrastructure/websocket/websocket-core.module";
 import { AuthModule } from "./modules/auth/auth.module";
+import { BlogModule } from "./modules/blogs/blog.module";
 import { CustomerModule } from "./modules/customer/customer.module";
 import { NotificationModule } from "./modules/notification/notification.module";
 
@@ -26,6 +27,7 @@ import { NotificationModule } from "./modules/notification/notification.module";
     TwilioModule,
     WebsocketCoreModule,
     AuthModule,
+    BlogModule,
     NotificationModule,
     // Registers the USER socket channel + push-token resolver used by the delivery sweep.
     CustomerModule,

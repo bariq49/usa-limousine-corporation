@@ -11,10 +11,12 @@ import { ScrollArea } from "../../components/scroll-area";
 import { Button } from "../../components/button";
 import { Logo } from "../../components/logo";
 import { useShell } from "../../providers/shell-context";
-import { toShellNav, type ShellNavChild } from "../../utils/nav-model";
+import type { ShellNavChild } from "../../types/navigation";
+import { toShellNav } from "../../utils/nav-model";
 import { SingleIconMenu } from "./single-icon-menu";
 import { ModuleMenuItem, NestedMenus } from "./module-menu-item";
 import { MenuOverlayPortal } from "./menu-overlay";
+
 
 export function Sidebar() {
   const { navigation, roles } = useShell();
@@ -168,6 +170,7 @@ export function Sidebar() {
                       index={j}
                       nestedIndex={nestedIndex}
                       locationName={locationName}
+                      siblingHrefs={currentSubMenu.map((item) => item.href)}
                     />
                     <NestedMenus
                       index={j}
@@ -181,6 +184,8 @@ export function Sidebar() {
             </div>
           </ScrollArea>
         </div>
+
+
       </div>
       {!isDesktop ? (
         <MenuOverlayPortal

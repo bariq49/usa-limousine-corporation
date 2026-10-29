@@ -1,28 +1,12 @@
 import PDFDocument from "pdfkit";
 import type { BookingType } from "@prisma/client";
-import { EMAIL_BRAND } from "./layout";
-import { chargeLines, formatDate, formatPrice, formatTime } from "./cards";
-import type { BookingEmail } from "./types";
 import { PLATFORM } from "@usa-limousine-corporation/config";
+import { formatDate } from "../../../../common/utils/format-date";
+import { formatTime } from "../../../../common/utils/format-time";
+import type { ReceiptProps } from "../../types/booking";
+import { EMAIL_BRAND } from "../shared/brand";
 
-export type ReceiptPayment = {
-  status: string;
-  amount: number;
-  cardBrand: string | null;
-  cardLast4: string | null;
-  transactionId: string | null;
-  paidAt: Date | null;
-  refundedAmount: number | null;
-  refundedAt: Date | null;
-};
-
-export type ReceiptInput = {
-  booking: BookingEmail;
-  payment: ReceiptPayment | null;
-  issuedAt: Date;
-  logo: Buffer | null;
-  siteUrl: string;
-};
+import { chargeLines, formatPrice } from "./components/cards";
 
 const TRIP_LABELS: Record<BookingType, string> = {
   ONE_WAY: "One way",
@@ -44,8 +28,8 @@ const shortDate = (date: Date) =>
     timeZone: PLATFORM.locale.timezone,
   }).format(date);
 
-export function renderReceiptPdf(input: ReceiptInput): Promise<Buffer> {
-  const { booking, payment } = input;
+export function renderReceiptPdf(props: ReceiptProps): Promise<Buffer> {
+  const { booking, payment, logo, siteUrl, issuedAt } = props;
   const doc = new PDFDocument({
     size: "LETTER",
     margins: { top: PAGE_MARGIN, left: PAGE_MARGIN, right: PAGE_MARGIN, bottom: 0 },
@@ -69,8 +53,8 @@ export function renderReceiptPdf(input: ReceiptInput): Promise<Buffer> {
 
   doc.rect(0, 0, pageWidth, HEADER_HEIGHT).fill(EMAIL_BRAND.dark);
   doc.rect(0, HEADER_HEIGHT, pageWidth, 3).fill(EMAIL_BRAND.accent);
-  if (input.logo) {
-    doc.image(input.logo, left, 28, { fit: [160, 40] });
+  if (logo) {
+    doc.image(logo, left, 28, { fit: [160, 40] });
   } else {
     doc.font("Helvetica-Bold").fontSize(18).fillColor("#ffffff").text(EMAIL_BRAND.name, left, 38);
   }
@@ -84,7 +68,7 @@ export function renderReceiptPdf(input: ReceiptInput): Promise<Buffer> {
     .fontSize(10)
     .fillColor("#d1d5db")
     .text(`Booking ${booking.bookingNumber}`, left, 54, { width: contentWidth, align: "right" })
-    .text(`Issued ${shortDate(input.issuedAt)}`, left, 68, { width: contentWidth, align: "right" });
+    .text(`Issued ${shortDate(issuedAt)}`, left, 68, { width: contentWidth, align: "right" });
 
   const isRefunded = payment?.status === "REFUNDED";
   const statusLabel = isRefunded ? "REFUNDED" : payment ? "PAID" : "UNPAID";
@@ -153,12 +137,12 @@ export function renderReceiptPdf(input: ReceiptInput): Promise<Buffer> {
       "Trip",
       `${TRIP_LABELS[booking.bookingType]} · ${vehicle} · ${passengers} ${passengers === 1 ? "passenger" : "passengers"}`,
     ],
-    ["Pickup", `${formatDate(booking.pickupDate)} at ${formatTime(booking.pickupTime)}`],
+    ["Pickup", `${formatDate({ date: booking.pickupDate })} at ${formatTime({ date: booking.pickupTime })}`],
   ];
   if (booking.returnDate && booking.returnTime) {
     tripRows.push([
       "Return",
-      `${formatDate(booking.returnDate)} at ${formatTime(booking.returnTime)}`,
+      `${formatDate({ date: booking.returnDate })} at ${formatTime({ date: booking.returnTime })}`,
     ]);
   }
   tripRows.push(["From", booking.pickupAddress]);
@@ -272,7 +256,7 @@ export function renderReceiptPdf(input: ReceiptInput): Promise<Buffer> {
     .fontSize(9)
     .fillColor(EMAIL_BRAND.muted)
     .text(
-      `${EMAIL_BRAND.phone}  ·  ${EMAIL_BRAND.email}  ·  ${input.siteUrl.replace(/^https?:\/\//, "")}`,
+      `${EMAIL_BRAND.phone}  ·  ${EMAIL_BRAND.email}  ·  ${siteUrl.replace(/^https?:\/\//, "")}`,
       left,
       footerTop + 28,
       { width: contentWidth, align: "center" },

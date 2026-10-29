@@ -5,10 +5,11 @@ import Image from "next/image";
 import { useFormContext, useWatch } from "react-hook-form";
 import { Input } from "@usa-limousine-corporation/ui/components/input";
 import { Close, Plus } from "@usa-limousine-corporation/ui/svg";
-import { cn, formatPrice } from "@/lib/utils";
+import { cn } from "@usa-limousine-corporation/ui/utils/cn";
 import { useExtraServices } from "@/hooks/queries/use-extra-services";
 import { ChildSeatSkeleton } from "@/components/skeletons/child-seat-skeleton";
 import type { Step3ChildSeatSelection, Step3FormValues } from "@/types/booking.types";
+import { formatPrice } from "@usa-limousine-corporation/ui/utils/price";
 
 type Props = {
   childSeatsField?: "childSeats" | "returnChildSeats";
@@ -140,7 +141,7 @@ export const TripExtrasFields = (props: Props = {}) => {
                               : "border-border text-black",
                           )}
                         >
-                          {seat.price === 0 ? "Free" : formatPrice(seat.price)}
+                          {seat.price === 0 ? "Free" : formatPrice({ price: seat.price })}
                         </span>
                       </div>
                       {seat.description ? (

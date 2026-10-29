@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { cn } from "@usa-limousine-corporation/ui/utils/cn";
 import { heroItemVariants, heroStaggerVariants } from "./variants";
 
 type HeroMotionProps = {

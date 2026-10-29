@@ -13,7 +13,9 @@ import { useMediaQuery } from "@/hooks/use-media-query";
 import { BookingLocationDetails } from "@usa-limousine-corporation/ui/bookings/booking-location-details";
 import { useTimeFormat } from "@usa-limousine-corporation/ui/store/time-format";
 import { useBookingStore } from "@/store/use-booking-store";
-import { calculateArrivalTime, formatDistance, formatDuration, formatTime } from "@/lib/utils";
+import { calculateArrivalTime, formatTime } from "@usa-limousine-corporation/ui/utils/date";
+import { formatDistance } from "@usa-limousine-corporation/ui/utils/distance";
+import { formatDuration } from "@usa-limousine-corporation/ui/utils/duration";
 
 type ReturnTripFormValues = {
   returnDate: string;
@@ -47,8 +49,8 @@ export function ReturnTripModal({ isOpen, onClose }: ReturnTripModalProps) {
     durationMinutes: step1?.travelDuration,
   });
   const routeNote = [
-    formatDuration(step1?.travelDuration),
-    distance ? `${(distance * 1.60934).toFixed(1)} km / ${formatDistance(distance)}` : null,
+    step1?.travelDuration ? formatDuration({ minutes: step1.travelDuration }) : null,
+    distance ? `${(distance * 1.60934).toFixed(1)} km / ${formatDistance({ distance })}` : null,
   ]
     .filter(Boolean)
     .map((value) => `~ ${value}`)
@@ -138,7 +140,7 @@ export function ReturnTripModal({ isOpen, onClose }: ReturnTripModalProps) {
                         .map((stop) => stop.address.trim())
                         .filter(Boolean)
                         .reverse()}
-                      pickupTime={returnTime ? formatTime(returnTime, hourCycle) : undefined}
+                      pickupTime={returnTime ? formatTime({ date: returnTime, hourCycle }) : undefined}
                       dropoffTime={returnTime && arrivalTime !== "—" ? arrivalTime : undefined}
                       note={routeNote}
                       variant="plain"

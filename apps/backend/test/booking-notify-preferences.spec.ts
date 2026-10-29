@@ -112,7 +112,7 @@ describe("BookingEmailService preferences", () => {
   it("skips customer emails when email is turned off but still tells the admin", async () => {
     const { service, email } = setup({ email: false, sms: true });
 
-    await service.sendPaid("book-1");
+    await service.sendPaid({ bookingId: "book-1" });
 
     expect(email.send).toHaveBeenCalledTimes(1);
     expect(email.send).toHaveBeenCalledWith(expect.objectContaining({ to: "admin@example.com" }));
@@ -124,7 +124,7 @@ describe("BookingEmailService preferences", () => {
       { notifyByEmail: false, notifyBySms: true },
     );
 
-    await service.sendPaid("book-1");
+    await service.sendPaid({ bookingId: "book-1" });
 
     expect(email.send).toHaveBeenCalledTimes(1);
     expect(email.send).toHaveBeenCalledWith(expect.objectContaining({ to: "admin@example.com" }));
@@ -133,7 +133,7 @@ describe("BookingEmailService preferences", () => {
   it("emails the customer when email is on", async () => {
     const { service, email } = setup({ email: true, sms: true });
 
-    await service.sendConfirmed("book-1");
+    await service.sendConfirmed({ bookingId: "book-1" });
 
     expect(email.send).toHaveBeenCalledWith(expect.objectContaining({ to: "ada@example.com" }));
   });

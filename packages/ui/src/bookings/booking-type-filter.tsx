@@ -4,16 +4,11 @@ import { Checkbox } from "../components/checkbox";
 import { cn } from "../utils/cn";
 import { BOOKING_TYPE_COLORS, BOOKING_TYPE_LABELS } from "./labels";
 import type { BookingType } from "./types";
+import type { BookingTypeFilterProps } from "../types/bookings";
 
-type Props = {
-  options: BookingType[];
-  value: BookingType[];
-  onChange: (next: BookingType[]) => void;
-  className?: string;
-};
+export function BookingTypeFilter(props: BookingTypeFilterProps) {
+  const { options, value, onChange, className } = props;
 
-/** Checkbox list that filters the calendar by trip type, with each type's colour. */
-export function BookingTypeFilter({ options, value, onChange, className }: Props) {
   const toggle = (bookingType: BookingType, checked: boolean) => {
     onChange(checked ? value.concat(bookingType) : value.filter((item) => item !== bookingType));
   };

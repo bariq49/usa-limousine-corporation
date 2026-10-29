@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@usa-limousine-corporation/ui/utils/cn";
 
 interface VehicleCategoryCardSkeletonProps {
   isExpanded?: boolean;

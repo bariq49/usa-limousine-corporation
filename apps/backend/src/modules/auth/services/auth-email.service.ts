@@ -8,8 +8,7 @@ import {
 import { createOtp } from "../../../common/utils/create-otp";
 import { PrismaService } from "../../../infrastructure/database/prisma.service";
 import { EmailService } from "../../../infrastructure/email/email.service";
-import type { PasswordReset } from "../../../infrastructure/email/types/password-reset";
-import type { Verification } from "../../../infrastructure/email/types/verification";
+import type { PasswordReset, Verification } from "../../../infrastructure/email/types/auth";
 import { TwilioService } from "../../../infrastructure/twilio/twilio.service";
 import { AUTH_EMAIL_TTL } from "../constants/auth.constants";
 import { AuthEmailQueueService } from "../jobs/auth-email-queue.service";

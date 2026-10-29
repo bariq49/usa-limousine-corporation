@@ -14,7 +14,7 @@ export interface DataTableFilterColumn {
   title: string;
   multiple?: boolean | undefined;
   searchable?: boolean | undefined;
-  options: DataTableFacetedFilterOption[];
+  options?: DataTableFacetedFilterOption[] | undefined;
 }
 
 interface DataTableToolbarProps<TData> {
@@ -42,9 +42,10 @@ export function DataTableToolbar<TData>({
 }: DataTableToolbarProps<TData>) {
   const [localSearch, setLocalSearch] = React.useState(searchValue ?? "");
   const isServerSearch = Boolean(onSearchChange);
-  const isFiltered = table.getState().columnFilters.length > 0;
+  const columnFilters = table.getState().columnFilters ?? [];
+  const isFiltered = columnFilters.length > 0;
   const showResetFilters = isFiltered && (!isServerSearch || manualFiltering);
-  const selectedRows = table.getFilteredSelectedRowModel().rows;
+  const selectedRows = table.getFilteredSelectedRowModel().rows ?? [];
   const hasSelectedRows = selectedRows.length > 0;
 
   const isFirstSearchRender = React.useRef(true);
@@ -114,17 +115,20 @@ export function DataTableToolbar<TData>({
             table.getColumn(filter.column) ??
             table.getColumn(filter.column.toLowerCase()) ??
             table.getAllColumns().find((c) => c.id.toLowerCase() === filter.column.toLowerCase());
-          return column ? (
+          if (!column) return null;
+          const options = filter.options ?? [];
+          return (
             <DataTableFacetedFilter
               key={filter.column}
               column={column}
               title={filter.title}
-              options={filter.options}
-              multiple={filter.multiple}
-              searchable={filter.searchable}
+              options={options}
+              multiple={filter.multiple ?? true}
+              searchable={filter.searchable ?? false}
             />
-          ) : null;
+          );
         })}
+
 
         {showResetFilters && (
           <Button

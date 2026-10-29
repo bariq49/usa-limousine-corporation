@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @source "../**/*.{ts,tsx}";
 @import "./theme.css";
+@import "./rich-content.css";
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
@@ -330,13 +331,19 @@ body {
   @apply bg-default-100;
 }
 .booking-calendar .fc-daygrid-day.fc-day-selected .fc-daygrid-day-frame {
-  @apply bg-primary/10 ring-1 ring-primary/35 ring-inset;
+  @apply bg-primary/10 ring-1 ring-primary/40 ring-inset;
+}
+.booking-calendar .fc-daygrid-day.fc-day-selected .fc-daygrid-day-number {
+  @apply rounded-md bg-primary px-1.5 font-semibold text-primary-foreground;
 }
 .booking-calendar .fc-daygrid-day.fc-day-today:not(.fc-day-selected) .fc-daygrid-day-frame {
   @apply bg-default-100;
 }
 .booking-calendar .fc .fc-daygrid-day.fc-day-today {
   @apply bg-transparent;
+}
+.booking-calendar .fc-highlight {
+  @apply bg-primary/15;
 }
 .booking-calendar .fc-daygrid-event {
   @apply cursor-pointer rounded-md border-0 px-1.5 py-0.5 text-[11px] font-medium shadow-none;

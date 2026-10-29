@@ -14,7 +14,6 @@ export const BOOKING_TYPE_LABELS: Record<BookingType, string> = {
   HOURLY: "Hourly",
 };
 
-/** Event colours on the booking calendar, one per trip type. */
 export const BOOKING_TYPE_COLORS: Record<BookingType, string> = {
   ONE_WAY: "#C9A84C",
   RETURN: "#0EA5E9",

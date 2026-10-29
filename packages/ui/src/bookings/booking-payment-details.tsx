@@ -5,10 +5,8 @@ import { Calendar, DollarSign, Hash, Tag } from "../svg";
 import { formatDateTime } from "../utils/date";
 import { DetailItem } from "./detail-item";
 import type { Payment } from "./types";
+import type { BookingPaymentDetailsProps } from "../types/bookings";
 
-type Props = {
-  payment?: Payment | null | undefined;
-};
 
 const STATUS_LABELS: Record<Payment["status"], string> = {
   PAID: "Paid",
@@ -16,7 +14,8 @@ const STATUS_LABELS: Record<Payment["status"], string> = {
   CANCELLED: "Cancelled",
 };
 
-export function BookingPaymentDetails({ payment }: Props) {
+export function BookingPaymentDetails(props: BookingPaymentDetailsProps) {
+  const { payment } = props;
   if (!payment) return null;
 
   const currency = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });

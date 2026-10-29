@@ -1,0 +1,108 @@
+enum BlogStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+}
+
+enum BlogCommentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model BlogCategory {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  image       String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  blogs Blog[]
+
+  @@index([isActive, sortOrder])
+}
+
+model BlogTag {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  blogs BlogPostTag[]
+
+  @@index([isActive, sortOrder])
+}
+
+model Blog {
+  id                 String     @id @default(cuid())
+  categoryId         String
+  title              String
+  slug               String     @unique
+  excerpt            String?
+  content            String
+  coverImage         String?
+  status             BlogStatus @default(DRAFT)
+  isFeatured         Boolean    @default(false)
+  seoTitle           String?
+  seoDescription     String?
+  seoKeywords        String?
+  canonicalUrl       String?
+  ogTitle            String?
+  ogDescription      String?
+  ogImage            String?
+  robots             String?
+  jsonLd             String?
+  scheduledAt        DateTime?
+  publishedAt        DateTime?
+  sortOrder          Int        @default(0)
+  readingTimeMinutes Int        @default(1)
+  viewCount          Int        @default(0)
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+
+  category BlogCategory  @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  tags     BlogPostTag[]
+  comments BlogComment[]
+
+  @@index([status, publishedAt])
+  @@index([status, scheduledAt])
+  @@index([categoryId])
+  @@index([isFeatured])
+}
+
+model BlogPostTag {
+  blogId String
+  tagId  String
+
+  blog Blog    @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  tag  BlogTag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([blogId, tagId])
+  @@index([tagId])
+}
+
+model BlogComment {
+  id           String            @id @default(cuid())
+  blogId       String
+  fullName     String
+  email        String
+  content      String
+  status       BlogCommentStatus @default(PENDING)
+  replyContent String?
+  repliedAt    DateTime?
+  reviewedAt   DateTime?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  blog Blog @relation(fields: [blogId], references: [id], onDelete: Cascade)
+
+  @@index([blogId, status, createdAt])
+  @@index([status, createdAt])
+}

@@ -18,10 +18,10 @@ import { ReturnTripField } from "./return-trip-field";
 import { NotificationsField } from "./notifications-field";
 import { PriceChangedModal } from "../modals/price-changed-modal";
 import BookingStepActions from "../booking-step-actions";
-import { formatPrice } from "@/lib/utils";
 import { useHasHydrated } from "@/hooks/use-has-hydrated";
 import { PASSENGER_TITLES, PICKUP_TIME_ERRORS, TRIP_TYPES } from "@/constants/booking-constants";
 import type { Step3FormValues } from "@/types/booking.types";
+import { formatPrice } from "@usa-limousine-corporation/ui/utils/price";
 
 const PASSENGER_FORM_ID = "passenger-details-form";
 
@@ -225,7 +225,7 @@ function Step3() {
                 className="h-11 flex-1 gap-2 rounded-sm bg-black font-semibold text-white hover:bg-black/90"
               >
                 {totalPrice > 0
-                  ? `Continue to Book — ${formatPrice(totalPrice)}`
+                  ? `Continue to Book — ${formatPrice({ price: totalPrice })}`
                   : "Pricing your trip..."}
                 <ChevronRight width={16} height={16} strokeWidth={2.5} />
               </Button>

@@ -33,6 +33,7 @@ import { ExtraServiceModule } from "./modules/extra-services/extra-service.modul
 import { PlatformSettingsModule } from "./modules/platform-settings/platform-settings.module";
 import { DriverModule } from "./modules/drivers/driver.module";
 import { DashboardModule } from "./modules/dashboard/dashboard.module";
+import { BlogModule } from "./modules/blogs/blog.module";
 
 @Module({
   imports: [
@@ -75,6 +76,7 @@ import { DashboardModule } from "./modules/dashboard/dashboard.module";
     PlatformSettingsModule,
     DriverModule,
     DashboardModule,
+    BlogModule,
   ],
   providers: [
     {

@@ -16,13 +16,13 @@ import { AddStopButton } from "../setp-1/AddStopButton";
 import { StopItem } from "../setp-1/StopItem";
 import {
   getCurrentLocationErrorMessage,
+  getPickupLocation,
   isAirportPickupRequired,
   isGeolocationError,
-  getPickupLocation,
   swapPickupAndDelivery,
-  formatHrs,
-  validateBookingTime,
-} from "@/lib/utils";
+} from "@usa-limousine-corporation/ui/utils/location";
+import { validateBookingTime } from "@usa-limousine-corporation/ui/utils/date";
+import { formatHrs } from "@usa-limousine-corporation/ui/utils/duration";
 import { useSettings } from "@/hooks/queries/use-settings";
 import { useCalculateRouteDistance } from "@/hooks/queries/use-calculate-distance";
 import { SwapButton } from "../setp-1/SwapButton";
@@ -70,7 +70,7 @@ export function EditBookingModal({ isOpen, onClose }: EditBookingModalProps) {
   const tripType = useWatch({ control: form.control, name: "tripType" });
   const isHourly = tripType === TRIP_TYPES.HOURLY;
   const durationOptions = HOURLY_DURATIONS.map((hours) => ({
-    label: formatHrs(hours),
+    label: formatHrs({ hours }),
     value: String(hours),
   }));
 
@@ -98,8 +98,10 @@ export function EditBookingModal({ isOpen, onClose }: EditBookingModalProps) {
   const handleSwapLocations = () => {
     setIsSwapping(true);
     swapPickupAndDelivery({
-      getValues: form.getValues,
-      setValue: form.setValue,
+      form: {
+        getValues: form.getValues,
+        setValue: form.setValue,
+      },
     });
     window.setTimeout(() => setIsSwapping(false), 300);
   };
@@ -117,7 +119,7 @@ export function EditBookingModal({ isOpen, onClose }: EditBookingModalProps) {
       })
       .catch((error: unknown) => {
         if (isGeolocationError(error)) {
-          toast.error(getCurrentLocationErrorMessage(error));
+          toast.error(getCurrentLocationErrorMessage({ error }));
           return;
         }
         toast.error("Could not fetch location. Please type your address manually.");
@@ -169,7 +171,7 @@ export function EditBookingModal({ isOpen, onClose }: EditBookingModalProps) {
         routeResult = await calculateRoute.mutateAsync(addresses);
       }
 
-      const isAirportSelected = isAirportPickupRequired(pickupAddress, deliveryAddress);
+      const isAirportSelected = isAirportPickupRequired({ pickupAddress, deliveryAddress });
 
       setStep1Data({
         tripType,

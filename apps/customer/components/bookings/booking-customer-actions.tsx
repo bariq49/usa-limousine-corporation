@@ -1,11 +1,10 @@
 "use client";
 
-import { APP_TIMEZONE } from "@usa-limousine-corporation/ui/constants";
-import { formatInTimeZone } from "date-fns-tz";
 import { useState } from "react";
 import { Button } from "@usa-limousine-corporation/ui/components/button";
 import { ConfirmDialog } from "@usa-limousine-corporation/ui/components/confirm-dialog";
 import type { Item } from "@usa-limousine-corporation/ui/bookings/types";
+import { formatDateTime } from "@usa-limousine-corporation/ui/utils/date";
 import { useCancelBooking, useCompleteBooking } from "@/hooks/queries/use-bookings";
 
 /** Customers can cancel a pending or confirmed booking, and complete a confirmed ride after pickup. */
@@ -18,7 +17,7 @@ export function BookingCustomerActions({ booking }: { booking: Item }) {
   const canComplete =
     booking.status === "CONFIRMED" &&
     `${booking.bookingTime.pickupDate} ${booking.bookingTime.pickupTime}` <=
-      formatInTimeZone(new Date(), APP_TIMEZONE, "yyyy-MM-dd HH:mm");
+      formatDateTime({ date: new Date(), as: "value" });
 
   if (!canCancel && !canComplete) {
     return null;

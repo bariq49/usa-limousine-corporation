@@ -2,13 +2,10 @@
 
 import { Mail, Phone, User } from "../svg";
 import { DetailItem } from "./detail-item";
-import type { Passenger } from "./types";
+import type { BookingCustomerDetailsProps } from "../types/bookings";
 
-type Props = {
-  passenger?: Passenger | null | undefined;
-};
 
-export function BookingCustomerDetails(props: Props) {
+export function BookingCustomerDetails(props: BookingCustomerDetailsProps) {
   const passenger = props.passenger;
 
   return (

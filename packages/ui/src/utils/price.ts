@@ -1,8 +1,6 @@
 import { APP_CURRENCY } from "../constants/index";
 import type { FormatPriceProps } from "../types/price";
 
-export type { FormatPriceProps };
-
 export function formatPrice(props?: FormatPriceProps): string {
   const { price, currency = APP_CURRENCY, currencySymbol, fallback = "—" } = props ?? {};
   const symbol = currencySymbol ?? currency;

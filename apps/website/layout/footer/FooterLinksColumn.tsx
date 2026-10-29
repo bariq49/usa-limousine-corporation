@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ArrowRight } from "@usa-limousine-corporation/ui/svg";
-import { cn } from "@/lib/utils";
+import { cn } from "@usa-limousine-corporation/ui/utils/cn";
 import { Stagger, StaggerItem } from "@/components/animations";
 
 export interface FooterLinkItem {

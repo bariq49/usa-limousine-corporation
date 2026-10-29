@@ -5,7 +5,6 @@ export const APP_LOCALE = PLATFORM.locale.locale;
 export const APP_CURRENCY = PLATFORM.locale.currencySymbol;
 export const APP_DISTANCE_UNIT = PLATFORM.locale.distanceUnit;
 
-/** formatDate — e.g. "Oct 15, 2026" */
 export const DATE_FORMAT: Intl.DateTimeFormatOptions = {
   timeZone: APP_TIMEZONE,
   month: "short",
@@ -13,7 +12,6 @@ export const DATE_FORMAT: Intl.DateTimeFormatOptions = {
   year: "numeric",
 };
 
-/** formatTime — e.g. "02:30 PM" */
 export const TIME_FORMAT: Intl.DateTimeFormatOptions = {
   timeZone: APP_TIMEZONE,
   hour: "2-digit",

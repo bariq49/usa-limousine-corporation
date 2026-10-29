@@ -169,7 +169,9 @@ describe("Drivers (e2e)", () => {
     await prisma.booking.update({
       where: { id: bookingId },
       data: {
-        bookingTime: Object.assign({}, row.bookingTime as object, { pickupDate: formatDate() }),
+        bookingTime: Object.assign({}, row.bookingTime as object, {
+          pickupDate: formatDate({ as: "value" }),
+        }),
       },
     });
 

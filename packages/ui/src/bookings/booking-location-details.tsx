@@ -2,40 +2,24 @@
 
 import { Clock, Location } from "../svg";
 import { cn } from "../utils/cn";
+import type {
+  BookingLocationDetailsProps,
+  BookingLocationPoint,
+} from "../types/bookings";
 
-type Props = {
-  pickupLocation?: string | null | undefined;
-  dropoffLocation?: string | null | undefined;
-  stops?: string[] | undefined;
-  isHourly?: boolean | undefined;
-  durationLabel?: string | null | undefined;
-  pickupTime?: string | null | undefined;
-  dropoffTime?: string | null | undefined;
-  note?: string | null | undefined;
-  variant?: "card" | "plain";
-  className?: string | undefined;
-};
-
-type Point = {
-  label: string;
-  value: string;
-  time?: string | null | undefined;
-  hint?: string;
-};
-
-export function BookingLocationDetails(props: Props) {
+export function BookingLocationDetails(props: BookingLocationDetailsProps) {
   const { isHourly = false, stops = [], variant = "card" } = props;
   const isCard = variant === "card";
-  const pickup: Point = {
+  const pickup: BookingLocationPoint = {
     label: "Pickup Location",
     value: props.pickupLocation || "—",
     time: props.pickupTime,
   };
-  const stopPoints: Point[] = stops.map((stop, index) => ({
+  const stopPoints: BookingLocationPoint[] = stops.map((stop, index) => ({
     label: `Stop ${index + 1}`,
     value: stop,
   }));
-  const last: Point = isHourly
+  const last: BookingLocationPoint = isHourly
     ? {
         label: "Hourly Duration",
         value: props.durationLabel || "—",

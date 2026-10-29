@@ -7,8 +7,8 @@ import { useBookingStore } from "@/store/use-booking-store";
 import { Stepper } from "@usa-limousine-corporation/ui/components/stepper";
 import { Luggage } from "@usa-limousine-corporation/ui/svg";
 import { useLuggageTypes } from "@/hooks/queries/use-luggage";
-import { formatPrice } from "@/lib/utils";
 import type { Step3FormValues, Step3LuggageSelection } from "@/types/booking.types";
+import { formatPrice } from "@usa-limousine-corporation/ui/utils/price";
 
 export const LuggageDetailsField = () => {
     const { control, setValue } = useFormContext<Step3FormValues>();
@@ -65,7 +65,7 @@ export const LuggageDetailsField = () => {
                                     {type.name}
                                     {price > 0 ? (
                                         <span className="ml-1.5 text-xs font-medium text-secondary">
-                                            (+{formatPrice(price)})
+                                            (+{formatPrice({ price: price })})
                                         </span>
                                     ) : null}
                                 </p>

@@ -1,5 +1,5 @@
-import { formatDate } from "./format-date";
 import { APP_TIMEZONE, formatTime } from "./format-time";
+import { formatDate } from "./format-date";
 
 type WallClockParts = {
   year: number;
@@ -11,8 +11,8 @@ type WallClockParts = {
 };
 
 function localParts(date: Date, timeZone: string) {
-  const [year, month, day] = formatDate(date, timeZone).split("-").map(Number);
-  const [hour, minute] = formatTime(date, timeZone).split(":").map(Number);
+  const [year, month, day] = formatDate({ date, as: "value", timeZone }).split("-").map(Number);
+  const [hour, minute] = formatTime({ date, as: "value", timeZone }).split(":").map(Number);
   const second = Number(
     new Intl.DateTimeFormat("en-US", {
       timeZone,

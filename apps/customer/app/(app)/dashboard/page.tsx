@@ -1,7 +1,5 @@
 "use client";
 
-import { APP_TIMEZONE } from "@usa-limousine-corporation/ui/constants";
-import { formatInTimeZone } from "date-fns-tz";
 import { useState } from "react";
 import {
   BookingOverview,
@@ -11,9 +9,10 @@ import { PageHeader } from "@usa-limousine-corporation/ui/layout/page-header";
 import { useUser } from "@usa-limousine-corporation/ui/providers/user-context";
 import { BookingCalendar } from "@usa-limousine-corporation/ui/bookings/booking-calendar";
 import type { CalendarQuery } from "@usa-limousine-corporation/ui/bookings/types";
+import { formatDate } from "@usa-limousine-corporation/ui/utils/date";
 import { useBookingAnalytics, useBookingCalendar } from "@/hooks/queries/use-bookings";
 
-const CURRENT_YEAR = Number(formatInTimeZone(new Date(), APP_TIMEZONE, "yyyy"));
+const CURRENT_YEAR = Number(formatDate({ date: new Date(), options: { year: "numeric" } }));
 const YEARS = [CURRENT_YEAR, CURRENT_YEAR - 1, CURRENT_YEAR - 2];
 const EMPTY_MONTHS = Array<number>(12).fill(0);
 

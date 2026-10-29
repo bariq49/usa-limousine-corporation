@@ -1,0 +1,105 @@
+@layer components {
+  .rich-content {
+    font-size: 1rem;
+    line-height: 1.75;
+    overflow-wrap: anywhere;
+  }
+  .rich-content > * + * {
+    margin-top: 1rem;
+  }
+  .rich-content h2 {
+    margin-top: 2rem;
+    font-size: 1.5rem;
+    line-height: 1.3;
+    font-weight: 700;
+  }
+  .rich-content h3 {
+    margin-top: 1.5rem;
+    font-size: 1.25rem;
+    line-height: 1.35;
+    font-weight: 600;
+  }
+  .rich-content h4 {
+    margin-top: 1.25rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+  }
+  .rich-content ul {
+    list-style: disc;
+    padding-left: 1.5rem;
+  }
+  .rich-content ol {
+    list-style: decimal;
+    padding-left: 1.5rem;
+  }
+  .rich-content li + li {
+    margin-top: 0.375rem;
+  }
+  .rich-content li > p {
+    margin: 0;
+  }
+  .rich-content a {
+    color: var(--color-primary);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .rich-content blockquote {
+    border-left: 3px solid var(--color-primary);
+    padding-left: 1rem;
+    font-style: italic;
+    opacity: 0.85;
+  }
+  .rich-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.25rem;
+  }
+  .rich-content .rich-text-image {
+    margin: 1.5rem 0;
+  }
+  .rich-content .rich-text-image img {
+    margin: 0;
+    border-radius: 0.25rem;
+  }
+  .rich-content figure {
+    margin: 2rem 0;
+  }
+  .rich-content figure img {
+    width: 100%;
+    display: block;
+  }
+  .rich-content figcaption {
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    color: rgb(107 114 128);
+  }
+  .rich-content hr {
+    border: 0;
+    border-top: 1px solid currentColor;
+    opacity: 0.15;
+    margin: 2rem 0;
+  }
+  .rich-content code {
+    border-radius: 0.25rem;
+    background: rgb(0 0 0 / 0.06);
+    padding: 0.125rem 0.375rem;
+    font-size: 0.875em;
+  }
+  .rich-content pre {
+    overflow-x: auto;
+    border-radius: 0.25rem;
+    background: rgb(0 0 0 / 0.06);
+    padding: 1rem;
+  }
+  .rich-content pre code {
+    background: none;
+    padding: 0;
+  }
+  .rich-content p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+    opacity: 0.45;
+  }
+}

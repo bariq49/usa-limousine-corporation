@@ -30,3 +30,49 @@ export type MenuSection = {
   submenu?: boolean;
   groups: MenuGroup[];
 };
+
+export type ShellNavIcon = ComponentType<{ className?: string }>;
+
+export type ShellNavChild = {
+  title: string;
+  href?: string;
+  icon?: ShellNavIcon;
+  nested?: ShellNavChild[];
+  child?: ShellNavChild[];
+};
+
+export type ShellNavItem = {
+  title: string;
+  href?: string;
+  icon?: ShellNavIcon;
+  child?: ShellNavChild[];
+};
+
+export type ModuleMenuItemProps = {
+  childItem: ShellNavChild;
+  toggleNested: (subIndex: number) => void;
+  nestedIndex: number | null;
+  index: number;
+  locationName: string;
+  siblingHrefs: readonly (string | undefined)[];
+};
+
+export type NestedMenusProps = {
+  nestedIndex: number | null;
+  index: number;
+  nestedMenus: ShellNavChild[] | undefined;
+  locationName: string;
+};
+
+export type NavLinkProps = {
+  childItem: ShellNavChild;
+  locationName: string;
+  siblingHrefs: readonly (string | undefined)[];
+};
+
+export type SingleIconMenuProps = {
+  index: number;
+  activeIndex: number | null;
+  item: ShellNavItem;
+  locationName: string;
+};

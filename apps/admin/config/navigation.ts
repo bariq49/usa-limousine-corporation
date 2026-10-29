@@ -19,6 +19,10 @@ import {
   UserList,
   Users,
   UserSign,
+  Blog,
+  FileText,
+  MessageSquare,
+  Plus,
 } from "@usa-limousine-corporation/ui/svg";
 import { APP_CONFIG } from "./app";
 
@@ -77,7 +81,7 @@ export const navigation: MenuSection[] = [
             href: "/bookings",
             icon: Calendar,
           },
-          
+
           {
             id: "pending-bookings",
             label: "Pending Bookings",
@@ -178,6 +182,32 @@ export const navigation: MenuSection[] = [
             icon: Users,
           },
         ],
+      },
+    ],
+  },
+  {
+    id: "blog",
+    label: "Blog",
+    icon: Blog,
+    submenu: true,
+    groups: [
+      {
+        id: "blog-group",
+        items: [
+          { id: "all-blogs", label: "All Articles", href: "/blogs", icon: Blog },
+          { id: "create-blog", label: "New Article", href: "/blogs/create", icon: Plus },
+          { id: "draft-blogs", label: "Drafts", href: "/blogs/drafts", icon: FileText },
+          {
+            id: "scheduled-blogs",
+            label: "Scheduled",
+            href: "/blogs/scheduled",
+            icon: CalendarClock,
+          },
+          { id: "blog-categories", label: "Categories", href: "/blog-categories", icon: Grid },
+          { id: "blog-tags", label: "Tags", href: "/blog-tags", icon: Tag },
+          { id: "blog-comments", label: "Comments", href: "/blog-comments", icon: MessageSquare },
+        ],
+
       },
     ],
   },

@@ -1,6 +1,6 @@
 import React from "react";
 import { Plus } from "@usa-limousine-corporation/ui/svg";
-import { cn } from "@/lib/utils";
+import { cn } from "@usa-limousine-corporation/ui/utils/cn";
 
 interface AddStopButtonProps {
   onAdd: () => void;

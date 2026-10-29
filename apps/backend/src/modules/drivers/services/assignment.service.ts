@@ -9,7 +9,8 @@ import { roundAmount, toAmount } from "../../../common/utils/money";
 import { toRequestContext } from "../../../common/utils/to-request-context";
 import { PrismaService } from "../../../infrastructure/database/prisma.service";
 import { EmailService } from "../../../infrastructure/email/email.service";
-import { driverAssigned } from "../../../infrastructure/email/templates/booking/templates";
+import { driverAssigned } from "../../../infrastructure/email/templates/booking/driver-assigned";
+
 import { BookingRepository } from "../../booking/repositories/booking.repository";
 import { toBookingEmail } from "../../booking/utils/booking-email-view";
 import type { AssignDto } from "../dto/driver.dto";
@@ -120,18 +121,15 @@ export class AssignmentService {
       await this.emailService.send({
         to: user.email,
         subject: `New ride assigned · ${row.bookingNumber} - ${PLATFORM.shortName}`,
-        html: driverAssigned(
-          toBookingEmail(row),
-          {
-            siteUrl: this.configService.getOrThrow<string>("WEBSITE_URL").replace(/\/+$/, ""),
-            assetsUrl: `https://res.cloudinary.com/${this.configService.getOrThrow<string>("CLOUDINARY_CLOUD_NAME")}/image/upload/usa-limousine/email`,
-          },
-          {
+        html: driverAssigned({
+          booking: toBookingEmail(row),
+          siteUrl: this.configService.getOrThrow<string>("WEBSITE_URL").replace(/\/+$/, ""),
+          assignment: {
             driverName,
             driverAmount: toAmount(assignment.driverAmount),
             note: assignment.note,
           },
-        ),
+        }),
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown error";

@@ -1,39 +1,20 @@
 "use client";
 
-import { APP_TIMEZONE } from "../constants/index";
-import { formatInTimeZone } from "date-fns-tz";
 import { useEffect, useMemo, useRef } from "react";
 import { useTimeFormat, type HourCycle } from "../store/time-format";
 import { cn } from "../utils/cn";
+import { calculateArrivalTime, formatTime } from "../utils/date";
 import { isAirportAddress, isHotelAddress, isTrainAddress } from "../utils/places";
 import { loadGoogleMaps } from "./google-maps-loader";
 import { ASSETS } from "../assets/images";
+import type { AnimatedRouteMapProps } from "../types/bookings";
+export type { AnimatedRouteMapProps };
 
-export interface AnimatedRouteMapProps {
-  pickupAddress: string;
-  deliveryAddress: string;
-  stops?: { address: string }[] | undefined;
-  /** Pickup time ("HH:mm") shown on the pickup pin; the drop-off pin adds the drive time. */
-  pickupTime?: string | undefined;
-  /** Fallback drive time in minutes when Google does not return one. */
-  travelDuration?: number | undefined;
-  /** Top-down car image that drives along the route. */
-  carMarkerSrc?: string | undefined;
-  className?: string | undefined;
-  wrapperClassName?: string | undefined;
-  /** Pixels of the map's bottom edge covered by content laid over it (e.g. a mobile sheet). */
-  bottomInset?: number | undefined;
-}
 
-// --- Constants & Styles ---
 const BRAND_GOLD = "#C9A84C";
 const DEFAULT_CAR_MARKER = ASSETS.map.carMarker.src;
 const NEW_YORK = { lat: 40.7128, lng: -74.006 };
 
-/**
- * Google-style basemap: light grey land, white streets with soft edges, blue-grey highways,
- * soft water and parks, with place labels kept for orientation.
- */
 const MAP_STYLES: google.maps.MapTypeStyle[] = [
   { elementType: "geometry", stylers: [{ color: "#f3f4f6" }] },
   { elementType: "labels.text.fill", stylers: [{ color: "#5f6368" }] },
@@ -80,7 +61,6 @@ const MAP_STYLES: google.maps.MapTypeStyle[] = [
   { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#4b7fa3" }] },
 ];
 
-// --- SVG path data from @/components/svg/duel-tone ---
 const PLANE_SVG_PATH = `M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5Z`;
 const TRAIN_SVG_PATH = `M12 2c-4 0-8 .5-8 4v9.5A3.5 3.5 0 0 0 7.5 19L6 21h2l1.5-2h5L16 21h2l-1.5-2A3.5 3.5 0 0 0 20 15.5V6c0-3.5-4-4-8-4ZM7.5 16.5a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5Zm9 0a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5ZM7 7h10v4H7V7Z`;
 const HOTEL_SVG_PATH = `M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z`;
@@ -118,7 +98,6 @@ function getLocationIconSvg(
   return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${fillColor}" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0;"><path d="${path}"/></svg>`;
 }
 
-// --- Geometry Helpers ---
 function calculateHeading(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const dLng = ((lng2 - lng1) * Math.PI) / 180;
   const phi1 = (lat1 * Math.PI) / 180;
@@ -173,42 +152,13 @@ function truncateTitle(title: string, maxLen: number = 26): string {
 }
 
 function formatBadgeTime(rawTime: string, hourCycle: HourCycle, addMinutesCount?: number): string {
-  let hours = 13;
-  let minutes = 45;
-
-  if (rawTime) {
-    const match = rawTime.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
-    if (match) {
-      hours = Number(match[1]);
-      minutes = Number(match[2]);
-      const period = match[3]?.toUpperCase();
-      if (period === "PM" && hours < 12) hours += 12;
-      if (period === "AM" && hours === 12) hours = 0;
-    }
-  } else {
-    const [nowHours = 0, nowMinutes = 0] = formatInTimeZone(new Date(), APP_TIMEZONE, "HH:mm")
-      .split(":")
-      .map(Number);
-    hours = nowHours;
-    minutes = nowMinutes;
+  const time = rawTime.trim() || formatTime({ date: new Date(), as: "value" });
+  if (typeof addMinutesCount === "number" && !Number.isNaN(addMinutesCount)) {
+    return calculateArrivalTime({ time, durationMinutes: addMinutesCount, hourCycle });
   }
-
-  if (typeof addMinutesCount === "number" && !isNaN(addMinutesCount)) {
-    const totalMinutes = hours * 60 + minutes + addMinutesCount;
-    const finalMinutes = ((totalMinutes % (24 * 60)) + 24 * 60) % (24 * 60);
-    hours = Math.floor(finalMinutes / 60);
-    minutes = finalMinutes % 60;
-  }
-
-  if (hourCycle === "24h") {
-    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
-  }
-  const period = hours >= 12 ? "PM" : "AM";
-  const hour12 = hours % 12 === 0 ? 12 : hours % 12;
-  return `${String(hour12).padStart(2, "0")}:${String(minutes).padStart(2, "0")} ${period}`;
+  return formatTime({ date: time, hourCycle });
 }
 
-// --- Unified Callout Pin Overlay (Marker + Stem + Badge as one cohesive unit) ---
 function createCalloutOverlay({
   position,
   title,
@@ -338,7 +288,6 @@ function createCalloutOverlay({
       const map = this.getMap() as google.maps.Map | null;
       if (!map) return;
       const zoom = map.getZoom() ?? 12;
-      // Keep badges compact on tall, narrow map columns
       this.currentScale = Math.max(0.75, Math.min(1.05, 0.5 + zoom * 0.035));
       if (this.placement === "above") {
         this.container.style.transform = `translate(-50%, calc(-100% + 5.5px)) scale(${this.currentScale})`;
@@ -381,7 +330,6 @@ function createCalloutOverlay({
   return new CalloutOverlay();
 }
 
-// --- Animated Car Overlay ---
 export interface CarOverlayInstance extends google.maps.OverlayView {
   updatePositionAndHeading: (position: google.maps.LatLng, heading: number) => void;
 }
@@ -482,19 +430,18 @@ function createCarOverlay(
   return new CarOverlay();
 }
 
-// --- Main Component ---
-/** Route map with pickup/drop-off callouts and a car that drives the route on a loop. */
-export function AnimatedRouteMap({
-  pickupAddress,
-  deliveryAddress,
-  stops,
-  pickupTime = "",
-  travelDuration,
-  carMarkerSrc = DEFAULT_CAR_MARKER,
-  className,
-  wrapperClassName,
-  bottomInset = 0,
-}: AnimatedRouteMapProps) {
+export function AnimatedRouteMap(props: AnimatedRouteMapProps) {
+  const {
+    pickupAddress,
+    deliveryAddress,
+    stops,
+    pickupTime = "",
+    travelDuration,
+    carMarkerSrc = DEFAULT_CAR_MARKER,
+    className,
+    wrapperClassName,
+    bottomInset = 0,
+  } = props;
   const hourCycle = useTimeFormat((state) => state.hourCycle);
   const mapRef = useRef<HTMLDivElement>(null);
   const bottomInsetRef = useRef(bottomInset);
@@ -570,9 +517,6 @@ export function AnimatedRouteMap({
         const containerW = mapRef.current?.clientWidth || 450;
         const isCompact = containerH < 400 || containerW < 400;
 
-        // Generous padding so top/bottom badges (~60px), side badges (~105px half-width),
-        // and Google copyright/terms (~25px) are never clipped, plus the mobile sheet that
-        // overlaps the bottom edge of a small map:
         const padTop = isCompact ? 70 : Math.min(125, Math.max(90, Math.round(containerH * 0.18)));
         const padBottom =
           (isCompact ? 80 : Math.min(140, Math.max(105, Math.round(containerH * 0.22)))) +
@@ -593,13 +537,6 @@ export function AnimatedRouteMap({
           const currentZoom = targetMap.getZoom();
           if (typeof currentZoom !== "number") return;
 
-          // Short distance: zoom in close to see streets/neighborhood
-          // Ultra-short (< 2 km): cap at 15.5
-          // Short (< 5 km): cap at 14.5
-          // City trip (< 15 km): ensure at least 11.5 for clear city layout
-          // Medium trip (< 30 km): ensure at least 11 so route fills the frame
-          // Zooming in past the fitted view would push the badges off a small map, so the
-          // last two only apply to larger maps.
           let targetZoom: number | null = null;
           if (distKm < 2 && currentZoom > 15.5) targetZoom = 15.5;
           else if (distKm < 5 && currentZoom > 14.5) targetZoom = 14.5;
@@ -609,7 +546,6 @@ export function AnimatedRouteMap({
 
           targetMap.setZoom(targetZoom);
           targetMap.panTo(bounds.getCenter());
-          // Keep the route centred in the padded area rather than the whole map.
           targetMap.panBy(0, (padBottom - padTop) / 2);
         });
       };
@@ -666,7 +602,6 @@ export function AnimatedRouteMap({
             points = route.overview_path;
           }
 
-          // White casing under the route line so it reads clearly over any background.
           routeCasingRef.current = new google.maps.Polyline({
             map,
             path: points,
@@ -682,7 +617,6 @@ export function AnimatedRouteMap({
 
           if (!firstLeg?.start_location || !lastLeg?.end_location) return;
 
-          // Compute duration and distance across all legs (supports stops)
           const totalDurationSec = route.legs.reduce(
             (sum, leg) => sum + (leg.duration?.value || 0),
             0,
@@ -696,7 +630,6 @@ export function AnimatedRouteMap({
           );
           const distanceKm = legDistanceMeters / 1000;
 
-          // --- Distance-aware automatic map framing (Near vs Far) ---
           const routeBounds =
             route.bounds ||
             (() => {
@@ -717,13 +650,11 @@ export function AnimatedRouteMap({
           const pickupLocationType = detectLocationType(pickupAddress);
           const dropoffLocationType = detectLocationType(deliveryAddress);
 
-          // Placement: if dest is further North, show pickup below and dropoff above, else reversed
           const startPoint = points[0] ?? firstLeg.start_location;
           const endPoint = points[points.length - 1] ?? lastLeg.end_location;
           const pickupBelow = endPoint.lat() >= startPoint.lat();
           const dropoffBelow = !pickupBelow;
 
-          // 1. Unified Pickup Pin (Marker + Stem + Badge)
           const pickupOverlay = createCalloutOverlay({
             position: startPoint,
             title: pickupTitle,
@@ -736,7 +667,6 @@ export function AnimatedRouteMap({
           pickupOverlay.setMap(map);
           pickupOverlayRef.current = pickupOverlay;
 
-          // 2. Unified Drop-off Pin (Marker + Stem + Badge)
           const dropoffOverlay = createCalloutOverlay({
             position: endPoint,
             title: dropoffTitle,
@@ -749,12 +679,10 @@ export function AnimatedRouteMap({
           dropoffOverlay.setMap(map);
           dropoffOverlayRef.current = dropoffOverlay;
 
-          // 3. Animated car marker driving the route
           const firstPoint = points[0];
           const secondPoint = points[1];
           if (!firstPoint || !secondPoint) return;
 
-          // Precompute cumulative distances along the route for realistic constant speed
           const distances: number[] = [0];
           let totalDistance = 0;
           for (let i = 0; i < points.length - 1; i++) {
@@ -793,7 +721,6 @@ export function AnimatedRouteMap({
             const progress = Math.min(elapsed / moveDurationMs, 1);
             const currentDist = progress * totalDistance;
 
-            // Find current segment along route
             let idx = 0;
             while (idx < distances.length - 2 && (distances[idx + 1] ?? Infinity) < currentDist) {
               idx++;
@@ -817,7 +744,6 @@ export function AnimatedRouteMap({
             const curLng = p1.lng() + segFrac * (p2.lng() - p1.lng());
             const currentPos = new google.maps.LatLng(curLat, curLng);
 
-            // Lookahead 15 meters ahead for smooth rotation into curves
             const lookaheadDist = Math.min(currentDist + 15, totalDistance);
             let lookaheadIdx = idx;
             while (
@@ -834,13 +760,11 @@ export function AnimatedRouteMap({
               lookaheadP.lng(),
             );
 
-            // Smooth angular rotation (shortest angular distance)
             let diff = (targetHeading - smoothedHeading) % 360;
             if (diff < -180) diff += 360;
             if (diff > 180) diff -= 360;
             smoothedHeading = (smoothedHeading + diff * 0.2 + 360) % 360;
 
-            // When cycle resets near start, re-anchor heading
             if (progress < 0.02) {
               smoothedHeading = initialHeading;
             }

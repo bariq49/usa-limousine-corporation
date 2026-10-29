@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
+import { cn } from "@usa-limousine-corporation/ui/utils/cn";
 import { CircleUser } from "@usa-limousine-corporation/ui/svg";
 import { Logo } from "@usa-limousine-corporation/ui/components/logo";
 import { getCustomerAppUrl } from "@/lib/api/base-url";
@@ -38,8 +38,9 @@ export default function Header() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const isBookRidePage = pathname?.startsWith("/book-ride");
-  const hasSolidBackground = isBookRidePage || isScrolled || mobileOpen;
+  const isSolidRoute =
+    Boolean(pathname?.startsWith("/book-ride")) || Boolean(pathname?.startsWith("/blog"));
+  const hasSolidBackground = isSolidRoute || isScrolled || mobileOpen;
   const useDarkContent = hasSolidBackground;
 
   return (

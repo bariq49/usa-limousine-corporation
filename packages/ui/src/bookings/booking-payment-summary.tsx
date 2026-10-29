@@ -1,11 +1,9 @@
 "use client";
 
 import { formatPrice } from "../utils/price";
-import type { ExtraServiceItem, Item, LegPricing, Pricing } from "./types";
+import type { ExtraServiceItem, LegPricing, Pricing } from "./types";
+import type { BookingPaymentSummaryProps } from "../types/bookings";
 
-type Props = {
-  booking: Pick<Item, "pricing" | "totalPrice" | "extraServices" | "luggage" | "bookingType">;
-};
 
 function row(label: string, amount: number, discount = false) {
   if (!amount || amount <= 0) return null;
@@ -44,7 +42,7 @@ function serviceRows(
     });
 }
 
-export function BookingPaymentSummary(props: Props) {
+export function BookingPaymentSummary(props: BookingPaymentSummaryProps) {
   const pricing = (props.booking.pricing ?? {}) as Pricing;
   const rates = pricing.rates;
   const rate = (value: number | undefined) => (rates && value != null ? ` (${value}%)` : "");

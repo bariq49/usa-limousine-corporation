@@ -1,8 +1,6 @@
 import { APP_DISTANCE_UNIT } from "../constants/index";
 import type { FormatDistanceProps } from "../types/distance";
 
-export type { FormatDistanceProps };
-
 export function formatDistance(props?: FormatDistanceProps): string {
   const { distance, unit = APP_DISTANCE_UNIT, fallback = "—", digits = 1 } = props ?? {};
 

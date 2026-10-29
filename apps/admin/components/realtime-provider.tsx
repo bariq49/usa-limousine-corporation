@@ -16,7 +16,7 @@ import {
   useNotificationList,
 } from "@/hooks/queries/use-notifications";
 
-/** Admin page that a notification links to, if any. */
+
 function notificationHref(item: NotificationItem): string | null {
   const data = (item.data ?? {}) as Record<string, unknown>;
   const id = (key: string) => (typeof data[key] === "string" ? (data[key] as string) : null);
@@ -28,6 +28,8 @@ function notificationHref(item: NotificationItem): string | null {
     case "BOOKING_CREATED":
     case "BOOKING_CANCELLED":
       return id("bookingId") ? `/bookings/${id("bookingId")}` : "/pending-bookings";
+    case "BLOG_COMMENT_CREATED":
+      return id("commentId") ? `/blog-comments?id=${id("commentId")}` : "/blog-comments";
     default:
       return null;
   }

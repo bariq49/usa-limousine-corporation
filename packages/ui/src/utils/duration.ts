@@ -1,6 +1,4 @@
-import type { FormatDurationProps } from "../types/duration";
-
-export type { FormatDurationProps };
+import type { FormatDurationProps, FormatHrsProps } from "../types/duration";
 
 export function formatDuration(props?: FormatDurationProps): string {
   const { minutes, fallback = "—" } = props ?? {};
@@ -21,4 +19,9 @@ export function formatDuration(props?: FormatDurationProps): string {
   if (hours <= 0) return `${mins} min`;
   if (mins <= 0) return `${hours} hr`;
   return `${hours} hr ${mins} min`;
+}
+
+export function formatHrs(props: FormatHrsProps): string {
+  const { hours } = props;
+  return `${hours} ${hours === 1 ? "hr" : "hrs"}`;
 }

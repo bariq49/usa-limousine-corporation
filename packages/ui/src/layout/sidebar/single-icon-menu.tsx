@@ -1,21 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import type { SingleIconMenuProps } from "../../types/navigation";
 import { cn } from "../../utils/cn";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../components/tooltip";
-import type { ShellNavItem } from "../../utils/nav-model";
 
-export function SingleIconMenu({
-  index,
-  activeIndex,
-  item,
-  locationName,
-}: {
-  index: number;
-  activeIndex: number | null;
-  item: ShellNavItem;
-  locationName: string;
-}) {
+export function SingleIconMenu(props: SingleIconMenuProps) {
+  const { index, activeIndex, item, locationName } = props;
   const Icon = item.icon;
   const href = item.href;
 

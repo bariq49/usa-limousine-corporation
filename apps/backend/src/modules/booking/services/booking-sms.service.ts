@@ -1,7 +1,8 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { AppLogger } from "../../../common/logger/app.logger";
 import { TwilioService } from "../../../infrastructure/twilio/twilio.service";
-import { formatDate, formatTime } from "../../../infrastructure/email/templates/booking/cards";
+import { formatDate } from "../../../common/utils/format-date";
+import { formatTime } from "../../../common/utils/format-time";
 import { BookingRepository } from "../repositories/booking.repository";
 import type { PassengerInput, TimeInput } from "../types/booking";
 import { PLATFORM } from "@usa-limousine-corporation/config";
@@ -82,7 +83,7 @@ export class BookingSmsService {
         to: phone,
         body: text({
           bookingNumber: row.bookingNumber,
-          pickup: `${formatDate(time.pickupDate)} at ${formatTime(time.pickupTime)}`,
+          pickup: `${formatDate({ date: time.pickupDate })} at ${formatTime({ date: time.pickupTime })}`,
           total: row.totalPrice.toFixed(2),
         }),
       });

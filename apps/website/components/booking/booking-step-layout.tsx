@@ -7,7 +7,7 @@ import { AnimatedRouteMap } from "@usa-limousine-corporation/ui/bookings/animate
 import SummaryDetails from "@/components/booking/summary-details";
 import { useBookingStore } from "@/store/use-booking-store";
 import { useSyncQuote } from "@/hooks/queries/use-quotes";
-import { cn } from "@/lib/utils";
+import { cn } from "@usa-limousine-corporation/ui/utils/cn";
 import { PICKUP_TIME_ERRORS } from "@/constants/booking-constants";
 import type { ApiError } from "@/lib/api/client";
 

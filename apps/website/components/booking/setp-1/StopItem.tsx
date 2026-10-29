@@ -1,7 +1,7 @@
 import React from "react";
 import { Input } from "@usa-limousine-corporation/ui/components/input";
 import { Close } from "@usa-limousine-corporation/ui/svg";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice } from "@usa-limousine-corporation/ui/utils/price";
 
 interface StopItemProps {
   index: number;
@@ -22,7 +22,7 @@ export const StopItem: React.FC<StopItemProps> = ({ index, onRemove, stopFeePerS
               <>
                 Stop {index + 1}
                 {stopFeePerStop > 0 ? (
-                  <span className="text-secondary ml-1">({formatPrice(stopFeePerStop)} extra)</span>
+                  <span className="text-secondary ml-1">({formatPrice({ price: stopFeePerStop })} extra)</span>
                 ) : null}
               </>
             }

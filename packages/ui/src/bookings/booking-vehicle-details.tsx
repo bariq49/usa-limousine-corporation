@@ -2,14 +2,10 @@
 
 import { Car, UserList } from "../svg";
 import { DetailItem } from "./detail-item";
-import type { Item } from "./types";
+import type { BookingVehicleDetailsProps } from "../types/bookings";
 
-type Props = {
-  vehicleCategory?: Item["vehicleCategory"] | undefined;
-  vehicleCount?: number | undefined;
-};
 
-export function BookingVehicleDetails(props: Props) {
+export function BookingVehicleDetails(props: BookingVehicleDetailsProps) {
   const vehicle = props.vehicleCategory;
   if (!vehicle?.name) return null;
 

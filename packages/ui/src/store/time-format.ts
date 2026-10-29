@@ -2,8 +2,9 @@
 
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import type { HourCycle } from "../types/date";
 
-export type HourCycle = "12h" | "24h";
+export type { HourCycle };
 
 interface TimeFormatState {
   hourCycle: HourCycle;

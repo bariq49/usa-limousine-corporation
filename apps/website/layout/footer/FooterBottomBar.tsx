@@ -1,12 +1,15 @@
 "use client";
 
-import { formatInTimeZone } from "date-fns-tz";
 import Link from "next/link";
 import { PLATFORM } from "@usa-limousine-corporation/config";
+import { formatDate } from "@usa-limousine-corporation/ui/utils/date";
 import { Stagger, StaggerItem } from "@/components/animations";
 
 export default function FooterBottomBar() {
-  const year = formatInTimeZone(new Date(), PLATFORM.locale.timezone, "yyyy");
+  const year = formatDate({
+    date: new Date(),
+    options: { year: "numeric" },
+  });
 
   return (
     <div className="border-t border-white/15 bg-black">

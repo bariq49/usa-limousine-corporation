@@ -4,3 +4,7 @@ export interface FormatDurationProps {
   minutes?: DurationInput;
   fallback?: string | undefined;
 }
+
+export interface FormatHrsProps {
+  hours: number;
+}

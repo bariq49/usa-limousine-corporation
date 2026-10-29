@@ -165,32 +165,34 @@ export function Upload(props: UploadProps) {
           )}
 
           {/* Hover overlay with "Change image" hint */}
-          {!disabled && !isUploading && (
-            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-2 text-white text-xs font-medium pointer-events-none">
+          {!disabled && !isUploading ? (
+            <div className="pointer-events-none absolute inset-0 z-[1] flex items-center justify-center gap-2 bg-black/40 text-xs font-medium text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100">
               <UploadIcon className="h-4 w-4" />
               <span>Click or drop image to replace</span>
             </div>
-          )}
+          ) : null}
 
           {/* Uploading overlay */}
-          {isUploading && (
-            <div className="absolute inset-0 bg-white/80 backdrop-blur-[1px] flex flex-col items-center justify-center gap-1.5 z-20">
+          {isUploading ? (
+            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-1.5 bg-white/80 backdrop-blur-[1px]">
               <Loader2 className="h-6 w-6 animate-spin text-primary" />
               <span className="text-xs font-semibold text-primary">Uploading...</span>
             </div>
-          )}
+          ) : null}
 
           {/* Remove button */}
-          {!disabled && !isUploading && (
+          {!disabled && !isUploading ? (
             <button
               type="button"
-              className="absolute top-2 right-2 h-7 w-7 rounded-full bg-black/60 hover:bg-destructive text-white flex items-center justify-center transition-colors shadow-sm z-10 cursor-pointer"
+              className="absolute top-2 right-2 z-30 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-black/10 bg-white text-default-700 shadow-md transition-colors hover:bg-destructive hover:text-white"
               onClick={handleRemove}
+              onMouseDown={(event) => event.stopPropagation()}
               title="Remove image"
+              aria-label="Remove image"
             >
-              <X className="h-3.5 w-3.5" />
+              <X className="h-4 w-4" strokeWidth={2.5} />
             </button>
-          )}
+          ) : null}
         </div>
       ) : (
         <div

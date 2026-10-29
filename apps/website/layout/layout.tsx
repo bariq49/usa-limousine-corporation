@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
+import { cn } from "@usa-limousine-corporation/ui/utils/cn";
 import Footer from "./footer/footer";
 import Header from "./header/Header";
 

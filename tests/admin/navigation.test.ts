@@ -8,6 +8,13 @@ describe("admin navigation", () => {
     );
     expect(hrefs.sort()).toEqual([
       "/analytics",
+      "/blog-categories",
+      "/blog-comments",
+      "/blog-tags",
+      "/blogs",
+      "/blogs/create",
+      "/blogs/drafts",
+      "/blogs/scheduled",
       "/bookings",
       "/calendar",
       "/cancelled-bookings",

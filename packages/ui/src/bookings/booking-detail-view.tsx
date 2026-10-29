@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { ComponentType, ReactNode, SVGProps } from "react";
+import type { ComponentType, SVGProps } from "react";
 import { ArrowLeft, BadgeCheck, BadgeX, Clock } from "lucide-react";
 import { Badge } from "../components/badge";
 import { Button } from "../components/button";
@@ -27,10 +27,11 @@ import { AnimatedRouteMap } from "./animated-route-map";
 import { BookingVehicleDetails } from "./booking-vehicle-details";
 import { DetailItem } from "./detail-item";
 import { getLuggageIcon } from "./luggage-icon";
-import { formatDate, formatTime } from "../utils/date";
+import { calculateArrivalTime, formatDate, formatTime } from "../utils/date";
 import { formatDistance } from "../utils/distance";
 import { formatDuration } from "../utils/duration";
 import type { Item } from "./types";
+import type { BookingDetailViewProps } from "../types/bookings";
 import {
   BOOKING_STATUS_DESCRIPTIONS,
   BOOKING_STATUS_HEADINGS,
@@ -62,22 +63,8 @@ function BookingStatusIcon({ status }: { status: Item["status"] }) {
   return <BadgeCheck className={`${className} fill-default-900`} />;
 }
 
-function addMinutes(time: string, minutes: number) {
-  const [hours = 0, mins = 0] = time.split(":").map(Number);
-  const total = (((hours * 60 + mins + Math.round(minutes)) % 1440) + 1440) % 1440;
-  return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
-}
 
-type Props = {
-  booking: Item;
-  actions?: ReactNode;
-  backHref?: string;
-  heading?: { title: string; description: string };
-  mapStickyClassName?: string;
-  children?: ReactNode;
-};
-
-export function BookingDetailView(props: Props) {
+export function BookingDetailView(props: BookingDetailViewProps) {
   const { booking } = props;
   const router = useRouter();
 
@@ -96,7 +83,9 @@ export function BookingDetailView(props: Props) {
   const travelMinutes =
     booking.address?.travelDuration ?? (isHourly ? undefined : booking.address?.duration);
   const arrivalTime =
-    !isHourly && pickupTime && travelMinutes != null ? addMinutes(pickupTime, travelMinutes) : null;
+    !isHourly && pickupTime && travelMinutes != null
+      ? calculateArrivalTime({ time: pickupTime, durationMinutes: travelMinutes })
+      : null;
   const showMap = !isHourly && Boolean(booking.address?.dropoff?.address);
 
   return (
@@ -208,7 +197,7 @@ export function BookingDetailView(props: Props) {
                 isHourly={isHourly}
                 durationLabel={formatDuration({ minutes: booking.address?.duration })}
                 pickupTime={pickupTime ? formatTime({ date: pickupTime }) : undefined}
-                dropoffTime={arrivalTime ? formatTime({ date: arrivalTime }) : undefined}
+                dropoffTime={arrivalTime && arrivalTime !== "—" ? arrivalTime : undefined}
               />
 
               <section className="flex flex-1 flex-col rounded-md bg-default-100 p-4">

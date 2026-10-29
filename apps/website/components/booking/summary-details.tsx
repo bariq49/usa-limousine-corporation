@@ -4,15 +4,7 @@ import { useMemo, useState } from "react";
 import { useTimeFormat } from "@usa-limousine-corporation/ui/store/time-format";
 import { useBookingStore, usePricing } from "@/store/use-booking-store";
 import { BookingLocationDetails } from "@usa-limousine-corporation/ui/bookings/booking-location-details";
-import {
-  calculateArrivalTime,
-  formatDistance,
-  formatDuration,
-  formatHrs,
-  formatPrice,
-  formatTime,
-  cn,
-} from "@/lib/utils";
+import { cn } from "@usa-limousine-corporation/ui/utils/cn";
 import { PriceRow } from "@usa-limousine-corporation/ui/bookings/price-row";
 import type { LegPricing } from "@usa-limousine-corporation/ui/bookings/types";
 import {
@@ -31,8 +23,15 @@ import {
   Users,
   Visa,
 } from "@usa-limousine-corporation/ui/svg";
-import { format, isValid, parseISO, subMinutes } from "date-fns";
-import { formatInTimeZone, fromZonedTime } from "date-fns-tz";
+import {
+  calculateArrivalTime,
+  formatDate,
+  formatTime,
+  shiftDateTime,
+} from "@usa-limousine-corporation/ui/utils/date";
+import { formatDistance } from "@usa-limousine-corporation/ui/utils/distance";
+import { formatDuration, formatHrs } from "@usa-limousine-corporation/ui/utils/duration";
+import { formatPrice } from "@usa-limousine-corporation/ui/utils/price";
 import { useSettings } from "@/hooks/queries/use-settings";
 import { EditBookingModal } from "./modals/edit-booking-modal";
 import { ReturnTripModal } from "./modals/return-trip-modal";
@@ -45,13 +44,14 @@ function getChildSeatLabel(name: string) {
   return shortName || name;
 }
 
-type Props = {
+type SummaryDetailsProps = {
   className?: string;
 };
 
 type SummaryLine = { id: string; name: string; quantity: number; total: number };
 
-function SummaryDetails({ className }: Props = {}) {
+function SummaryDetails(props: SummaryDetailsProps = {}) {
+  const { className } = props;
   const hasHydrated = useHasHydrated();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
@@ -69,13 +69,11 @@ function SummaryDetails({ className }: Props = {}) {
   const pickupDate = (step1?.pickupDate || "").trim();
   const pickupTime = (step1?.pickupTime || "").trim();
   const hasPickupTime = Boolean(pickupTime);
-  const formattedPickupDate = useMemo(() => {
-    const date = parseISO(pickupDate);
-    return isValid(date) ? format(date, "dd MMM yyyy") : "—";
-  }, [pickupDate]);
+  const formattedPickupDate = useMemo(() => formatDate({ date: pickupDate }), [pickupDate]);
 
   const isHourly = step1?.tripType === TRIP_TYPES.HOURLY;
-  const hireDuration = isHourly && step1?.duration ? formatHrs(step1.duration) : null;
+  const hireDuration =
+    isHourly && step1?.duration ? formatHrs({ hours: step1.duration }) : null;
 
   const deliveryTime = useMemo(
     () =>
@@ -94,30 +92,33 @@ function SummaryDetails({ className }: Props = {}) {
     () =>
       isHourly || !distance
         ? null
-        : `${(distance * 1.60934).toFixed(1)} km / ${formatDistance(distance)}`,
+        : `${(distance * 1.60934).toFixed(1)} km / ${formatDistance({ distance })}`,
     [isHourly, distance],
   );
   const estDuration = useMemo(
-    () => (isHourly ? null : formatDuration(step1?.travelDuration)),
+    () =>
+      isHourly || !step1?.travelDuration
+        ? null
+        : formatDuration({ minutes: step1.travelDuration }),
     [isHourly, step1?.travelDuration],
   );
 
   const returnEnabled = Boolean(returnTrip);
   const stopCount = stops.length;
   const cancellationRefundRate = settings?.cancellationRefundRate ?? 0;
-  const pickupDateTime = fromZonedTime(`${pickupDate} ${pickupTime}`, PLATFORM.locale.timezone);
-  const cancellationDeadline = isValid(pickupDateTime)
-    ? formatInTimeZone(
-        subMinutes(pickupDateTime, settings?.cancellationMinutes ?? 0),
-        PLATFORM.locale.timezone,
-        hourCycle === "24h" ? "d MMMM yyyy HH:mm" : "d MMMM yyyy hh:mm a",
-      )
+  const cancellationAt = shiftDateTime({
+    date: pickupDate,
+    time: pickupTime,
+    minutes: -(settings?.cancellationMinutes ?? 0),
+  });
+  const cancellationDeadline = cancellationAt
+    ? `${formatDate({
+        date: cancellationAt.date,
+        options: { day: "numeric", month: "long", year: "numeric" },
+      })}, ${formatTime({ date: cancellationAt.time, hourCycle })}`
     : null;
   const returnTime = (returnTrip?.returnTime || "").trim();
-  const parsedReturnDate = parseISO((returnTrip?.returnDate || "").trim());
-  const formattedReturnDate = isValid(parsedReturnDate)
-    ? format(parsedReturnDate, "dd MMM yyyy")
-    : "—";
+  const formattedReturnDate = formatDate({ date: (returnTrip?.returnDate || "").trim() });
   const returnArrivalTime = calculateArrivalTime({
     hourCycle,
     time: returnTime,
@@ -161,7 +162,7 @@ function SummaryDetails({ className }: Props = {}) {
             ×{line.quantity}
           </span>
         </span>
-        <span className="shrink-0 font-medium text-black">{formatPrice(line.total)}</span>
+        <span className="shrink-0 font-medium text-black">{formatPrice({ price: line.total })}</span>
       </div>
     ));
 
@@ -172,40 +173,27 @@ function SummaryDetails({ className }: Props = {}) {
     extras: SummaryLine[],
   ) => (
     <>
-      <PriceRow format={formatPrice} label={`${prefix}Base Price`} value={leg.basePrice} />
+      <PriceRow label={`${prefix}Base Price`} value={leg.basePrice} />
       <PriceRow
-        format={formatPrice}
         label={`${prefix}Fuel Surcharge (${rates?.fuelSurchargeRate ?? 0}%)`}
         value={leg.fuelSurchargePrice}
       />
       <PriceRow
-        format={formatPrice}
         label={`${prefix}Gratuity (${rates?.gratuityRate ?? 0}%)`}
         value={leg.gratuityPrice}
       />
+      <PriceRow label={`${prefix}Tax (${rates?.taxRate ?? 0}%)`} value={leg.taxPrice} />
       <PriceRow
-        format={formatPrice}
-        label={`${prefix}Tax (${rates?.taxRate ?? 0}%)`}
-        value={leg.taxPrice}
-      />
-      <PriceRow
-        format={formatPrice}
         label={`${prefix}Transaction Fee (${rates?.transactionFeeRate ?? 0}%)`}
         value={leg.transactionFeePrice}
       />
       <PriceRow
-        format={formatPrice}
         label={`${prefix}Discount (${discountRate ?? 0}%)`}
         value={leg.discountPrice}
         destructive
       />
+      <PriceRow label={`${prefix}Airport Pickup`} value={leg.airportPickupPrice} />
       <PriceRow
-        format={formatPrice}
-        label={`${prefix}Airport Pickup`}
-        value={leg.airportPickupPrice}
-      />
-      <PriceRow
-        format={formatPrice}
         label={`${prefix}Meet & Greet Service`}
         value={leg.meetAndGreetPrice ?? 0}
       />
@@ -254,7 +242,7 @@ function SummaryDetails({ className }: Props = {}) {
             stops={stops}
             isHourly={isHourly}
             durationLabel={hireDuration}
-            pickupTime={hasPickupTime ? formatTime(pickupTime, hourCycle) : undefined}
+            pickupTime={hasPickupTime ? formatTime({ date: pickupTime, hourCycle }) : undefined}
             dropoffTime={hasPickupTime && deliveryTime !== "—" ? deliveryTime : undefined}
             note={[estDuration, estDistance]
               .filter(Boolean)
@@ -274,7 +262,7 @@ function SummaryDetails({ className }: Props = {}) {
                 pickupLocation={step1?.deliveryAddress}
                 dropoffLocation={step1?.pickupAddress}
                 stops={stops.slice().reverse()}
-                pickupTime={returnTime ? formatTime(returnTime, hourCycle) : undefined}
+                pickupTime={returnTime ? formatTime({ date: returnTime, hourCycle }) : undefined}
                 dropoffTime={
                   returnTime && returnArrivalTime !== "—" ? returnArrivalTime : undefined
                 }
@@ -358,16 +346,11 @@ function SummaryDetails({ className }: Props = {}) {
                     )
                   )}
                   <PriceRow
-                    format={formatPrice}
                     label={`Additional Stops (${stopCount})`}
                     value={pricing.stopsPrice ?? 0}
                   />
                   {lineRows("", luggageLines)}
-                  <PriceRow
-                    format={formatPrice}
-                    label="Notifications"
-                    value={pricing.notificationsPrice ?? 0}
-                  />
+                  <PriceRow label="Notifications" value={pricing.notificationsPrice ?? 0} />
 
                   <div className="flex items-end justify-between border-t border-gray-100 pt-2">
                     <span className="text-sm font-semibold text-black">Total price</span>

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useReducedMotion, type HTMLMotionProps } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { cn } from "@usa-limousine-corporation/ui/utils/cn";
 import {
   cardSequenceVariants,
   cardShellVariants,

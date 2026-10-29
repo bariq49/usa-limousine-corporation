@@ -1,23 +1,15 @@
-import type { ComponentType } from "react";
-import type { MenuItem, MenuSection, NavIcon, RoleKey } from "../types/navigation";
+import type {
+  MenuItem,
+  MenuSection,
+  NavIcon,
+  RoleKey,
+  ShellNavChild,
+  ShellNavIcon,
+  ShellNavItem,
+} from "../types/navigation";
 import { filterMenuSections } from "./menu";
 
-export type ShellNavIcon = ComponentType<{ className?: string }>;
-
-export interface ShellNavChild {
-  title: string;
-  href?: string;
-  icon?: ShellNavIcon;
-  nested?: ShellNavChild[];
-  child?: ShellNavChild[];
-}
-
-export interface ShellNavItem {
-  title: string;
-  href?: string;
-  icon?: ShellNavIcon;
-  child?: ShellNavChild[];
-}
+export type { ShellNavChild, ShellNavIcon, ShellNavItem };
 
 function resolveIcon(rawIcon?: NavIcon): ShellNavIcon | undefined {
   if (!rawIcon) return undefined;

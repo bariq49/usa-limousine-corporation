@@ -1,12 +1,11 @@
 "use client";
 
-import { APP_TIMEZONE } from "@usa-limousine-corporation/ui/constants";
-import { formatInTimeZone } from "date-fns-tz";
 import { useState } from "react";
 import {
   BookingOverview,
   type OverviewStat,
 } from "@usa-limousine-corporation/ui/dashboard/booking-overview";
+import { formatDate } from "@usa-limousine-corporation/ui/utils/date";
 import { DashboardCalendarPanel } from "@/components/dashboard-calendar-panel";
 import { PeriodSelect } from "@/components/period-select";
 import { STATS_PERIODS } from "@/config/periods";
@@ -124,7 +123,7 @@ const Analytics = () => {
         title="Booking Overview"
         description={`${data?.totalBookings ?? 0} bookings by booking date · performance and booking metrics breakdown.`}
         stats={bookingStats}
-        year={Number(formatInTimeZone(new Date(), APP_TIMEZONE, "yyyy"))}
+        year={Number(formatDate({ date: new Date(), options: { year: "numeric" } }))}
         categories={data?.labels ?? []}
         chartDescription={subtitle}
         isLoading={isLoading}
@@ -137,7 +136,7 @@ const Analytics = () => {
             title="Driver Assignment Overview"
             description={`${data?.activeDrivers ?? 0} active drivers · assigned rides, admin commission and driver payout by pickup date.`}
             stats={assignmentStats}
-            year={Number(formatInTimeZone(new Date(), APP_TIMEZONE, "yyyy"))}
+            year={Number(formatDate({ date: new Date(), options: { year: "numeric" } }))}
             categories={data?.labels ?? []}
             chartDescription={subtitle}
             isLoading={isLoading}

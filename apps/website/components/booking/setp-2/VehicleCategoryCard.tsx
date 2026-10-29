@@ -7,10 +7,11 @@ import {
   Luggage,
   Users,
 } from "@usa-limousine-corporation/ui/svg";
-import { cn, formatPrice } from "@/lib/utils";
+import { cn } from "@usa-limousine-corporation/ui/utils/cn";
 import { Stepper } from "@usa-limousine-corporation/ui/components/stepper";
 import { MAX_VEHICLES } from "@/constants/booking-constants";
 import type { QuoteEstimate, VehicleCategory } from "@/types/booking.types";
+import { formatPrice } from "@usa-limousine-corporation/ui/utils/price";
 
 interface VehicleCategoryCardProps {
   vehicleCategory: VehicleCategory;
@@ -123,13 +124,13 @@ export default function VehicleCategoryCard({
                     {hasDiscount && (
                       <div className="flex items-center gap-2 text-xs sm:text-sm">
                         <span className="text-gray-400 line-through">
-                          {formatPrice(priceBeforeDiscount)}
+                          {formatPrice({ price: priceBeforeDiscount })}
                         </span>
                         <span className="font-semibold text-success">-{discountPercentage}%</span>
                       </div>
                     )}
                     <span className="text-2xl font-semibold leading-none tracking-tight text-black sm:text-3xl">
-                      {formatPrice(totalPrice)}
+                      {formatPrice({ price: totalPrice })}
                     </span>
                   </div>
                 )}

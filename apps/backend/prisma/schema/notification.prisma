@@ -9,6 +9,7 @@ enum NotificationType {
   TICKET_CREATED
   BOOKING_CREATED
   BOOKING_CANCELLED
+  BLOG_COMMENT_CREATED
 }
 
 model Notification {

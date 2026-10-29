@@ -1,6 +1,6 @@
 import React from "react";
 import { ArrowDownUp } from "@usa-limousine-corporation/ui/svg";
-import { cn } from "@/lib/utils";
+import { cn } from "@usa-limousine-corporation/ui/utils/cn";
 
 interface SwapButtonProps {
   onSwap: () => void;

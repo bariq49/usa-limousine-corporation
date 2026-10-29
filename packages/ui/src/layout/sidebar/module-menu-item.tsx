@@ -2,13 +2,19 @@
 
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
+import type {
+  ModuleMenuItemProps,
+  NavLinkProps,
+  NestedMenusProps,
+} from "../../types/navigation";
 import { cn, isLocationMatch } from "../../utils/cn";
-import type { ShellNavChild } from "../../utils/nav-model";
 
-function NavLink({ childItem, locationName }: { childItem: ShellNavChild; locationName: string }) {
+function NavLink(props: NavLinkProps) {
+  const { childItem, locationName, siblingHrefs } = props;
   const href = childItem.href ?? "/";
   const Icon = childItem.icon;
-  const active = isLocationMatch(href, locationName);
+  const active = isLocationMatch(href, locationName, siblingHrefs);
+
   return (
     <Link
       href={href}
@@ -30,24 +36,18 @@ function NavLink({ childItem, locationName }: { childItem: ShellNavChild; locati
   );
 }
 
-export function ModuleMenuItem({
-  childItem,
-  toggleNested,
-  nestedIndex,
-  index,
-  locationName,
-}: {
-  childItem: ShellNavChild;
-  toggleNested: (subIndex: number) => void;
-  nestedIndex: number | null;
-  index: number;
-  locationName: string;
-}) {
+export function ModuleMenuItem(props: ModuleMenuItemProps) {
+  const { childItem, toggleNested, nestedIndex, index, locationName, siblingHrefs } = props;
   const Icon = childItem.icon;
+
   if (!childItem.nested) {
     return (
       <div className="flex-1">
-        <NavLink childItem={childItem} locationName={locationName} />
+        <NavLink
+          childItem={childItem}
+          locationName={locationName}
+          siblingHrefs={siblingHrefs}
+        />
       </div>
     );
   }
@@ -82,20 +82,15 @@ export function ModuleMenuItem({
   );
 }
 
-export function NestedMenus({
-  nestedIndex,
-  index,
-  nestedMenus,
-  locationName,
-}: {
-  nestedIndex: number | null;
-  index: number;
-  nestedMenus: ShellNavChild[] | undefined;
-  locationName: string;
-}) {
+export function NestedMenus(props: NestedMenusProps) {
+  const { nestedIndex, index, nestedMenus, locationName } = props;
+
   if (!nestedMenus?.length) {
     return null;
   }
+
+  const siblingHrefs = nestedMenus.map((item) => item.href);
+
   return (
     <ul
       className={cn(
@@ -103,20 +98,23 @@ export function NestedMenus({
         nestedIndex === index ? "block" : "hidden",
       )}
     >
-      {nestedMenus.map((item) => (
-        <li key={item.title} className="relative ml-[30px] block first:pt-4">
-          <Link href={item.href ?? "/"}>
-            <div
-              className={cn("pl-3 text-sm font-normal capitalize", {
-                "text-primary": isLocationMatch(item.href, locationName),
-                "text-default-700 hover:text-primary": !isLocationMatch(item.href, locationName),
-              })}
-            >
-              {item.title}
-            </div>
-          </Link>
-        </li>
-      ))}
+      {nestedMenus.map((item) => {
+        const active = isLocationMatch(item.href, locationName, siblingHrefs);
+        return (
+          <li key={item.title} className="relative ml-[30px] block first:pt-4">
+            <Link href={item.href ?? "/"}>
+              <div
+                className={cn("pl-3 text-sm font-normal capitalize", {
+                  "text-primary": active,
+                  "text-default-700 hover:text-primary": !active,
+                })}
+              >
+                {item.title}
+              </div>
+            </Link>
+          </li>
+        );
+      })}
     </ul>
   );
 }

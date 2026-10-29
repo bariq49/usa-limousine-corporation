@@ -10,15 +10,9 @@ import { Eye, MapPin, Navigation, Trash2 } from "lucide-react";
 import { formatDate, formatTime } from "../utils/date";
 import { formatPrice } from "../utils/price";
 import type { BookingStatus, BookingType, Item } from "./types";
+import type { BookingColumnOptions } from "../types/bookings";
 
-export type BookingColumnOptions = {
-  /** Where booking links point, e.g. "/bookings" (admin) or "/my-bookings" (customer). */
-  basePath?: string;
-  /** When set, rows get a select checkbox and a delete button (admin). */
-  onDelete?: (item: Item) => void;
-  onCancel?: (item: Item) => void;
-  onConfirm?: (item: Item) => void;
-};
+export type { BookingColumnOptions };
 
 const statusColorMap: Record<
   BookingStatus,
