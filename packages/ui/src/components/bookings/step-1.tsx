@@ -34,6 +34,7 @@ import {
 import { Step1FormSkeleton } from "../../skeletons/step-1-form-skeleton";
 import { TRIP_TYPES } from "../../constants/booking";
 import type { HeroFormValues, TripType } from "../../types/booking";
+import { validateBookingTime } from "../../utils/date";
 
 const TRIP_TABS = [
   { value: TRIP_TYPES.ONE_WAY, label: "One Way" },
@@ -110,6 +111,20 @@ function Step1() {
   };
 
   const onSubmit = (values: HeroFormValues) => {
+    const pickupValidation = validateBookingTime({
+      date: values.pickupDate,
+      time: values.pickupTime,
+      minBookingMinutes: settings?.minBookingMinutes ?? 0,
+    });
+    if (!pickupValidation.isValid) {
+      toast.error(
+        pickupValidation.isPast
+          ? "The pickup time has already passed. Please choose a later time."
+          : `Bookings need at least ${pickupValidation.timeDisplay} notice. Please choose a later time.`,
+      );
+      return;
+    }
+
     setIsSubmitting(true);
     const pickupAddress = values.pickupAddress.trim();
     const deliveryAddress = isHourly ? "" : values.deliveryAddress.trim();

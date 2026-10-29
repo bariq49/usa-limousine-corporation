@@ -20,6 +20,7 @@ import {
   Spinner,
 } from "../../svg";
 import { cn } from "../../utils/cn";
+import { validateBookingTime } from "../../utils/date";
 import { formatPrice } from "../../utils/price";
 import {
   getCurrentLocationErrorMessage,
@@ -130,6 +131,20 @@ export function EditBookingModal(props: Props) {
   };
 
   const onSubmit = (values: HeroFormValues) => {
+    const pickupValidation = validateBookingTime({
+      date: values.pickupDate,
+      time: values.pickupTime,
+      minBookingMinutes: settings?.minBookingMinutes ?? 0,
+    });
+    if (!pickupValidation.isValid) {
+      toast.error(
+        pickupValidation.isPast
+          ? "The pickup time has already passed. Please choose a later time."
+          : `Bookings need at least ${pickupValidation.timeDisplay} notice. Please choose a later time.`,
+      );
+      return;
+    }
+
     setIsSubmitting(true);
     const pickupAddress = values.pickupAddress.trim();
     const deliveryAddress = isHourly ? "" : values.deliveryAddress.trim();
