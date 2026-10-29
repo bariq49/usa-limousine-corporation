@@ -17,5 +17,3 @@ export class QueryDto extends ApiFeatureQueryDto {
   @IsBoolean()
   isActive?: boolean;
 }
-
-export { QueryDto as LuggageQueryDto };

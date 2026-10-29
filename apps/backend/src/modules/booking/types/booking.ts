@@ -1,8 +1,5 @@
 import type { Request } from "express";
-import type {
-  BookingPricing,
-  BookingPricingInput,
-} from "../../platform-settings/types/platform-settings";
+import type { BookingPricing } from "../../platform-settings/types/platform-settings";
 import type { BookingStatus, BookingType, Prisma } from "@prisma/client";
 import type { CancelDto } from "../dto/booking.dto";
 
@@ -33,7 +30,9 @@ export const bookingItemsInclude = {
     include: { luggageType: { select: { id: true, name: true } } },
   },
   extraServices: {
-    include: { extraService: { select: { id: true, name: true, type: true } } },
+    include: {
+      extraService: { select: { id: true, name: true, description: true, type: true } },
+    },
   },
 } as const;
 
@@ -98,12 +97,14 @@ export type PricingInput = {
 
 export type FlightDetailsInput = {
   flightNumber?: string | undefined;
+  returnFlightNumber?: string | undefined;
 };
 
 export type MeetAndGreetInput = {
   enabled?: boolean | undefined;
   returnEnabled?: boolean | undefined;
   signName?: string | undefined;
+  returnSignName?: string | undefined;
 };
 
 export type ExtraServiceItemInput = {
@@ -146,7 +147,6 @@ export type CreateData = {
   notes?: string | null | undefined;
   returnNotes?: string | null | undefined;
   luggage: LuggageItemInput[];
-  quoteId?: string | undefined;
   notifyByEmail?: boolean | undefined;
   notifyBySms?: boolean | undefined;
 };
@@ -222,9 +222,7 @@ export type CalendarEvent = {
   dropoffAddress: string | null;
 };
 
-export type TripPricing = Omit<BookingPricingInput, "basePrice" | "vehicleCount">;
-
-export type QuoteEstimate = {
+export type VehicleEstimate = {
   vehicleCategory: {
     id: string;
     name: string;
@@ -236,6 +234,6 @@ export type QuoteEstimate = {
   vehicleCount: number;
   pricing: BookingPricing;
   total: number;
+  distance: number;
+  travelDuration: number;
 };
-
-export type SavedQuote = QuoteEstimate & { id: string; expiresAt: Date };

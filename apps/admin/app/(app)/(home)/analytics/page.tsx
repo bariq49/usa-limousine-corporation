@@ -4,7 +4,7 @@ import { useState } from "react";
 import {
   BookingOverview,
   type OverviewStat,
-} from "@usa-limousine-corporation/ui/dashboard/booking-overview";
+} from "@usa-limousine-corporation/ui/components/dashboard/booking-overview";
 import { formatDate } from "@usa-limousine-corporation/ui/utils/date";
 import { DashboardCalendarPanel } from "@/components/dashboard-calendar-panel";
 import { PeriodSelect } from "@/components/period-select";

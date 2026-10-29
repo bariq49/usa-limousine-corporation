@@ -4,11 +4,11 @@ import { useState } from "react";
 import {
   BookingOverview,
   type OverviewStat,
-} from "@usa-limousine-corporation/ui/dashboard/booking-overview";
+} from "@usa-limousine-corporation/ui/components/dashboard/booking-overview";
 import { PageHeader } from "@usa-limousine-corporation/ui/layout/page-header";
 import { useUser } from "@usa-limousine-corporation/ui/providers/user-context";
-import { BookingCalendar } from "@usa-limousine-corporation/ui/bookings/booking-calendar";
-import type { CalendarQuery } from "@usa-limousine-corporation/ui/bookings/types";
+import { BookingCalendar } from "@usa-limousine-corporation/ui/components/bookings/booking-calendar";
+import type { CalendarQuery } from "@usa-limousine-corporation/ui/types/booking-model";
 import { formatDate } from "@usa-limousine-corporation/ui/utils/date";
 import { useBookingAnalytics, useBookingCalendar } from "@/hooks/queries/use-bookings";
 

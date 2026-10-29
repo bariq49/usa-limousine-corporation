@@ -4,7 +4,7 @@ export type RouteStop = {
   longitude?: number | null;
 };
 
-export type ResolveRouteProps = {
+export type CalculateDistanceProps = {
   pickup: RouteStop;
   dropoff: RouteStop;
   stops?: RouteStop[];

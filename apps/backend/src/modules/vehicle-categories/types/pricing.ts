@@ -1,5 +1,3 @@
-import { roundAmount } from "../../../common/utils/money";
-
 export type PricedVehicle = {
   id: string;
   name: string;
@@ -9,17 +7,6 @@ export type PricedVehicle = {
   luggageCount: number;
   basePrice: number;
 };
-
-export type HourlyPriceInput = {
-  basePrice: number;
-  includedDistance: number;
-  extraDistanceRate: number;
-};
-
-export function hourlyPrice(pricing: HourlyPriceInput, distance: number): number {
-  const overage = Math.max(0, distance - pricing.includedDistance);
-  return roundAmount(pricing.basePrice + overage * pricing.extraDistanceRate);
-}
 
 export const pricingInclude = {
   vehicleCategory: {

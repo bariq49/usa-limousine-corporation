@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import type { VehicleCategory, Estimate } from "./booking";
 import type {
   BookingType,
   CalendarEvent,
@@ -6,7 +7,7 @@ import type {
   Item,
   Passenger,
   Payment,
-} from "../bookings/types";
+} from "./booking-model";
 
 export interface BookingDetailViewProps {
   booking: Item;
@@ -98,4 +99,19 @@ export interface BookingColumnOptions {
   onDelete?: (item: Item) => void;
   onCancel?: (item: Item) => void;
   onConfirm?: (item: Item) => void;
+}
+
+export interface VehicleCategoryCardProps {
+  vehicleCategory: VehicleCategory;
+  estimate: Estimate | null;
+  isPricing?: boolean;
+  isSelected?: boolean;
+  vehicleCount: number;
+  passengers: number;
+  bags: number;
+  onSelect: (vehicleCategory: VehicleCategory) => void;
+  onVehicleCountChange: (value: number) => void;
+  onPassengersChange: (value: number) => void;
+  onBagsChange: (value: number) => void;
+  onShowSummary: () => void;
 }

@@ -13,7 +13,7 @@ import {
 import { Button } from "@usa-limousine-corporation/ui/components/button";
 import { Form } from "@usa-limousine-corporation/ui/components/form";
 import { Input, type InputOption } from "@usa-limousine-corporation/ui/components/input";
-import type { Item } from "@usa-limousine-corporation/ui/bookings/types";
+import type { Item } from "@usa-limousine-corporation/ui/types/booking-model";
 import { formatPrice } from "@usa-limousine-corporation/ui/utils/price";
 import { driverName } from "@/components/columns/driver-columns";
 import { useAssignDriver, useDrivers } from "@/hooks/queries/use-drivers";

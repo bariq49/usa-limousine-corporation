@@ -1,4 +1,4 @@
-import { BookingStatus, PaymentMode, PaymentStatus, Prisma } from "@prisma/client";
+import { BookingStatus, PaymentMode, PaymentStatus } from "@prisma/client";
 import { PaymentService } from "../src/modules/payment/services/payment.service";
 
 const body = {
@@ -7,7 +7,6 @@ const body = {
   address: { pickup: { address: "A" }, dropoff: { address: "B" }, distance: 10, travelDuration: 20 },
   passenger: { passengerCount: 1, name: "Ada", phone: "+17322898928", email: "ada@example.com" },
   bookingTime: { pickupDate: "2030-09-11", pickupTime: "14:00" },
-  quoteId: "quote-1",
 } as never;
 const request = { headers: {} } as never;
 const passenger = { name: "Ada", email: "ada@example.com", phone: "+17322898928" };
@@ -31,21 +30,14 @@ function setup(
     recorded?: boolean;
     createLink?: jest.Mock;
     customerId?: string | null;
-    existing?: Record<string, unknown> | null;
-    createError?: unknown;
   } = {},
 ) {
-  const quoteService = {
-    find: jest.fn(async () => ({ id: "quote-1" })),
-    pricingFor: jest.fn(async () => ({ basePrice: 100, total: 110 })),
+  const pricingService = {
+    calculatePrice: jest.fn(async () => ({ basePrice: 100, total: 110 })),
   };
   const bookingRepository = {
     findCustomerIdByEmail: jest.fn(async () => options.customerId ?? null),
-    create: jest.fn(async () => {
-      if (options.createError) throw options.createError;
-      return { id: "book-1", bookingNumber: "BK-1" };
-    }),
-    findByQuoteId: jest.fn(async () => options.existing ?? null),
+    create: jest.fn(async () => ({ id: "book-1", bookingNumber: "BK-000001" })),
     attachPaymentLink: jest.fn(async () => undefined),
     delete: jest.fn(async () => undefined),
     findByOrderId: jest.fn(async () => ({
@@ -89,7 +81,7 @@ function setup(
   };
 
   const service = new PaymentService(
-    quoteService as never,
+    pricingService as never,
     bookingRepository as never,
     paymentRepository as never,
     { nextBooking: async () => 1 } as never,
@@ -116,7 +108,7 @@ function setup(
     notifications,
     emails,
     sms,
-    quoteService,
+    pricingService,
   };
 }
 
@@ -135,12 +127,17 @@ describe("PaymentService.startCheckout", () => {
   });
 
   it("saves a pending booking and returns the Square checkout page", async () => {
-    const { service, bookingRepository, square } = setup();
+    const { service, bookingRepository, square, pricingService } = setup();
 
     const result = await service.startCheckout(body, request);
 
+    expect(pricingService.calculatePrice).toHaveBeenCalledWith(body);
     expect(bookingRepository.create).toHaveBeenCalledWith(
-      expect.objectContaining({ userId: null, status: BookingStatus.PENDING }),
+      expect.objectContaining({
+        userId: null,
+        status: BookingStatus.PENDING,
+        pricing: { basePrice: 100, total: 110 },
+      }),
     );
     expect(square.createPaymentLink).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -159,73 +156,6 @@ describe("PaymentService.startCheckout", () => {
       orderId: ORDER_ID,
       bookingNumber: "BK-000001",
     });
-  });
-
-  it("charges the quote's price and records the quote on the booking", async () => {
-    const { service, quoteService, bookingRepository, square } = setup();
-
-    await service.startCheckout(body, request);
-
-    expect(quoteService.pricingFor).toHaveBeenCalledWith({ id: "quote-1" }, body);
-    expect(bookingRepository.create).toHaveBeenCalledWith(
-      expect.objectContaining({ quoteId: "quote-1", pricing: { basePrice: 100, total: 110 } }),
-    );
-    expect(bookingRepository.attachPaymentLink).toHaveBeenCalledWith(
-      "book-1",
-      expect.objectContaining({ url: "https://square.link/u/abc" }),
-      PaymentMode.TEST,
-    );
-    expect(square.createPaymentLink).toHaveBeenCalledWith(expect.objectContaining({ amount: 110 }));
-  });
-
-  it("returns the same payment page when the quote is submitted again", async () => {
-    const { service, bookingRepository, square } = setup({
-      existing: {
-        id: "book-1",
-        status: BookingStatus.PENDING,
-        bookingNumber: "BK-000001",
-        squareOrderId: ORDER_ID,
-        squarePaymentLinkUrl: "https://square.link/u/abc",
-      },
-    });
-
-    const result = await service.startCheckout(body, request);
-
-    expect(result).toEqual({
-      url: "https://square.link/u/abc",
-      orderId: ORDER_ID,
-      bookingNumber: "BK-000001",
-    });
-    expect(bookingRepository.create).not.toHaveBeenCalled();
-    expect(square.createPaymentLink).not.toHaveBeenCalled();
-  });
-
-  it("refuses a quote whose booking was already paid or cancelled", async () => {
-    const { service } = setup({
-      existing: {
-        id: "book-1",
-        status: BookingStatus.CONFIRMED,
-        bookingNumber: "BK-000001",
-        squareOrderId: ORDER_ID,
-        squarePaymentLinkUrl: "https://square.link/u/abc",
-      },
-    });
-
-    await expect(service.startCheckout(body, request)).rejects.toThrow(
-      "This price was already used",
-    );
-  });
-
-  it("refuses a second checkout that raced the first one for the same quote", async () => {
-    const { service, square } = setup({
-      createError: new Prisma.PrismaClientKnownRequestError("Unique constraint failed", {
-        code: "P2002",
-        clientVersion: "6",
-      }),
-    });
-
-    await expect(service.startCheckout(body, request)).rejects.toThrow("already being prepared");
-    expect(square.createPaymentLink).not.toHaveBeenCalled();
   });
 
   it("files the booking under the rider's account when their email has one", async () => {
@@ -260,82 +190,15 @@ describe("PaymentService.handleWebhook", () => {
     );
   });
 
-  it("records the payment and tells the admin and the rider by email and SMS", async () => {
-    const { service, paymentRepository, square, notifications, emails, sms } = setup();
+  it("marks the booking paid when Square reports payment.updated", async () => {
+    const { service, paymentRepository, notifications, emails, sms } = setup();
 
     await service.handleWebhook(webhook("payment.updated"), "sig");
     await flush();
 
-    expect(square.retrieveOrder).toHaveBeenCalledWith(PaymentMode.TEST, ORDER_ID);
-    expect(paymentRepository.recordPaid).toHaveBeenCalledWith(
-      expect.objectContaining({ id: "book-1", passenger }),
-      paidOrder,
-      PaymentMode.TEST,
-    );
-    expect(notifications.paid).toHaveBeenCalledWith(
-      expect.objectContaining({ bookingId: "book-1", bookingNumber: expect.any(String) }),
-    );
-    expect(emails.sendPaid).toHaveBeenCalledWith("book-1");
-    expect(sms.sendPaid).toHaveBeenCalledWith("book-1");
-  });
-
-  it("sends nothing again when the payment was already recorded", async () => {
-    const { service, emails, sms } = setup({ recorded: false });
-
-    await service.handleWebhook(webhook("payment.updated"), "sig");
-    await flush();
-
-    expect(emails.sendPaid).not.toHaveBeenCalled();
-    expect(sms.sendPaid).not.toHaveBeenCalled();
-  });
-
-  it("leaves an unpaid order open until it expires", async () => {
-    const order = Object.assign({}, paidOrder, { paid: false, paymentId: null });
-    const { service, paymentRepository } = setup({ order });
-
-    await service.handleWebhook(webhook("payment.created"), "sig");
-
-    expect(paymentRepository.recordPaid).not.toHaveBeenCalled();
-    expect(paymentRepository.recordCancelled).not.toHaveBeenCalled();
-  });
-
-  it("ignores bookings that are no longer pending", async () => {
-    const { service, square } = setup({ status: BookingStatus.CONFIRMED });
-
-    await service.handleWebhook(webhook("payment.updated"), "sig");
-
-    expect(square.retrieveOrder).not.toHaveBeenCalled();
-  });
-});
-
-describe("PaymentService.releaseExpiredCheckouts", () => {
-  it("cancels unpaid checkouts older than 30 minutes and deletes their payment link", async () => {
-    const order = Object.assign({}, paidOrder, { paid: false, paymentId: null });
-    const { service, square, paymentRepository } = setup({ order });
-
-    await service.releaseExpiredCheckouts();
-
-    expect(square.deletePaymentLink).toHaveBeenCalledWith(PaymentMode.TEST, "LINK1");
-    expect(paymentRepository.recordCancelled).toHaveBeenCalled();
-  });
-
-  it("records the payment instead when the expired checkout was actually paid", async () => {
-    const { service, square, paymentRepository } = setup();
-
-    await service.releaseExpiredCheckouts();
-
     expect(paymentRepository.recordPaid).toHaveBeenCalled();
-    expect(square.deletePaymentLink).not.toHaveBeenCalled();
-  });
-});
-
-describe("PaymentService.checkoutBooking", () => {
-  it("settles a pending booking with Square before showing it", async () => {
-    const { service, paymentRepository } = setup();
-
-    const booking = await service.checkoutBooking(ORDER_ID);
-
-    expect(paymentRepository.recordPaid).toHaveBeenCalled();
-    expect(booking.status).toBe(BookingStatus.CONFIRMED);
+    expect(notifications.paid).toHaveBeenCalled();
+    expect(emails.sendPaid).toHaveBeenCalled();
+    expect(sms.sendPaid).toHaveBeenCalled();
   });
 });

@@ -5,7 +5,7 @@ import type {
   Item,
   ListResponse,
   Query,
-} from "@usa-limousine-corporation/ui/bookings/types";
+} from "@usa-limousine-corporation/ui/types/booking-model";
 import { http } from "../http/client";
 import API_ROUTES from "./routes";
 import type { BookingAnalytics } from "./types";

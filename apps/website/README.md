@@ -20,17 +20,14 @@ pnpm --filter @usa-limousine-corporation/website dev
 ## Booking flow
 
 1. Trip details → route distance (miles) from Google Distance Matrix.
-2. Vehicles and prices from `GET /public/vehicle-categories/pricing?distance=&isAirport=` (with the
-   fee breakdown); luggage from `GET /public/luggage`; child seats from `GET /public/extra-services`;
-   stop, meet & greet fees and booking notice from `GET /public/settings`.
-   Hourly hire is offered as a quote request.
+2. Vehicles and prices from estimates; luggage from `GET /public/vehicle-categories/:id/luggage`;
+   child seats from `GET /public/extra-services`; fees and booking notice from `GET /public/settings`.
 3. Passenger details → `POST /public/bookings/checkout` saves the booking as `PENDING` (priced on
    the server) and returns a Square payment link. No sign-in is needed.
-4. The rider pays on Square and is sent back to `/book-ride/payment-success`, which shows the full
-   booking from `GET /public/bookings/checkout/:orderId`. The booking is confirmed as soon as Square
-   reports the payment (webhook or this page, whichever is first). Going back from Square lands on
-   `/book-ride/payment-cancel`, which can resume payment or edit the booking; unpaid bookings are
-   cancelled after 30 minutes.
+4. The rider pays on Square and is sent back to `/book-ride/payment-success`, which shows the
+   booking from `GET /public/bookings/checkout/:orderId` (payment is confirmed by the Square
+   webhook). Leaving Square unpaid lands on `/book-ride/payment-pending`, which shows the pending
+   booking and can resume payment or edit; unpaid bookings are cancelled after 30 minutes.
 
 Blog, reviews, contact and newsletter have no backend yet. They show static content, and the
 forms open the visitor's email app.

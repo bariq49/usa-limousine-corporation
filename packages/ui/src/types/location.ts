@@ -14,7 +14,7 @@ export interface ReverseGeocodeParams {
   lng: number;
 }
 
-export interface AirportPickupRequiredProps {
+export type IsAirportProps = {
   pickupAddress: string;
   deliveryAddress?: string | undefined;
-}
+};

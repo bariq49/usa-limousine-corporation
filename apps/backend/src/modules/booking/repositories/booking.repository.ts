@@ -152,19 +152,6 @@ export class BookingRepository {
     });
   }
 
-  findByQuoteId(quoteId: string) {
-    return this.prisma.booking.findUnique({
-      where: { quoteId },
-      select: {
-        id: true,
-        status: true,
-        bookingNumber: true,
-        squareOrderId: true,
-        squarePaymentLinkUrl: true,
-      },
-    });
-  }
-
   findPaymentForRefund(bookingId: string) {
     return this.prisma.payment.findUnique({
       where: { bookingId },
@@ -324,7 +311,6 @@ export class BookingRepository {
         notifyByEmail: data.notifyByEmail ?? true,
         notifyBySms: data.notifyBySms ?? true,
         confirmedAt: data.confirmedAt ?? null,
-        quoteId: data.quoteId ?? null,
         luggage: {
           create: items.luggage.map((item) => ({
             luggageTypeId: item.luggageTypeId,

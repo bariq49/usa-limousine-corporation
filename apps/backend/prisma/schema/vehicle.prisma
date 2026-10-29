@@ -20,7 +20,6 @@ model VehicleCategory {
 
   luggageCapacity VehicleCategoryLuggageCapacity[]
   bookings        Booking[]
-  quotes          Quote[]
   drivers         Driver[]
   pricing         VehicleCategoryPricing[]
   hourlyPricing   HourlyPricing[]

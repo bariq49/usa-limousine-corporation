@@ -1,7 +1,7 @@
 "use client";
 
 import { Breadcrumbs } from "@usa-limousine-corporation/ui/layout/breadcrumbs";
-import { NotificationsPage } from "@usa-limousine-corporation/ui/notifications/notifications-page";
+import { NotificationsPage } from "@usa-limousine-corporation/ui/components/notifications/notifications-page";
 
 const crumbs = [{ label: "Home", href: "/analytics" }, { label: "Notifications" }];
 

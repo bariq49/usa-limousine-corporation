@@ -1,5 +1,4 @@
-import { Controller, Get, Inject, Query } from "@nestjs/common";
-import { LuggageQueryDto } from "../dto/luggage-query.dto";
+import { Controller, Get, Inject, Param, Query } from "@nestjs/common";
 import { VehicleCategoryQueryDto } from "../dto/query.dto";
 import { PublicService } from "../services/public.service";
 
@@ -20,8 +19,8 @@ export class PublicController {
     return this.publicService.findHourlyDurations();
   }
 
-  @Get("luggage")
-  findLuggage(@Query() query: LuggageQueryDto) {
-    return this.publicService.findLuggage(query);
+  @Get("vehicle-categories/:id/luggage")
+  findCategoryLuggage(@Param("id") id: string) {
+    return this.publicService.findCategoryLuggage(id);
   }
 }

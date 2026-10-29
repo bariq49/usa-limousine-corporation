@@ -4,7 +4,7 @@ import type {
   CalendarQuery,
   CreateInput,
   Query,
-} from "@usa-limousine-corporation/ui/bookings/types";
+} from "@usa-limousine-corporation/ui/types/booking-model";
 import {
   cancelBooking,
   completeBooking,

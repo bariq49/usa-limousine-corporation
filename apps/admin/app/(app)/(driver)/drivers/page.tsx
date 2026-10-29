@@ -8,7 +8,7 @@ import { ConfirmDialog } from "@usa-limousine-corporation/ui/components/confirm-
 import {
   DataTable,
   type ColumnFiltersState,
-} from "@usa-limousine-corporation/ui/data-table/data-table";
+} from "@usa-limousine-corporation/ui/components/data-table/data-table";
 import { Plus } from "lucide-react";
 import { driverName, filter, getColumns } from "@/components/columns/driver-columns";
 import { DriverModal } from "@/components/modals/driver-modal";

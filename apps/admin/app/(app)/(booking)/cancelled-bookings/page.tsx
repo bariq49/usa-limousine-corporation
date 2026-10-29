@@ -3,10 +3,10 @@
 import { useMemo, useState } from "react";
 import { Breadcrumbs } from "@usa-limousine-corporation/ui/layout/breadcrumbs";
 import { Card, CardContent } from "@usa-limousine-corporation/ui/components/card";
-import { DataTable } from "@usa-limousine-corporation/ui/data-table/data-table";
+import { DataTable } from "@usa-limousine-corporation/ui/components/data-table/data-table";
 import { useBookings, useDeleteBooking, useBulkDeleteBookings } from "@/hooks/queries/use-bookings";
 import type { Item } from "@/lib/types/bookings";
-import { getColumns } from "@usa-limousine-corporation/ui/bookings/booking-columns";
+import { getColumns } from "@usa-limousine-corporation/ui/components/bookings/booking-columns";
 
 export default function BookingsPage() {
   const [page, setPage] = useState(1);

@@ -56,13 +56,15 @@ export class AddressDto {
   @ArrayMaxSize(10)
   stops?: LocationDto[];
 
+  @IsOptional()
   @IsNumber()
   @Min(0)
-  distance!: number;
+  distance?: number;
 
+  @IsOptional()
   @IsNumber()
   @Min(0)
-  travelDuration!: number;
+  travelDuration?: number;
 
   @IsOptional()
   @Type(() => Number)
@@ -131,6 +133,11 @@ export class FlightDetailsDto {
   @IsString()
   @MaxLength(50)
   flightNumber?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  returnFlightNumber?: string;
 }
 
 export class MeetAndGreetDto {
@@ -146,6 +153,11 @@ export class MeetAndGreetDto {
   @IsString()
   @MaxLength(200)
   signName?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  returnSignName?: string;
 }
 
 export class NotificationsDto {
@@ -284,9 +296,10 @@ export class TripPriceDto {
   @Type(() => AddressDto)
   address!: AddressDto;
 
+  @IsOptional()
   @ValidateNested()
   @Type(() => TimeDto)
-  bookingTime!: TimeDto;
+  bookingTime?: TimeDto;
 
   @IsOptional()
   @ValidateNested()
@@ -313,18 +326,7 @@ export class TripPriceDto {
   notifications?: NotificationsDto;
 }
 
-export class QuoteDto extends TripPriceDto {
-  @IsString()
-  @IsNotEmpty()
-  vehicleCategoryId!: string;
-}
-
-export class CheckoutDto extends OmitType(CreateDto, ["pricing"] as const) {
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(64)
-  quoteId!: string;
-}
+export class CheckoutDto extends OmitType(CreateDto, ["pricing"] as const) {}
 
 export class UpdateDto {
   @IsOptional()

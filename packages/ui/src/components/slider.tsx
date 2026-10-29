@@ -38,7 +38,7 @@ export function Slider(props: SliderProps) {
         modules={modules}
         spaceBetween={spaceBetween}
         slidesPerView={slidesPerView}
-        breakpoints={breakpoints}
+        {...(breakpoints ? { breakpoints } : undefined)}
         navigation={
           navigation
             ? {

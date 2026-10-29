@@ -1,6 +1,6 @@
-import { loadGoogleMaps } from "../bookings/google-maps-loader";
+import { loadGoogleMaps } from "../components/bookings/google-maps-loader";
 import type {
-  AirportPickupRequiredProps,
+  IsAirportProps,
   LocationFormAccessor,
   ReverseGeocodeParams,
 } from "../types/location";
@@ -104,7 +104,7 @@ export async function getPickupLocation(): Promise<string> {
   return geocodedAddress ?? `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
 }
 
-export function isAirportPickupRequired(props: AirportPickupRequiredProps): boolean {
+export function isAirport(props: IsAirportProps): boolean {
   return (
     isAirportAddress(props.pickupAddress) || isAirportAddress(props.deliveryAddress ?? "")
   );

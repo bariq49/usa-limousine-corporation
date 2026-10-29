@@ -9,7 +9,7 @@ import {
   DataTable,
   type ColumnFiltersState,
   type DataTableFilterColumn,
-} from "@usa-limousine-corporation/ui/data-table/data-table";
+} from "@usa-limousine-corporation/ui/components/data-table/data-table";
 import { Plus } from "@usa-limousine-corporation/ui/svg";
 import { getColumns } from "@/components/columns/blog-taxonomy-columns";
 import { BlogCategoryModal } from "@/components/modals/blog-category-modal";

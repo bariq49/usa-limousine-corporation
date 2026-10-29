@@ -2,7 +2,7 @@ import { http } from "../http/client";
 import API_ROUTES from "./routes";
 import type { Item, ListResponse, Query } from "../types/bookings";
 import type { BookingAnalytics } from "../types/dashboard";
-import type { CalendarEvent, CalendarQuery } from "@usa-limousine-corporation/ui/bookings/types";
+import type { CalendarEvent, CalendarQuery } from "@usa-limousine-corporation/ui/types/booking-model";
 
 export const getBookings = (params?: Query) => {
   return http.get<ListResponse>(API_ROUTES.BOOKINGS, { params });

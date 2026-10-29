@@ -22,19 +22,6 @@ export type PlatformRates = {
   cancellationRefundRate: number;
 };
 
-export type LegQuote = {
-  basePrice: number;
-  fuelSurchargeAmount: number;
-  gratuityAmount: number;
-  taxAmount: number;
-  transactionFeeAmount: number;
-  priceBeforeDiscount: number;
-  discountRate: number;
-  discountAmount: number;
-  airportFeeAmount: number;
-  total: number;
-};
-
 export type PricedLine = {
   type: "EXTRA_SERVICE" | "LUGGAGE";
   id: string;
@@ -80,18 +67,4 @@ export type BookingPricing = {
     oneWayDiscountRate: number;
     returnDiscountRate: number;
   };
-};
-
-export type BookingPricingInput = {
-  basePrice: number;
-  rates: PlatformRates;
-  isAirport: boolean;
-  isReturn: boolean;
-  vehicleCount?: number;
-  stopsCount: number;
-  meetAndGreetOneWay: boolean;
-  meetAndGreetReturn: boolean;
-  extraServicesPrice: number;
-  notificationsPrice?: number;
-  items?: PricedLine[];
 };

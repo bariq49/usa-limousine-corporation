@@ -2,7 +2,7 @@ import { Inject, Injectable } from "@nestjs/common";
 import { APIFeature } from "../../../common/api-feature";
 import { PrismaService } from "../../../infrastructure/database/prisma.service";
 import type { CreateDto } from "../dto/create-luggage.dto";
-import type { LuggageQueryDto, QueryDto } from "../dto/luggage-query.dto";
+import type { QueryDto } from "../dto/luggage-query.dto";
 import type { UpdateLuggageDto } from "../dto/update-luggage.dto";
 
 @Injectable()
@@ -97,36 +97,6 @@ export class LuggageRepository {
               },
             },
           },
-        }),
-      count: ({ where }) => this.prisma.luggageType.count({ where: where as never }),
-    });
-  }
-
-  findPublicMany(query: LuggageQueryDto) {
-    const feature = new APIFeature(query, {
-      initialFilter: { isActive: true },
-      filterFields: [],
-      search: {
-        searchFields: ["name", "description", "dimensions"],
-      },
-      sort: {
-        allowedFields: ["createdAt", "updatedAt", "name"],
-        defaultSortBy: "name",
-        defaultSortOrder: "asc",
-      },
-      pagination: {
-        defaultLimit: 50,
-        maxLimit: 100,
-      },
-    });
-
-    return feature.execute({
-      findMany: (args) =>
-        this.prisma.luggageType.findMany({
-          where: args.where as never,
-          orderBy: args.orderBy as never,
-          skip: args.skip,
-          take: args.take,
         }),
       count: ({ where }) => this.prisma.luggageType.count({ where: where as never }),
     });

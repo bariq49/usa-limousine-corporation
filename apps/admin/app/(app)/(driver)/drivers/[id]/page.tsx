@@ -14,14 +14,14 @@ import {
   SelectValue,
 } from "@usa-limousine-corporation/ui/components/select";
 import { Skeleton } from "@usa-limousine-corporation/ui/components/skeleton";
-import { DataTable } from "@usa-limousine-corporation/ui/data-table/data-table";
+import { DataTable } from "@usa-limousine-corporation/ui/components/data-table/data-table";
 import {
   BookingOverview,
   type OverviewStat,
-} from "@usa-limousine-corporation/ui/dashboard/booking-overview";
+} from "@usa-limousine-corporation/ui/components/dashboard/booking-overview";
 import { Breadcrumbs } from "@usa-limousine-corporation/ui/layout/breadcrumbs";
-import { CoverHeader } from "@usa-limousine-corporation/ui/profile/cover-header";
-import { BOOKING_STATUS_LABELS } from "@usa-limousine-corporation/ui/bookings/labels";
+import { CoverHeader } from "@usa-limousine-corporation/ui/components/profile/cover-header";
+import { BOOKING_STATUS_LABELS } from "@usa-limousine-corporation/ui/components/bookings/labels";
 import { cn } from "@usa-limousine-corporation/ui/utils/cn";
 import { formatDate } from "@usa-limousine-corporation/ui/utils/date";
 import {

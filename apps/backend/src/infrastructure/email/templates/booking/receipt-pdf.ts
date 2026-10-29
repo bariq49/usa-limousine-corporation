@@ -15,7 +15,7 @@ const TRIP_LABELS: Record<BookingType, string> = {
 };
 
 const PAGE_MARGIN = 44;
-const HEADER_HEIGHT = 96;
+const HEADER_HEIGHT = 120;
 const FOOTER_HEIGHT = 64;
 const SUCCESS = "#15803d";
 const DANGER = "#b91c1c";
@@ -54,21 +54,21 @@ export function renderReceiptPdf(props: ReceiptProps): Promise<Buffer> {
   doc.rect(0, 0, pageWidth, HEADER_HEIGHT).fill(EMAIL_BRAND.dark);
   doc.rect(0, HEADER_HEIGHT, pageWidth, 3).fill(EMAIL_BRAND.accent);
   if (logo) {
-    doc.image(logo, left, 28, { fit: [160, 40] });
+    doc.image(logo, left, 28, { fit: [240, 72] });
   } else {
-    doc.font("Helvetica-Bold").fontSize(18).fillColor("#ffffff").text(EMAIL_BRAND.name, left, 38);
+    doc.font("Helvetica-Bold").fontSize(22).fillColor("#ffffff").text(EMAIL_BRAND.name, left, 44);
   }
   doc
     .font("Helvetica-Bold")
     .fontSize(22)
     .fillColor(EMAIL_BRAND.accent)
-    .text("RECEIPT", left, 26, { width: contentWidth, align: "right" });
+    .text("RECEIPT", left, 34, { width: contentWidth, align: "right" });
   doc
     .font("Helvetica")
     .fontSize(10)
     .fillColor("#d1d5db")
-    .text(`Booking ${booking.bookingNumber}`, left, 54, { width: contentWidth, align: "right" })
-    .text(`Issued ${shortDate(issuedAt)}`, left, 68, { width: contentWidth, align: "right" });
+    .text(`Booking ${booking.bookingNumber}`, left, 62, { width: contentWidth, align: "right" })
+    .text(`Issued ${shortDate(issuedAt)}`, left, 76, { width: contentWidth, align: "right" });
 
   const isRefunded = payment?.status === "REFUNDED";
   const statusLabel = isRefunded ? "REFUNDED" : payment ? "PAID" : "UNPAID";

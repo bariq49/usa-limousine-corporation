@@ -101,7 +101,6 @@ export async function cleanupBookingTables(prisma: PrismaService): Promise<void>
   await prisma.driver.deleteMany();
   await prisma.bookingLuggage.deleteMany();
   await prisma.booking.deleteMany();
-  await prisma.quote.deleteMany();
   await prisma.bookingExtraService.deleteMany();
   await prisma.sequence.deleteMany();
 }

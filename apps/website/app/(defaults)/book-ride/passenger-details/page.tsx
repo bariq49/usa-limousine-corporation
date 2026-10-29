@@ -2,10 +2,10 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Step3 from "@/components/booking/setp-3/setp-3";
-import BookingStepLayout from "@/components/booking/booking-step-layout";
-import { useBookingStore } from "@/store/use-booking-store";
-import { useHasHydrated } from "@/hooks/use-has-hydrated";
+import BookingStepLayout from "@usa-limousine-corporation/ui/components/bookings/booking-step-layout";
+import Step3 from "@usa-limousine-corporation/ui/components/bookings/step-3";
+import { useBookingStore } from "@usa-limousine-corporation/ui/store/booking";
+import { useHasHydrated } from "@usa-limousine-corporation/ui/hooks/use-booking";
 
 function PassengerDetailsPage() {
   const router = useRouter();
@@ -16,7 +16,7 @@ function PassengerDetailsPage() {
   useEffect(() => {
     if (!hasHydrated) return;
     if (useBookingStore.getState().checkout) {
-      router.replace("/book-ride/payment-cancel");
+      router.replace("/book-ride/payment-pending");
       return;
     }
     if (!step1) {

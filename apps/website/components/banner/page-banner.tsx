@@ -5,7 +5,7 @@ import { IMAGES } from "@/constants/image-constants";
 import React from "react";
 import Link from "next/link";
 import { Button } from "@usa-limousine-corporation/ui/components/button";
-import Step1 from "@/components/booking/setp-1/setp-1";
+import Step1 from "@usa-limousine-corporation/ui/components/bookings/step-1";
 import { MoveRight } from "@usa-limousine-corporation/ui/svg";
 import { cn } from "@usa-limousine-corporation/ui/utils/cn";
 import type { PageBannerProps } from "@/types/page-banner.types";

@@ -1,7 +1,7 @@
 import { BadRequestException, ServiceUnavailableException } from "@nestjs/common";
 import { MapsService } from "../src/infrastructure/maps/maps.service";
 
-describe("MapsService.resolveRoute", () => {
+describe("MapsService.calculateDistance", () => {
   const originalFetch = global.fetch;
 
   afterEach(() => {
@@ -11,7 +11,7 @@ describe("MapsService.resolveRoute", () => {
   it("fails closed when the API key is missing", async () => {
     const service = new MapsService({ get: () => undefined } as never);
     await expect(
-      service.resolveRoute({
+      service.calculateDistance({
         pickup: { address: "A" },
         dropoff: { address: "B" },
       }),
@@ -35,7 +35,7 @@ describe("MapsService.resolveRoute", () => {
 
     const service = new MapsService({ get: () => "test-key" } as never);
     await expect(
-      service.resolveRoute({
+      service.calculateDistance({
         pickup: { address: "JFK" },
         dropoff: { address: "Times Square" },
         stops: [{ address: "Brooklyn" }],
@@ -53,7 +53,7 @@ describe("MapsService.resolveRoute", () => {
 
     const service = new MapsService({ get: () => "test-key" } as never);
     await expect(
-      service.resolveRoute({
+      service.calculateDistance({
         pickup: { address: "A" },
         dropoff: { address: "B" },
       }),

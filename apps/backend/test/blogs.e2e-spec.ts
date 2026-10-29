@@ -191,7 +191,7 @@ describe("Blogs (e2e)", () => {
     const [mail] = sendMail.mock.calls[0] as unknown as [
       { to: string; replyTo: string; subject: string; html: string },
     ];
-    expect(mail.to).toBe(process.env.DEFAULT_ADMIN_EMAIL);
+    expect(mail.to).toBe(process.env["DEFAULT_ADMIN_EMAIL"]);
     expect(mail.replyTo).toBe("ada@example.com");
     expect(mail.subject).toContain("Getting to JFK on Time");
     expect(mail.html).toContain("/blog-comments");

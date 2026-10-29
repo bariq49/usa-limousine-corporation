@@ -99,8 +99,12 @@ describe("CustomerBookingService.create", () => {
     const pricingService = new BookingPricingService(
       { priceItems, vehicleCapacity } as never,
       { get: async () => rates } as never,
-      { basePriceFor: async () => 100, findHourlyDurations: async () => [2, 3, 4] } as never,
-      { resolveRoute: async () => ({ distance: 10, travelDuration: 20 }) } as never,
+      {
+        pricedForDistance: async () => [{ id: "cat-1", basePrice: 100 }],
+        pricedForHours: async () => [{ id: "cat-1", basePrice: 100 }],
+        findHourlyDurations: async () => [2, 3, 4],
+      } as never,
+      { calculateDistance: async () => ({ distance: 10, travelDuration: 20 }) } as never,
     );
 
     const service = new CustomerBookingService(
@@ -164,11 +168,11 @@ describe("BookingPricingService.create checks", () => {
     } as never,
     { get: async () => ({ minBookingMinutes: 0 }) } as never,
     {
-      basePriceFor: async () => 100,
-      basePriceForHours: async () => 200,
+      pricedForDistance: async () => [{ id: "cat-1", basePrice: 100 }],
+      pricedForHours: async () => [{ id: "cat-1", basePrice: 200 }],
       findHourlyDurations: async () => [2, 3, 4],
     } as never,
-    { resolveRoute: async () => ({ distance: 10, travelDuration: 20 }) } as never,
+    { calculateDistance: async () => ({ distance: 10, travelDuration: 20 }) } as never,
   );
   const service = new CustomerBookingService(
     {

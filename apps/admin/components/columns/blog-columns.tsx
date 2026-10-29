@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import type { ColumnDef } from "@usa-limousine-corporation/ui/data-table/data-table";
-import { DataTableColumnHeader } from "@usa-limousine-corporation/ui/data-table/data-table-column-header";
+import type { ColumnDef } from "@usa-limousine-corporation/ui/components/data-table/data-table";
+import { DataTableColumnHeader } from "@usa-limousine-corporation/ui/components/data-table/data-table-column-header";
 import { Badge } from "@usa-limousine-corporation/ui/components/badge";
 import { Button } from "@usa-limousine-corporation/ui/components/button";
 import { formatDateTime } from "@usa-limousine-corporation/ui/utils/date";

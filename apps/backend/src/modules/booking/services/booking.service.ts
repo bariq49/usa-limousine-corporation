@@ -57,7 +57,11 @@ export class BookingService {
       status: BookingStatus.CONFIRMED,
       confirmedAt,
       pricing: body.pricing,
-      address: body.address,
+      address: {
+        ...body.address,
+        distance: body.address.distance ?? 0,
+        travelDuration: body.address.travelDuration ?? 0,
+      },
       passenger: body.passenger,
       bookingTime: body.bookingTime,
       flightDetails: body.flightDetails,
@@ -131,7 +135,11 @@ export class BookingService {
       updateData.pricing = body.pricing;
     }
     if (body.address !== undefined) {
-      updateData.address = body.address;
+      updateData.address = {
+        ...body.address,
+        distance: body.address.distance ?? 0,
+        travelDuration: body.address.travelDuration ?? 0,
+      };
     }
     if (body.passenger !== undefined) {
       updateData.passenger = body.passenger;

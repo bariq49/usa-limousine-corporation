@@ -13,7 +13,7 @@ import {
 import {
   DataTable,
   type ColumnFiltersState,
-} from "@usa-limousine-corporation/ui/data-table/data-table";
+} from "@usa-limousine-corporation/ui/components/data-table/data-table";
 import { Plus } from "lucide-react";
 import {
   useVehiclePricings,

@@ -9,16 +9,15 @@ import { PlatformSettingsModule } from "../platform-settings/platform-settings.m
 import { VehicleCategoryModule } from "../vehicle-categories/vehicle-category.module";
 import { BookingController } from "./controllers/booking.controller";
 import { CustomerBookingController } from "./controllers/customer-booking.controller";
-import { QuoteController } from "./controllers/quote.controller";
+import { EstimateController } from "./controllers/estimate.controller";
 import { BookingRepository } from "./repositories/booking.repository";
-import { QuoteRepository } from "./repositories/quote.repository";
 import { BookingEmailService } from "./services/booking-email.service";
 import { NotificationService } from "./services/notification.service";
 import { BookingPricingService } from "./services/booking-pricing.service";
 import { BookingSmsService } from "./services/booking-sms.service";
 import { BookingService } from "./services/booking.service";
 import { CustomerBookingService } from "./services/customer-booking.service";
-import { QuoteService } from "./services/quote.service";
+import { EstimateService } from "./services/estimate.service";
 import { ReceiptService } from "./services/receipt.service";
 
 @Module({
@@ -32,17 +31,16 @@ import { ReceiptService } from "./services/receipt.service";
     PlatformSettingsModule,
     VehicleCategoryModule,
   ],
-  controllers: [CustomerBookingController, BookingController, QuoteController],
+  controllers: [CustomerBookingController, BookingController, EstimateController],
   providers: [
     BookingRepository,
-    QuoteRepository,
     BookingEmailService,
     BookingSmsService,
     NotificationService,
     BookingPricingService,
     BookingService,
     CustomerBookingService,
-    QuoteService,
+    EstimateService,
     ReceiptService,
   ],
   exports: [
@@ -53,7 +51,7 @@ import { ReceiptService } from "./services/receipt.service";
     BookingEmailService,
     BookingSmsService,
     NotificationService,
-    QuoteService,
+    EstimateService,
     ReceiptService,
   ],
 })

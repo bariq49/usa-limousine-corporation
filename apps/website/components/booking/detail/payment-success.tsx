@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { useSearchParams } from "next/navigation";
-import { BookingDetailView } from "@usa-limousine-corporation/ui/bookings/booking-detail-view";
-import { BookingDetailSkeleton } from "@usa-limousine-corporation/ui/bookings/booking-detail-skeleton";
-import { useCheckoutBooking } from "@/hooks/queries/use-checkout-booking";
-import { useBookingStore } from "@/store/use-booking-store";
+import { useRouter, useSearchParams } from "next/navigation";
+import { BookingDetailView } from "@usa-limousine-corporation/ui/components/bookings/booking-detail-view";
+import { BookingDetailSkeleton } from "@usa-limousine-corporation/ui/components/bookings/booking-detail-skeleton";
+import { useBookingStore } from "@usa-limousine-corporation/ui/store/booking";
+import { useBooking } from "@usa-limousine-corporation/ui/hooks/use-booking";
 import { Button } from "@usa-limousine-corporation/ui/components/button";
 import { Download } from "@usa-limousine-corporation/ui/svg";
 import API_ROUTES from "@/config/routes";
@@ -14,9 +14,10 @@ import { getApiBaseUrl } from "@/lib/api/base-url";
 import PaymentNotFound from "./payment-not-found";
 
 export default function PaymentSuccess() {
+  const router = useRouter();
   const resetBooking = useBookingStore((s) => s.resetBooking);
   const orderId = useSearchParams().get("orderId");
-  const { data: booking, isError, isFetching } = useCheckoutBooking(orderId, true);
+  const { data: booking, isError, isLoading } = useBooking(orderId);
   const isPaid = booking?.payment?.status === "PAID";
   const [isDownloading, setIsDownloading] = useState(false);
 
@@ -45,10 +46,13 @@ export default function PaymentSuccess() {
     if (isPaid) resetBooking();
   }, [isPaid, resetBooking]);
 
+  useEffect(() => {
+    if (!booking || booking.status !== "PENDING" || !orderId) return;
+    router.replace(`/book-ride/payment-pending?orderId=${encodeURIComponent(orderId)}`);
+  }, [booking, orderId, router]);
+
   if (!orderId || isError) return <PaymentNotFound />;
-  if (!booking || booking.status === "PENDING") {
-    return isFetching || !booking ? <BookingDetailSkeleton /> : <PaymentNotFound />;
-  }
+  if (isLoading || !booking || booking.status === "PENDING") return <BookingDetailSkeleton />;
 
   const hasReceipt =
     booking.payment?.status === "PAID" || booking.payment?.status === "REFUNDED";

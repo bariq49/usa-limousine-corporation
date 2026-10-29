@@ -1,5 +1,5 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { CalendarQuery } from "@usa-limousine-corporation/ui/bookings/types";
+import type { CalendarQuery } from "@usa-limousine-corporation/ui/types/booking-model";
 import toast from "react-hot-toast";
 import {
   bulkDeleteBookings,

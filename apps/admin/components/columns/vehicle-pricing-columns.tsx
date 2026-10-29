@@ -3,8 +3,8 @@
 import type {
   ColumnDef,
   DataTableFilterColumn,
-} from "@usa-limousine-corporation/ui/data-table/data-table";
-import { DataTableColumnHeader } from "@usa-limousine-corporation/ui/data-table/data-table-column-header";
+} from "@usa-limousine-corporation/ui/components/data-table/data-table";
+import { DataTableColumnHeader } from "@usa-limousine-corporation/ui/components/data-table/data-table-column-header";
 import { Checkbox } from "@usa-limousine-corporation/ui/components/checkbox";
 import { Badge } from "@usa-limousine-corporation/ui/components/badge";
 import { Button } from "@usa-limousine-corporation/ui/components/button";

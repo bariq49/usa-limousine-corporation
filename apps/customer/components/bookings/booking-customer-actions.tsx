@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@usa-limousine-corporation/ui/components/button";
 import { ConfirmDialog } from "@usa-limousine-corporation/ui/components/confirm-dialog";
-import type { Item } from "@usa-limousine-corporation/ui/bookings/types";
+import type { Item } from "@usa-limousine-corporation/ui/types/booking-model";
 import { formatDateTime } from "@usa-limousine-corporation/ui/utils/date";
 import { useCancelBooking, useCompleteBooking } from "@/hooks/queries/use-bookings";
 

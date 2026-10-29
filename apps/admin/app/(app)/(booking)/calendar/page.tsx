@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { Breadcrumbs } from "@usa-limousine-corporation/ui/layout/breadcrumbs";
-import { BookingCalendar } from "@usa-limousine-corporation/ui/bookings/booking-calendar";
-import type { CalendarQuery } from "@usa-limousine-corporation/ui/bookings/types";
+import { BookingCalendar } from "@usa-limousine-corporation/ui/components/bookings/booking-calendar";
+import type { CalendarQuery } from "@usa-limousine-corporation/ui/types/booking-model";
 import { useBookingCalendar } from "@/hooks/queries/use-bookings";
 
 const crumbs = [

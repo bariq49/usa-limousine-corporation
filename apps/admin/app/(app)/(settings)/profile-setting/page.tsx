@@ -1,17 +1,17 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { ProfileSettings } from "@usa-limousine-corporation/ui/profile/profile-settings";
+import { ProfileSettings } from "@usa-limousine-corporation/ui/components/profile/profile-settings";
 import type {
   ChangePasswordSchema,
   PersonalDetailsSchema,
 } from "@usa-limousine-corporation/ui/schemas";
 import { Card, CardContent } from "@usa-limousine-corporation/ui/components/card";
-import { DataTable } from "@usa-limousine-corporation/ui/data-table/data-table";
+import { DataTable } from "@usa-limousine-corporation/ui/components/data-table/data-table";
 import {
   getSessionColumns,
   type Session,
-} from "@usa-limousine-corporation/ui/data-table/columns/session";
+} from "@usa-limousine-corporation/ui/components/data-table/columns/session";
 import { useUser } from "@usa-limousine-corporation/ui/providers/user-context";
 import { useAuthChangePassword, useAuthUpdateProfile } from "@/hooks/queries/use-auth";
 import { useUploadFile } from "@/hooks/queries/use-upload";

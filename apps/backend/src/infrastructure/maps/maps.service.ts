@@ -6,7 +6,7 @@ import {
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { PLATFORM } from "@usa-limousine-corporation/config";
-import type { ResolveRouteProps, RouteResult, RouteStop } from "./types/maps";
+import type { CalculateDistanceProps, RouteResult, RouteStop } from "./types/maps";
 
 const METERS_PER_MILE = 1609.344;
 
@@ -20,7 +20,7 @@ type GoogleDirectionsPayload = {
 export class MapsService {
   constructor(@Inject(ConfigService) private readonly configService: ConfigService) {}
 
-  async resolveRoute(props: ResolveRouteProps): Promise<RouteResult> {
+  async calculateDistance(props: CalculateDistanceProps): Promise<RouteResult> {
     const key = this.configService.get<string>("GOOGLE_MAPS_API_KEY")?.trim();
     if (!key) {
       throw new ServiceUnavailableException("Route pricing is not configured");

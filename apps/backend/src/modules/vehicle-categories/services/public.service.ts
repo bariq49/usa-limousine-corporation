@@ -1,21 +1,17 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { PricingType } from "@prisma/client";
 import { roundAmount } from "../../../common/utils/money";
-import type { LuggageQueryDto } from "../dto/luggage-query.dto";
 import type { VehicleCategoryQueryDto } from "../dto/query.dto";
 import { CategoriesRepository } from "../repositories/categories.repository";
 import { HourlyPricingRepository } from "../repositories/hourly-pricing.repository";
-import { LuggageRepository } from "../repositories/luggage.repository";
 import { PricingRepository } from "../repositories/pricing.repository";
-import { hourlyPrice, type PricedVehicle } from "../types/pricing";
+import type { PricedVehicle } from "../types/pricing";
 
 @Injectable()
 export class PublicService {
   constructor(
     @Inject(CategoriesRepository)
     private readonly categoriesRepository: CategoriesRepository,
-    @Inject(LuggageRepository)
-    private readonly luggageRepository: LuggageRepository,
     @Inject(PricingRepository)
     private readonly pricingRepository: PricingRepository,
     @Inject(HourlyPricingRepository)
@@ -32,8 +28,22 @@ export class PublicService {
     return page;
   }
 
-  async findLuggage(query: LuggageQueryDto) {
-    return this.luggageRepository.findPublicMany(query);
+  async findCategoryLuggage(categoryId: string) {
+    const category = await this.categoriesRepository.findById(categoryId);
+    if (!category || category.deletedAt || !category.isActive) {
+      throw new NotFoundException("Vehicle category not found");
+    }
+
+    const rows = await this.categoriesRepository.findPublicLuggage(categoryId);
+    return rows.map((row) => ({
+      id: row.luggageType.id,
+      name: row.luggageType.name,
+      description: row.luggageType.description,
+      dimensions: row.luggageType.dimensions,
+      image: row.luggageType.image,
+      price: row.luggageType.price?.toNumber() ?? null,
+      maxQuantity: row.quantity,
+    }));
   }
 
   async findHourlyDurations() {
@@ -94,6 +104,8 @@ export class PublicService {
       .filter((category) => pricingByCategory.has(category.id))
       .map((category) => {
         const pricing = pricingByCategory.get(category.id)!;
+        const overageMiles = Math.max(0, distance - pricing.includedDistance);
+        const amount = pricing.basePrice.toNumber() + overageMiles * pricing.extraDistanceRate;
         return {
           id: category.id,
           name: category.name,
@@ -101,63 +113,8 @@ export class PublicService {
           image: category.image,
           passengerCount: category.passengerCount,
           luggageCount: category.luggageCapacity.reduce((total, item) => total + item.quantity, 0),
-          basePrice: hourlyPrice(
-            {
-              basePrice: pricing.basePrice.toNumber(),
-              includedDistance: pricing.includedDistance,
-              extraDistanceRate: pricing.extraDistanceRate,
-            },
-            distance,
-          ),
+          basePrice: roundAmount(amount),
         };
       });
-  }
-
-  async basePriceFor(vehicleCategoryId: string, distance: number): Promise<number | null> {
-    const categories = await this.categoriesRepository.findPublicActive();
-    if (!categories.some((category) => category.id === vehicleCategoryId)) {
-      return null;
-    }
-    const [pricing] = await this.pricingRepository.findAllForDistance(distance, [
-      vehicleCategoryId,
-    ]);
-    if (!pricing) {
-      return null;
-    }
-    const basePrice = pricing.basePrice.toNumber();
-    const perUnitRate = pricing.perUnitRate?.toNumber() ?? 0;
-    const percentageRate = pricing.percentageRate?.toNumber() ?? 0;
-    if (pricing.pricingType === PricingType.PER_UNIT) {
-      return roundAmount(basePrice + distance * perUnitRate);
-    }
-    if (pricing.pricingType === PricingType.PERCENTAGE) {
-      return roundAmount(basePrice * (1 + percentageRate / 100));
-    }
-    return roundAmount(basePrice);
-  }
-
-  async basePriceForHours(
-    vehicleCategoryId: string,
-    hours: number,
-    distance = 0,
-  ): Promise<number | null> {
-    const categories = await this.categoriesRepository.findPublicActive();
-    if (!categories.some((category) => category.id === vehicleCategoryId)) {
-      return null;
-    }
-    const [pricing] = await this.hourlyPricingRepository.findActiveByDuration(hours, [
-      vehicleCategoryId,
-    ]);
-    if (!pricing) {
-      return null;
-    }
-    return hourlyPrice(
-      {
-        basePrice: pricing.basePrice.toNumber(),
-        includedDistance: pricing.includedDistance,
-        extraDistanceRate: pricing.extraDistanceRate,
-      },
-      distance,
-    );
   }
 }

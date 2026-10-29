@@ -43,7 +43,7 @@ export class CustomerBookingService {
   async create(body: CreateDto, request: Request) {
     const context = toRequestContext(request);
     const userId = requireUserId(context);
-    const pricing = await this.pricingService.priceForCustomer(body);
+    const pricing = await this.pricingService.calculatePrice(body);
     const bookingNumber = await allocateCode({
       prefix: "BK",
       nextSequence: () => this.sequenceService.nextBooking(),
@@ -58,7 +58,11 @@ export class CustomerBookingService {
           vehicleCount: body.vehicleCount,
           status: BookingStatus.PENDING,
           pricing,
-          address: body.address,
+          address: {
+            ...body.address,
+            distance: body.address.distance ?? 0,
+            travelDuration: body.address.travelDuration ?? 0,
+          },
           passenger: body.passenger,
           bookingTime: body.bookingTime,
           flightDetails: body.flightDetails,

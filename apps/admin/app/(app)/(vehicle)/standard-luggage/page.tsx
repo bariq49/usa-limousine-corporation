@@ -7,7 +7,7 @@ import { Button } from "@usa-limousine-corporation/ui/components/button";
 import {
   DataTable,
   type ColumnFiltersState,
-} from "@usa-limousine-corporation/ui/data-table/data-table";
+} from "@usa-limousine-corporation/ui/components/data-table/data-table";
 import { Plus } from "lucide-react";
 import { useLuggage, useDeleteLuggage, useBulkDeleteLuggage } from "@/hooks/queries/use-luggage";
 import type { Item } from "@/lib/types/luggage";

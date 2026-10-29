@@ -94,6 +94,19 @@ export class CategoriesRepository {
     });
   }
 
+  findPublicLuggage(categoryId: string) {
+    return this.prisma.vehicleCategoryLuggageCapacity.findMany({
+      where: {
+        categoryId,
+        quantity: { gt: 0 },
+        category: { id: categoryId, deletedAt: null, isActive: true },
+        luggageType: { isActive: true },
+      },
+      include: { luggageType: true },
+      orderBy: { luggageType: { name: "asc" } },
+    });
+  }
+
   create(data: CreateDto, luggageCapacity: VehicleCategoryLuggageCapacityInput[]) {
     return this.prisma.vehicleCategory.create({
       data: {

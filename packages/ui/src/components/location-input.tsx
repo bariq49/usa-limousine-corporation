@@ -7,7 +7,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, Close, LocateFixed, Location, Plane, Train } from "../svg";
 import { cn } from "../utils/cn";
 import { isAirportAddress, isTrainAddress } from "../utils/places";
-import { loadGoogleMaps } from "../bookings/google-maps-loader";
+import { loadGoogleMaps } from "./bookings/google-maps-loader";
 
 const PANEL_EASE = [0.22, 1, 0.36, 1] as const;
 

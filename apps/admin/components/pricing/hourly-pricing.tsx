@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { Card, CardContent } from "@usa-limousine-corporation/ui/components/card";
 import { Button } from "@usa-limousine-corporation/ui/components/button";
-import { DataTable, type ColumnFiltersState } from "@usa-limousine-corporation/ui/data-table/data-table";
+import { DataTable, type ColumnFiltersState } from "@usa-limousine-corporation/ui/components/data-table/data-table";
 import { Plus } from "lucide-react";
 import {
   useHourlyPricings,

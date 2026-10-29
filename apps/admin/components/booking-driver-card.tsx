@@ -10,7 +10,7 @@ import {
 import { Button } from "@usa-limousine-corporation/ui/components/button";
 import { ConfirmDialog } from "@usa-limousine-corporation/ui/components/confirm-dialog";
 import { Skeleton } from "@usa-limousine-corporation/ui/components/skeleton";
-import type { Item } from "@usa-limousine-corporation/ui/bookings/types";
+import type { Item } from "@usa-limousine-corporation/ui/types/booking-model";
 import { formatPrice } from "@usa-limousine-corporation/ui/utils/price";
 import { driverName } from "@/components/columns/driver-columns";
 import { AssignDriverModal } from "@/components/modals/assign-driver-modal";

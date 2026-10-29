@@ -72,7 +72,7 @@ describe("Booking (e2e)", () => {
     await prisma.userRole.create({ data: { userId: user.id, roleId: role.id } });
   }
 
-  it("estimates vehicles without saving, then saves the chosen vehicle's quote", async () => {
+  it("estimates vehicles without persisting anything", async () => {
     const fixtures = await seedBookingFixtures(prisma);
     const payload = buildBookingPayload({ vehicleCategoryId: fixtures.vehicleCategoryId });
     const trip = {
@@ -84,8 +84,9 @@ describe("Booking (e2e)", () => {
       },
     };
 
+    const beforeBookings = await prisma.booking.count();
     const estimates = await request(app.getHttpServer())
-      .post(`${basePath}/public/quotes/estimates`)
+      .post(`${basePath}/public/estimates`)
       .send(trip)
       .expect(200);
     const estimate = estimates.body.data.find(
@@ -93,15 +94,7 @@ describe("Booking (e2e)", () => {
         option.vehicleCategory.id === fixtures.vehicleCategoryId,
     );
     expect(estimate.total).toBeGreaterThan(0);
-    expect(await prisma.quote.count()).toBe(0);
-
-    const response = await request(app.getHttpServer())
-      .post(`${basePath}/public/quotes`)
-      .send(Object.assign({ vehicleCategoryId: fixtures.vehicleCategoryId }, trip))
-      .expect(200);
-
-    const saved = await prisma.quote.findUniqueOrThrow({ where: { id: response.body.data.id } });
-    expect(saved.total.toNumber()).toBe(estimate.total);
+    expect(await prisma.booking.count()).toBe(beforeBookings);
   });
 
   it("downloads a paid booking's receipt as a PDF", async () => {

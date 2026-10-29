@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
-import Step1 from "../booking/setp-1/setp-1";
+import Step1 from "@usa-limousine-corporation/ui/components/bookings/step-1";
 import { IMAGES } from "@/constants/image-constants";
 import { HeroMotion, HeroMotionItem, fadeInVariants, luxuryEase } from "@/components/animations";
 

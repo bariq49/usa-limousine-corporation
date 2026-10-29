@@ -1,1 +1,1 @@
-export * from "@usa-limousine-corporation/ui/bookings/types";
+export * from "@usa-limousine-corporation/ui/types/booking-model";

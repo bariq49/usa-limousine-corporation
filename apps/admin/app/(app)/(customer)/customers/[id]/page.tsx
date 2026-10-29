@@ -11,14 +11,14 @@ import {
 import { Button } from "@usa-limousine-corporation/ui/components/button";
 import { Card, CardContent } from "@usa-limousine-corporation/ui/components/card";
 import { Skeleton } from "@usa-limousine-corporation/ui/components/skeleton";
-import { DataTable } from "@usa-limousine-corporation/ui/data-table/data-table";
-import { getColumns as getBookingColumns } from "@usa-limousine-corporation/ui/bookings/booking-columns";
+import { DataTable } from "@usa-limousine-corporation/ui/components/data-table/data-table";
+import { getColumns as getBookingColumns } from "@usa-limousine-corporation/ui/components/bookings/booking-columns";
 import {
   BookingOverview,
   type OverviewStat,
-} from "@usa-limousine-corporation/ui/dashboard/booking-overview";
+} from "@usa-limousine-corporation/ui/components/dashboard/booking-overview";
 import { Breadcrumbs } from "@usa-limousine-corporation/ui/layout/breadcrumbs";
-import { CoverHeader } from "@usa-limousine-corporation/ui/profile/cover-header";
+import { CoverHeader } from "@usa-limousine-corporation/ui/components/profile/cover-header";
 import { cn } from "@usa-limousine-corporation/ui/utils/cn";
 import { formatDate } from "@usa-limousine-corporation/ui/utils/date";
 import { Calendar, Mail, Phone, User, UserSign } from "@usa-limousine-corporation/ui/svg";

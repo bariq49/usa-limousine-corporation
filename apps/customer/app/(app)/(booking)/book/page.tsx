@@ -11,8 +11,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@usa-limousine-corporation/ui/components/card";
-import { BOOKING_TYPE_LABELS } from "@usa-limousine-corporation/ui/bookings/labels";
-import type { CreateInput } from "@usa-limousine-corporation/ui/bookings/types";
+import { BOOKING_TYPE_LABELS } from "@usa-limousine-corporation/ui/components/bookings/labels";
+import type { CreateInput } from "@usa-limousine-corporation/ui/types/booking-model";
 import { formatPrice } from "@usa-limousine-corporation/ui/utils/price";
 import { Calendar, CalendarClock, Car, Location, User } from "@usa-limousine-corporation/ui/svg";
 import { useCreateBooking } from "@/hooks/queries/use-bookings";

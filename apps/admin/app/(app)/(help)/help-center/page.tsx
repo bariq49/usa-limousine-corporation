@@ -7,7 +7,7 @@ import { Card, CardContent } from "@usa-limousine-corporation/ui/components/card
 import {
   DataTable,
   type ColumnFiltersState,
-} from "@usa-limousine-corporation/ui/data-table/data-table";
+} from "@usa-limousine-corporation/ui/components/data-table/data-table";
 import { useBulkDeleteTickets, useDeleteTicket, useTickets } from "@/hooks/queries/use-tickets";
 import type { Ticket, TicketCategory, TicketPriority, TicketStatus } from "@/lib/types/tickets";
 import { getColumns, filter } from "@/components/columns/ticket-columns";

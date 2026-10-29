@@ -20,7 +20,7 @@ import { Input } from "@usa-limousine-corporation/ui/components/input";
 import {
   DataTable,
   type ColumnFiltersState,
-} from "@usa-limousine-corporation/ui/data-table/data-table";
+} from "@usa-limousine-corporation/ui/components/data-table/data-table";
 import { formatDateTime } from "@usa-limousine-corporation/ui/utils/date";
 import {
   COMMENT_STATUS_COLORS,

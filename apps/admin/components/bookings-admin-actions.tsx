@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@usa-limousine-corporation/ui/components/button";
-import type { Item } from "@usa-limousine-corporation/ui/bookings/types";
+import type { Item } from "@usa-limousine-corporation/ui/types/booking-model";
 import {
   useCancelBooking,
   useCompleteBooking,

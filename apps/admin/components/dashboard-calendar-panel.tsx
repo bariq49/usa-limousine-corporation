@@ -8,8 +8,8 @@ import { Skeleton } from "@usa-limousine-corporation/ui/components/skeleton";
 import {
   BOOKING_TYPE_COLORS,
   BOOKING_TYPE_LABELS,
-} from "@usa-limousine-corporation/ui/bookings/labels";
-import { MiniMonthCalendar } from "@usa-limousine-corporation/ui/bookings/mini-month-calendar";
+} from "@usa-limousine-corporation/ui/components/bookings/labels";
+import { MiniMonthCalendar } from "@usa-limousine-corporation/ui/components/bookings/mini-month-calendar";
 import { formatDate, formatTime } from "@usa-limousine-corporation/ui/utils/date";
 import { useBookingCalendar } from "@/hooks/queries/use-bookings";
 

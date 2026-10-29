@@ -1,7 +1,7 @@
 "use client";
 
 import { PageHeader } from "@usa-limousine-corporation/ui/layout/page-header";
-import { NotificationsPage } from "@usa-limousine-corporation/ui/notifications/notifications-page";
+import { NotificationsPage } from "@usa-limousine-corporation/ui/components/notifications/notifications-page";
 
 export default function CustomerNotificationsPage() {
   return (

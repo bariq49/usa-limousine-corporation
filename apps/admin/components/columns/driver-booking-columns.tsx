@@ -1,14 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import type { ColumnDef } from "@usa-limousine-corporation/ui/data-table/data-table";
-import { DataTableColumnHeader } from "@usa-limousine-corporation/ui/data-table/data-table-column-header";
+import type { ColumnDef } from "@usa-limousine-corporation/ui/components/data-table/data-table";
+import { DataTableColumnHeader } from "@usa-limousine-corporation/ui/components/data-table/data-table-column-header";
 import { Badge } from "@usa-limousine-corporation/ui/components/badge";
 import {
   BOOKING_STATUS_LABELS,
   BOOKING_TYPE_LABELS,
   bookingStatusBadgeColor,
-} from "@usa-limousine-corporation/ui/bookings/labels";
+} from "@usa-limousine-corporation/ui/components/bookings/labels";
 import { formatDate, formatTime } from "@usa-limousine-corporation/ui/utils/date";
 import { formatPrice } from "@usa-limousine-corporation/ui/utils/price";
 import type { DriverBooking } from "@/lib/types/drivers";
