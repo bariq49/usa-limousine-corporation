@@ -10,10 +10,6 @@ export type ContactPreferences = {
   sms: boolean;
 };
 
-export type BookingEmailProps = {
-  bookingId: string;
-};
-
 export type CancelEmailProps = {
   bookingId: string;
   reason: string | null;

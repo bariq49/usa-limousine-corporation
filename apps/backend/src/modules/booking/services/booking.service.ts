@@ -233,7 +233,7 @@ export class BookingService {
     });
     const booking = created.booking;
     await this.notificationService.deliverStaged(created.notifications);
-    void this.bookingEmails.sendCreated({ bookingId: booking.id });
+    void this.bookingEmails.sendCreated(booking.id);
 
     await auditLog({
       prisma: this.prisma,
@@ -292,7 +292,7 @@ export class BookingService {
         source: "admin",
       },
     });
-    void this.bookingEmails.sendConfirmed({ bookingId: booking.id });
+    void this.bookingEmails.sendConfirmed(booking.id);
     void this.bookingSms.sendConfirmed(booking.id);
 
     return (await this.bookingRepository.findById(booking.id)) ?? booking;
@@ -574,7 +574,7 @@ export class BookingService {
       metadata: { bookingId: updated.id, bookingNumber: updated.bookingNumber },
     });
     if (booking.status !== BookingStatus.CONFIRMED) {
-      void this.bookingEmails.sendConfirmed({ bookingId: updated.id });
+      void this.bookingEmails.sendConfirmed(updated.id);
       void this.bookingSms.sendConfirmed(updated.id);
     }
 
@@ -605,7 +605,7 @@ export class BookingService {
       userId: context.userId,
       metadata: { bookingId: updated.id, bookingNumber: updated.bookingNumber },
     });
-    void this.bookingEmails.sendCompleted({ bookingId: updated.id });
+    void this.bookingEmails.sendCompleted(updated.id);
     void this.bookingSms.sendCompleted(updated.id);
 
     return updated;

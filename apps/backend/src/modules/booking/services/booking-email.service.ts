@@ -12,7 +12,6 @@ import type { SendMailOptions } from "../../../infrastructure/email/types/mail";
 import { BookingRepository } from "../repositories/booking.repository";
 import type {
   AdminMailProps,
-  BookingEmailProps,
   CancelEmailProps,
   ContactPreferences,
   CustomerMailProps,
@@ -30,9 +29,9 @@ export class BookingEmailService {
     @Inject(AppLogger) private readonly logger: AppLogger,
   ) {}
 
-  sendCreated(props: BookingEmailProps) {
+  sendCreated(bookingId: string) {
     return this.deliver({
-      bookingId: props.bookingId,
+      bookingId,
       kind: "created",
       send: async ({ booking, context, prefs }) => {
         await this.toCustomer({
@@ -50,9 +49,9 @@ export class BookingEmailService {
     });
   }
 
-  sendPaid(props: BookingEmailProps) {
+  sendPaid(bookingId: string) {
     return this.deliver({
-      bookingId: props.bookingId,
+      bookingId,
       kind: "paid",
       send: async ({ booking, context, prefs }) => {
         await this.toCustomer({
@@ -70,9 +69,9 @@ export class BookingEmailService {
     });
   }
 
-  sendConfirmed(props: BookingEmailProps) {
+  sendConfirmed(bookingId: string) {
     return this.deliver({
-      bookingId: props.bookingId,
+      bookingId,
       kind: "confirmed",
       send: ({ booking, context, prefs }) =>
         this.toCustomer({
@@ -118,9 +117,9 @@ export class BookingEmailService {
     });
   }
 
-  sendCompleted(props: BookingEmailProps) {
+  sendCompleted(bookingId: string) {
     return this.deliver({
-      bookingId: props.bookingId,
+      bookingId,
       kind: "completed",
       send: ({ booking, context, prefs }) =>
         this.toCustomer({

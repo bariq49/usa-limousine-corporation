@@ -256,7 +256,7 @@ export class PaymentService implements OnModuleInit, OnModuleDestroy {
       ),
     );
     await this.notificationService.deliverStaged(notifications);
-    void this.bookingEmails.sendPaid({ bookingId: booking.id });
+    void this.bookingEmails.sendPaid(booking.id);
     void this.bookingSms.sendPaid(booking.id);
   }
 }
