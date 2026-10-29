@@ -64,6 +64,7 @@ tmp/
 temp/
 
 # AI assistant instructions (local only, never push)
+.ai/
 AGENTS.md
 CLAUDE.md
 CLAUDE.local.md
