@@ -32,9 +32,14 @@ export default function VehicleCategoryCard({
   const totalPrice = estimate?.total ?? 0;
   const discountAmount = pricing?.discountPrice ?? 0;
   const priceBeforeDiscount = totalPrice + discountAmount;
-  const discountPercentage =
-    priceBeforeDiscount > 0 ? Math.round((discountAmount / priceBeforeDiscount) * 100) : 0;
-  const hasDiscount = discountPercentage > 0 && discountAmount > 0;
+  const oneWayDiscountRate = pricing?.rates?.oneWayDiscountRate ?? 0;
+  const returnDiscountRate = pricing?.rates?.returnDiscountRate ?? 0;
+  const isReturn = Boolean(pricing?.legs?.returnTrip);
+  const hasDiscount = discountAmount > 0 && (oneWayDiscountRate > 0 || returnDiscountRate > 0);
+  const discountLabel =
+    isReturn && returnDiscountRate !== oneWayDiscountRate
+      ? `-${oneWayDiscountRate}% / -${returnDiscountRate}%`
+      : `-${isReturn ? oneWayDiscountRate || returnDiscountRate : oneWayDiscountRate}%`;
 
   return (
     <div
@@ -106,14 +111,14 @@ export default function VehicleCategoryCard({
                   <span className="text-sm font-semibold text-secondary">Getting price…</span>
                 ) : (
                   <div className="flex flex-col items-end gap-1">
-                    {hasDiscount && (
+                    {hasDiscount ? (
                       <div className="flex items-center gap-2 text-xs sm:text-sm">
                         <span className="text-gray-400 line-through">
                           {formatPrice({ price: priceBeforeDiscount })}
                         </span>
-                        <span className="font-semibold text-success">-{discountPercentage}%</span>
+                        <span className="font-semibold text-success">{discountLabel}</span>
                       </div>
-                    )}
+                    ) : null}
                     <span className="text-2xl font-semibold leading-none tracking-tight text-black sm:text-3xl">
                       {formatPrice({ price: totalPrice })}
                     </span>

@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { useBookingStore } from "../store/booking";
+import { estimateRequest, useBookingStore } from "../store/booking";
 import { formatHrs } from "../utils/duration";
 import { draftBooking, getBooking, startCheckout } from "../lib/booking/checkout";
 import type { ApiError } from "../types/api";
@@ -12,7 +12,6 @@ import { getHourlyDurations } from "../lib/booking/hourly-durations";
 import { getLuggageTypes } from "../lib/booking/luggage";
 import { getEstimates } from "../lib/booking/estimates";
 import { getSettings } from "../lib/booking/settings";
-import type { EstimateRequest } from "../types/booking";
 
 export function useHasHydrated() {
   const [hasHydrated, setHasHydrated] = useState(false);
@@ -59,14 +58,34 @@ export const useExtraServices = () => {
   });
 };
 
-export const useEstimates = (request: EstimateRequest | null) => {
-  return useQuery({
+export const useEstimates = () => {
+  const step1 = useBookingStore((state) => state.step1);
+  const step2 = useBookingStore((state) => state.step2);
+  const returnTrip = useBookingStore((state) => state.returnTrip);
+
+  const request = useMemo(
+    () => estimateRequest(useBookingStore.getState()),
+    [step1, returnTrip, step2?.vehicleCount],
+  );
+
+  const query = useQuery({
     queryKey: ["estimates", request],
     queryFn: () => getEstimates(request!),
     enabled: Boolean(request),
     placeholderData: keepPreviousData,
     retry: false,
   });
+
+  useEffect(() => {
+    const vehicleCategoryId = step2?.vehicleCategory.id;
+    if (!vehicleCategoryId || !query.data) return;
+    const estimate = query.data.find(
+      (item) => item.vehicleCategory.id === vehicleCategoryId,
+    );
+    if (estimate) useBookingStore.getState().applyEstimate(estimate);
+  }, [query.data, step2?.vehicleCategory.id]);
+
+  return query;
 };
 
 export const usePlaceOrder = () => {

@@ -38,6 +38,7 @@ export interface BookingOverviewProps {
   chartDescription?: string | undefined;
   actions?: ReactNode;
   statsClassName?: string | undefined;
+  className?: string | undefined;
 }
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -58,12 +59,13 @@ export function BookingOverview({
   chartDescription,
   actions,
   statsClassName,
+  className,
 }: BookingOverviewProps) {
   const [selectedKey, setSelectedKey] = useState(stats[0]?.key ?? "");
   const selected = stats.find((item) => item.key === selectedKey) ?? stats[0];
 
   return (
-    <Card>
+    <Card className={cn("flex h-full flex-col", className)}>
       <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3 border-none pb-0">
         <div>
           <div className="text-xl font-semibold whitespace-nowrap text-default-900">{title}</div>
@@ -86,7 +88,7 @@ export function BookingOverview({
           actions
         )}
       </CardHeader>
-      <CardContent className="p-4 md:p-5">
+      <CardContent className="flex flex-1 flex-col p-4 md:p-5">
         <div
           className={cn(
             "grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:gap-6",
@@ -139,7 +141,7 @@ export function BookingOverview({
           ))}
         </div>
         {selected ? (
-          <div className="mt-6 border-t border-border px-3 pt-6">
+          <div className="mt-6 flex flex-1 flex-col border-t border-border px-3 pt-6">
             <div className="mb-4">
               <h3 className="text-base font-semibold text-default-900">
                 {selected.label} Overview

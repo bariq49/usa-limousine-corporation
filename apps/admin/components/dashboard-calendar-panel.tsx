@@ -44,8 +44,8 @@ export function DashboardCalendarPanel() {
   );
 
   return (
-    <Card className="h-full w-full min-w-0 overflow-hidden">
-      <CardHeader className="border-none px-4 pb-0 pt-4 md:px-5">
+    <Card className="flex h-full w-full min-w-0 flex-col overflow-hidden">
+      <CardHeader className="shrink-0 border-none px-4 pb-0 pt-4 md:px-5">
         <div className="flex items-start justify-between gap-3">
           <div>
             <div className="text-lg font-semibold text-default-900 md:text-xl">Ride Schedule</div>
@@ -60,8 +60,8 @@ export function DashboardCalendarPanel() {
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-4 p-4 md:p-5">
-        <div className="rounded-md border border-border p-3">
+      <CardContent className="flex min-h-0 flex-1 flex-col gap-4 p-4 md:p-5">
+        <div className="shrink-0 rounded-md border border-border p-3">
           <MiniMonthCalendar
             month={displayMonth}
             selected={selectedDate}
@@ -75,8 +75,8 @@ export function DashboardCalendarPanel() {
           />
         </div>
 
-        <div>
-          <div className="mb-1.5 flex items-center justify-between px-0.5">
+        <div className="flex min-h-0 flex-1 flex-col">
+          <div className="mb-1.5 flex shrink-0 items-center justify-between px-0.5">
             <h3 className="text-sm font-semibold text-default-900">Rides of the Day</h3>
             {isFetching && !isLoading ? (
               <span className="text-xs text-default-400">Updating...</span>
@@ -89,11 +89,11 @@ export function DashboardCalendarPanel() {
               <Skeleton className="h-14 w-full" />
             </div>
           ) : rides.length === 0 ? (
-            <p className="px-1 py-6 text-center text-sm text-default-500">
+            <p className="flex flex-1 items-center justify-center px-1 py-6 text-center text-sm text-default-500">
               No rides scheduled for this day.
             </p>
           ) : (
-            <div className="max-h-72 space-y-1 overflow-y-auto pr-1">
+            <div className="min-h-0 flex-1 space-y-1 overflow-y-auto pr-1">
               {rides.map((ride) => (
                 <div
                   key={ride.id}

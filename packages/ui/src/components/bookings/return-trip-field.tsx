@@ -9,7 +9,7 @@ import { Button } from "../button";
 import { MeetGreetField } from "./meet-greet-field";
 import { TripExtrasFields } from "./trip-extras-fields";
 import { Input } from "../input";
-import { useBookingStore } from "../../store/booking";
+import { useBookingStore, usePricing } from "../../store/booking";
 import { cn } from "../../utils/cn";
 import { isAirport } from "../../utils/location";
 import { ReturnTripModal } from "./return-trip-modal";
@@ -19,11 +19,12 @@ import { formatPrice } from "../../utils/price";
 export const ReturnTripField = () => {
   const { setValue } = useFormContext<Step3FormValues>();
   const { step1, returnTrip, step2, setReturn, setStep2 } = useBookingStore();
+  const pricing = usePricing();
   const hourCycle = useTimeFormat((state) => state.hourCycle);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const returnEnabled = Boolean(returnTrip);
-  const returnTotalPrice = step2?.pricing?.legs?.returnTrip.total;
+  const returnTotalPrice = pricing?.legs?.returnTrip.total;
   const pickupAddress = step1?.pickupAddress?.trim() || "";
   const deliveryAddress = step1?.deliveryAddress?.trim() || "";
   const showReturnAirport = isAirport({ pickupAddress, deliveryAddress });

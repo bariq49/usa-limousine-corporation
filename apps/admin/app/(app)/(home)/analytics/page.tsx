@@ -130,7 +130,7 @@ const Analytics = () => {
         actions={<PeriodSelect value={period} onChange={setPeriod} />}
       />
 
-      <div className="grid w-full min-w-0 grid-cols-1 gap-6 lg:grid-cols-12">
+      <div className="grid w-full min-w-0 grid-cols-1 items-stretch gap-6 lg:grid-cols-12">
         <div className="min-w-0 lg:col-span-7 xl:col-span-8">
           <BookingOverview
             title="Driver Assignment Overview"
@@ -141,9 +141,10 @@ const Analytics = () => {
             chartDescription={subtitle}
             isLoading={isLoading}
             statsClassName="sm:grid-cols-2 lg:grid-cols-2 lg:gap-4"
+            className="h-full"
           />
         </div>
-        <div className="min-w-0 lg:col-span-5 xl:col-span-4">
+        <div className="flex min-w-0 lg:col-span-5 xl:col-span-4">
           <DashboardCalendarPanel />
         </div>
       </div>

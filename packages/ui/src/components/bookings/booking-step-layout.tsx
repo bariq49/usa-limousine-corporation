@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { AnimatedRouteMap } from "./animated-route-map";
 import SummaryDetails from "./summary-details";
+import { useEstimates } from "../../hooks/use-booking";
 import { useBookingStore } from "../../store/booking";
 import { cn } from "../../utils/cn";
 
@@ -15,6 +16,7 @@ type Props = {
 
 export default function BookingStepLayout({ children, showMobileMap = true }: Props) {
   const { step1, step2 } = useBookingStore();
+  useEstimates();
 
   const hasMap = Boolean(step1?.pickupAddress?.trim()) && Boolean(step1?.deliveryAddress?.trim());
   const hasMobileMap = hasMap && showMobileMap;

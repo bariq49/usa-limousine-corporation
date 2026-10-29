@@ -7,7 +7,7 @@ import { ChevronRight } from "../../svg";
 import { Button } from "../button";
 import { useBookingStore } from "../../store/booking";
 import { useHasHydrated, useEstimates } from "../../hooks/use-booking";
-import { PICKUP_TIME_ERRORS, TRIP_TYPES } from "../../constants/booking";
+import { PICKUP_TIME_ERRORS } from "../../constants/booking";
 import VehicleCategoryCard from "./vehicle-category-card";
 import BookingStepActions from "./booking-step-actions";
 import MobileSummary from "./mobile-summary";
@@ -15,7 +15,6 @@ import { VehicleCategoryCardSkeleton } from "../../skeletons/vehicle-category-ca
 import type { ApiError } from "../../types/api";
 import type {
   Step2,
-  EstimateRequest,
   VehicleCategory,
   CountsChange,
   Estimate,
@@ -26,35 +25,10 @@ const SKELETON_COUNT = 10;
 function Step2() {
   const hasHydrated = useHasHydrated();
   const router = useRouter();
-  const { step1, returnTrip, step2, setStep2, setStep3 } = useBookingStore();
+  const { step2, setStep2, setStep3 } = useBookingStore();
   const [isNavigating, setIsNavigating] = useState(false);
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
-
-  const isHourly = step1?.tripType === TRIP_TYPES.HOURLY;
-  const deliveryAddress = step1?.deliveryAddress.trim() ?? "";
-  const estimatesRequest: EstimateRequest | null =
-    step1 && (isHourly ? Boolean(step1.hourlyDuration) : Boolean(deliveryAddress))
-      ? {
-          vehicleCount: step2?.vehicleCount,
-          bookingType: isHourly ? "HOURLY" : returnTrip ? "RETURN" : "ONE_WAY",
-          hourlyDuration: isHourly ? step1.hourlyDuration : undefined,
-          address: {
-            pickup: { address: step1.pickupAddress },
-            dropoff: deliveryAddress ? { address: deliveryAddress } : undefined,
-            stops: step1.stops,
-            distance: step2?.distance ?? 0,
-            travelDuration: step2?.travelDuration ?? 0,
-          },
-          bookingTime: {
-            pickupDate: step1.pickupDate,
-            pickupTime: step1.pickupTime,
-            returnDate: returnTrip?.returnDate,
-            returnTime: returnTrip?.returnTime,
-          },
-        }
-      : null;
-
-  const vehicleEstimates = useEstimates(estimatesRequest);
+  const vehicleEstimates = useEstimates();
   const estimateError = vehicleEstimates.error as ApiError | null;
   const priceError = estimateError?.message;
   const estimates = vehicleEstimates.data ?? [];
@@ -65,32 +39,6 @@ function Step2() {
       router.push("/");
     }
   }, [estimateError, router]);
-
-  useEffect(() => {
-    if (!step2) return;
-    const selected = estimates.find(
-      (estimate) => estimate.vehicleCategory.id === step2.vehicleCategory.id,
-    );
-    if (!selected) return;
-    if (
-      step2.pricing === selected.pricing &&
-      step2.total === selected.total &&
-      step2.distance === selected.distance &&
-      step2.travelDuration === selected.travelDuration
-    ) {
-      return;
-    }
-    setStep2({
-      vehicleCategory: step2.vehicleCategory,
-      vehicleCount: step2.vehicleCount,
-      passengers: step2.passengers,
-      bags: step2.bags,
-      pricing: selected.pricing,
-      total: selected.total,
-      distance: selected.distance,
-      travelDuration: selected.travelDuration,
-    });
-  }, [estimates, step2, setStep2]);
 
   const estimateByCategory = new Map(
     estimates.map((estimate) => [estimate.vehicleCategory.id, estimate]),

@@ -147,6 +147,29 @@ export type Step3FormValues = {
 
 export type BookingType = "ONE_WAY" | "RETURN" | "HOURLY";
 
+export type DraftMeetAndGreet = {
+  enabled: boolean;
+  signName?: string | undefined;
+  returnEnabled?: boolean | undefined;
+  returnSignName?: string | undefined;
+};
+
+export type DraftExtraService = {
+  extraServiceId: string;
+  quantity: number;
+  returnQuantity: number;
+};
+
+export type DraftLuggage = {
+  luggageTypeId: string;
+  quantity: number;
+};
+
+export type DraftNotifications = {
+  email: boolean;
+  sms: boolean;
+};
+
 export type BookingDraft = {
   vehicleCategoryId: string;
   vehicleCount: number;
@@ -175,21 +198,12 @@ export type BookingDraft = {
   flightDetails?:
     | { flightNumber?: string | undefined; returnFlightNumber?: string | undefined }
     | undefined;
-  meetAndGreet?:
-    | {
-        enabled: boolean;
-        signName?: string | undefined;
-        returnEnabled?: boolean | undefined;
-        returnSignName?: string | undefined;
-      }
-    | undefined;
-  extraServices?:
-    | { extraServiceId: string; quantity: number; returnQuantity: number }[]
-    | undefined;
-  luggage?: { luggageTypeId: string; quantity: number }[] | undefined;
+  meetAndGreet?: DraftMeetAndGreet | undefined;
+  extraServices?: DraftExtraService[] | undefined;
+  luggage?: DraftLuggage[] | undefined;
   notes?: string | undefined;
   returnNotes?: string | undefined;
-  notifications?: { email: boolean; sms: boolean } | undefined;
+  notifications?: DraftNotifications | undefined;
 };
 
 export type EstimateRequest = {

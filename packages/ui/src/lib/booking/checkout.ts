@@ -2,7 +2,10 @@ import { BOOKING_API_ROUTES, TRIP_TYPES } from "../../constants/booking";
 import type {
   Booking,
   BookingDraft,
+  ChildSeat,
   DraftBookingInput,
+  DraftExtraService,
+  DraftLuggage,
   CheckoutStart,
 } from "../../types/booking";
 import { isAirport } from "../../utils/location";
@@ -19,6 +22,50 @@ export const getBooking = async (id: string): Promise<Booking> => {
   );
   return response.data;
 };
+
+function draftExtraServices(
+  outbound: ChildSeat[],
+  inbound: ChildSeat[],
+  isReturn: boolean,
+): DraftExtraService[] {
+  const byId = new Map<string, DraftExtraService>();
+
+  for (const seat of outbound) {
+    if (seat.quantity <= 0) continue;
+    byId.set(seat.id, {
+      extraServiceId: seat.id,
+      quantity: seat.quantity,
+      returnQuantity: 0,
+    });
+  }
+
+  if (!isReturn) return Array.from(byId.values());
+
+  for (const seat of inbound) {
+    if (seat.quantity <= 0) continue;
+    const existing = byId.get(seat.id);
+    if (existing) {
+      existing.returnQuantity = seat.quantity;
+      continue;
+    }
+    byId.set(seat.id, {
+      extraServiceId: seat.id,
+      quantity: 0,
+      returnQuantity: seat.quantity,
+    });
+  }
+
+  return Array.from(byId.values());
+}
+
+function draftLuggage(items: { id: string; quantity: number }[]): DraftLuggage[] {
+  return items
+    .filter((item) => item.quantity > 0)
+    .map((item) => ({
+      luggageTypeId: item.id,
+      quantity: item.quantity,
+    }));
+}
 
 export function draftBooking(input: DraftBookingInput): BookingDraft {
   const { step1, step2, step3, returnTrip } = input;
@@ -71,40 +118,12 @@ export function draftBooking(input: DraftBookingInput): BookingDraft {
             returnSignName: isReturn ? step3.returnMeetGreet : undefined,
           }
         : undefined,
-    extraServices: (() => {
-      const seats = new Map<
-        string,
-        { extraServiceId: string; quantity: number; returnQuantity: number }
-      >();
-      for (const seat of step3.childSeats ?? []) {
-        if (seat.quantity <= 0) continue;
-        seats.set(seat.id, {
-          extraServiceId: seat.id,
-          quantity: seat.quantity,
-          returnQuantity: 0,
-        });
-      }
-      if (isReturn) {
-        for (const seat of step3.returnChildSeats ?? []) {
-          if (seat.quantity <= 0) continue;
-          const existing = seats.get(seat.id);
-          if (existing) {
-            existing.returnQuantity = seat.quantity;
-          } else {
-            seats.set(seat.id, {
-              extraServiceId: seat.id,
-              quantity: 0,
-              returnQuantity: seat.quantity,
-            });
-          }
-        }
-      }
-      return [...seats.values()];
-    })(),
-    luggage: (step3.luggage ?? []).map((item) => ({
-      luggageTypeId: item.id,
-      quantity: item.quantity,
-    })),
+    extraServices: draftExtraServices(
+      step3.childSeats ?? [],
+      step3.returnChildSeats ?? [],
+      isReturn,
+    ),
+    luggage: draftLuggage(step3.luggage ?? []),
     notifications: {
       email: step3.notifyByEmail ?? true,
       sms: step3.notifyBySms ?? false,
