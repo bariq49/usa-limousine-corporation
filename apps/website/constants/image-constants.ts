@@ -104,6 +104,63 @@ export const IMAGES = {
       WHY_CHOOSE_US: "/assets/images/services/diplomatic-government-transportation/why-choose-us.png",
     },
   },
+  AIRPORTS: {
+    EWR: {
+      BANNER: "/assets/images/airports/newark-ewr/hero.banner.png",
+      STORY: "/assets/images/airports/newark-ewr/story.jpg",
+      WHY_CHOOSE_US: "/assets/images/airports/newark-ewr/why-choose-us.jpg",
+    },
+    PHL: {
+      BANNER: "/assets/images/airports/philadelphia-phl/hero.banner.png",
+      STORY: "/assets/images/airports/philadelphia-phl/story.png",
+      WHY_CHOOSE_US: "/assets/images/airports/philadelphia-phl/why-choose-us.png",
+    },
+    JFK: {
+      BANNER: "/assets/images/airports/jfk/hero.banner.png",
+      STORY: "/assets/images/airports/jfk/story.png",
+      WHY_CHOOSE_US: "/assets/images/airports/jfk/why-choose-us.png",
+    },
+    LGA: {
+      BANNER: "/assets/images/airports/laguardia-lga/hero.banner.png",
+      STORY: "/assets/images/airports/laguardia-lga/story.png",
+      WHY_CHOOSE_US: "/assets/images/airports/laguardia-lga/why-choose-us.png",
+    },
+    TEB: {
+      BANNER: "/assets/images/airports/teterboro-teb/hero.banner.png",
+      STORY: "/assets/images/airports/teterboro-teb/story.png",
+      WHY_CHOOSE_US: "/assets/images/airports/teterboro-teb/why-choose-us.png",
+    },
+    HPN: {
+      BANNER: "/assets/images/airports/hpn/hero.banner.png",
+      STORY: "/assets/images/airports/hpn/story.png",
+      WHY_CHOOSE_US: "/assets/images/airports/hpn/why-choose-us.png",
+    },
+    ACY: {
+      BANNER: "/assets/images/airports/atlantic-city-acy/hero.banner.png",
+      STORY: "/assets/images/airports/atlantic-city-acy/story.png",
+      WHY_CHOOSE_US: "/assets/images/airports/atlantic-city-acy/why-choose-us.png",
+    },
+    SWF: {
+      BANNER: "/assets/images/airports/stewart-swf/hero.banner.png",
+      STORY: "/assets/images/airports/stewart-swf/story.png",
+      WHY_CHOOSE_US: "/assets/images/airports/stewart-swf/why-choose-us.png",
+    },
+    MMU: {
+      BANNER: "/assets/images/airports/morristown-mmu/hero.banner.png",
+      STORY: "/assets/images/airports/morristown-mmu/story.png",
+      WHY_CHOOSE_US: "/assets/images/airports/morristown-mmu/why-choose-us.png",
+    },
+    ISP: {
+      BANNER: "/assets/images/airports/macarthur-isp/hero.banner.png",
+      STORY: "/assets/images/airports/macarthur-isp/story.png",
+      WHY_CHOOSE_US: "/assets/images/airports/macarthur-isp/why-choose-us.png",
+    },
+    TTN: {
+      BANNER: "/assets/images/airports/trenton-ttn/hero.banner.png",
+      STORY: "/assets/images/airports/trenton-ttn/story.png",
+      WHY_CHOOSE_US: "/assets/images/airports/trenton-ttn/why-choose-us.png",
+    },
+  },
   CONTACT: {
     BANNER: "/assets/images/contact-us/hero.banner.png",
   },

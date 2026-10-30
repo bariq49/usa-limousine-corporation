@@ -96,7 +96,8 @@ export function useHeaderMenu(pathname: string | null) {
       if (
         openDropdownId &&
         desktopNavRef.current &&
-        !desktopNavRef.current.contains(target)
+        !desktopNavRef.current.contains(target) &&
+        !mobileMenuRef.current?.contains(target)
       ) {
         setOpenDropdownId(null);
       }

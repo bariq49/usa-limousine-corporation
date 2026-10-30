@@ -86,7 +86,7 @@ export const HeaderDesktopNav = forwardRef<HTMLElement, HeaderDesktopNavProps>(
                   onMouseLeave={onDropdownClose}
                 >
                   <div
-                    className="relative rounded-lg bg-white p-1.5 shadow-2xl"
+                    className="relative rounded-md border border-border bg-white p-1.5 shadow-2xl"
                     role="menu"
                   >
                     <div className="absolute -top-3 left-8 h-3.5 w-6">
@@ -98,7 +98,7 @@ export const HeaderDesktopNav = forwardRef<HTMLElement, HeaderDesktopNavProps>(
                       </svg>
                     </div>
 
-                    <div className="relative z-10 flex max-h-dropdown flex-col gap-0.5 overflow-y-auto overscroll-contain py-0.5 scrollbar-thin">
+                    <div className="relative z-10 flex max-h-dropdown flex-col gap-0.5 overflow-y-auto overscroll-contain py-0.5 scrollbar-none">
                       {link.sublinks.map((sub) => {
                         const Icon = sub.icon;
                         return (
@@ -106,7 +106,7 @@ export const HeaderDesktopNav = forwardRef<HTMLElement, HeaderDesktopNavProps>(
                             key={sub.title}
                             href={sub.path}
                             role="menuitem"
-                            className={`group flex cursor-pointer items-center gap-2 rounded-xl px-3 py-1 text-sm font-bold transition-all duration-300 ${
+                            className={`group flex cursor-pointer items-center gap-2 rounded-md px-3 py-1 text-sm font-bold transition-all duration-300 ${
                               pathname === sub.path
                                 ? "bg-secondary/10 text-secondary"
                                 : "text-gray-600 hover:bg-gray-50 hover:text-secondary"

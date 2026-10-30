@@ -19,30 +19,30 @@ export const QUICK_NAV_ITEMS = [
 ] as const satisfies readonly NavItem[];
 
 export const SERVICE_LINKS = [
-  { title: "Airport Transfers", href: "/airport-transfers" },
-  { title: "Hourly Chauffeur", href: "/hourly-chauffeur" },
-  { title: "Corporate Transportation", href: "/corporate-transportation" },
-  { title: "Point-to-Point Transfers", href: "/point-to-point-transfers" },
-  { title: "Concert Transportation", href: "/concert-transportation" },
-  { title: "Sporting Event Transportation", href: "/sporting-event-transportation" },
-  { title: "Wedding Transportation", href: "/wedding-transportation" },
-  { title: "Prom Transportation", href: "/prom-transportation" },
-  { title: "Diplomatic & Government", href: "/diplomatic-government-transportation" },
+  { title: "Airport Transfers", href: "/services/airport-transfers" },
+  { title: "Hourly Chauffeur", href: "/services/hourly-chauffeur" },
+  { title: "Corporate Transportation", href: "/services/corporate-transportation" },
+  { title: "Point-to-Point Transfers", href: "/services/point-to-point-transfers" },
+  { title: "Concert Transportation", href: "/services/concert-transportation" },
+  { title: "Sporting Event Transportation", href: "/services/sporting-event-transportation" },
+  { title: "Wedding Transportation", href: "/services/wedding-transportation" },
+  { title: "Prom Transportation", href: "/services/prom-transportation" },
+  { title: "Diplomatic & Government", href: "/services/diplomatic-government-transportation" },
 ] as const satisfies readonly NavItem[];
 
 
 export const AIRPORTS = [
-  { code: "EWR", name: "Newark" },
-  { code: "JFK", name: "John F. Kennedy" },
-  { code: "LGA", name: "LaGuardia" },
-  { code: "TEB", name: "Teterboro" },
-  { code: "HPN", name: "Westchester" },
-  { code: "PHL", name: "Philadelphia" },
-  { code: "MMU", name: "Morristown" },
-  { code: "TTN", name: "Trenton-Mercer" },
-  { code: "ACY", name: "Atlantic City" },
-  { code: "ISP", name: "MacArthur" },
-  { code: "SWF", name: "Stewart" },
+  { code: "EWR", name: "Newark", slug: "newark-ewr" },
+  { code: "JFK", name: "John F. Kennedy", slug: "jfk" },
+  { code: "LGA", name: "LaGuardia", slug: "laguardia-lga" },
+  { code: "TEB", name: "Teterboro", slug: "teterboro-teb" },
+  { code: "HPN", name: "Westchester", slug: "hpn" },
+  { code: "PHL", name: "Philadelphia", slug: "philadelphia-phl" },
+  { code: "MMU", name: "Morristown", slug: "morristown-mmu" },
+  { code: "TTN", name: "Trenton-Mercer", slug: "trenton-ttn" },
+  { code: "ACY", name: "Atlantic City", slug: "atlantic-city-acy" },
+  { code: "ISP", name: "MacArthur", slug: "macarthur-isp" },
+  { code: "SWF", name: "Stewart", slug: "stewart-swf" },
 ] as const;
 
 export const NAV_LINKS: NavLink[] = [
@@ -54,13 +54,20 @@ export const NAV_LINKS: NavLink[] = [
   {
     title: "Fleet",
     sublinks: [
-      { title: "Luxury Sedan", path: "/luxury-sedan" },
-      { title: "Premium Luxury Sedan", path: "/premium-luxury-sedan" },
-      { title: "Luxury SUV", path: "/luxury-suv" },
-      { title: "Luxury SUV w/ Bench Seat", path: "/luxury-suv-bench" },
-      { title: "Premium Luxury SUV", path: "/premium-luxury-suv" },
-      { title: "Passenger Van", path: "/passenger-van" },
+      { title: "Luxury Sedan", path: "/fleet/luxury-sedan" },
+      { title: "Premium Luxury Sedan", path: "/fleet/premium-luxury-sedan" },
+      { title: "Luxury SUV", path: "/fleet/luxury-suv" },
+      { title: "Luxury SUV w/ Bench Seat", path: "/fleet/luxury-suv-bench" },
+      { title: "Premium Luxury SUV", path: "/fleet/premium-luxury-suv" },
+      { title: "Passenger Van", path: "/fleet/passenger-van" },
     ],
+  },
+  {
+    title: "Airports",
+    sublinks: AIRPORTS.map((airport) => ({
+      title: `${airport.name} (${airport.code})`,
+      path: `/airports/${airport.slug}`,
+    })),
   },
   { title: "About Us", path: "/about-us" },
   { title: "Blog", path: "/blog" },

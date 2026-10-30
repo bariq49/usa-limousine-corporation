@@ -112,22 +112,27 @@ export default function Home() {
           {
             name: "Newark Liberty Airport",
             image: IMAGES.HOME.AIRPORTS.NEWARK,
+            href: "/airports/newark-ewr",
           },
           {
             name: "John F. Kennedy Airport",
             image: IMAGES.HOME.AIRPORTS.JFK,
+            href: "/airports/jfk",
           },
           {
             name: "LaGuardia Airport",
             image: IMAGES.HOME.AIRPORTS.LAGUARDIA,
+            href: "/airports/laguardia-lga",
           },
           {
             name: "Teterboro Airport",
             image: IMAGES.HOME.AIRPORTS.TETERBORO,
+            href: "/airports/teterboro-teb",
           },
           {
             name: "Westchester County Airport",
             image: IMAGES.HOME.AIRPORTS.WESTCHESTER,
+            href: "/airports/hpn",
           },
         ]}
       />

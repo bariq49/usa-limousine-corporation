@@ -1,6 +1,7 @@
 import { MetadataRoute } from 'next';
 import { getAppUrl } from "@/lib/api/base-url";
 import { getBlogSitemap } from "@/lib/api/blogs";
+import { AIRPORTS } from "@/constants/navigation";
 
 export const revalidate = 300;
 
@@ -10,28 +11,30 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const routes = [
     '',
     '/services',
-    '/airport-transfers',
-    '/hourly-chauffeur',
-    '/corporate-transportation',
-    '/point-to-point-transfers',
-    '/concert-transportation',
-    '/sporting-event-transportation',
-    '/wedding-transportation',
-    '/prom-transportation',
-    '/diplomatic-government-transportation',
-    '/luxury-sedan',
-    '/luxury-suv',
-    '/luxury-suv-bench',
-    '/premium-luxury-suv',
-    '/premium-luxury-sedan',
-    '/passenger-van',
+    '/services/airport-transfers',
+    '/services/hourly-chauffeur',
+    '/services/corporate-transportation',
+    '/services/point-to-point-transfers',
+    '/services/concert-transportation',
+    '/services/sporting-event-transportation',
+    '/services/wedding-transportation',
+    '/services/prom-transportation',
+    '/services/diplomatic-government-transportation',
+    '/fleet/luxury-sedan',
+    '/fleet/luxury-suv',
+    '/fleet/luxury-suv-bench',
+    '/fleet/premium-luxury-suv',
+    '/fleet/premium-luxury-sedan',
+    '/fleet/passenger-van',
     '/about-us',
     '/blog',
     '/contact-us',
   ];
   const articles = await getBlogSitemap();
+  const airports = AIRPORTS.map((airport) => `/airports/${airport.slug}`);
 
   return routes
+    .concat(airports)
     .map((route) => ({
       url: `${baseUrl}${route}`,
       lastModified: new Date(),

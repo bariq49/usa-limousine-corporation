@@ -140,7 +140,7 @@ export default function Footer() {
             title="Airports We Serve"
             delay={0.16}
             links={AIRPORTS.map((airport) => ({
-              href: "/#hero-booking",
+              href: `/airports/${airport.slug}`,
               label: `${airport.name} (${airport.code})`,
             }))}
           />
