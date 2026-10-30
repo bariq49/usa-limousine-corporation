@@ -57,6 +57,13 @@ export const IMAGES = {
       WHY_CHOOSE_US: "/assets/images/fleet/passenger-van/why-choose-us.png",
     },
   },
+  SERVICES: {
+    AIRPORT_TRANSFERS: {
+      BANNER: "/assets/images/services/airport-transfers/hero.banner.png",
+      STORY: "/assets/images/services/airport-transfers/story.png",
+      WHY_CHOOSE_US: "/assets/images/services/airport-transfers/why-choose-us.png",
+    },
+  },
   CONTACT: {
     BANNER: "/assets/images/contact-us/hero.banner.png",
   },

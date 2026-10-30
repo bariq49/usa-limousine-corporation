@@ -19,7 +19,7 @@ export const QUICK_NAV_ITEMS = [
 ] as const satisfies readonly NavItem[];
 
 export const SERVICE_LINKS = [
-  { title: "Airport Transfers", href: "/#hero-booking" },
+  { title: "Airport Transfers", href: "/airport-transfers" },
   { title: "Hourly Chauffeur", href: "/#hero-booking" },
   { title: "Corporate Transportation", href: "/#hero-booking" },
   { title: "Point-to-Point Transfers", href: "/#hero-booking" },
@@ -47,7 +47,12 @@ export const AIRPORTS = [
 
 export const NAV_LINKS: NavLink[] = [
   { title: "Home", path: "/" },
-  { title: "Services", path: "/services" },
+  {
+    title: "Services",
+    sublinks: [
+      { title: "Airport Transfers", path: "/airport-transfers" },
+    ],
+  },
   {
     title: "Fleet",
     sublinks: [
