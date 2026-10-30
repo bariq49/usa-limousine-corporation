@@ -33,7 +33,7 @@ export class BookingService {
     @Inject(NotificationService) private readonly notifications: NotificationService,
     @Inject(BookingEmailService) private readonly bookingEmails: BookingEmailService,
     @Inject(BookingSmsService) private readonly bookingSms: BookingSmsService,
-  ) {}
+  ) { }
 
   list(query: QueryDto) {
     return this.bookingRepository.findMany(query);
@@ -196,63 +196,6 @@ export class BookingService {
 
     return updated;
   }
-
-  async cancel({
-    id,
-    body,
-    request,
-    refundAmount = 0,
-    byCustomer = false,
-  }: CancelParams) {
-    const context = toRequestContext(request);
-
-    const booking = await this.bookingRepository.findById(id);
-    if (!booking) {
-      throw new NotFoundException("Booking not found");
-    }
-
-    const statusData: UpdateStatusData = { cancelledAt: new Date() };
-    if (body.cancellationReason !== undefined) {
-      statusData.cancellationReason = body.cancellationReason.trim();
-    }
-    const updated = await this.bookingRepository.updateStatus(
-      id,
-      BookingStatus.CANCELLED,
-      statusData,
-    );
-
-    await auditLog({
-      prisma: this.prisma,
-      event: "booking.cancelled",
-      result: "success",
-      context,
-      userId: context.userId,
-      metadata: {
-        bookingId: updated.id,
-        bookingNumber: updated.bookingNumber,
-        reason: updated.cancellationReason,
-      },
-    });
-
-    void this.bookingEmails.sendCancelled({
-      bookingId: updated.id,
-      reason: updated.cancellationReason,
-      refundAmount,
-      byCustomer,
-    });
-    void this.bookingSms.sendCancelled(updated.id, updated.cancellationReason, refundAmount);
-
-    await this.notifications.cancelled({
-      bookingId: updated.id,
-      bookingNumber: updated.bookingNumber,
-      excludeUserId: context.userId ?? null,
-      customerUserId: updated.userId,
-      notifyAdmins: byCustomer,
-    });
-
-    return updated;
-  }
-
   async remove(id: string, request: Request) {
     const context = toRequestContext(request);
 
@@ -388,4 +331,71 @@ export class BookingService {
     result.monthlyRevenue = result.monthlyRevenue.map((value) => Math.round(value * 100) / 100);
     return result;
   }
+
+  async cancel({
+    id,
+    body,
+    request,
+    refundAmount = 0,
+    byCustomer = false,
+  }: CancelParams) {
+    const context = toRequestContext(request);
+
+    const booking = await this.bookingRepository.findById(id);
+    if (!booking) {
+      throw new NotFoundException("Booking not found");
+    }
+
+    const statusData: UpdateStatusData = { cancelledAt: new Date() };
+    if (body.cancellationReason !== undefined) {
+      statusData.cancellationReason = body.cancellationReason.trim();
+    }
+    const updated = await this.bookingRepository.updateStatus(
+      id,
+      BookingStatus.CANCELLED,
+      statusData,
+    );
+
+    await auditLog({
+      prisma: this.prisma,
+      event: "booking.cancelled",
+      result: "success",
+      context,
+      userId: context.userId,
+      metadata: {
+        bookingId: updated.id,
+        bookingNumber: updated.bookingNumber,
+        reason: updated.cancellationReason,
+      },
+    });
+
+    const passenger = updated.passenger as PassengerInput;
+    const customerName = passenger?.name ?? null;
+
+    void this.bookingEmails.sendCancelled({
+      bookingId: updated.id,
+      reason: updated.cancellationReason,
+      refundAmount,
+      byCustomer,
+    });
+    void this.bookingSms.sendCancelled(
+      updated.id,
+      updated.cancellationReason,
+      byCustomer,
+    );
+
+    await this.notifications.cancelled({
+      bookingId: updated.id,
+      bookingNumber: updated.bookingNumber,
+      userId: updated.userId,
+      excludeUserId: context.userId ?? null,
+      notifyAdmins: byCustomer,
+      byCustomer,
+      customerName,
+      reason: updated.cancellationReason,
+    });
+
+    return updated;
+  }
+
 }

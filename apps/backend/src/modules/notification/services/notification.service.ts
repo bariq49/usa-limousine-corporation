@@ -6,10 +6,8 @@ import {
   type Client,
   type Create,
   type MarkRead,
-  type NotifyAdmins,
   type Query,
   type Recipient,
-  RecipientType,
   type Remove,
   type RemoveMany,
 } from "../types/notification";
@@ -98,23 +96,6 @@ export class NotificationService {
 
   stage(inputs: Create[], client: Client) {
     return this.repository.createManyAndReturn({ inputs }, client);
-  }
-
-  async stageForAdmins(input: NotifyAdmins, client: Client) {
-    const adminIds = await this.repository.findAdminUserIds(input.excludeUserId, client);
-    return this.stage(
-      adminIds.map((id) => ({
-        recipientType: RecipientType.USER,
-        recipientId: id,
-        type: input.type,
-        title: input.title,
-        body: input.body,
-        data: input.data,
-        push: false,
-        idempotencyKey: `${input.idempotencyKey}:${id}`,
-      })),
-      client,
-    );
   }
 
   deliverStaged(notifications: Notification[]) {

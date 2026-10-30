@@ -44,17 +44,24 @@ export class BookingSmsService {
     });
   }
 
-  sendCancelled(bookingId: string, reason: string | null, refundAmount = 0) {
+  sendCancelled(
+    bookingId: string,
+    reason: string | null,
+    byCustomer = false,
+  ) {
     return sendBookingSms({
       bookingId,
       kind: "cancelled",
-      text: (booking) =>
-        `${BRAND}: your booking ${booking.bookingNumber} has been cancelled.` +
-        (reason ? ` Reason: ${reason}.` : "") +
-        (refundAmount > 0
-          ? ` A refund of $${refundAmount.toFixed(2)} is on its way to your card.`
-          : "") +
-        ` Questions? Call ${SUPPORT_PHONE}.`,
+      text: (booking) => {
+        const prefix = byCustomer
+          ? `${BRAND}: your booking ${booking.bookingNumber} has been cancelled.`
+          : `${BRAND} has cancelled your booking ${booking.bookingNumber}.`;
+        return (
+          prefix +
+          (reason ? ` Reason: ${reason}.` : "") +
+          ` Questions? Call ${SUPPORT_PHONE}.`
+        );
+      },
       bookingRepository: this.bookingRepository,
       twilio: this.twilio,
       logger: this.logger,

@@ -1,6 +1,7 @@
 import { Test } from "@nestjs/testing";
 import type { TestingModule } from "@nestjs/testing";
 import { NotificationRecipientType, NotificationType } from "@prisma/client";
+import { stageForAdmins } from "../src/common/utils/notification";
 import { NotificationRepository } from "../src/modules/notification/repositories/notification.repository";
 import { NotificationDeliveryService } from "../src/modules/notification/services/notification-delivery.service";
 import { NotificationService } from "../src/modules/notification/services/notification.service";
@@ -113,13 +114,17 @@ describe("NotificationService", () => {
   });
 
   it("stages one row per admin on the caller's transaction with per-admin idempotency keys", async () => {
-    const tx = { marker: "tx" };
-    const findAdminUserIds = jest.fn(async () => ["admin-1", "admin-2"]);
+    const tx = {
+      user: {
+        findMany: jest.fn(async () => [{ id: "admin-1" }, { id: "admin-2" }]),
+      },
+    };
     const createManyAndReturn = jest.fn(async () => [row("n-1", "admin-1", false)]);
-    const service = await createService({ findAdminUserIds, createManyAndReturn });
+    const service = await createService({ createManyAndReturn });
 
-    await service.stageForAdmins(
+    await stageForAdmins(
       {
+        notificationService: service,
         type: NotificationType.BOOKING_CREATED,
         title: "New booking",
         body: "Booking BK-1 was created.",
@@ -130,7 +135,14 @@ describe("NotificationService", () => {
       tx as never,
     );
 
-    expect(findAdminUserIds).toHaveBeenCalledWith("customer-user", tx);
+    expect(tx.user.findMany).toHaveBeenCalledWith({
+      where: {
+        isActive: true,
+        roles: { some: { role: { key: "SUPER_ADMIN" } } },
+        id: { not: "customer-user" },
+      },
+      select: { id: true },
+    });
     expect(createManyAndReturn).toHaveBeenCalledWith(
       {
         inputs: [

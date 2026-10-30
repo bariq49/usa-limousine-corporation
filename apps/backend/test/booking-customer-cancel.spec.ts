@@ -64,8 +64,8 @@ function setup(options: { hoursToPickup: number; status?: BookingStatus; paid?: 
   };
   const notifications = {
     cancelled: jest.fn(async () => undefined),
-    stageCreated: jest.fn(async () => [{ id: "n-1" }]),
-    deliverStaged: jest.fn(async () => undefined),
+    created: jest.fn(async () => undefined),
+    paid: jest.fn(async () => undefined),
   };
   const prisma = {
     auditLog: { create: jest.fn(async () => undefined) },
@@ -87,26 +87,20 @@ function setup(options: { hoursToPickup: number; status?: BookingStatus; paid?: 
     {} as never,
     bookingService,
     emails as never,
-    square as never,
   );
   return { service, repository, square, emails, sms, notifications };
 }
 
 describe("CustomerBookingService.cancel", () => {
-  it("refunds the set percentage through Square and tells everyone", async () => {
+  it("cancels booking without automatic Square refund and tells everyone", async () => {
     const { service, repository, square, emails, sms, notifications } = setup({
       hoursToPickup: 24,
     });
 
     await service.cancel("book-1", {}, request);
 
-    expect(square.refundPayment).toHaveBeenCalledWith(
-      PaymentMode.TEST,
-      "SQ-PAY",
-      150,
-      expect.stringContaining("BK-000001"),
-    );
-    expect(repository.recordRefund).toHaveBeenCalledWith("pay-1", 150, "REFUND-1");
+    expect(square.refundPayment).not.toHaveBeenCalled();
+    expect(repository.recordRefund).not.toHaveBeenCalled();
     expect(repository.updateStatus).toHaveBeenCalledWith(
       "book-1",
       BookingStatus.CANCELLED,
@@ -115,10 +109,10 @@ describe("CustomerBookingService.cancel", () => {
     expect(emails.sendCancelled).toHaveBeenCalledWith({
       bookingId: "book-1",
       reason: null,
-      refundAmount: 150,
+      refundAmount: 0,
       byCustomer: true,
     });
-    expect(sms.sendCancelled).toHaveBeenCalledWith("book-1", null, 150);
+    expect(sms.sendCancelled).toHaveBeenCalledWith("book-1", null, true);
     expect(notifications.cancelled).toHaveBeenCalledWith(
       expect.objectContaining({
         bookingId: "book-1",
@@ -131,7 +125,7 @@ describe("CustomerBookingService.cancel", () => {
     const { service, square, repository } = setup({ hoursToPickup: 1 });
 
     await expect(service.cancel("book-1", {}, request)).rejects.toThrow(
-      "up to 2 hours before pickup",
+      "at least 2 hours before pickup",
     );
     expect(square.refundPayment).not.toHaveBeenCalled();
     expect(repository.updateStatus).not.toHaveBeenCalled();

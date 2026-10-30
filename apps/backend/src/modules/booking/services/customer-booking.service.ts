@@ -1,15 +1,13 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from "@nestjs/common";
-import { BookingStatus, BookingType, PaymentStatus } from "@prisma/client";
+import { BookingStatus, BookingType, type Notification } from "@prisma/client";
 import type { Request } from "express";
 import { auditLog } from "../../../common/utils/audit-log";
 import { allocateCode } from "../../../common/utils/allocate-sequence-code";
 import { wallClock } from "../../../common/utils/day-bounds";
 import { APP_TIMEZONE } from "../../../common/utils/format-time";
-import { roundAmount } from "../../../common/utils/money";
 import { requireUserId, toRequestContext } from "../../../common/utils/to-request-context";
 import { PrismaService } from "../../../infrastructure/database/prisma.service";
 import { SequenceService } from "../../../infrastructure/sequence/sequence.service";
-import { SquareService } from "../../../infrastructure/square/square.service";
 import { PlatformSettingsService } from "../../platform-settings/services/platform-settings.service";
 import type {
   AnalyticsQueryDto,
@@ -37,8 +35,7 @@ export class CustomerBookingService {
     @Inject(BookingPricingService) private readonly pricingService: BookingPricingService,
     @Inject(BookingService) private readonly bookingService: BookingService,
     @Inject(BookingEmailService) private readonly bookingEmails: BookingEmailService,
-    @Inject(SquareService) private readonly square: SquareService,
-  ) { }
+  ) {}
 
   async create(body: CreateDto, request: Request) {
     const context = toRequestContext(request);
@@ -48,8 +45,9 @@ export class CustomerBookingService {
       prefix: "BK",
       nextSequence: () => this.sequenceService.nextBooking(),
     });
-    const created = await this.prisma.$transaction(async (tx) => {
-      const booking = await this.bookingRepository.create(
+    let stagedNotifications: Notification[] = [];
+    const booking = await this.prisma.$transaction(async (tx) => {
+      const created = await this.bookingRepository.create(
         {
           userId,
           vehicleCategoryId: body.vehicleCategoryId,
@@ -59,9 +57,12 @@ export class CustomerBookingService {
           status: BookingStatus.PENDING,
           pricing,
           address: {
-            ...body.address,
+            pickup: body.address.pickup,
+            dropoff: body.address.dropoff,
+            stops: body.address.stops,
             distance: body.address.distance ?? 0,
             travelDuration: body.address.travelDuration ?? 0,
+            hourlyDuration: body.address.hourlyDuration,
           },
           passenger: body.passenger,
           bookingTime: body.bookingTime,
@@ -77,20 +78,20 @@ export class CustomerBookingService {
         tx,
       );
 
-      const notifications = await this.notifications.stageCreated(
+      stagedNotifications = await this.notifications.stageCreated(
         {
-          bookingId: booking.id,
-          bookingNumber: booking.bookingNumber,
+          bookingId: created.id,
+          bookingNumber: created.bookingNumber,
+          userId,
           excludeUserId: userId,
-          customerUserId: userId,
         },
         tx,
       );
 
-      return { booking, notifications };
+      return created;
     });
-    const booking = created.booking;
-    await this.notifications.deliverStaged(created.notifications);
+
+    void this.notifications.deliverStaged(stagedNotifications);
     void this.bookingEmails.sendCreated(booking.id);
 
     await auditLog({
@@ -152,26 +153,12 @@ export class CustomerBookingService {
         `Bookings must be cancelled at least ${rates.cancellationNotice} ${unit}${plural} before pickup`
       );
     }
-    let refundAmount = 0;
-    const payment = await this.bookingRepository.findPaymentForRefund(id);
-    if (payment?.status === PaymentStatus.PAID && payment.squarePaymentId) {
-      refundAmount = roundAmount((payment.amount.toNumber() * rates.cancellationRefundRate) / 100);
-      if (refundAmount > 0) {
-        const refundId = await this.square.refundPayment(
-          payment.mode,
-          payment.squarePaymentId,
-          refundAmount,
-          `Booking ${booking.bookingNumber} cancelled by the customer`,
-        );
-        await this.bookingRepository.recordRefund(payment.id, refundAmount, refundId);
-      }
-    }
 
     return this.bookingService.cancel({
       id,
       body,
       request,
-      refundAmount,
+      refundAmount: 0,
       byCustomer: true,
     });
   }

@@ -2,8 +2,6 @@ import type {
   HelpTicketCategory,
   HelpTicketPriority,
   HelpTicketStatus,
-  NotificationType,
-  Prisma,
 } from "@prisma/client";
 
 type Owner = {
@@ -43,14 +41,6 @@ export type StatusUpdated = Owner & {
   from: HelpTicketStatus;
   to: HelpTicketStatus;
   note?: string | null;
-};
-
-export type Notify = {
-  type: NotificationType;
-  title: string;
-  body: string;
-  data: Prisma.InputJsonValue;
-  push: boolean;
 };
 
 export type TicketEmailKind = "created" | "replied" | "priority";

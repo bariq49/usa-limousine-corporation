@@ -52,6 +52,7 @@ export type BookingCancelMailProps = {
   reason: string | null;
   refundAmount: number;
   admin?: boolean | undefined;
+  byCustomer?: boolean | undefined;
 };
 
 export type DriverAssignedMailProps = {

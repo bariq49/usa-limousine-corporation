@@ -3,6 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import { NotificationType } from "@prisma/client";
 import { PLATFORM } from "@usa-limousine-corporation/config";
 import { AppLogger } from "../../../common/logger/app.logger";
+import { stageForAdmins } from "../../../common/utils/notification";
 import { PrismaService } from "../../../infrastructure/database/prisma.service";
 import { getEmailConfig } from "../../../infrastructure/email/email.config";
 import { EmailService } from "../../../infrastructure/email/email.service";
@@ -34,8 +35,9 @@ export class NotificationService {
   async notifyAdmins(input: CommentCreated) {
     try {
       const staged = await this.prisma.$transaction((tx) =>
-        this.appNotifications.stageForAdmins(
+        stageForAdmins(
           {
+            notificationService: this.appNotifications,
             type: NotificationType.BLOG_COMMENT_CREATED,
             title: "New blog comment",
             body: `${input.comment.fullName} commented on "${input.blog.title}"`,

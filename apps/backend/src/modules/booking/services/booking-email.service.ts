@@ -161,6 +161,7 @@ export class BookingEmailService {
             siteUrl: context.siteUrl,
             reason,
             refundAmount,
+            byCustomer,
           }),
         });
         if (byCustomer) {
@@ -173,6 +174,7 @@ export class BookingEmailService {
               reason,
               refundAmount,
               admin: true,
+              byCustomer: true,
             }),
           });
         }

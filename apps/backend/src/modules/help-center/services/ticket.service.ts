@@ -5,8 +5,6 @@ import {
   HelpTicketPriority,
   HelpTicketSource,
   HelpTicketStatus,
-  NotificationType,
-  type Notification,
   type Prisma,
 } from "@prisma/client";
 import type { Request } from "express";
@@ -15,14 +13,20 @@ import { auditLog } from "../../../common/utils/audit-log";
 import { requireUserId, toRequestContext } from "../../../common/utils/to-request-context";
 import { PrismaService } from "../../../infrastructure/database/prisma.service";
 import { SequenceService } from "../../../infrastructure/sequence/sequence.service";
-import { NotificationService } from "../../notification/services/notification.service";
-import { RecipientType } from "../../notification/types/notification";
 import { TICKET_EVENT } from "../constants/ticket.events";
 import type { PriorityDto, QueryDto, ReplyDto, StatusDto } from "../dto/ticket.dto";
 import { TicketRepository } from "../repositories/ticket.repository";
 import type { Create, CreateData, WebsiteCreate } from "../types/ticket";
 import type { Created, PriorityUpdated, Reply, StatusUpdated } from "../types/ticket.events";
-import { createdNotify, replyNotify, statusNotify } from "../utils/ticket-notify";
+import { NotificationService } from "./notification.service";
+
+const ALLOWED_STATUS_TRANSITIONS: Record<HelpTicketStatus, readonly HelpTicketStatus[]> = {
+  [HelpTicketStatus.PENDING]: [HelpTicketStatus.OPEN],
+  [HelpTicketStatus.OPEN]: [HelpTicketStatus.IN_PROGRESS],
+  [HelpTicketStatus.IN_PROGRESS]: [HelpTicketStatus.RESOLVED],
+  [HelpTicketStatus.RESOLVED]: [HelpTicketStatus.CLOSED, HelpTicketStatus.IN_PROGRESS],
+  [HelpTicketStatus.CLOSED]: [],
+};
 
 @Injectable()
 export class TicketService {
@@ -31,7 +35,7 @@ export class TicketService {
     @Inject(SequenceService) private readonly sequenceService: SequenceService,
     @Inject(PrismaService) private readonly prisma: PrismaService,
     @Inject(EventEmitter2) private readonly events: EventEmitter2,
-    @Inject(NotificationService) private readonly notificationService: NotificationService,
+    @Inject(NotificationService) private readonly notifications: NotificationService,
   ) {}
 
   async create(input: Create, request: Request) {
@@ -62,59 +66,23 @@ export class TicketService {
         tx,
       );
 
-      const adminNotifications = await this.notificationService.stageForAdmins(
+      const notifications = await this.notifications.stageCreated(
         {
-          type: NotificationType.TICKET_CREATED,
-          title: "New support ticket",
-          body: `${ticket.ticketNumber}: ${ticket.subject}`,
-          data: {
-            type: "TICKET_CREATED",
-            ticketId: ticket.id,
+          ticket: {
+            id: ticket.id,
             ticketNumber: ticket.ticketNumber,
+            subject: ticket.subject,
             customerId: ticket.customerId,
           },
-          excludeUserId: actorUserId,
-          idempotencyKey: `TICKET_CREATED:${ticket.id}`,
+          actorUserId,
         },
         tx,
       );
-      const owner = await tx.customer.findUnique({
-        where: { id: input.customerId },
-        select: { userId: true, settings: { select: { notification: true } } },
-      });
-      const wantsNotification = owner !== null && owner.settings?.notification !== false;
-      const notify = createdNotify({
-        customerId: input.customerId,
-        actorUserId,
-        ticketId: ticket.id,
-        ticketNumber: ticket.ticketNumber,
-        subject: ticket.subject,
-        category: ticket.category,
-        status: ticket.status,
-        priority: ticket.priority,
-      });
-      const customerNotifications = wantsNotification
-        ? await this.notificationService.stage(
-            [
-              {
-                recipientType: RecipientType.USER,
-                recipientId: owner.userId,
-                type: notify.type,
-                title: notify.title,
-                body: notify.body,
-                data: notify.data,
-                push: notify.push,
-                idempotencyKey: `TICKET_CREATED_CUSTOMER:${ticket.id}`,
-              },
-            ],
-            tx,
-          )
-        : [];
 
-      return { ticket, notifications: adminNotifications.concat(customerNotifications) };
+      return { ticket, notifications };
     });
     const ticket = created.ticket;
-    await this.notificationService.deliverStaged(created.notifications);
+    await this.notifications.deliverStaged(created.notifications);
 
     await auditLog({
       prisma: this.prisma,
@@ -169,60 +137,25 @@ export class TicketService {
 
     const created = await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const ticket = await this.tickets.create(data, tx);
-      const adminNotifications = await this.notificationService.stageForAdmins(
+      const notifications = await this.notifications.stageWebsiteCreated(
         {
-          type: NotificationType.TICKET_CREATED,
-          title: isHigh ? "High priority enquiry" : "New website enquiry",
-          body: `${ticket.ticketNumber}: ${ticket.subject} (${input.name})`,
-          data: {
-            type: "TICKET_CREATED",
-            ticketId: ticket.id,
+          ticket: {
+            id: ticket.id,
             ticketNumber: ticket.ticketNumber,
+            subject: ticket.subject,
             customerId: ticket.customerId,
-            source: HelpTicketSource.WEBSITE,
           },
-          idempotencyKey: `TICKET_CREATED:${ticket.id}`,
+          contactName: input.name,
+          userId: customer?.userId ?? null,
+          isHigh,
         },
         tx,
       );
-      let customerNotifications: Notification[] = [];
-      if (customer) {
-        const owner = await tx.customer.findUnique({
-          where: { id: customer.id },
-          select: { settings: { select: { notification: true } } },
-        });
-        if (owner?.settings?.notification !== false) {
-          const notify = createdNotify({
-            customerId: ticket.customerId,
-            actorUserId: customer.userId,
-            ticketId: ticket.id,
-            ticketNumber: ticket.ticketNumber,
-            subject: ticket.subject,
-            category: ticket.category,
-            status: ticket.status,
-            priority: ticket.priority,
-          });
-          customerNotifications = await this.notificationService.stage(
-            [
-              {
-                recipientType: RecipientType.USER,
-                recipientId: customer.userId,
-                type: notify.type,
-                title: notify.title,
-                body: notify.body,
-                data: notify.data,
-                push: notify.push,
-                idempotencyKey: `TICKET_CREATED_CUSTOMER:${ticket.id}`,
-              },
-            ],
-            tx,
-          );
-        }
-      }
-      return { ticket, notifications: adminNotifications.concat(customerNotifications) };
+
+      return { ticket, notifications };
     });
     const ticket = created.ticket;
-    await this.notificationService.deliverStaged(created.notifications);
+    await this.notifications.deliverStaged(created.notifications);
 
     await auditLog({
       prisma: this.prisma,
@@ -274,7 +207,6 @@ export class TicketService {
       throw new BadRequestException(`Cannot reply to a ${ticket.status.toLowerCase()} ticket`);
     }
 
-    // Message (+ first-reply status change) and the customer notification commit together.
     const replied = await this.prisma.$transaction(async (tx) => {
       const message = await this.tickets.addMessage(
         { ticketId: ticket.id, authorUserId: actorUserId, body: body.body },
@@ -302,37 +234,24 @@ export class TicketService {
         messageId: message.id,
         fromStaff: true,
       };
-      const owner = ticket.customerId
-        ? await tx.customer.findUnique({
-            where: { id: ticket.customerId },
-            select: { userId: true, settings: { select: { notification: true } } },
-          })
-        : null;
-      // Customers who turned off notifications get no notification row (and so no push).
-      const wantsNotification = owner !== null && owner.settings?.notification !== false;
-      const notify = replyNotify(payload);
-      const notifications = wantsNotification
-        ? await this.notificationService.stage(
-            [
-              {
-                recipientType: RecipientType.USER,
-                recipientId: owner.userId,
-                type: notify.type,
-                title: notify.title,
-                body: notify.body,
-                data: notify.data,
-                push: notify.push,
-                idempotencyKey: `TICKET_REPLY:${message.id}`,
-              },
-            ],
-            tx,
-          )
-        : [];
+
+      const notifications = await this.notifications.stageStaffReply(
+        {
+          ticket: {
+            id: ticket.id,
+            ticketNumber: ticket.ticketNumber,
+            subject: ticket.subject,
+            customerId: ticket.customerId,
+          },
+          messageId: message.id,
+        },
+        tx,
+      );
 
       return { message, payload, notifications };
     });
     const message = replied.message;
-    await this.notificationService.deliverStaged(replied.notifications);
+    await this.notifications.deliverStaged(replied.notifications);
 
     await auditLog({
       prisma: this.prisma,
@@ -352,7 +271,6 @@ export class TicketService {
     return this.getOne(id);
   }
 
-  /** Customer reply on their own ticket; admins get a live notification in the same transaction. */
   async customerReply(id: string, body: ReplyDto, request: Request) {
     const context = toRequestContext(request);
     const actorUserId = requireUserId(context);
@@ -368,19 +286,16 @@ export class TicketService {
         tx,
       );
 
-      const notifications = await this.notificationService.stageForAdmins(
+      const notifications = await this.notifications.stageCustomerReply(
         {
-          type: NotificationType.TICKET_REPLY,
-          title: "Customer replied",
-          body: `${ticket.ticketNumber}: ${body.body.slice(0, 120)}`,
-          data: {
-            type: "TICKET_REPLY",
-            ticketId: ticket.id,
+          ticket: {
+            id: ticket.id,
             ticketNumber: ticket.ticketNumber,
-            messageId: message.id,
+            customerId: ticket.customerId,
           },
-          excludeUserId: actorUserId,
-          idempotencyKey: `TICKET_CUSTOMER_REPLY:${message.id}`,
+          messageId: message.id,
+          body: body.body,
+          actorUserId,
         },
         tx,
       );
@@ -397,7 +312,7 @@ export class TicketService {
 
       return { message, payload, notifications };
     });
-    await this.notificationService.deliverStaged(replied.notifications);
+    await this.notifications.deliverStaged(replied.notifications);
 
     await auditLog({
       prisma: this.prisma,
@@ -426,7 +341,10 @@ export class TicketService {
       throw new BadRequestException(`Ticket is already ${ticket.status}`);
     }
 
-    this.assertCanTransition(ticket.status, body.status);
+    const allowed = ALLOWED_STATUS_TRANSITIONS[ticket.status] || [];
+    if (!allowed.includes(body.status)) {
+      throw new BadRequestException(`Cannot transition ticket from ${ticket.status} to ${body.status}`);
+    }
 
     const payload: StatusUpdated = {
       customerId: ticket.customerId,
@@ -439,42 +357,31 @@ export class TicketService {
       note: body.note ?? null,
     };
 
-    // Status change and the customer notification commit together.
     const changed = await this.prisma.$transaction(async (tx) => {
       const updated = await this.tickets.updateStatus(
         { ticketId: ticket.id, status: body.status, actorUserId, note: body.note },
         tx,
       );
-      const owner = ticket.customerId
-        ? await tx.customer.findUnique({
-            where: { id: ticket.customerId },
-            select: { userId: true, settings: { select: { notification: true } } },
-          })
-        : null;
-      // Customers who turned off notifications get no notification row (and so no push).
-      const wantsNotification = owner !== null && owner.settings?.notification !== false;
-      const notify = statusNotify(payload);
-      const notifications = wantsNotification
-        ? await this.notificationService.stage(
-            [
-              {
-                recipientType: RecipientType.USER,
-                recipientId: owner.userId,
-                type: notify.type,
-                title: notify.title,
-                body: notify.body,
-                data: notify.data,
-                push: notify.push,
-                idempotencyKey: `TICKET_STATUS:${ticket.id}:${updated.updatedAt.getTime()}`,
-              },
-            ],
-            tx,
-          )
-        : [];
+
+      const notifications = await this.notifications.stageStatusUpdated(
+        {
+          ticket: {
+            id: ticket.id,
+            ticketNumber: ticket.ticketNumber,
+            subject: ticket.subject,
+            customerId: ticket.customerId,
+          },
+          from: ticket.status,
+          to: body.status,
+          updatedAt: updated.updatedAt,
+        },
+        tx,
+      );
+
       return { updated, notifications };
     });
     const updated = changed.updated;
-    await this.notificationService.deliverStaged(changed.notifications);
+    await this.notifications.deliverStaged(changed.notifications);
 
     await auditLog({
       prisma: this.prisma,
@@ -570,28 +477,5 @@ export class TicketService {
     });
 
     return { success: true, count: result.count };
-  }
-
-  private assertCanTransition(current: HelpTicketStatus, next: HelpTicketStatus) {
-    const allowed = this.allowedTransitions(current);
-    if (!allowed.includes(next)) {
-      throw new BadRequestException(`Cannot transition ticket from ${current} to ${next}`);
-    }
-  }
-  private allowedTransitions(current: HelpTicketStatus): HelpTicketStatus[] {
-    switch (current) {
-      case HelpTicketStatus.PENDING:
-        return [HelpTicketStatus.OPEN];
-      case HelpTicketStatus.OPEN:
-        return [HelpTicketStatus.IN_PROGRESS];
-      case HelpTicketStatus.IN_PROGRESS:
-        return [HelpTicketStatus.RESOLVED];
-      case HelpTicketStatus.RESOLVED:
-        return [HelpTicketStatus.CLOSED, HelpTicketStatus.IN_PROGRESS];
-      case HelpTicketStatus.CLOSED:
-        return [];
-      default:
-        return [];
-    }
   }
 }

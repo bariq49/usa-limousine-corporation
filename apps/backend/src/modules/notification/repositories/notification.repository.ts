@@ -1,5 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { type Notification, type Prisma, RoleKey } from "@prisma/client";
+import { type Notification, type Prisma } from "@prisma/client";
 import { APIFeature } from "../../../common/api-feature";
 import { PrismaService } from "../../../infrastructure/database/prisma.service";
 import {
@@ -21,20 +21,6 @@ import type {
 @Injectable()
 export class NotificationRepository {
   constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
-
-  findAdminUserIds(excludeUserId?: string | null, client: Client = this.prisma) {
-    const where: Prisma.UserWhereInput = {
-      isActive: true,
-      roles: { some: { role: { key: RoleKey.SUPER_ADMIN } } },
-    };
-    if (excludeUserId) {
-      where.id = { not: excludeUserId };
-    }
-
-    return client.user
-      .findMany({ where, select: { id: true } })
-      .then((rows) => rows.map((row) => row.id));
-  }
 
   create(input: Create, client: Client = this.prisma): Promise<Notification> {
     const data: Prisma.NotificationUncheckedCreateInput = {
@@ -76,41 +62,51 @@ export class NotificationRepository {
     }
 
     return this.prisma.notification.createMany({
-      data: inputs.map((input) => this.toCreateManyRow(input)),
+      data: inputs.map((input) => {
+        const row: Prisma.NotificationCreateManyInput = {
+          recipientType: input.recipientType,
+          recipientId: input.recipientId,
+          type: input.type,
+          title: input.title,
+          body: input.body,
+          push: input.push !== false,
+        };
+        if (input.data !== undefined) {
+          row.data = input.data;
+        }
+        if (input.idempotencyKey !== undefined) {
+          row.idempotencyKey = input.idempotencyKey;
+        }
+        return row;
+      }),
     });
   }
 
-  /** Rows whose idempotency key already exists are skipped and not returned. */
-  createManyAndReturn(
-    { inputs }: CreateMany,
-    client: Client = this.prisma,
-  ): Promise<Notification[]> {
+  createManyAndReturn({ inputs }: CreateMany, client: Client = this.prisma): Promise<Notification[]> {
     if (inputs.length === 0) {
       return Promise.resolve([]);
     }
 
     return client.notification.createManyAndReturn({
-      data: inputs.map((input) => this.toCreateManyRow(input)),
+      data: inputs.map((input) => {
+        const row: Prisma.NotificationCreateManyInput = {
+          recipientType: input.recipientType,
+          recipientId: input.recipientId,
+          type: input.type,
+          title: input.title,
+          body: input.body,
+          push: input.push !== false,
+        };
+        if (input.data !== undefined) {
+          row.data = input.data;
+        }
+        if (input.idempotencyKey !== undefined) {
+          row.idempotencyKey = input.idempotencyKey;
+        }
+        return row;
+      }),
       skipDuplicates: true,
     });
-  }
-
-  private toCreateManyRow(input: Create): Prisma.NotificationCreateManyInput {
-    const row: Prisma.NotificationCreateManyInput = {
-      recipientType: input.recipientType,
-      recipientId: input.recipientId,
-      type: input.type,
-      title: input.title,
-      body: input.body,
-      push: input.push !== false,
-    };
-    if (input.data !== undefined) {
-      row.data = input.data;
-    }
-    if (input.idempotencyKey !== undefined) {
-      row.idempotencyKey = input.idempotencyKey;
-    }
-    return row;
   }
 
   list(query: Query, recipient: Recipient) {

@@ -8,6 +8,7 @@ import { NotificationModule } from "../notification/notification.module";
 import { TicketController } from "./controllers/ticket.controller";
 import { TicketActivityListener } from "./listeners/ticket-activity.listener";
 import { TicketRepository } from "./repositories/ticket.repository";
+import { NotificationService } from "./services/notification.service";
 import { TicketEmailQueueService } from "./jobs/ticket-email-queue.service";
 import { TicketEmailService } from "./services/ticket-email.service";
 import { TicketService } from "./services/ticket.service";
@@ -25,10 +26,11 @@ import { TicketService } from "./services/ticket.service";
   providers: [
     TicketRepository,
     TicketService,
+    NotificationService,
     TicketActivityListener,
     TicketEmailService,
     TicketEmailQueueService,
   ],
-  exports: [TicketService, TicketRepository],
+  exports: [TicketService, TicketRepository, NotificationService],
 })
 export class HelpCenterModule {}

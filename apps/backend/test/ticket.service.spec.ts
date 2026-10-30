@@ -5,7 +5,8 @@ import type { PrismaService } from "../src/infrastructure/database/prisma.servic
 import type { SequenceService } from "../src/infrastructure/sequence/sequence.service";
 import { TICKET_EVENT } from "../src/modules/help-center/constants/ticket.events";
 import type { TicketRepository } from "../src/modules/help-center/repositories/ticket.repository";
-import type { NotificationService } from "../src/modules/notification/services/notification.service";
+import { NotificationService as HelpCenterNotificationService } from "../src/modules/help-center/services/notification.service";
+import type { NotificationService as AppNotificationService } from "../src/modules/notification/services/notification.service";
 import { TicketService } from "../src/modules/help-center/services/ticket.service";
 
 describe("TicketService", () => {
@@ -24,6 +25,9 @@ describe("TicketService", () => {
     customer: {
       findUnique: jest.fn(),
     },
+    user: {
+      findMany: jest.fn(async () => [{ id: "admin-1" }]),
+    },
   };
   const prisma = {
     auditLog: {
@@ -36,11 +40,13 @@ describe("TicketService", () => {
     $transaction: jest.fn(async (fn: (client: typeof tx) => Promise<unknown>) => fn(tx)),
   };
   const staged = [{ id: "notification-1" }];
-  const notificationService = {
+  const appNotifications = {
     stage: jest.fn(async () => staged),
-    stageForAdmins: jest.fn(async () => staged),
     deliverStaged: jest.fn(async () => undefined),
   };
+  const notificationService = new HelpCenterNotificationService(
+    appNotifications as unknown as AppNotificationService,
+  );
   const events = {
     emit: jest.fn(),
   };
@@ -81,15 +87,17 @@ describe("TicketService", () => {
       { ticketId: "ticket-1", authorUserId: "user-1", body: "Any update?" },
       tx,
     );
-    expect(notificationService.stageForAdmins).toHaveBeenCalledWith(
-      expect.objectContaining({
-        type: "TICKET_REPLY",
-        excludeUserId: "user-1",
-        idempotencyKey: "TICKET_CUSTOMER_REPLY:msg-9",
-      }),
+    expect(appNotifications.stage).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          recipientId: "admin-1",
+          type: "TICKET_REPLY",
+          idempotencyKey: "TICKET_CUSTOMER_REPLY:msg-9:admin-1",
+        }),
+      ]),
       tx,
     );
-    expect(notificationService.deliverStaged).toHaveBeenCalledWith(staged);
+    expect(appNotifications.deliverStaged).toHaveBeenCalledWith(staged);
   });
 
   it("customer cannot reply to a closed ticket", async () => {
@@ -161,14 +169,17 @@ describe("TicketService", () => {
       }),
       tx,
     );
-    expect(notificationService.stageForAdmins).toHaveBeenCalledWith(
-      expect.objectContaining({
-        excludeUserId: "user-1",
-        idempotencyKey: "TICKET_CREATED:ticket-1",
-      }),
+    expect(appNotifications.stage).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          recipientId: "admin-1",
+          type: "TICKET_CREATED",
+          idempotencyKey: "TICKET_CREATED:ticket-1:admin-1",
+        }),
+      ]),
       tx,
     );
-    expect(notificationService.deliverStaged).toHaveBeenCalledWith(staged);
+    expect(appNotifications.deliverStaged).toHaveBeenCalledWith(staged);
     expect(events.emit).toHaveBeenCalledWith(
       TICKET_EVENT.CREATED,
       expect.objectContaining({
@@ -248,7 +259,7 @@ describe("TicketService", () => {
         to: HelpTicketStatus.RESOLVED,
       }),
     );
-    expect(notificationService.stage).toHaveBeenCalledWith(
+    expect(appNotifications.stage).toHaveBeenCalledWith(
       [
         expect.objectContaining({
           recipientId: "customer-user-1",
@@ -259,7 +270,7 @@ describe("TicketService", () => {
       ],
       tx,
     );
-    expect(notificationService.deliverStaged).toHaveBeenCalledWith(staged);
+    expect(appNotifications.deliverStaged).toHaveBeenCalledWith(staged);
   });
 
   it("does not stage a customer notification when dashboard notifications are off", async () => {
@@ -285,8 +296,8 @@ describe("TicketService", () => {
       user: { sub: "admin-user", sid: "s1", email: "a@test.com", roles: [] },
     } as never);
 
-    expect(notificationService.stage).not.toHaveBeenCalled();
-    expect(notificationService.deliverStaged).toHaveBeenCalledWith([]);
+    expect(appNotifications.stage).not.toHaveBeenCalled();
+    expect(appNotifications.deliverStaged).toHaveBeenCalledWith([]);
   });
 
   it("emits status updated on non-resolved status changes", async () => {

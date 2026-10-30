@@ -7,7 +7,7 @@ import { helpLine } from "./components/help-line";
 import { refundParagraph } from "./components/refund";
 
 export function bookingCancelled(props: BookingCancelMailProps) {
-  const { booking, siteUrl, reason, refundAmount, admin = false } = props;
+  const { booking, siteUrl, reason, refundAmount, admin = false, byCustomer = false } = props;
 
   if (admin) {
     return emailLayout({
@@ -16,7 +16,7 @@ export function bookingCancelled(props: BookingCancelMailProps) {
       subtitle: `Cancelled by customer · ${booking.bookingNumber}`,
       preheader: `${booking.passenger.name} cancelled ${booking.bookingNumber}.`,
       body: `
-        ${emailParagraph(`Booking ${escapeHtml(booking.bookingNumber)} was cancelled by the customer.`, { strong: true })}
+        ${emailParagraph(`Booking ${escapeHtml(booking.bookingNumber)} was cancelled by ${escapeHtml(booking.passenger.name)}.`, { strong: true })}
         ${emailParagraph(reason ? `Reason: ${escapeHtml(reason)}` : "No reason was given.")}
         ${emailParagraph(
           refundAmount > 0
@@ -28,6 +28,10 @@ export function bookingCancelled(props: BookingCancelMailProps) {
     });
   }
 
+  const message = byCustomer
+    ? `Your booking ${escapeHtml(booking.bookingNumber)} has been cancelled.`
+    : `USA Limousine Corporation has cancelled your booking ${escapeHtml(booking.bookingNumber)}.`;
+
   return emailLayout({
     siteUrl,
     title: "Booking Cancelled",
@@ -35,7 +39,7 @@ export function bookingCancelled(props: BookingCancelMailProps) {
     preheader: `Booking cancelled · ${booking.bookingNumber}.`,
     body: `
       ${emailParagraph(`Hello, ${escapeHtml(booking.passenger.name)}.`, { strong: true })}
-      ${emailParagraph(`Your booking ${escapeHtml(booking.bookingNumber)} has been cancelled.`)}
+      ${emailParagraph(message)}
       ${reason ? emailParagraph(`Reason: ${escapeHtml(reason)}`) : ""}
       ${refundParagraph(refundAmount)}
       ${bookingSummary(booking)}
