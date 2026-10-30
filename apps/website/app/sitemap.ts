@@ -10,6 +10,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const routes = [
     '',
     '/services',
+    '/luxury-sedan',
     '/about-us',
     '/blog',
     '/contact-us',

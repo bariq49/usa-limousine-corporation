@@ -25,6 +25,13 @@ export const IMAGES = {
     MISSION: "/assets/images/about-us/mission.png",
     JOURNEY: "/assets/images/about-us/journey.png",
   },
+  FLEET: {
+    LUXURY_SEDAN: {
+      BANNER: "/assets/images/fleet/luxury-sedan/hero.banner.png",
+      STORY: "/assets/images/fleet/luxury-sedan/story.png",
+      WHY_CHOOSE_US: "/assets/images/fleet/luxury-sedan/why-choose-us.png",
+    },
+  },
   CONTACT: {
     BANNER: "/assets/images/contact-us/hero.banner.png",
   },

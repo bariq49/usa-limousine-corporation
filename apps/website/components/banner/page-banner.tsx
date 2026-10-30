@@ -20,7 +20,9 @@ export default function PageBanner(props: Props) {
     topText,
     highlightTopText = false,
     title,
+    titleClassName,
     description,
+    footnote,
     button,
     secondaryButton,
     showBookingForm = false,
@@ -128,7 +130,12 @@ export default function PageBanner(props: Props) {
                       <div className="h-0.5 w-10 bg-primary md:hidden" />
                     </div>
                   ))}
-                <h1 className="text-center text-4xl font-extrabold text-white md:text-left md:text-6xl lg:text-7xl">
+                <h1
+                  className={cn(
+                    "text-center text-4xl font-extrabold text-white md:text-left md:text-6xl lg:text-7xl",
+                    titleClassName,
+                  )}
+                >
                   {renderTitle(title)}
                 </h1>
 
@@ -137,6 +144,12 @@ export default function PageBanner(props: Props) {
                     {description}
                   </p>
                 )}
+
+                {footnote ? (
+                  <p className="text-center text-xs font-bold uppercase tracking-widest text-white md:text-left">
+                    {footnote}
+                  </p>
+                ) : null}
 
                 {(button || secondaryButton) && (
                   <div className="flex w-full flex-col gap-2.5 pt-1 sm:flex-row sm:flex-wrap sm:justify-center sm:gap-3 md:justify-start md:pt-2 lg:pt-3">

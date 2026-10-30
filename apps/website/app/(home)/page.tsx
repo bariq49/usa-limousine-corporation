@@ -6,7 +6,7 @@ import ServicesSection from "@/components/home/services-section";
 import StatsBar from "@/components/shared/stats-bar";
 import StorySection from "@/components/shared/story-section";
 import TrustSection from "@/components/home/trust-section";
-import WhyChooseUsSection from "@/components/home/why-choose-us-section";
+import WhyChooseUsSection from "@/components/shared/why-choose-us-section";
 import { PLATFORM } from "@usa-limousine-corporation/config";
 import { IMAGES } from "@/constants/image-constants";
 import {

@@ -18,7 +18,9 @@ export type PageBannerProps = {
   topText?: string | ReactNode;
   highlightTopText?: boolean;
   title?: string | ReactNode;
+  titleClassName?: string;
   description?: string;
+  footnote?: string;
   showBookingForm?: boolean;
   button?: PageBannerButton;
   secondaryButton?: PageBannerSecondaryButton;

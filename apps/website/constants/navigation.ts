@@ -48,6 +48,10 @@ export const AIRPORTS = [
 export const NAV_LINKS: NavLink[] = [
   { title: "Home", path: "/" },
   { title: "Services", path: "/services" },
+  {
+    title: "Fleet",
+    sublinks: [{ title: "Luxury Sedan", path: "/luxury-sedan" }],
+  },
   { title: "About Us", path: "/about-us" },
   { title: "Blog", path: "/blog" },
   { title: "Contact Us", path: "/contact-us" },
