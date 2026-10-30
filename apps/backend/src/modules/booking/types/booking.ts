@@ -63,17 +63,17 @@ export type SmsBooking = {
 
 export type LocationInput = {
   address: string;
-  latitude?: number | null;
-  longitude?: number | null;
+  latitude?: number | null | undefined;
+  longitude?: number | null | undefined;
 };
 
 export type AddressInput = {
   pickup: LocationInput;
-  dropoff?: LocationInput | null;
-  stops?: LocationInput[];
+  dropoff?: LocationInput | null | undefined;
+  stops?: LocationInput[] | undefined;
   distance: number;
   travelDuration: number;
-  hourlyDuration?: number | null;
+  hourlyDuration?: number | null | undefined;
 };
 
 export type PassengerInput = {
@@ -81,14 +81,14 @@ export type PassengerInput = {
   name: string;
   phone: string;
   email: string;
-  ccEmail?: string | null;
+  ccEmail?: string | null | undefined;
 };
 
 export type TimeInput = {
   pickupDate: string;
   pickupTime: string;
-  returnDate?: string | null;
-  returnTime?: string | null;
+  returnDate?: string | null | undefined;
+  returnTime?: string | null | undefined;
 };
 
 export type PricingInput = {
@@ -190,6 +190,7 @@ export type MonthlySeries = {
 
 export type Analytics = {
   year: number;
+  month: number | null;
   totalBookings: number;
   totalRevenue: number;
   completedBookings: number;
@@ -201,7 +202,7 @@ export type Analytics = {
 };
 
 export type AnalyticsRow = {
-  month: number;
+  bucket: number;
   status: BookingStatus;
   count: number;
   amount: number;

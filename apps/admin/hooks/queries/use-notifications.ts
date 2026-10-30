@@ -77,18 +77,23 @@ export const useNotificationEvents = (socket: Socket | null) => {
       return;
     }
 
-    let connectedBefore = false;
     const onConnect = () => {
-      if (connectedBefore) {
-        void queryClient.invalidateQueries({ queryKey: notificationQueryKeys.list });
-      }
-      connectedBefore = true;
+      void queryClient.invalidateQueries({ queryKey: notificationQueryKeys.list });
     };
 
     const onCreated = (item: NotificationItem) => {
       queryClient.setQueryData<NotificationList>(notificationQueryKeys.list, (list) => {
-        if (!list || list.items.some((existing) => existing.id === item.id)) {
+        if (list?.items.some((existing) => existing.id === item.id)) {
           return list;
+        }
+        if (!list) {
+          const seeded: NotificationList = {
+            items: [item],
+            nextCursor: null,
+            hasNextPage: false,
+            unreadCount: item.readAt ? 0 : 1,
+          };
+          return seeded;
         }
         return withChanges(
           list,

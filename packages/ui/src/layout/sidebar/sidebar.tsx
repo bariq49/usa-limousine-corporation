@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronLeft, LogOut } from "lucide-react";
+import { LogOut, X } from "lucide-react";
 import { cn, getDynamicPath, isLocationMatch } from "../../utils/cn";
 import { useSidebar } from "../../store/sidebar";
 import { useMediaQuery } from "../../hooks/use-media-query";
@@ -18,12 +18,12 @@ import { SingleIconMenu } from "./single-icon-menu";
 import { ModuleMenuItem, NestedMenus } from "./module-menu-item";
 import { MenuOverlayPortal } from "./menu-overlay";
 
-
 export function Sidebar() {
   const { navigation, roles } = useShell();
   const { onLogout, isLoggingOut } = useUser();
   const menus = useMemo(() => toShellNav(navigation, roles), [navigation, roles]);
-  const { subMenu, setSubmenu, collapsed, setCollapsed } = useSidebar();
+  const { subMenu, setSubmenu, collapsed, setCollapsed, openRequested, setOpenRequested } =
+    useSidebar();
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [currentSubMenu, setCurrentSubMenu] = useState<ShellNavChild[]>([]);
   const [nestedIndex, setNestedIndex] = useState<number | null>(null);
@@ -92,17 +92,29 @@ export function Sidebar() {
     }
   }, [locationName, isDesktop, menus, setCollapsed, setSubmenu]);
 
+  useEffect(() => {
+    if (!openRequested) return;
+    setOpenRequested(false);
+    if (currentSubMenu.length > 0) {
+      setCollapsed(false);
+      setSubmenu(false);
+      setMenuOverlay(true);
+      return;
+    }
+    setCollapsed(true);
+  }, [openRequested, currentSubMenu, setOpenRequested, setCollapsed, setSubmenu]);
+
   const menuTitle = activeIndex !== null ? (menus[activeIndex]?.title ?? "") : "";
 
   return (
     <>
       <div
         className={cn(
-          "main-sidebar pointer-events-none fixed start-0 top-0 z-60 flex h-full overflow-hidden print:hidden xl:z-10",
+          "main-sidebar pointer-events-none fixed start-0 top-0 z-60 flex h-full overflow-hidden print:hidden xl:z-10 max-xl:transition-[transform,width] max-xl:duration-300 max-xl:ease-out",
           {
-            "max-xl:w-0": !isDesktop && !collapsed && subMenu,
-            "max-xl:w-[72px]": !isDesktop && collapsed && subMenu,
-            "max-xl:w-[300px]": !isDesktop && !collapsed && !subMenu,
+            "max-xl:w-[300px] max-xl:-translate-x-full": !isDesktop && !collapsed && subMenu,
+            "max-xl:w-[72px] max-xl:translate-x-0": !isDesktop && collapsed && subMenu,
+            "max-xl:w-[300px] max-xl:translate-x-0": !isDesktop && !collapsed && !subMenu,
           },
         )}
       >
@@ -110,14 +122,13 @@ export function Sidebar() {
           className={cn(
             "pointer-events-auto relative z-20 flex h-full w-[72px] shrink-0 flex-col border-r border-dashed border-border bg-card transition-all duration-300 dark:border-default-300",
             {
-              "max-xl:hidden": !isDesktop && !collapsed && subMenu,
               "-translate-x-full xl:translate-x-0": isDesktop && !collapsed && subMenu,
             },
           )}
         >
           <div className="flex items-center justify-center border-b border-dashed border-border pt-4 pb-4">
             <Link href="/dashboard">
-              <Logo variant="short" className="h-16 w-16 text-primary" />
+              <Logo variant="short" className="h-16 w-16" />
             </Link>
           </div>
           <ScrollArea className="grow pt-6 pb-6">
@@ -148,29 +159,29 @@ export function Sidebar() {
           className={cn(
             "pointer-events-auto relative z-10 flex h-full w-[228px] shrink-0 flex-col border-r border-border bg-card transition-all duration-300",
             {
-              "max-xl:hidden": !isDesktop && (collapsed || subMenu),
               "translate-x-[calc(-100%_-_72px)]": isDesktop && (collapsed || subMenu),
             },
           )}
         >
-          <h2 className="sticky top-0 z-50 flex items-center gap-4 bg-transparent px-4 py-4 text-lg font-semibold text-default-700 capitalize">
-            <span className="block">{menuTitle}</span>
+          <h2 className="sticky top-0 z-50 flex h-[97px] shrink-0 items-center justify-between gap-3 border-b border-dashed border-border bg-card px-4 text-lg font-semibold text-default-900 capitalize">
+            <span className="block truncate">{menuTitle}</span>
             {!isDesktop && (
               <Button
                 size="icon"
                 variant="ghost"
                 onClick={() => {
-                  setCollapsed(true);
+                  setCollapsed(false);
                   setSubmenu(true);
                   setMenuOverlay(false);
                 }}
-                className="h-8 w-8 rounded-full"
+                aria-label="Close menu"
+                className="h-9 w-9 shrink-0 rounded-full bg-default-100 text-default-700 hover:bg-default-200 hover:text-default-900"
               >
-                <ChevronLeft className="h-5 w-5" />
+                <X className="h-4.5 w-4.5" />
               </Button>
             )}
           </h2>
-          <ScrollArea className="h-[calc(100%-40px)] grow">
+          <ScrollArea className="min-h-0 grow pt-4">
             <div className="px-4">
               <ul>
                 {currentSubMenu.map((childItem, j) => (
@@ -197,8 +208,6 @@ export function Sidebar() {
             </div>
           </ScrollArea>
         </div>
-
-
       </div>
       {!isDesktop ? (
         <MenuOverlayPortal

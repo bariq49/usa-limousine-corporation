@@ -158,7 +158,7 @@ export function BookingDetailView(props: BookingDetailViewProps) {
         </div>
 
         {props.actions ? (
-          <div className="flex shrink-0 items-center gap-2">{props.actions}</div>
+          <div className="flex w-full shrink-0 items-center gap-2 sm:w-auto">{props.actions}</div>
         ) : null}
       </div>
 

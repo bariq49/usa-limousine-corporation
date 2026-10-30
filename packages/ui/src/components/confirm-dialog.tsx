@@ -45,11 +45,12 @@ export function ConfirmDialog({
 
         {children}
 
-        <div className="flex items-center justify-end gap-2 pt-2">
+        <div className="grid grid-cols-2 gap-2 pt-2 sm:flex sm:items-center sm:justify-end">
           <Button
             type="button"
             variant="outline"
             size="sm"
+            className="h-11 sm:h-9"
             onClick={() => onOpenChange(false)}
             disabled={pending}
           >
@@ -58,6 +59,7 @@ export function ConfirmDialog({
           <Button
             type="button"
             size="sm"
+            className="h-11 sm:h-9"
             color={confirmColor}
             onClick={onConfirm}
             disabled={pending}

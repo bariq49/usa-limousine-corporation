@@ -36,12 +36,12 @@ function DashBoardFrame({ children }: { children: ReactNode }) {
   return (
     <>
       <ScrollLockFix />
-      <div className="min-h-screen overflow-x-clip bg-background">
+      <div className="min-h-screen overflow-x-clip bg-background max-md:bg-card">
         <Header />
         <Sidebar />
         <div
           className={cn(
-            "content-wrapper page-min-height max-w-full min-h-screen bg-background transition-all duration-150",
+            "content-wrapper page-min-height max-w-full min-h-screen bg-background transition-all duration-150 max-md:bg-card",
             {
               "xl:ml-[300px]": !collapsed,
               "xl:ml-[72px]": collapsed,

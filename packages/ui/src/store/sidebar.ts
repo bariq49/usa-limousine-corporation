@@ -8,6 +8,8 @@ interface SidebarState {
   setCollapsed: (value: boolean) => void;
   subMenu: boolean;
   setSubmenu: (value: boolean) => void;
+  openRequested: boolean;
+  setOpenRequested: (value: boolean) => void;
 }
 
 export const useSidebar = create<SidebarState>()(
@@ -17,6 +19,8 @@ export const useSidebar = create<SidebarState>()(
       setCollapsed: (value) => set({ collapsed: value }),
       subMenu: false,
       setSubmenu: (value) => set({ subMenu: value }),
+      openRequested: false,
+      setOpenRequested: (value) => set({ openRequested: value }),
     }),
     {
       name: "usa-limousine-corporation-sidebar-store",

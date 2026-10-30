@@ -80,6 +80,7 @@ export type NotificationList = {
 /** Response of GET /customers/bookings/analytics (the customer's own bookings, one year). */
 export type BookingAnalytics = {
   year: number;
+  month: number | null;
   totalBookings: number;
   /** Amount of completed bookings. */
   totalRevenue: number;

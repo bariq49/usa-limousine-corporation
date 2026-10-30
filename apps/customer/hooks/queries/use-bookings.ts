@@ -5,6 +5,7 @@ import type {
   CreateInput,
   Query,
 } from "@usa-limousine-corporation/ui/types/booking-model";
+import { downloadBlob } from "@usa-limousine-corporation/ui/utils/download";
 import {
   cancelBooking,
   completeBooking,
@@ -13,19 +14,21 @@ import {
   getBookingAnalytics,
   getBookingCalendar,
   getBookings,
+  getReceipt,
 } from "@/lib/api/bookings";
 
 export const bookingQueryKeys = {
   all: ["bookings"] as const,
   list: (params?: Query) => ["bookings", "list", params] as const,
   detail: (id: string) => ["bookings", "detail", id] as const,
-  analytics: (year: number) => ["bookings", "analytics", year] as const,
+  analytics: (year: number, month: number | null) =>
+    ["bookings", "analytics", year, month] as const,
 };
 
-export const useBookingAnalytics = (year: number) => {
+export const useBookingAnalytics = (year: number, month: number | null) => {
   return useQuery({
-    queryKey: bookingQueryKeys.analytics(year),
-    queryFn: () => getBookingAnalytics(year),
+    queryKey: bookingQueryKeys.analytics(year, month),
+    queryFn: () => getBookingAnalytics(year, month),
   });
 };
 
@@ -96,5 +99,17 @@ export const useBookingCalendar = (query: CalendarQuery | null) => {
     queryFn: () => getBookingCalendar(query as CalendarQuery),
     enabled: Boolean(query),
     placeholderData: keepPreviousData,
+  });
+};
+
+export const useDownloadReceipt = () => {
+  return useMutation({
+    mutationFn: async ({ orderId, fileName }: { orderId: string; fileName: string }) => {
+      const blob = await getReceipt(orderId);
+      downloadBlob(blob, fileName);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "We could not download your receipt. Please try again.");
+    },
   });
 };

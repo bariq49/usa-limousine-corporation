@@ -16,12 +16,19 @@ import {
   useNotificationList,
 } from "@/hooks/queries/use-notifications";
 
-/** Ticket notifications open the ticket in the Help Center. */
 function notificationHref(item: NotificationItem): string | null {
   const data = (item.data ?? {}) as Record<string, unknown>;
-  const ticketId = typeof data["ticketId"] === "string" ? data["ticketId"] : null;
+  const payload =
+    data["payload"] && typeof data["payload"] === "object" && !Array.isArray(data["payload"])
+      ? (data["payload"] as Record<string, unknown>)
+      : data;
+  const ticketId = typeof payload["ticketId"] === "string" ? payload["ticketId"] : null;
+  const bookingId = typeof payload["bookingId"] === "string" ? payload["bookingId"] : null;
   if (item.type.startsWith("TICKET_")) {
     return ticketId ? `/help-center/${ticketId}` : "/help-center";
+  }
+  if (item.type.startsWith("BOOKING_")) {
+    return bookingId ? `/bookings/${bookingId}` : "/bookings";
   }
   return null;
 }

@@ -8,10 +8,18 @@ export const getBookings = (params?: Query) => {
   return http.get<ListResponse>(API_ROUTES.BOOKINGS, { params });
 };
 
-export const getBookingAnalytics = (year: number, userId?: string) => {
-  return http.get<BookingAnalytics>(`${API_ROUTES.BOOKINGS}/analytics`, {
-    params: { year, userId },
-  });
+export const getBookingAnalytics = (
+  year: number,
+  options?: { userId?: string | undefined; month?: number | null | undefined },
+) => {
+  const params: { year: number; userId?: string; month?: number } = { year };
+  if (options?.userId) {
+    params.userId = options.userId;
+  }
+  if (options?.month != null) {
+    params.month = options.month;
+  }
+  return http.get<BookingAnalytics>(`${API_ROUTES.BOOKINGS}/analytics`, { params });
 };
 
 export const getBooking = (id: string) => {

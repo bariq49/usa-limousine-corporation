@@ -1,4 +1,4 @@
-import axios, { AxiosError } from "axios";
+import axios, { type AxiosError } from "axios";
 import type { ApiError } from "../../types/api";
 
 export type { ApiError };
@@ -40,17 +40,28 @@ bookingApi.interceptors.request.use((config) => {
 
 bookingApi.interceptors.response.use(
   (response) => response.data,
-  async (error: AxiosError<ApiErrorBody>) => {
+  async (error: AxiosError<ApiErrorBody | Blob>) => {
+    let payload: ApiErrorBody | undefined;
+    const data = error.response?.data;
+    if (typeof Blob !== "undefined" && data instanceof Blob) {
+      try {
+        payload = JSON.parse(await data.text()) as ApiErrorBody;
+      } catch {
+        payload = undefined;
+      }
+    } else if (data && typeof data === "object") {
+      payload = data as ApiErrorBody;
+    }
     const message =
-      toText(error.response?.data?.error?.message) ||
-      toText(error.response?.data?.message) ||
+      toText(payload?.error?.message) ||
+      toText(payload?.message) ||
       error.message ||
       "Something went wrong";
     const rejection: ApiError = {
       message,
       status: error.response?.status,
-      code: error.response?.data?.error?.error,
-      details: error.response?.data?.error?.details,
+      code: payload?.error?.error,
+      details: payload?.error?.details,
     };
     return Promise.reject(rejection);
   },

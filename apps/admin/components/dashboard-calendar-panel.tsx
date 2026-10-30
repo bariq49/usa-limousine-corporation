@@ -44,23 +44,15 @@ export function DashboardCalendarPanel() {
   );
 
   return (
-    <Card className="flex h-full w-full min-w-0 flex-col overflow-hidden">
-      <CardHeader className="shrink-0 border-none px-4 pb-0 pt-4 md:px-5">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <div className="text-lg font-semibold text-default-900 md:text-xl">Ride Schedule</div>
-            <p className="mt-0.5 text-xs text-default-500">
-              {rides.length} ride{rides.length === 1 ? "" : "s"} on{" "}
-              {formatDate({ date: selectedKey })}
-            </p>
-          </div>
-          <Button asChild size="sm" variant="outline">
-            <Link href="/calendar">View All</Link>
-          </Button>
-        </div>
+    <Card className="flex h-full w-full min-w-0 flex-col overflow-hidden max-md:border-none max-md:bg-transparent max-md:shadow-none">
+      <CardHeader className="shrink-0 gap-1 border-none pb-0 max-md:px-0 max-md:pt-0 md:px-5 md:pt-4">
+        <div className="text-xl font-semibold text-default-900">Ride Schedule</div>
+        <p className="text-xs text-default-600 md:text-sm">
+          {rides.length} ride{rides.length === 1 ? "" : "s"} on {formatDate({ date: selectedKey })}
+        </p>
       </CardHeader>
 
-      <CardContent className="flex min-h-0 flex-1 flex-col gap-4 p-4 md:p-5">
+      <CardContent className="flex min-h-0 flex-1 flex-col gap-4 px-0 py-4 md:p-5">
         <div className="shrink-0 rounded-md border border-border p-3">
           <MiniMonthCalendar
             month={displayMonth}
@@ -94,7 +86,7 @@ export function DashboardCalendarPanel() {
             </p>
           ) : (
             <div className="min-h-0 flex-1 space-y-1 overflow-y-auto pr-1">
-              {rides.map((ride) => (
+              {rides.slice(0, 3).map((ride) => (
                 <div
                   key={ride.id}
                   className="flex items-center justify-between gap-2 border-l-4 py-2 pl-2.5"
@@ -122,6 +114,12 @@ export function DashboardCalendarPanel() {
                   </Button>
                 </div>
               ))}
+              <Link
+                href="/calendar"
+                className="flex items-center justify-center pt-2 text-sm font-medium text-primary hover:underline"
+              >
+                View all
+              </Link>
             </div>
           )}
         </div>

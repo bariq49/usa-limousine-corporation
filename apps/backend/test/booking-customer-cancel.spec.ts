@@ -73,7 +73,6 @@ function setup(options: { hoursToPickup: number; status?: BookingStatus; paid?: 
   };
   const bookingService = new BookingService(
     repository as never,
-    {} as never,
     prisma as never,
     notifications as never,
     emails as never,

@@ -1,14 +1,10 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { useForm, useWatch } from "react-hook-form";
 import { Card, CardContent, CardHeader } from "../card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../select";
+import { Form } from "../form";
+import { Input } from "../input";
 import { Skeleton } from "../skeleton";
 import AreaChart from "../charts/area-chart";
 import { cn } from "../../utils/cn";
@@ -33,6 +29,8 @@ export interface BookingOverviewProps {
   year: number;
   years?: number[] | undefined;
   onYearChange?: ((year: number) => void) | undefined;
+  month?: number | null | undefined;
+  onMonthChange?: ((month: number | null) => void) | undefined;
   isLoading?: boolean | undefined;
   categories?: string[] | undefined;
   chartDescription?: string | undefined;
@@ -42,6 +40,11 @@ export interface BookingOverviewProps {
 }
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+type FilterValues = {
+  month: string;
+  year: string;
+};
 
 function formatValue(kind: OverviewStat["kind"], value: number) {
   return kind === "currency" ? formatPrice({ price: value }) : Math.round(value).toString();
@@ -54,6 +57,8 @@ export function BookingOverview({
   year,
   years,
   onYearChange,
+  month,
+  onMonthChange,
   isLoading,
   categories = MONTHS,
   chartDescription,
@@ -63,35 +68,89 @@ export function BookingOverview({
 }: BookingOverviewProps) {
   const [selectedKey, setSelectedKey] = useState(stats[0]?.key ?? "");
   const selected = stats.find((item) => item.key === selectedKey) ?? stats[0];
+  const form = useForm<FilterValues>({
+    defaultValues: {
+      month: month ? String(month) : "all",
+      year: String(year),
+    },
+  });
+  const watchedMonth = useWatch({ control: form.control, name: "month" });
+  const watchedYear = useWatch({ control: form.control, name: "year" });
+
+  useEffect(() => {
+    form.setValue("month", month ? String(month) : "all");
+    form.setValue("year", String(year));
+  }, [form, month, year]);
+
+  useEffect(() => {
+    if (!onMonthChange || watchedMonth === undefined) return;
+    const next = watchedMonth === "all" ? null : Number(watchedMonth);
+    if (next !== month) onMonthChange(next);
+  }, [month, onMonthChange, watchedMonth]);
+
+  useEffect(() => {
+    if (!onYearChange || watchedYear === undefined) return;
+    const next = Number(watchedYear);
+    if (next !== year) onYearChange(next);
+  }, [onYearChange, watchedYear, year]);
+
+  const monthOptions = [{ value: "all", label: "All months" }].concat(
+    MONTHS.map((option, index) => ({
+      value: String(index + 1),
+      label: option,
+    })),
+  );
+  const yearOptions = (years ?? []).map((option) => ({
+    value: String(option),
+    label: String(option),
+  }));
 
   return (
-    <Card className={cn("flex h-full flex-col", className)}>
-      <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3 border-none pb-0">
-        <div>
-          <div className="text-xl font-semibold whitespace-nowrap text-default-900">{title}</div>
-          <span className="text-xs text-default-600">{description}</span>
+    <Card
+      className={cn(
+        "flex h-full flex-col max-md:border-none max-md:bg-transparent max-md:shadow-none",
+        className,
+      )}
+    >
+      <CardHeader className="gap-3 border-none pb-0 max-md:px-0 max-md:pt-0 md:flex-row md:items-start md:justify-between">
+        <div className="min-w-0 space-y-1">
+          <div className="text-xl font-semibold text-default-900">{title}</div>
+          <span className="block text-xs text-default-600 md:text-sm">{description}</span>
         </div>
         {years && onYearChange ? (
-          <Select value={String(year)} onValueChange={(value) => onYearChange(Number(value))}>
-            <SelectTrigger className="h-9 w-[110px]" aria-label="Year">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {years.map((option) => (
-                <SelectItem key={option} value={String(option)}>
-                  {option}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Form {...form}>
+            <div
+              className={cn(
+                "grid gap-2 md:flex md:shrink-0",
+                onMonthChange ? "grid-cols-2" : "grid-cols-1",
+              )}
+            >
+              {onMonthChange ? (
+                <Input
+                  name="month"
+                  type="select"
+                  options={monthOptions}
+                  className="md:w-32"
+                  inputClassName="h-10 bg-transparent md:h-9"
+                />
+              ) : null}
+              <Input
+                name="year"
+                type="select"
+                options={yearOptions}
+                className="md:w-24"
+                inputClassName="h-10 bg-transparent md:h-9"
+              />
+            </div>
+          </Form>
         ) : (
           actions
         )}
       </CardHeader>
-      <CardContent className="flex flex-1 flex-col p-4 md:p-5">
+      <CardContent className="flex flex-1 flex-col px-0 py-4 md:p-5">
         <div
           className={cn(
-            "grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:gap-6",
+            "grid grid-cols-2 items-stretch gap-3 sm:gap-4 lg:gap-6",
             {
               "lg:grid-cols-4": stats.length === 4,
               "lg:grid-cols-5": stats.length >= 5,
@@ -107,33 +166,36 @@ export function BookingOverview({
               aria-pressed={selected?.key === item.key}
               onClick={() => setSelectedKey(item.key)}
               className={cn(
-                "relative flex w-full cursor-pointer flex-col items-start gap-1.5 overflow-hidden rounded-md p-4 text-left transition hover:-translate-y-0.5 hover:shadow-sm focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none",
+                "relative flex h-full min-h-24 w-full cursor-pointer flex-col items-start justify-between gap-1 overflow-hidden rounded-md p-3.5 text-left md:min-h-28 md:gap-1.5 md:p-4 transition hover:-translate-y-0.5 hover:shadow-sm focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none",
                 {
                   "bg-primary/30": item.color === "primary",
                   "bg-warning/30": item.color === "warning",
                   "bg-success/30": item.color === "success",
                   "bg-info/30": item.color === "info",
                   "bg-destructive/20": item.color === "destructive",
-                  "ring-2 ring-primary ring-offset-2": selected?.key === item.key,
+                  "ring-2 ring-inset ring-primary": selected?.key === item.key,
                 },
               )}
             >
               <span
-                className={cn("absolute -top-3 -right-3 h-10 w-10 rounded-full ring-8", {
-                  "bg-primary/50 ring-primary/20": item.color === "primary",
-                  "bg-amber-200 ring-amber-100": item.color === "warning",
-                  "bg-green-200 ring-green-100": item.color === "success",
-                  "bg-cyan-200 ring-cyan-100": item.color === "info",
-                  "bg-red-200 ring-red-100": item.color === "destructive",
-                })}
+                className={cn(
+                  "absolute -top-3 -right-3 h-8 w-8 rounded-full ring-6 md:h-10 md:w-10 md:ring-8",
+                  {
+                    "bg-primary/50 ring-primary/20": item.color === "primary",
+                    "bg-amber-200 ring-amber-100": item.color === "warning",
+                    "bg-green-200 ring-green-100": item.color === "success",
+                    "bg-cyan-200 ring-cyan-100": item.color === "info",
+                    "bg-red-200 ring-red-100": item.color === "destructive",
+                  },
+                )}
               />
-              <span className="relative z-10 text-sm font-semibold text-default-800 capitalize">
+              <span className="relative z-10 pr-6 text-xs font-semibold capitalize text-default-700 md:pr-0 md:text-sm md:text-default-800">
                 {item.label}
               </span>
               {isLoading ? (
                 <Skeleton className="relative z-10 h-7 w-20" />
               ) : (
-                <span className="relative z-10 text-lg font-semibold text-default-900">
+                <span className="relative z-10 text-xl font-bold text-default-900 md:text-lg md:font-semibold">
                   {formatValue(item.kind, item.total)}
                 </span>
               )}
@@ -141,7 +203,7 @@ export function BookingOverview({
           ))}
         </div>
         {selected ? (
-          <div className="mt-6 flex flex-1 flex-col border-t border-border px-3 pt-6">
+          <div className="mt-6 flex flex-1 flex-col md:px-3">
             <div className="mb-4">
               <h3 className="text-base font-semibold text-default-900">
                 {selected.label} Overview
@@ -149,21 +211,30 @@ export function BookingOverview({
               <p className="text-xs text-default-500">
                 {chartDescription ??
                   (selected.kind === "currency"
-                    ? `Monthly amount from completed bookings in ${year}`
-                    : `Monthly booking count in ${year}`)}
+                    ? `${month ? "Daily" : "Monthly"} amount from completed bookings in ${month ? `${MONTHS[month - 1]} ` : ""}${year}`
+                    : `${month ? "Daily" : "Monthly"} booking count in ${month ? `${MONTHS[month - 1]} ` : ""}${year}`)}
               </p>
             </div>
             {isLoading ? (
-              <Skeleton className="h-[300px] w-full" />
+              <Skeleton className="h-64 w-full md:h-72" />
             ) : (
-              <AreaChart
-                series={[{ name: selected.label, data: selected.monthly }]}
-                chartColor={selected.chartColor}
-                height={300}
-                categories={categories}
-                formatYAxisValue={(value) => formatValue(selected.kind, value)}
-                formatTooltipValue={(value) => formatValue(selected.kind, value)}
-              />
+              <div className="min-w-0 overflow-x-auto">
+                <AreaChart
+                  series={[{ name: selected.label, data: selected.monthly }]}
+                  chartColor={selected.chartColor}
+                  height={260}
+                  categories={categories}
+                  formatYAxisValue={(value) =>
+                    selected.kind === "currency"
+                      ? `$${new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 }).format(value)}`
+                      : String(Math.round(value))
+                  }
+                  formatTooltipTitle={(category) =>
+                    month ? `${MONTHS[month - 1]} ${category}, ${year}` : `${category} ${year}`
+                  }
+                  formatTooltipValue={(value) => formatValue(selected.kind, value)}
+                />
+              </div>
             )}
           </div>
         ) : null}

@@ -24,7 +24,7 @@ export async function sendBookingSms(props: Props) {
     if (!row || !phone) return;
 
     const prefs = await props.bookingRepository.contactPreferences(row.userId);
-    if (!prefs.sms || !row.notifyBySms) return;
+    if (props.kind !== "cancelled" && (!prefs.sms || !row.notifyBySms)) return;
 
     const time = row.bookingTime as TimeInput;
     await props.twilio.send({

@@ -61,7 +61,7 @@ export default function CustomerDetailPage() {
   const [ticketPage, setTicketPage] = useState(1);
   const [ticketSize, setTicketSize] = useState(5);
 
-  const analytics = useBookingAnalytics(year, userId, Boolean(userId));
+  const analytics = useBookingAnalytics(year, { userId, enabled: Boolean(userId) });
   const bookings = useBookings({ userId, page: bookingPage, limit: bookingSize }, Boolean(userId));
   const tickets = useTickets({ customerId: params.id, page: ticketPage, limit: ticketSize });
 

@@ -161,7 +161,7 @@ export function DataTable<TData, TValue = unknown>({
           isDeleting={isDeleting}
         />
       )}
-      <div className="relative overflow-hidden rounded-md border border-border bg-background">
+      <div className="relative overflow-hidden rounded-md border border-border bg-transparent">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

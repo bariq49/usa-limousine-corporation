@@ -6,19 +6,13 @@ import { useSidebar } from "../../store/sidebar";
 import { useMediaQuery } from "../../hooks/use-media-query";
 import { Logo } from "../../components/logo";
 
-function MenuBar({
-  collapsed,
-  setCollapsed,
-}: {
-  collapsed: boolean;
-  setCollapsed: (value: boolean) => void;
-}) {
+function MenuBar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
   return (
     <button
       type="button"
       aria-label="Toggle sidebar"
       className="relative flex h-10 w-10 items-center justify-center overflow-hidden"
-      onClick={() => setCollapsed(!collapsed)}
+      onClick={onToggle}
     >
       <div className="flex w-6 flex-col justify-between gap-1.5">
         <span
@@ -42,7 +36,7 @@ function MenuBar({
 }
 
 export function VerticalHeader() {
-  const { collapsed, setCollapsed, subMenu } = useSidebar();
+  const { collapsed, setCollapsed, subMenu, setOpenRequested } = useSidebar();
   const isDesktop = useMediaQuery("(min-width: 1280px)");
   const isTablet = useMediaQuery("(min-width: 768px)");
   const showLogo = !isDesktop && isTablet;
@@ -55,7 +49,12 @@ export function VerticalHeader() {
           <Logo />
         </Link>
       ) : null}
-      {showMenuBar ? <MenuBar collapsed={collapsed} setCollapsed={setCollapsed} /> : null}
+      {showMenuBar ? (
+        <MenuBar
+          collapsed={collapsed}
+          onToggle={() => (isDesktop ? setCollapsed(!collapsed) : setOpenRequested(true))}
+        />
+      ) : null}
     </div>
   );
 }

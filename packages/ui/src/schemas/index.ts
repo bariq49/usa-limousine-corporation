@@ -8,3 +8,7 @@ export {
   type PersonalDetailsSchema,
 } from "./profile/personal-details.schema";
 export { changePasswordSchema, type ChangePasswordSchema } from "./profile/change-password.schema";
+export {
+  cancelBookingSchema,
+  type CancelBookingSchema,
+} from "./booking/cancel.schema";

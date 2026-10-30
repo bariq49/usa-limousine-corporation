@@ -4,6 +4,7 @@ export type CheckoutBooking = {
   id: string;
   status: BookingStatus;
   bookingNumber: string;
+  userId: string | null;
   passenger: { name: string; email: string; phone: string };
 };
 

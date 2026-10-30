@@ -5,13 +5,14 @@ import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { estimateRequest, useBookingStore } from "../store/booking";
 import { formatHrs } from "../utils/duration";
-import { draftBooking, getBooking, startCheckout } from "../lib/booking/checkout";
+import { draftBooking, getBooking, getReceipt, startCheckout } from "../lib/booking/checkout";
 import type { ApiError } from "../types/api";
 import { getExtraServices } from "../lib/booking/extra-services";
 import { getHourlyDurations } from "../lib/booking/hourly-durations";
 import { getLuggageTypes } from "../lib/booking/luggage";
 import { getEstimates } from "../lib/booking/estimates";
 import { getSettings } from "../lib/booking/settings";
+import { downloadBlob } from "../utils/download";
 
 export function useHasHydrated() {
   const [hasHydrated, setHasHydrated] = useState(false);
@@ -117,5 +118,17 @@ export const useBooking = (id: string | null | undefined) => {
     queryKey: ["booking", id],
     queryFn: () => getBooking(id!),
     enabled: Boolean(id),
+  });
+};
+
+export const useDownloadReceipt = () => {
+  return useMutation({
+    mutationFn: async ({ orderId, fileName }: { orderId: string; fileName: string }) => {
+      const blob = await getReceipt(orderId);
+      downloadBlob(blob, fileName);
+    },
+    onError: (error: ApiError) => {
+      toast.error(error.message || "We could not download your receipt. Please try again.");
+    },
   });
 };

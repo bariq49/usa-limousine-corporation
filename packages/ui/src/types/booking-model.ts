@@ -133,6 +133,7 @@ export type Item = {
   userId?: string | null | undefined;
   vehicleCategoryId: string;
   bookingNumber: string;
+  squareOrderId?: string | null | undefined;
   status: BookingStatus;
   bookingType: BookingType;
   vehicleCount?: number | undefined;
@@ -232,4 +233,9 @@ export type CalendarQuery = {
   start: string;
   end: string;
   bookingType?: BookingType[] | undefined;
+};
+
+export type DayRides = {
+  date: string;
+  rides: CalendarEvent[];
 };

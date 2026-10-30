@@ -18,8 +18,8 @@ export const bookingKeys = {
   all: ["bookings"] as const,
   list: (params?: Query) => [...bookingKeys.all, "list", params] as const,
   detail: (id: string) => [...bookingKeys.all, "detail", id] as const,
-  analytics: (year: number, userId?: string) =>
-    ["bookings", "analytics", year, userId ?? "all"] as const,
+  analytics: (year: number, userId?: string, month?: number | null) =>
+    ["bookings", "analytics", year, userId ?? "all", month ?? "all"] as const,
 };
 
 export const useBookings = (params?: Query, enabled = true) => {
@@ -31,11 +31,20 @@ export const useBookings = (params?: Query, enabled = true) => {
 };
 
 /** Platform-wide stats, or one customer's when `userId` is given. */
-export const useBookingAnalytics = (year: number, userId?: string, enabled = true) => {
+export const useBookingAnalytics = (
+  year: number,
+  options?: {
+    userId?: string | undefined;
+    month?: number | null | undefined;
+    enabled?: boolean | undefined;
+  },
+) => {
+  const userId = options?.userId;
+  const month = options?.month ?? null;
   return useQuery({
-    queryKey: bookingKeys.analytics(year, userId),
-    queryFn: () => getBookingAnalytics(year, userId),
-    enabled,
+    queryKey: bookingKeys.analytics(year, userId, month),
+    queryFn: () => getBookingAnalytics(year, { userId, month }),
+    enabled: options?.enabled ?? true,
   });
 };
 

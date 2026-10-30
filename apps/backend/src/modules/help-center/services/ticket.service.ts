@@ -6,6 +6,7 @@ import {
   HelpTicketSource,
   HelpTicketStatus,
   NotificationType,
+  type Notification,
   type Prisma,
 } from "@prisma/client";
 import type { Request } from "express";
@@ -21,7 +22,7 @@ import type { PriorityDto, QueryDto, ReplyDto, StatusDto } from "../dto/ticket.d
 import { TicketRepository } from "../repositories/ticket.repository";
 import type { Create, CreateData, WebsiteCreate } from "../types/ticket";
 import type { Created, PriorityUpdated, Reply, StatusUpdated } from "../types/ticket.events";
-import { replyNotify, statusNotify } from "../utils/ticket-notify";
+import { createdNotify, replyNotify, statusNotify } from "../utils/ticket-notify";
 
 @Injectable()
 export class TicketService {
@@ -61,7 +62,7 @@ export class TicketService {
         tx,
       );
 
-      const notifications = await this.notificationService.stageForAdmins(
+      const adminNotifications = await this.notificationService.stageForAdmins(
         {
           type: NotificationType.TICKET_CREATED,
           title: "New support ticket",
@@ -77,8 +78,40 @@ export class TicketService {
         },
         tx,
       );
+      const owner = await tx.customer.findUnique({
+        where: { id: input.customerId },
+        select: { userId: true, settings: { select: { notification: true } } },
+      });
+      const wantsNotification = owner !== null && owner.settings?.notification !== false;
+      const notify = createdNotify({
+        customerId: input.customerId,
+        actorUserId,
+        ticketId: ticket.id,
+        ticketNumber: ticket.ticketNumber,
+        subject: ticket.subject,
+        category: ticket.category,
+        status: ticket.status,
+        priority: ticket.priority,
+      });
+      const customerNotifications = wantsNotification
+        ? await this.notificationService.stage(
+            [
+              {
+                recipientType: RecipientType.USER,
+                recipientId: owner.userId,
+                type: notify.type,
+                title: notify.title,
+                body: notify.body,
+                data: notify.data,
+                push: notify.push,
+                idempotencyKey: `TICKET_CREATED_CUSTOMER:${ticket.id}`,
+              },
+            ],
+            tx,
+          )
+        : [];
 
-      return { ticket, notifications };
+      return { ticket, notifications: adminNotifications.concat(customerNotifications) };
     });
     const ticket = created.ticket;
     await this.notificationService.deliverStaged(created.notifications);
@@ -136,7 +169,7 @@ export class TicketService {
 
     const created = await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const ticket = await this.tickets.create(data, tx);
-      const notifications = await this.notificationService.stageForAdmins(
+      const adminNotifications = await this.notificationService.stageForAdmins(
         {
           type: NotificationType.TICKET_CREATED,
           title: isHigh ? "High priority enquiry" : "New website enquiry",
@@ -152,7 +185,41 @@ export class TicketService {
         },
         tx,
       );
-      return { ticket, notifications };
+      let customerNotifications: Notification[] = [];
+      if (customer) {
+        const owner = await tx.customer.findUnique({
+          where: { id: customer.id },
+          select: { settings: { select: { notification: true } } },
+        });
+        if (owner?.settings?.notification !== false) {
+          const notify = createdNotify({
+            customerId: ticket.customerId,
+            actorUserId: customer.userId,
+            ticketId: ticket.id,
+            ticketNumber: ticket.ticketNumber,
+            subject: ticket.subject,
+            category: ticket.category,
+            status: ticket.status,
+            priority: ticket.priority,
+          });
+          customerNotifications = await this.notificationService.stage(
+            [
+              {
+                recipientType: RecipientType.USER,
+                recipientId: customer.userId,
+                type: notify.type,
+                title: notify.title,
+                body: notify.body,
+                data: notify.data,
+                push: notify.push,
+                idempotencyKey: `TICKET_CREATED_CUSTOMER:${ticket.id}`,
+              },
+            ],
+            tx,
+          );
+        }
+      }
+      return { ticket, notifications: adminNotifications.concat(customerNotifications) };
     });
     const ticket = created.ticket;
     await this.notificationService.deliverStaged(created.notifications);

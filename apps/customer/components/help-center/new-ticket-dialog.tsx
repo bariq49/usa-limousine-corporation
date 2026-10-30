@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@usa-limousine-corporation/ui/components/button";
@@ -17,6 +18,7 @@ import { Form } from "@usa-limousine-corporation/ui/components/form";
 import { Input } from "@usa-limousine-corporation/ui/components/input";
 import { useCreateTicket } from "@/hooks/queries/use-tickets";
 import { useUploadFile } from "@/hooks/queries/use-upload";
+import type { NewTicketDialogProps, NewTicketFormValues } from "@/lib/types/tickets";
 import { CATEGORY_OPTIONS } from "@/lib/utils/ticket-labels";
 
 const schema = z.object({
@@ -30,18 +32,30 @@ const schema = z.object({
   attachment: z.string().optional(),
 });
 
-type Values = z.infer<typeof schema>;
+const EMPTY: NewTicketFormValues = {
+  subject: "",
+  category: "BOOKING",
+  description: "",
+  attachment: "",
+};
 
-const EMPTY: Values = { subject: "", category: "BOOKING", description: "", attachment: "" };
-
-export function NewTicketDialog({ onCreated }: { onCreated?: (id: string) => void }) {
-  const [open, setOpen] = useState(false);
+export function NewTicketDialog(props: NewTicketDialogProps) {
+  const { onCreated, trigger } = props;
+  const bookingNumber = useSearchParams().get("booking");
+  const [open, setOpen] = useState(Boolean(bookingNumber));
   const createTicket = useCreateTicket();
   const uploadFile = useUploadFile();
-  const form = useForm<Values>({
+  const form = useForm<NewTicketFormValues>({
     resolver: zodResolver(schema),
     mode: "onTouched",
-    defaultValues: EMPTY,
+    defaultValues: bookingNumber
+      ? {
+          subject: `Change request for booking ${bookingNumber}`,
+          category: "BOOKING",
+          description: `I would like to make a change to my booking ${bookingNumber}: `,
+          attachment: "",
+        }
+      : EMPTY,
   });
 
   const handleUpload = async (file: File) => {
@@ -49,7 +63,7 @@ export function NewTicketDialog({ onCreated }: { onCreated?: (id: string) => voi
     return result.secureUrl || result.url;
   };
 
-  const submit = (values: Values) => {
+  const submit = (values: NewTicketFormValues) => {
     createTicket.mutate(
       {
         subject: values.subject,
@@ -70,7 +84,7 @@ export function NewTicketDialog({ onCreated }: { onCreated?: (id: string) => voi
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button type="button">New ticket</Button>
+        {trigger ?? <Button type="button">New ticket</Button>}
       </DialogTrigger>
       <DialogContent className="max-w-lg">
         <DialogHeader>

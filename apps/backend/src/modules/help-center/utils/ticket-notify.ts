@@ -1,5 +1,22 @@
 import { HelpTicketStatus, NotificationType } from "@prisma/client";
-import type { Notify, Reply, StatusUpdated } from "../types/ticket.events";
+import type { Created, Notify, Reply, StatusUpdated } from "../types/ticket.events";
+
+export function createdNotify(payload: Created): Notify {
+  return {
+    type: NotificationType.TICKET_CREATED,
+    title: "Support ticket received",
+    body: `We received your ticket ${payload.ticketNumber}: ${payload.subject}`,
+    data: {
+      type: "TICKET_CREATED",
+      payload: {
+        ticketId: payload.ticketId,
+        ticketNumber: payload.ticketNumber,
+        subject: payload.subject,
+      },
+    },
+    push: true,
+  };
+}
 
 export function replyNotify(payload: Reply): Notify {
   return {

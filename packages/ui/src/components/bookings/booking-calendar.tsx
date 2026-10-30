@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useForm, useWatch } from "react-hook-form";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin, { type DateClickArg } from "@fullcalendar/interaction";
@@ -14,29 +15,42 @@ import type {
   EventSourceInput,
 } from "@fullcalendar/core";
 import { Card, CardContent } from "../card";
-import { formatDate } from "../../utils/date";
-import { BookingTypeFilter } from "./booking-type-filter";
+import { Form } from "../form";
+import { Input } from "../input";
+import { formatDate, fromDateKey, toDateKey } from "../../utils/date";
 import { BOOKING_TYPE_COLORS, BOOKING_TYPE_LABELS } from "./labels";
+import { DayRideCards } from "./day-ride-cards";
 import { MiniMonthCalendar } from "./mini-month-calendar";
 import type { BookingType, CalendarEvent } from "../../types/booking-model";
 import type { BookingCalendarProps } from "../../types/bookings";
 
 const ALL_BOOKING_TYPES: BookingType[] = ["ONE_WAY", "RETURN", "HOURLY"];
 
+const TYPE_OPTIONS = [{ value: "ALL", label: "All trip types" }].concat(
+  ALL_BOOKING_TYPES.map((type) => ({
+    value: type,
+    label: BOOKING_TYPE_LABELS[type],
+  })),
+);
 
-function toDateKey(date: Date | string) {
-  if (typeof date === "string") return date.slice(0, 10);
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${date.getFullYear()}-${month}-${day}`;
-}
-
-function fromDateKey(key: string) {
-  return new Date(`${key}T00:00:00`);
-}
+type TypeFilterValues = {
+  bookingType: string;
+};
 
 export function BookingCalendar(props: BookingCalendarProps) {
-  const { events, isFetching = false, onQueryChange, basePath } = props;
+  const {
+    events,
+    isFetching = false,
+    onQueryChange,
+    basePath,
+    title = "Booking Calendar",
+    description = "Pick a date to see the rides booked for that day.",
+    getBooking,
+    bookingQueryKey,
+    onCancelBooking,
+    cancelPending,
+    onEditBooking,
+  } = props;
   const router = useRouter();
   const calendarRef = useRef<FullCalendar | null>(null);
   const rangeRef = useRef<{ start: string; end: string } | null>(null);
@@ -44,7 +58,12 @@ export function BookingCalendar(props: BookingCalendarProps) {
   const today = formatDate({ date: new Date(), as: "value" });
   const [displayMonth, setDisplayMonth] = useState(() => fromDateKey(today));
   const [selectedDate, setSelectedDate] = useState(today);
-  const [bookingTypes, setBookingTypes] = useState<BookingType[]>(ALL_BOOKING_TYPES);
+  const typeForm = useForm<TypeFilterValues>({
+    defaultValues: { bookingType: "ALL" },
+  });
+  const bookingTypeValue = useWatch({ control: typeForm.control, name: "bookingType" }) ?? "ALL";
+  const bookingTypes =
+    bookingTypeValue === "ALL" ? ALL_BOOKING_TYPES : [bookingTypeValue as BookingType];
 
   const emitQuery = useCallback(
     (range: { start: string; end: string }, types: BookingType[]) => {
@@ -56,6 +75,10 @@ export function BookingCalendar(props: BookingCalendarProps) {
     },
     [onQueryChange],
   );
+
+  useEffect(() => {
+    if (rangeRef.current) emitQuery(rangeRef.current, bookingTypes);
+  }, [bookingTypes, emitQuery]);
 
   const filteredEvents = useMemo(
     () => (events ?? []).filter((event) => bookingTypes.includes(event.bookingType)),
@@ -87,9 +110,8 @@ export function BookingCalendar(props: BookingCalendarProps) {
 
   const selectDate = useCallback((date: Date | string) => {
     const key = toDateKey(date);
-    const next = fromDateKey(key);
     setSelectedDate(key);
-    setDisplayMonth(next);
+    setDisplayMonth(fromDateKey(key));
     calendarRef.current?.getApi().gotoDate(key);
   }, []);
 
@@ -97,11 +119,6 @@ export function BookingCalendar(props: BookingCalendarProps) {
     (arg: DayCellContentArg) => (arg["dateStr"] === selectedDate ? ["fc-day-selected"] : []),
     [selectedDate],
   );
-
-  const handleTypesChange = (next: BookingType[]) => {
-    setBookingTypes(next);
-    if (rangeRef.current) emitQuery(rangeRef.current, next);
-  };
 
   const handleDatesSet = (arg: DatesSetArg) => {
     const lastDay = new Date(arg.end);
@@ -119,129 +136,125 @@ export function BookingCalendar(props: BookingCalendarProps) {
   };
 
   return (
-    <Card className="overflow-hidden shadow-xs">
-      <CardContent className="p-0">
-        <div className="grid grid-cols-1 xl:grid-cols-[300px_minmax(0,1fr)]">
-          <aside className="border-b border-border bg-default-50/70 px-5 py-5 xl:border-b-0 xl:border-r">
-            <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-default-500">
-              Jump to date
-            </p>
-            <div className="w-full rounded-xl border border-border bg-card p-4">
-              <MiniMonthCalendar
-                month={displayMonth}
-                selected={fromDateKey(selectedDate)}
-                onMonthChange={setDisplayMonth}
-                onSelect={selectDate}
-              />
+    <div className="space-y-6">
+      <Card className="overflow-hidden shadow-xs max-md:overflow-visible max-md:border-none max-md:bg-transparent max-md:shadow-none">
+        <CardContent className="p-0">
+          <div className="flex flex-col gap-3 border-b border-border px-5 py-5 max-md:border-none max-md:px-0 max-md:pt-0 md:flex-row md:items-end md:justify-between">
+            <div className="min-w-0 space-y-1">
+              <h2 className="text-xl font-semibold text-default-900">{title}</h2>
+              <p className="text-xs text-default-600 md:text-sm">{description}</p>
             </div>
+            <Form {...typeForm}>
+              <Input
+                name="bookingType"
+                type="select"
+                options={TYPE_OPTIONS}
+                className="w-full md:w-40"
+                inputClassName="h-9 bg-transparent"
+              />
+            </Form>
+          </div>
 
-            <BookingTypeFilter
-              options={ALL_BOOKING_TYPES}
-              value={bookingTypes}
-              onChange={handleTypesChange}
-              className="mt-5"
-            />
-
-            <div className="mt-5 border-t border-border pt-5">
-              <div className="mb-3 flex items-center justify-between gap-2">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-default-500">
-                  Selected day
-                </p>
-                <p className="text-xs font-medium text-default-600">
-                  {formatDate({ date: selectedDate })}
-                </p>
+          <div className="grid grid-cols-1 xl:grid-cols-[300px_minmax(0,1fr)]">
+            <aside className="border-b border-border bg-default-50/70 px-5 py-5 max-md:border-none max-md:bg-transparent max-md:px-0 max-md:pt-1 xl:border-b-0 xl:border-r">
+              <p className="mb-3 hidden text-[11px] font-semibold uppercase tracking-[0.14em] text-default-500 md:block">
+                Jump to date
+              </p>
+              <div className="w-full rounded-md border border-border bg-card p-4 max-md:border-none max-md:bg-transparent max-md:p-0">
+                <MiniMonthCalendar
+                  month={displayMonth}
+                  selected={fromDateKey(selectedDate)}
+                  onMonthChange={(month) => {
+                    setDisplayMonth(month);
+                    calendarRef.current?.getApi().gotoDate(toDateKey(month));
+                  }}
+                  onSelect={selectDate}
+                />
               </div>
 
-              {selectedRides.length === 0 ? (
-                <p className="rounded-md border border-dashed border-border px-3 py-5 text-center text-xs text-default-500">
-                  No rides on this day.
+              <div className="mt-4 border-t border-border pt-4 md:hidden">
+                <p className="truncate text-base font-semibold text-default-900">
+                  {formatDate({ date: selectedDate, options: { weekday: "long" } })}
                 </p>
-              ) : (
-                <ul className="max-h-64 space-y-1.5 overflow-y-auto pr-1">
-                  {selectedRides.map((ride) => (
-                    <li key={ride.id}>
-                      <button
-                        type="button"
-                        onClick={() => router.push(`${basePath}/${ride.id}`)}
-                        className="flex w-full cursor-pointer items-start gap-2.5 rounded-md border border-border bg-card px-2.5 py-2 text-left transition-colors hover:border-primary/40 hover:bg-primary/5"
-                      >
-                        <span
-                          className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full"
-                          style={{ backgroundColor: BOOKING_TYPE_COLORS[ride.bookingType] }}
-                        />
-                        <span className="min-w-0 flex-1">
-                          <span className="block text-[11px] text-default-400">
-                            {ride.pickupTime} · {BOOKING_TYPE_LABELS[ride.bookingType]}
-                          </span>
-                          <span className="mt-0.5 block truncate text-sm font-semibold text-default-900">
-                            {ride.bookingNumber}
-                          </span>
-                          <span className="mt-0.5 block truncate text-xs text-default-500">
-                            {ride.customerName}
-                            {ride.vehicleName ? ` · ${ride.vehicleName}` : ""}
-                          </span>
-                        </span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </aside>
-
-          <div className="relative min-w-0 p-3 sm:p-5">
-            {isFetching ? (
-              <div className="pointer-events-none absolute right-5 top-5 z-10 rounded-md border border-border bg-card px-2.5 py-1 text-xs text-default-500">
-                Updating...
+                <p className="mt-0.5 text-xs text-default-500">
+                  {selectedRides.length === 0 ? (
+                    "No rides scheduled"
+                  ) : (
+                    <>
+                      You have{" "}
+                      <span className="font-semibold text-default-900">
+                        {selectedRides.length} {selectedRides.length === 1 ? "ride" : "rides"}
+                      </span>{" "}
+                      scheduled
+                    </>
+                  )}
+                </p>
               </div>
-            ) : null}
+            </aside>
 
-            <div className="booking-calendar">
-              <FullCalendar
-                ref={calendarRef}
-                plugins={[dayGridPlugin, interactionPlugin]}
-                initialView="dayGridMonth"
-                initialDate={today}
-                now={today}
-                headerToolbar={{ left: "prev,next today", center: "title", right: "" }}
-                buttonText={{ today: "Today" }}
-                height="auto"
-                events={calendarEvents as EventSourceInput}
-                datesSet={handleDatesSet}
-                dateClick={(arg: DateClickArg) => selectDate(arg.dateStr)}
-                selectable
-                selectMirror
-                select={(info) => {
-                  selectDate(info.startStr.slice(0, 10));
-                  info.view.calendar.unselect();
-                }}
-                unselectAuto
-                dayCellClassNames={dayCellClassNames}
-                eventClick={(arg: EventClickArg) => {
-                  arg.jsEvent.preventDefault();
-                  router.push(`${basePath}/${arg.event.id}`);
-                }}
-                eventDidMount={(arg: EventMountArg) => {
-                  const event = arg.event.extendedProps as CalendarEvent;
-                  arg.el.title = [
-                    `${event.bookingNumber} · ${BOOKING_TYPE_LABELS[event.bookingType]}`,
-                    `${event.customerName} · ${event.vehicleName}`,
-                    `Pickup ${event.pickupTime}: ${event.pickupAddress}`,
-                    event.dropoffAddress ? `Drop-off: ${event.dropoffAddress}` : null,
-                  ]
-                    .filter(Boolean)
-                    .join("\n");
-                }}
-                nowIndicator
-                editable={false}
-                dayMaxEvents={4}
-                eventDisplay="block"
-                displayEventTime={false}
-              />
+            <div className="relative hidden min-w-0 p-3 sm:p-5 md:block">
+              {isFetching ? (
+                <div className="pointer-events-none absolute right-5 top-5 z-10 rounded-md border border-border bg-card px-2.5 py-1 text-xs text-default-500">
+                  Updating...
+                </div>
+              ) : null}
+
+              <div className="booking-calendar">
+                <FullCalendar
+                  ref={calendarRef}
+                  plugins={[dayGridPlugin, interactionPlugin]}
+                  initialView="dayGridMonth"
+                  initialDate={today}
+                  now={today}
+                  headerToolbar={false}
+                  height="auto"
+                  events={calendarEvents as EventSourceInput}
+                  datesSet={handleDatesSet}
+                  dateClick={(arg: DateClickArg) => selectDate(arg.dateStr)}
+                  selectable
+                  selectMirror
+                  select={(info) => {
+                    selectDate(info.startStr.slice(0, 10));
+                    info.view.calendar.unselect();
+                  }}
+                  unselectAuto
+                  dayCellClassNames={dayCellClassNames}
+                  eventClick={(arg: EventClickArg) => {
+                    arg.jsEvent.preventDefault();
+                    router.push(`${basePath}/${arg.event.id}`);
+                  }}
+                  eventDidMount={(arg: EventMountArg) => {
+                    const event = arg.event.extendedProps as CalendarEvent;
+                    arg.el.title = [
+                      `${event.bookingNumber} · ${BOOKING_TYPE_LABELS[event.bookingType]}`,
+                      `${event.customerName} · ${event.vehicleName}`,
+                      `Pickup ${event.pickupTime}: ${event.pickupAddress}`,
+                      event.dropoffAddress ? `Drop-off: ${event.dropoffAddress}` : null,
+                    ]
+                      .filter(Boolean)
+                      .join("\n");
+                  }}
+                  nowIndicator
+                  editable={false}
+                  dayMaxEvents={4}
+                  eventDisplay="block"
+                  displayEventTime={false}
+                />
+              </div>
             </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+
+      <DayRideCards
+        day={{ date: selectedDate, rides: selectedRides }}
+        basePath={basePath}
+        getBooking={getBooking}
+        bookingQueryKey={bookingQueryKey}
+        onCancelBooking={onCancelBooking}
+        cancelPending={cancelPending}
+        onEditBooking={onEditBooking}
+      />
+    </div>
   );
 }

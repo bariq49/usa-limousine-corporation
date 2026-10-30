@@ -1,11 +1,5 @@
 import { BadRequestException, Inject, Injectable } from "@nestjs/common";
-import {
-  BookingStatus,
-  PaymentStatus,
-  Prisma,
-  RoleKey,
-  type PaymentMode,
-} from "@prisma/client";
+import { BookingStatus, PaymentStatus, Prisma, RoleKey, type PaymentMode } from "@prisma/client";
 import { APIFeature } from "../../../common/api-feature";
 import { wallClock } from "../../../common/utils/day-bounds";
 import { APP_TIMEZONE } from "../../../common/utils/format-time";
@@ -201,6 +195,7 @@ export class BookingRepository {
         id: true,
         status: true,
         bookingNumber: true,
+        userId: true,
         passenger: true,
         paymentMode: true,
         squarePaymentLinkId: true,
@@ -330,16 +325,17 @@ export class BookingRepository {
     });
   }
 
-  analyticsRows(year: number, userId?: string): Promise<AnalyticsRow[]> {
-    const from =
-      wallClock(APP_TIMEZONE, `${year}-01-01`, "00:00") ?? new Date(Date.UTC(year, 0, 1));
-    const to =
-      wallClock(APP_TIMEZONE, `${year + 1}-01-01`, "00:00") ?? new Date(Date.UTC(year + 1, 0, 1));
+  analyticsRows(year: number, userId?: string, month?: number): Promise<AnalyticsRow[]> {
+    const start = month ? new Date(Date.UTC(year, month - 1, 1)) : new Date(Date.UTC(year, 0, 1));
+    const end = month ? new Date(Date.UTC(year, month, 1)) : new Date(Date.UTC(year + 1, 0, 1));
+    const from = wallClock(APP_TIMEZONE, start.toISOString().slice(0, 10), "00:00") ?? start;
+    const to = wallClock(APP_TIMEZONE, end.toISOString().slice(0, 10), "00:00") ?? end;
     const byUser = userId ? Prisma.sql`AND "userId" = ${userId}` : Prisma.empty;
+    const bucket = month ? Prisma.sql`DAY` : Prisma.sql`MONTH`;
 
     return this.prisma.$queryRaw<AnalyticsRow[]>`
       SELECT
-        EXTRACT(MONTH FROM ("createdAt" AT TIME ZONE 'UTC' AT TIME ZONE ${APP_TIMEZONE}))::int AS month,
+        EXTRACT(${bucket} FROM ("createdAt" AT TIME ZONE 'UTC' AT TIME ZONE ${APP_TIMEZONE}))::int AS bucket,
         "status" AS status,
         COUNT(*)::int AS count,
         COALESCE(SUM("totalPrice"), 0)::float8 AS amount

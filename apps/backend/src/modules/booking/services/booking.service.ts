@@ -1,15 +1,12 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from "@nestjs/common";
-import { BookingStatus, BookingType } from "@prisma/client";
+import { BookingStatus } from "@prisma/client";
 import type { Request } from "express";
 import { auditLog } from "../../../common/utils/audit-log";
-import { allocateCode } from "../../../common/utils/allocate-sequence-code";
 import { toRequestContext } from "../../../common/utils/to-request-context";
 import { PrismaService } from "../../../infrastructure/database/prisma.service";
-import { SequenceService } from "../../../infrastructure/sequence/sequence.service";
 import type {
   AnalyticsQueryDto,
   CalendarQueryDto,
-  CreateDto,
   QueryDto,
   UpdateDto,
 } from "../dto/booking.dto";
@@ -17,13 +14,12 @@ import { BookingRepository } from "../repositories/booking.repository";
 import type {
   AddressInput,
   Analytics,
-  AnalyticsRow,
   CalendarEvent,
-  CalendarRow,
   CancelParams,
   PassengerInput,
   TimeInput,
   UpdateData,
+  UpdateStatusData,
 } from "../types/booking";
 import { BookingEmailService } from "./booking-email.service";
 import { NotificationService } from "./notification.service";
@@ -33,63 +29,11 @@ import { BookingSmsService } from "./booking-sms.service";
 export class BookingService {
   constructor(
     @Inject(BookingRepository) private readonly bookingRepository: BookingRepository,
-    @Inject(SequenceService) private readonly sequenceService: SequenceService,
     @Inject(PrismaService) private readonly prisma: PrismaService,
     @Inject(NotificationService) private readonly notifications: NotificationService,
     @Inject(BookingEmailService) private readonly bookingEmails: BookingEmailService,
     @Inject(BookingSmsService) private readonly bookingSms: BookingSmsService,
   ) {}
-
-  async createManual(body: CreateDto, request: Request) {
-    const context = toRequestContext(request);
-    const confirmedAt = new Date();
-    const bookingNumber = await allocateCode({
-      prefix: "BK",
-      nextSequence: () => this.sequenceService.nextBooking(),
-    });
-
-    const booking = await this.bookingRepository.create({
-      userId: null,
-      vehicleCategoryId: body.vehicleCategoryId,
-      bookingNumber,
-      bookingType: body.bookingType ?? BookingType.ONE_WAY,
-      vehicleCount: body.vehicleCount,
-      status: BookingStatus.CONFIRMED,
-      confirmedAt,
-      pricing: body.pricing,
-      address: {
-        ...body.address,
-        distance: body.address.distance ?? 0,
-        travelDuration: body.address.travelDuration ?? 0,
-      },
-      passenger: body.passenger,
-      bookingTime: body.bookingTime,
-      flightDetails: body.flightDetails,
-      meetAndGreet: body.meetAndGreet,
-      extraServices: body.extraServices,
-      notes: body.notes ?? null,
-      returnNotes: body.returnNotes ?? null,
-      luggage: body.luggage ?? [],
-    });
-
-    await auditLog({
-      prisma: this.prisma,
-      event: "booking.created",
-      result: "success",
-      context,
-      userId: context.userId,
-      metadata: {
-        bookingId: booking.id,
-        bookingNumber: booking.bookingNumber,
-        status: booking.status,
-        source: "admin",
-      },
-    });
-    void this.bookingEmails.sendConfirmed(booking.id);
-    void this.bookingSms.sendConfirmed(booking.id);
-
-    return (await this.bookingRepository.findById(booking.id)) ?? booking;
-  }
 
   list(query: QueryDto) {
     return this.bookingRepository.findMany(query);
@@ -100,7 +44,11 @@ export class BookingService {
   }
 
   analytics(query: AnalyticsQueryDto) {
-    return this.buildAnalytics(query.year ?? new Date().getUTCFullYear(), query.userId);
+    return this.buildAnalytics(
+      query.year ?? new Date().getUTCFullYear(),
+      query.userId,
+      query.month,
+    );
   }
 
   async getOne(id: string) {
@@ -136,9 +84,12 @@ export class BookingService {
     }
     if (body.address !== undefined) {
       updateData.address = {
-        ...body.address,
+        pickup: body.address.pickup,
+        dropoff: body.address.dropoff,
+        stops: body.address.stops,
         distance: body.address.distance ?? 0,
         travelDuration: body.address.travelDuration ?? 0,
+        hourlyDuration: body.address.hourlyDuration,
       };
     }
     if (body.passenger !== undefined) {
@@ -260,20 +211,15 @@ export class BookingService {
       throw new NotFoundException("Booking not found");
     }
 
-    if (
-      booking.status !== BookingStatus.DRAFT &&
-      booking.status !== BookingStatus.PENDING &&
-      booking.status !== BookingStatus.CONFIRMED
-    ) {
-      throw new BadRequestException("This booking cannot be cancelled");
+    const statusData: UpdateStatusData = { cancelledAt: new Date() };
+    if (body.cancellationReason !== undefined) {
+      statusData.cancellationReason = body.cancellationReason.trim();
     }
-
-    const updated = await this.bookingRepository.updateStatus(id, BookingStatus.CANCELLED, {
-      cancelledAt: new Date(),
-      ...(body.cancellationReason !== undefined
-        ? { cancellationReason: body.cancellationReason.trim() }
-        : {}),
-    });
+    const updated = await this.bookingRepository.updateStatus(
+      id,
+      BookingStatus.CANCELLED,
+      statusData,
+    );
 
     await auditLog({
       prisma: this.prisma,
@@ -296,13 +242,13 @@ export class BookingService {
     });
     void this.bookingSms.sendCancelled(updated.id, updated.cancellationReason, refundAmount);
 
-    if (byCustomer) {
-      await this.notifications.cancelled({
-        bookingId: updated.id,
-        bookingNumber: updated.bookingNumber,
-        excludeUserId: context.userId ?? null,
-      });
-    }
+    await this.notifications.cancelled({
+      bookingId: updated.id,
+      bookingNumber: updated.bookingNumber,
+      excludeUserId: context.userId ?? null,
+      customerUserId: updated.userId,
+      notifyAdmins: byCustomer,
+    });
 
     return updated;
   }
@@ -366,19 +312,10 @@ export class BookingService {
       bookingTypes: query.bookingType,
       statuses: query.status?.length
         ? query.status
-        : [BookingStatus.PENDING, BookingStatus.CONFIRMED, BookingStatus.COMPLETED],
+        : [BookingStatus.PENDING, BookingStatus.CONFIRMED],
       userId,
     });
 
-    return this.toCalendarEvents(rows);
-  }
-
-  async buildAnalytics(year: number, userId?: string): Promise<Analytics> {
-    const rows = await this.bookingRepository.analyticsRows(year, userId);
-    return this.toAnalytics(year, rows);
-  }
-
-  toCalendarEvents(rows: CalendarRow[]): CalendarEvent[] {
     return rows.map((row) => {
       const address = row.address as AddressInput;
       const passenger = row.passenger as PassengerInput;
@@ -400,10 +337,13 @@ export class BookingService {
     });
   }
 
-  toAnalytics(year: number, rows: AnalyticsRow[]): Analytics {
-    const months = () => Array<number>(12).fill(0);
+  async buildAnalytics(year: number, userId?: string, month?: number): Promise<Analytics> {
+    const rows = await this.bookingRepository.analyticsRows(year, userId, month);
+    const size = month ? new Date(Date.UTC(year, month, 0)).getUTCDate() : 12;
+    const months = () => Array<number>(size).fill(0);
     const result: Analytics = {
       year,
+      month: month ?? null,
       totalBookings: 0,
       totalRevenue: 0,
       completedBookings: 0,
@@ -420,7 +360,7 @@ export class BookingService {
     };
 
     for (const row of rows) {
-      const index = row.month - 1;
+      const index = row.bucket - 1;
       result.totalBookings += row.count;
 
       if (row.status === BookingStatus.COMPLETED) {

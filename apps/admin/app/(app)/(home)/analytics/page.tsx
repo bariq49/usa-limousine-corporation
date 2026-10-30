@@ -5,23 +5,40 @@ import {
   BookingOverview,
   type OverviewStat,
 } from "@usa-limousine-corporation/ui/components/dashboard/booking-overview";
+import { PageHeader } from "@usa-limousine-corporation/ui/layout/page-header";
 import { formatDate } from "@usa-limousine-corporation/ui/utils/date";
 import { DashboardCalendarPanel } from "@/components/dashboard-calendar-panel";
-import { PeriodSelect } from "@/components/period-select";
-import { STATS_PERIODS } from "@/config/periods";
 import { useAuthMe } from "@/hooks/queries/use-auth";
+import { useBookingAnalytics } from "@/hooks/queries/use-bookings";
 import { useDashboardOverview } from "@/hooks/queries/use-dashboard";
-import type { StatsPeriod } from "@/lib/types/drivers";
+
+const CURRENT_YEAR = Number(formatDate({ date: new Date(), as: "value" }).slice(0, 4));
+const YEARS = [CURRENT_YEAR, CURRENT_YEAR - 1, CURRENT_YEAR - 2];
+const EMPTY_MONTHS = Array<number>(12).fill(0);
+const MONTH_NAMES = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
 
 const Analytics = () => {
   const { data: admin } = useAuthMe();
   const greetingName = admin?.firstName?.trim() || admin?.name?.trim() || "Admin";
-  const [period, setPeriod] = useState<StatsPeriod>("monthly");
-  const { data, isLoading, isFetching } = useDashboardOverview(period);
-  const empty = (data?.labels ?? []).map(() => 0);
-  const subtitle = `${STATS_PERIODS.find((item) => item.value === period)?.description ?? ""}${
-    isFetching && !isLoading ? " · Updating..." : ""
-  }`;
+  const [year, setYear] = useState(CURRENT_YEAR);
+  const [month, setMonth] = useState<number | null>(null);
+  const { data, isLoading } = useBookingAnalytics(year, { month });
+  const assignments = useDashboardOverview("monthly");
+  const days = data?.monthlyRevenue.length ?? 0;
+  const assignmentEmpty = (assignments.data?.labels ?? []).map(() => 0);
 
   const bookingStats: OverviewStat[] = [
     {
@@ -31,7 +48,7 @@ const Analytics = () => {
       chartColor: "#C9A84C",
       kind: "currency",
       total: data?.totalRevenue ?? 0,
-      monthly: data?.revenueSeries ?? empty,
+      monthly: data?.monthlyRevenue ?? EMPTY_MONTHS,
     },
     {
       key: "completed",
@@ -40,7 +57,7 @@ const Analytics = () => {
       chartColor: "#22c55e",
       kind: "count",
       total: data?.completedBookings ?? 0,
-      monthly: data?.bookingSeries.completed ?? empty,
+      monthly: data?.monthlyBookings.completed ?? EMPTY_MONTHS,
     },
     {
       key: "confirmed",
@@ -49,16 +66,7 @@ const Analytics = () => {
       chartColor: "#06b6d4",
       kind: "count",
       total: data?.confirmedBookings ?? 0,
-      monthly: data?.bookingSeries.confirmed ?? empty,
-    },
-    {
-      key: "pending",
-      label: "Pending Bookings",
-      color: "warning",
-      chartColor: "#f59e0b",
-      kind: "count",
-      total: data?.pendingBookings ?? 0,
-      monthly: data?.bookingSeries.pending ?? empty,
+      monthly: data?.monthlyBookings.confirmed ?? EMPTY_MONTHS,
     },
     {
       key: "cancelled",
@@ -67,7 +75,7 @@ const Analytics = () => {
       chartColor: "#ef4444",
       kind: "count",
       total: data?.cancelledBookings ?? 0,
-      monthly: data?.bookingSeries.cancelled ?? empty,
+      monthly: data?.monthlyBookings.cancelled ?? EMPTY_MONTHS,
     },
   ];
 
@@ -78,8 +86,8 @@ const Analytics = () => {
       color: "success",
       chartColor: "#22c55e",
       kind: "currency",
-      total: data?.totalDriverPayout ?? 0,
-      monthly: data?.assignmentSeries.driverPayout ?? empty,
+      total: assignments.data?.totalDriverPayout ?? 0,
+      monthly: assignments.data?.assignmentSeries.driverPayout ?? assignmentEmpty,
     },
     {
       key: "rides",
@@ -87,8 +95,8 @@ const Analytics = () => {
       color: "warning",
       chartColor: "#f59e0b",
       kind: "count",
-      total: data?.assignedRides ?? 0,
-      monthly: data?.assignmentSeries.rides ?? empty,
+      total: assignments.data?.assignedRides ?? 0,
+      monthly: assignments.data?.assignmentSeries.rides ?? assignmentEmpty,
     },
     {
       key: "rideTotal",
@@ -96,8 +104,8 @@ const Analytics = () => {
       color: "primary",
       chartColor: "#C9A84C",
       kind: "currency",
-      total: data?.assignedRideTotal ?? 0,
-      monthly: data?.assignmentSeries.rideTotal ?? empty,
+      total: assignments.data?.assignedRideTotal ?? 0,
+      monthly: assignments.data?.assignmentSeries.rideTotal ?? assignmentEmpty,
     },
     {
       key: "commission",
@@ -105,41 +113,48 @@ const Analytics = () => {
       color: "info",
       chartColor: "#06b6d4",
       kind: "currency",
-      total: data?.totalCommission ?? 0,
-      monthly: data?.assignmentSeries.commission ?? empty,
+      total: assignments.data?.totalCommission ?? 0,
+      monthly: assignments.data?.assignmentSeries.commission ?? assignmentEmpty,
     },
   ];
 
   return (
-    <div className="w-full min-w-0 space-y-6">
-      <div>
-        <h1 className="text-2xl font-medium text-default-800">Welcome back, {greetingName}</h1>
-        <p className="mt-1 text-sm text-default-500">
-          Here is an overview of your bookings, drivers and revenue performance.
-        </p>
-      </div>
+    <div className="flex w-full min-w-0 flex-col gap-8">
+      <PageHeader
+        className="mb-0"
+        title={`Welcome back, ${greetingName}`}
+        description="Here is an overview of your bookings, drivers and revenue performance."
+      />
 
       <BookingOverview
         title="Booking Overview"
-        description={`${data?.totalBookings ?? 0} bookings by booking date · performance and booking metrics breakdown.`}
+        description={
+          month
+            ? `${data?.totalBookings ?? 0} bookings in ${MONTH_NAMES[month - 1]} ${year}, by day of booking.`
+            : `${data?.totalBookings ?? 0} bookings in ${year}, by month of booking.`
+        }
         stats={bookingStats}
-        year={Number(formatDate({ date: new Date(), as: "value" }).slice(0, 4))}
-        categories={data?.labels ?? []}
-        chartDescription={subtitle}
+        year={year}
+        years={YEARS}
+        onYearChange={setYear}
+        month={month}
+        onMonthChange={setMonth}
+        categories={
+          month ? Array.from({ length: days }, (_, index) => String(index + 1)) : undefined
+        }
         isLoading={isLoading}
-        actions={<PeriodSelect value={period} onChange={setPeriod} />}
       />
 
-      <div className="grid w-full min-w-0 grid-cols-1 items-stretch gap-6 lg:grid-cols-12">
+      <div className="grid w-full min-w-0 grid-cols-1 items-stretch gap-8 lg:grid-cols-12 lg:gap-6">
         <div className="min-w-0 lg:col-span-7 xl:col-span-8">
           <BookingOverview
             title="Driver Assignment Overview"
-            description={`${data?.activeDrivers ?? 0} active drivers · assigned rides, admin commission and driver payout by pickup date.`}
+            description={`${assignments.data?.activeDrivers ?? 0} active drivers · assigned rides, admin commission and driver payout by pickup date.`}
             stats={assignmentStats}
-            year={Number(formatDate({ date: new Date(), as: "value" }).slice(0, 4))}
-            categories={data?.labels ?? []}
-            chartDescription={subtitle}
-            isLoading={isLoading}
+            year={CURRENT_YEAR}
+            categories={assignments.data?.labels ?? []}
+            chartDescription="Monthly totals this year."
+            isLoading={assignments.isLoading}
             statsClassName="sm:grid-cols-2 lg:grid-cols-2 lg:gap-4"
             className="h-full"
           />

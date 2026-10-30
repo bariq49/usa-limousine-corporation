@@ -44,7 +44,7 @@ export const DialogOverlay = forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Overlay
     ref={ref}
-    className={cn("fixed inset-0 z-50 bg-black/50", className)}
+    className={cn("fixed inset-0 z-100 bg-black/50", className)}
     {...props}
   />
 ));
@@ -62,11 +62,12 @@ export const DialogContent = forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed left-1/2 top-1/2 z-50 grid w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 border-0 bg-card p-6 shadow-2xl rounded-md outline-none focus:outline-none max-h-[90vh] overflow-y-auto",
+        "fixed left-1/2 top-1/2 z-100 grid w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 border-0 bg-card p-6 shadow-2xl outline-none focus:outline-none max-h-[90vh] overflow-y-auto sm:rounded-md max-sm:top-auto max-sm:bottom-0 max-sm:left-0 max-sm:right-0 max-sm:max-w-none max-sm:translate-x-0 max-sm:translate-y-0 max-sm:rounded-t-2xl max-sm:rounded-b-none max-sm:max-h-[85dvh] max-sm:pb-[calc(1.5rem+env(safe-area-inset-bottom))] max-sm:animate-sheet-up",
         className,
       )}
       {...props}
     >
+      <div className="mx-auto -mt-2 h-1.5 w-10 rounded-full bg-default-200 sm:hidden" />
       {children}
       {showCloseButton ? (
         <DialogPrimitive.Close

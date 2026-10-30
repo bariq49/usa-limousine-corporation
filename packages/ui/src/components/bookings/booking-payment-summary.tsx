@@ -1,9 +1,10 @@
 "use client";
 
+import { PLATFORM } from "@usa-limousine-corporation/config";
+import { cn } from "../../utils/cn";
 import { formatPrice } from "../../utils/price";
 import type { ExtraServiceItem, LegPricing, Pricing } from "../../types/booking-model";
 import type { BookingPaymentSummaryProps } from "../../types/bookings";
-
 
 function row(label: string, amount: number, discount = false) {
   if (!amount || amount <= 0) return null;
@@ -43,6 +44,7 @@ function serviceRows(
 }
 
 export function BookingPaymentSummary(props: BookingPaymentSummaryProps) {
+  const isPlain = props.variant === "plain";
   const pricing = (props.booking.pricing ?? {}) as Pricing;
   const rates = pricing.rates;
   const rate = (value: number | undefined) => (rates && value != null ? ` (${value}%)` : "");
@@ -73,9 +75,11 @@ export function BookingPaymentSummary(props: BookingPaymentSummaryProps) {
   );
 
   return (
-    <section className="rounded-md bg-default-100 p-4">
-      <h3 className="text-base font-bold text-default-900 sm:text-lg">Payment Summary</h3>
-      <div className="mt-3 space-y-2.5 text-sm sm:mt-4">
+    <section className={cn(!isPlain && "rounded-md bg-default-100 p-4")}>
+      {isPlain ? null : (
+        <h3 className="text-base font-bold text-default-900 sm:text-lg">Payment Summary</h3>
+      )}
+      <div className={cn("text-sm", isPlain ? "space-y-1" : "mt-3 space-y-2.5 sm:mt-4")}>
         {pricing.legs ? (
           <>
             {legRows("", pricing.legs.oneWay, rates?.oneWayDiscountRate)}
@@ -130,12 +134,26 @@ export function BookingPaymentSummary(props: BookingPaymentSummaryProps) {
         {pricing.subtotal != null && Number(pricing.subtotal) !== Number(pricing.total)
           ? row("Subtotal", Number(pricing.subtotal))
           : null}
-        <div className="mt-1 flex items-center justify-between gap-4 border-t border-border pt-3">
-          <span className="text-base font-bold text-default-900">Total</span>
-          <span className="text-lg font-bold text-default-900">
-            {formatPrice({ price: props.booking.totalPrice })}
-          </span>
-        </div>
+        {isPlain ? (
+          <div className="flex items-end justify-between border-t border-border pt-2">
+            <span className="text-sm font-semibold text-default-900">Total price</span>
+            <span className="flex items-baseline gap-1 leading-none text-default-900">
+              <span className="text-sm font-medium text-default-500">
+                {PLATFORM.locale.currencySymbol}
+              </span>
+              <span className="text-2xl font-semibold tracking-tight">
+                {props.booking.totalPrice.toFixed(2)}
+              </span>
+            </span>
+          </div>
+        ) : (
+          <div className="mt-1 flex items-center justify-between gap-4 border-t border-border pt-3">
+            <span className="text-base font-bold text-default-900">Total</span>
+            <span className="text-lg font-bold text-default-900">
+              {formatPrice({ price: props.booking.totalPrice })}
+            </span>
+          </div>
+        )}
       </div>
     </section>
   );

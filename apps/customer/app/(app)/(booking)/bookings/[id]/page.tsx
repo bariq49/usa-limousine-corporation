@@ -7,7 +7,7 @@ import { Button } from "@usa-limousine-corporation/ui/components/button";
 import { Card, CardContent } from "@usa-limousine-corporation/ui/components/card";
 import { BookingDetailView } from "@usa-limousine-corporation/ui/components/bookings/booking-detail-view";
 import { BookingDetailSkeleton } from "@usa-limousine-corporation/ui/components/bookings/booking-detail-skeleton";
-import { BookingCustomerActions } from "@/components/bookings/booking-customer-actions";
+import { BookingActions } from "@/components/bookings/booking-actions";
 import { useBooking } from "@/hooks/queries/use-bookings";
 
 const crumbs = [
@@ -51,7 +51,7 @@ export default function BookingDetailPage() {
   return (
     <div className="space-y-4">
       <Breadcrumbs items={crumbs} />
-      <BookingDetailView booking={booking} actions={<BookingCustomerActions booking={booking} />} />
+      <BookingDetailView booking={booking} actions={<BookingActions booking={booking} />} />
     </div>
   );
 }

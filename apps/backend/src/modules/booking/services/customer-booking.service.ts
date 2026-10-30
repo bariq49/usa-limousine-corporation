@@ -38,7 +38,7 @@ export class CustomerBookingService {
     @Inject(BookingService) private readonly bookingService: BookingService,
     @Inject(BookingEmailService) private readonly bookingEmails: BookingEmailService,
     @Inject(SquareService) private readonly square: SquareService,
-  ) {}
+  ) { }
 
   async create(body: CreateDto, request: Request) {
     const context = toRequestContext(request);
@@ -82,6 +82,7 @@ export class CustomerBookingService {
           bookingId: booking.id,
           bookingNumber: booking.bookingNumber,
           excludeUserId: userId,
+          customerUserId: userId,
         },
         tx,
       );
@@ -128,7 +129,11 @@ export class CustomerBookingService {
 
   analytics(query: AnalyticsQueryDto, request: Request): Promise<Analytics> {
     const userId = requireUserId(toRequestContext(request));
-    return this.bookingService.buildAnalytics(query.year ?? new Date().getUTCFullYear(), userId);
+    return this.bookingService.buildAnalytics(
+      query.year ?? new Date().getUTCFullYear(),
+      userId,
+      query.month,
+    );
   }
 
   async cancel(id: string, body: CancelDto, request: Request) {
@@ -144,10 +149,9 @@ export class CustomerBookingService {
       const unit = rates.cancellationNoticeUnit === "HOUR" ? "hour" : "minute";
       const plural = rates.cancellationNotice === 1 ? "" : "s";
       throw new BadRequestException(
-        `Bookings can only be cancelled up to ${rates.cancellationNotice} ${unit}${plural} before pickup. Please contact us.`,
+        `Bookings must be cancelled at least ${rates.cancellationNotice} ${unit}${plural} before pickup`
       );
     }
-
     let refundAmount = 0;
     const payment = await this.bookingRepository.findPaymentForRefund(id);
     if (payment?.status === PaymentStatus.PAID && payment.squarePaymentId) {

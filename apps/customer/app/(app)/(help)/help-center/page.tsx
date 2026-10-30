@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Breadcrumbs } from "@usa-limousine-corporation/ui/layout/breadcrumbs";
 import { Card, CardContent } from "@usa-limousine-corporation/ui/components/card";
@@ -65,7 +65,9 @@ export default function HelpCenterPage() {
                 Create a support ticket and follow the conversation with our team.
               </p>
             </div>
-            <NewTicketDialog onCreated={(id) => router.push(`/help-center/${id}`)} />
+            <Suspense fallback={null}>
+              <NewTicketDialog onCreated={(id) => router.push(`/help-center/${id}`)} />
+            </Suspense>
           </div>
 
           <DataTable

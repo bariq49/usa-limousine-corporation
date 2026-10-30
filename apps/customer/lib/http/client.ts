@@ -13,7 +13,7 @@ export const DEFAULT_HTTP_TIMEOUT_MS = 30_000;
 
 export type HttpRequestConfig = Pick<
   AxiosRequestConfig,
-  "params" | "signal" | "timeout" | "headers" | "data"
+  "params" | "signal" | "timeout" | "headers" | "data" | "responseType"
 >;
 
 export type HttpClient = {

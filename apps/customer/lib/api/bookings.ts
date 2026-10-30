@@ -10,8 +10,10 @@ import { http } from "../http/client";
 import API_ROUTES from "./routes";
 import type { BookingAnalytics } from "./types";
 
-export const getBookingAnalytics = (year: number) => {
-  return http.get<BookingAnalytics>(`${API_ROUTES.BOOKINGS}/analytics`, { params: { year } });
+export const getBookingAnalytics = (year: number, month: number | null) => {
+  return http.get<BookingAnalytics>(`${API_ROUTES.BOOKINGS}/analytics`, {
+    params: { year, month: month ?? undefined },
+  });
 };
 
 export const getBookings = (params?: Query) => {
@@ -41,6 +43,13 @@ export const getBookingCalendar = (query: CalendarQuery) => {
       start: query.start,
       end: query.end,
       bookingType: query.bookingType?.join(","),
+      status: "PENDING,CONFIRMED",
     },
+  });
+};
+
+export const getReceipt = (orderId: string) => {
+  return http.get<Blob>(`${API_ROUTES.CHECKOUT}/${encodeURIComponent(orderId)}/receipt`, {
+    responseType: "blob",
   });
 };

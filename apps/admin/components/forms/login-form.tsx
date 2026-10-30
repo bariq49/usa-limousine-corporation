@@ -28,10 +28,10 @@ export function LoginForm() {
 
   return (
     <div className="w-full">
-      <span className="inline-block">
+      <span className="hidden md:inline-block">
         <Logo />
       </span>
-      <div className="mt-6 text-2xl font-bold text-default-900 2xl:mt-8 2xl:text-3xl">
+      <div className="text-2xl font-bold text-default-900 md:mt-6 2xl:mt-8 2xl:text-3xl">
         Welcome Back, Admin
       </div>
       <div className="mt-2 text-base leading-6 text-default-600 2xl:text-lg">
@@ -39,10 +39,17 @@ export function LoginForm() {
       </div>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="mt-8 2xl:mt-7">
-          <Input name="email" label="Email" type="email" autoComplete="email" />
+          <Input
+            name="email"
+            label="Email"
+            placeholder="Enter your email"
+            type="email"
+            autoComplete="email"
+          />
           <Input
             name="password"
             label="Password"
+            placeholder="Enter your password"
             type="password"
             autoComplete="current-password"
             className="mt-6"

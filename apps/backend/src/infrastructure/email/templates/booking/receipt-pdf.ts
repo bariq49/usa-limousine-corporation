@@ -17,7 +17,6 @@ const TRIP_LABELS: Record<BookingType, string> = {
 const PAGE_MARGIN = 44;
 const HEADER_HEIGHT = 120;
 const FOOTER_HEIGHT = 64;
-const SUCCESS = "#15803d";
 const DANGER = "#b91c1c";
 
 const shortDate = (date: Date) =>
@@ -54,7 +53,7 @@ export function renderReceiptPdf(props: ReceiptProps): Promise<Buffer> {
   doc.rect(0, 0, pageWidth, HEADER_HEIGHT).fill(EMAIL_BRAND.dark);
   doc.rect(0, HEADER_HEIGHT, pageWidth, 3).fill(EMAIL_BRAND.accent);
   if (logo) {
-    doc.image(logo, left, 28, { fit: [240, 72] });
+    doc.image(logo, left, 33, { fit: [240, 72], valign: "center" });
   } else {
     doc.font("Helvetica-Bold").fontSize(22).fillColor("#ffffff").text(EMAIL_BRAND.name, left, 44);
   }
@@ -71,14 +70,8 @@ export function renderReceiptPdf(props: ReceiptProps): Promise<Buffer> {
     .text(`Issued ${shortDate(issuedAt)}`, left, 76, { width: contentWidth, align: "right" });
 
   const isRefunded = payment?.status === "REFUNDED";
-  const statusLabel = isRefunded ? "REFUNDED" : payment ? "PAID" : "UNPAID";
-  const statusColor = isRefunded ? DANGER : payment ? SUCCESS : EMAIL_BRAND.muted;
 
   let y = HEADER_HEIGHT + 24;
-  doc.font("Helvetica-Bold").fontSize(9);
-  const pillWidth = doc.widthOfString(statusLabel) + 20;
-  doc.roundedRect(left, y, pillWidth, 20, 10).lineWidth(1).strokeColor(statusColor).stroke();
-  doc.fillColor(statusColor).text(statusLabel, left, y + 6, { width: pillWidth, align: "center" });
   doc
     .font("Helvetica-Bold")
     .fontSize(20)

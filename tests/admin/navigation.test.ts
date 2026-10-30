@@ -25,7 +25,6 @@ describe("admin navigation", () => {
       "/drivers",
       "/extra-services",
       "/help-center",
-      "/notifications",
       "/pending-bookings",
       "/platform-settings",
       "/pricing",

@@ -14,11 +14,9 @@ import { useBookings } from "@/hooks/queries/use-bookings";
 type Props = {
   title: string;
   description: string;
-  /** Fixed status for the status pages; omit on "All Bookings" to show the status filter. */
   status?: BookingStatus | undefined;
 };
 
-/** The customer's own bookings, same table as the admin panel (view only). */
 export function BookingList({ title, description, status }: Props) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);

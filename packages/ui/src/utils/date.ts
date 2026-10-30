@@ -31,10 +31,7 @@ function resolveLocale(locale?: string): string {
   return locale ?? APP_LOCALE;
 }
 
-function getPart(
-  parts: Intl.DateTimeFormatPart[],
-  type: Intl.DateTimeFormatPartTypes,
-): string {
+function getPart(parts: Intl.DateTimeFormatPart[], type: Intl.DateTimeFormatPartTypes): string {
   return parts.find((part) => part.type === type)?.value ?? "";
 }
 
@@ -53,10 +50,9 @@ function hourCycleOptions(hourCycle?: HourCycle): Intl.DateTimeFormatOptions | u
 }
 
 function zonedParts(date: Date, options: Intl.DateTimeFormatOptions): Intl.DateTimeFormatPart[] {
-  return new Intl.DateTimeFormat(
-    "en-US",
-    withAppTimezone({}, options, APP_TIMEZONE),
-  ).formatToParts(date);
+  return new Intl.DateTimeFormat("en-US", withAppTimezone({}, options, APP_TIMEZONE)).formatToParts(
+    date,
+  );
 }
 
 function toHourMinute(time: string): string | null {
@@ -107,6 +103,22 @@ export function toValidDate(props?: ToValidDateProps): Date | null {
 
   const parsed = new Date(DATE_ONLY_PATTERN.test(value) ? `${value}T00:00:00Z` : value);
   return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+export function toDateKey(date: Date | string): string {
+  if (typeof date === "string") {
+    const value = date.trim();
+    if (DATE_ONLY_PATTERN.test(value.slice(0, 10))) return value.slice(0, 10);
+    return formatDate({ date: value, as: "value" });
+  }
+
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
+export function fromDateKey(key: string): Date {
+  return new Date(`${key.slice(0, 10)}T00:00:00`);
 }
 
 export function formatDate(props?: FormatDateProps): string {
@@ -220,9 +232,7 @@ export function addMinutes(props: AddMinutesProps): Date | null {
   return new Date(validDate.getTime() + props.minutes * 60_000);
 }
 
-export function shiftDateTime(
-  props: ShiftDateTimeProps,
-): { date: string; time: string } | null {
+export function shiftDateTime(props: ShiftDateTimeProps): { date: string; time: string } | null {
   const date = props.date?.trim() ?? "";
   const time = toHourMinute(props.time?.trim() ?? "");
   if (!DATE_ONLY_PATTERN.test(date) || !time) return null;
@@ -255,16 +265,13 @@ export function calculateArrivalTime(props?: CalculateArrivalTimeProps): string 
   if (!clock || typeof props?.durationMinutes !== "number") return "—";
 
   const [hour = 0, minute = 0] = clock.split(":").map(Number);
-  const total =
-    (((hour * 60 + minute + Math.round(props.durationMinutes)) % 1440) + 1440) % 1440;
+  const total = (((hour * 60 + minute + Math.round(props.durationMinutes)) % 1440) + 1440) % 1440;
   const arrival = `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
 
   return formatTime({ date: arrival, hourCycle: props.hourCycle });
 }
 
-export function validateBookingTime(
-  props: ValidateBookingTimeProps,
-): ValidateBookingTimeResult {
+export function validateBookingTime(props: ValidateBookingTimeProps): ValidateBookingTimeResult {
   const date = props.date?.trim() ?? "";
   const time = toHourMinute(props.time?.trim() ?? "");
   if (!date || !time || !DATE_ONLY_PATTERN.test(date)) return { isValid: true };

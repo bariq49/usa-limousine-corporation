@@ -23,6 +23,14 @@ export const getBooking = async (id: string): Promise<Booking> => {
   return response.data;
 };
 
+export const getReceipt = async (orderId: string): Promise<Blob> => {
+  const blob = await bookingApi.get(
+    `${BOOKING_API_ROUTES.CHECKOUT}/${encodeURIComponent(orderId)}/receipt`,
+    { responseType: "blob" },
+  );
+  return blob as unknown as Blob;
+};
+
 function draftExtraServices(
   outbound: ChildSeat[],
   inbound: ChildSeat[],

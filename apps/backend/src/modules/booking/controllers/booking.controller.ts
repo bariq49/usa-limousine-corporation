@@ -21,7 +21,6 @@ import {
   AnalyticsQueryDto,
   CalendarQueryDto,
   CancelDto,
-  CreateDto,
   QueryDto,
   UpdateDto,
 } from "../dto/booking.dto";
@@ -32,11 +31,6 @@ import { BookingService } from "../services/booking.service";
 @Roles(RoleKey.SUPER_ADMIN)
 export class BookingController {
   constructor(@Inject(BookingService) private readonly bookingService: BookingService) {}
-
-  @Post()
-  create(@Body() body: CreateDto, @Req() request: Request) {
-    return this.bookingService.createManual(body, request);
-  }
 
   @Get()
   list(@Query() query: QueryDto) {

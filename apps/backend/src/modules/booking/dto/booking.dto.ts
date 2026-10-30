@@ -396,6 +396,7 @@ export class UpdateDto {
 export class CancelDto {
   @IsOptional()
   @IsString()
+  @Transform(({ value }) => (typeof value === "string" ? value.trim() : value))
   @MaxLength(1000)
   cancellationReason?: string;
 }
@@ -421,6 +422,13 @@ export class AnalyticsQueryDto {
   @Min(2000)
   @Max(2100)
   year?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(12)
+  month?: number;
 
   @IsOptional()
   @IsString()

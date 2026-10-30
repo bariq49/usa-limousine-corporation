@@ -1,36 +1,48 @@
 import type { ReactNode } from "react";
 import type { VehicleCategory, Estimate } from "./booking";
-import type {
-  BookingType,
-  CalendarEvent,
-  CalendarQuery,
-  Item,
-  Passenger,
-  Payment,
-} from "./booking-model";
+import type { CalendarEvent, CalendarQuery, DayRides, Item, Passenger, Payment } from "./booking-model";
 
-export interface BookingDetailViewProps {
+export type { CalendarEvent, CalendarQuery, DayRides };
+
+export type BookingDetailViewProps = {
   booking: Item;
   actions?: ReactNode;
   backHref?: string;
   heading?: { title: string; description: string };
   mapStickyClassName?: string;
   children?: ReactNode;
-}
+};
 
-export interface MiniMonthCalendarProps {
+export type MiniMonthCalendarProps = {
   month: Date;
   selected: Date;
   onMonthChange: (date: Date) => void;
   onSelect: (date: Date) => void;
-}
+};
 
-export interface BookingCalendarProps {
+export type DayRideCardsProps = {
+  day: DayRides;
+  basePath: string;
+  getBooking: (id: string) => Promise<Item>;
+  bookingQueryKey?: ((id: string) => readonly unknown[]) | undefined;
+  onCancelBooking?: ((input: { id: string; reason: string }) => Promise<unknown> | void) | undefined;
+  cancelPending?: boolean | undefined;
+  onEditBooking?: ((booking: Item) => void) | undefined;
+};
+
+export type BookingCalendarProps = {
   events?: CalendarEvent[] | undefined;
   isFetching?: boolean | undefined;
   onQueryChange: (query: CalendarQuery) => void;
   basePath: string;
-}
+  title?: string | undefined;
+  description?: string | undefined;
+  getBooking: (id: string) => Promise<Item>;
+  bookingQueryKey?: ((id: string) => readonly unknown[]) | undefined;
+  onCancelBooking?: ((input: { id: string; reason: string }) => Promise<unknown> | void) | undefined;
+  cancelPending?: boolean | undefined;
+  onEditBooking?: ((booking: Item) => void) | undefined;
+};
 
 export interface BookingPaymentDetailsProps {
   payment?: Payment | null | undefined;
@@ -38,6 +50,7 @@ export interface BookingPaymentDetailsProps {
 
 export interface BookingPaymentSummaryProps {
   booking: Pick<Item, "pricing" | "totalPrice" | "extraServices" | "luggage" | "bookingType">;
+  variant?: "card" | "plain" | undefined;
 }
 
 export interface BookingLocationPoint {
@@ -67,13 +80,6 @@ export interface BookingVehicleDetailsProps {
 
 export interface BookingCustomerDetailsProps {
   passenger?: Passenger | null | undefined;
-}
-
-export interface BookingTypeFilterProps {
-  options: BookingType[];
-  value: BookingType[];
-  onChange: (next: BookingType[]) => void;
-  className?: string;
 }
 
 export interface DetailItemProps {
@@ -114,4 +120,12 @@ export interface VehicleCategoryCardProps {
   onPassengersChange: (value: number) => void;
   onBagsChange: (value: number) => void;
   onShowSummary: () => void;
+}
+
+export interface BookingCardProps {
+  booking: Item;
+  detailsHref: string;
+  onCancel?: (() => void) | undefined;
+  onEdit?: (() => void) | undefined;
+  className?: string | undefined;
 }
