@@ -54,16 +54,27 @@ export function PersonalDetailsForm({ onSubmit, isSubmitting }: PersonalDetailsF
       >
         <div className="grid grid-cols-12 gap-y-5 md:gap-x-6">
           <div className="col-span-12 md:col-span-6">
-            <Input name="firstName" label="First Name" />
+            <Input name="firstName" label="First Name" placeholder="Enter your first name" />
           </div>
           <div className="col-span-12 md:col-span-6">
-            <Input name="lastName" label="Last Name" />
+            <Input name="lastName" label="Last Name" placeholder="Enter your last name" />
           </div>
           <div className="col-span-12 md:col-span-6">
-            <Input name="phone" label="Phone Number" type="phone" />
+            <Input
+              name="phone"
+              label="Phone Number"
+              placeholder="Enter your phone number"
+              type="phone"
+            />
           </div>
           <div className="col-span-12 md:col-span-6">
-            <Input name="email" label="Email Address" type="email" readOnly />
+            <Input
+              name="email"
+              label="Email Address"
+              placeholder="Your email address"
+              type="email"
+              readOnly
+            />
           </div>
         </div>
 

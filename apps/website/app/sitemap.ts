@@ -29,6 +29,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '/about-us',
     '/blog',
     '/contact-us',
+    '/book-ride',
+    '/privacy-policy',
+    '/terms-and-conditions',
   ];
   const articles = await getBlogSitemap();
   const airports = AIRPORTS.map((airport) => `/airports/${airport.slug}`);

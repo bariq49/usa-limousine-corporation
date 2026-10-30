@@ -48,10 +48,10 @@ export function VerifyForm() {
 
   return (
     <div className="w-full py-5 md:w-[420px]">
-      <span className="inline-block">
+      <span className="hidden md:inline-block">
         <Logo />
       </span>
-      <div className="mt-6 text-2xl font-bold text-default-900 2xl:mt-8 2xl:text-3xl">
+      <div className="text-2xl font-bold text-default-900 md:mt-6 2xl:mt-8 2xl:text-3xl">
         Email Verification
       </div>
       <div className="mt-2 text-base leading-6 text-default-600 2xl:text-lg">

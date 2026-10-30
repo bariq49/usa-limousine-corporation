@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, LogOut } from "lucide-react";
 import { cn, getDynamicPath, isLocationMatch } from "../../utils/cn";
 import { useSidebar } from "../../store/sidebar";
 import { useMediaQuery } from "../../hooks/use-media-query";
@@ -11,6 +11,7 @@ import { ScrollArea } from "../../components/scroll-area";
 import { Button } from "../../components/button";
 import { Logo } from "../../components/logo";
 import { useShell } from "../../providers/shell-context";
+import { useUser } from "../../providers/user-context";
 import type { ShellNavChild } from "../../types/navigation";
 import { toShellNav } from "../../utils/nav-model";
 import { SingleIconMenu } from "./single-icon-menu";
@@ -20,6 +21,7 @@ import { MenuOverlayPortal } from "./menu-overlay";
 
 export function Sidebar() {
   const { navigation, roles } = useShell();
+  const { onLogout, isLoggingOut } = useUser();
   const menus = useMemo(() => toShellNav(navigation, roles), [navigation, roles]);
   const { subMenu, setSubmenu, collapsed, setCollapsed } = useSidebar();
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
@@ -114,7 +116,7 @@ export function Sidebar() {
           )}
         >
           <div className="flex items-center justify-center border-b border-dashed border-border pt-4 pb-4">
-            <Link href="/analytics">
+            <Link href="/dashboard">
               <Logo variant="short" className="h-16 w-16 text-primary" />
             </Link>
           </div>
@@ -130,6 +132,17 @@ export function Sidebar() {
               </div>
             ))}
           </ScrollArea>
+          {onLogout ? (
+            <button
+              type="button"
+              aria-label="Log out"
+              onClick={onLogout}
+              disabled={isLoggingOut}
+              className="mx-auto mb-5 flex h-11 w-11 items-center justify-center rounded-md text-default-600 transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50 md:hidden"
+            >
+              <LogOut className="h-5 w-5" />
+            </button>
+          ) : null}
         </div>
         <div
           className={cn(

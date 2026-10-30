@@ -12,7 +12,7 @@ import type { CalendarQuery } from "@usa-limousine-corporation/ui/types/booking-
 import { formatDate } from "@usa-limousine-corporation/ui/utils/date";
 import { useBookingAnalytics, useBookingCalendar } from "@/hooks/queries/use-bookings";
 
-const CURRENT_YEAR = Number(formatDate({ date: new Date(), options: { year: "numeric" } }));
+const CURRENT_YEAR = Number(formatDate({ date: new Date(), as: "value" }).slice(0, 4));
 const YEARS = [CURRENT_YEAR, CURRENT_YEAR - 1, CURRENT_YEAR - 2];
 const EMPTY_MONTHS = Array<number>(12).fill(0);
 

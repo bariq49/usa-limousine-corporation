@@ -25,10 +25,10 @@ export function ForgotForm() {
 
   return (
     <div className="w-full">
-      <span className="inline-block">
+      <span className="hidden md:inline-block">
         <Logo />
       </span>
-      <div className="mt-6 text-2xl font-bold text-default-900 2xl:mt-8 2xl:text-3xl">
+      <div className="text-2xl font-bold text-default-900 md:mt-6 2xl:mt-8 2xl:text-3xl">
         Forgot Your Password?
       </div>
       <div className="mt-2 text-base leading-6 text-default-600 2xl:text-lg">
@@ -36,7 +36,13 @@ export function ForgotForm() {
       </div>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="mt-5 xl:mt-7">
-          <Input name="email" label="Email" type="email" autoComplete="email" />
+          <Input
+            name="email"
+            label="Email"
+            placeholder="Enter your email"
+            type="email"
+            autoComplete="email"
+          />
           <Button type="submit" className="mt-6 w-full" disabled={isLoading} isLoading={isLoading}>
             Send Recovery Email
           </Button>

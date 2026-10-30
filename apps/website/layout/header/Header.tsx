@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { cn } from "@usa-limousine-corporation/ui/utils/cn";
@@ -86,6 +87,13 @@ export default function Header() {
               <CircleUser className="h-4.5 w-4.5" />
               Sign-in
             </a>
+
+            <Link
+              href="/book-ride"
+              className="hidden items-center rounded-lg border border-secondary bg-secondary px-4 py-2 text-base font-semibold text-white transition-colors hover:bg-secondary/90 xl:inline-flex"
+            >
+              Book now
+            </Link>
 
             <HeaderMobileMenu
               ref={mobileMenuRef}

@@ -6,10 +6,7 @@ import { formatDate } from "@usa-limousine-corporation/ui/utils/date";
 import { Stagger, StaggerItem } from "@/components/animations";
 
 export default function FooterBottomBar() {
-  const year = formatDate({
-    date: new Date(),
-    options: { year: "numeric" },
-  });
+  const year = formatDate({ date: new Date(), as: "value" }).slice(0, 4);
 
   return (
     <div className="border-t border-white/15 bg-black">
@@ -22,6 +19,14 @@ export default function FooterBottomBar() {
         </StaggerItem>
         <StaggerItem soft>
           <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 sm:justify-start">
+            <Link href="/privacy-policy" className="transition-colors hover:text-secondary">
+              Privacy Policy
+            </Link>
+            <span className="text-white/30">|</span>
+            <Link href="/terms-and-conditions" className="transition-colors hover:text-secondary">
+              Terms & Conditions
+            </Link>
+            <span className="text-white/30">|</span>
             <span>
               Developed by,{" "}
               <Link

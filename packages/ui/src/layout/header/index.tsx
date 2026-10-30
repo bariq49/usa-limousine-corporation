@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "../../utils/cn";
+import { Logo } from "../../components/logo";
 import { useSidebar } from "../../store/sidebar";
 import { useMediaQuery } from "../../hooks/use-media-query";
 import { ProfileInfo } from "./profile-info";
@@ -20,12 +21,17 @@ export function Header() {
       })}
     >
       <div className="w-full max-w-full overflow-hidden border-b border-border bg-card/90 px-4 py-2.5 backdrop-blur-lg sm:px-6 md:py-3">
-        <div className="flex min-w-0 items-center justify-between gap-1 sm:gap-2">
+        <div className="relative flex min-w-0 items-center justify-between gap-1 sm:gap-2">
           <VerticalHeader />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 md:hidden">
+            <Logo href="/dashboard" className="h-9 w-40" />
+          </div>
           <div className="nav-tools flex max-w-[calc(100%-2.5rem)] shrink items-center justify-end gap-0.5 sm:gap-1.5">
             {isDesktop ? <FullScreenToggle /> : null}
             <NotificationBell />
-            <ProfileInfo />
+            <div className="hidden md:block">
+              <ProfileInfo />
+            </div>
           </div>
         </div>
       </div>

@@ -214,7 +214,7 @@ export default function DriverDetailPage() {
             title="Driver Stats"
             description={`${data?.totalRides ?? 0} rides · ${driver._count.assignments} assigned all time`}
             stats={overview}
-            year={Number(formatDate({ date: new Date(), options: { year: "numeric" } }))}
+            year={Number(formatDate({ date: new Date(), as: "value" }).slice(0, 4))}
             categories={data?.labels ?? []}
             chartDescription={selectedPeriod?.description}
             isLoading={stats.isLoading}

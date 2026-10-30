@@ -33,7 +33,7 @@ import {
 } from "../../hooks/use-booking";
 import { Step1FormSkeleton } from "../../skeletons/step-1-form-skeleton";
 import { TRIP_TYPES } from "../../constants/booking";
-import type { HeroFormValues, TripType } from "../../types/booking";
+import type { HeroFormValues, Step1Props, TripType } from "../../types/booking";
 import { validateBookingTime } from "../../utils/date";
 
 const TRIP_TABS = [
@@ -41,7 +41,8 @@ const TRIP_TABS = [
   { value: TRIP_TYPES.HOURLY, label: "By the Hour" },
 ] as const;
 
-function Step1() {
+function Step1(props: Step1Props) {
+  const { className, formClassName } = props;
   const router = useRouter();
   const hasHydrated = useHasHydrated();
   const { setStep1, setSettings, step1 } = useBookingStore();
@@ -149,18 +150,21 @@ function Step1() {
 
   if (!hasHydrated || isSettingsLoading) {
     return (
-      <div className="flex flex-col w-full max-w-screen-sm mx-auto" id="booking">
+      <div className={cn("flex flex-col w-full max-w-screen-sm mx-auto", className)} id="booking">
         <Step1FormSkeleton />
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col w-full max-w-screen-sm mx-auto" id="booking">
+    <div className={cn("flex flex-col w-full max-w-screen-sm mx-auto", className)} id="booking">
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="relative z-10 flex flex-col items-stretch gap-4 rounded-t-md rounded-b-none bg-white p-5 shadow-none sm:p-6 md:rounded-md md:shadow-xl"
+          className={cn(
+            "relative z-10 flex flex-col items-stretch gap-4 rounded-t-md rounded-b-none bg-white p-5 shadow-none sm:p-6 md:rounded-md md:shadow-xl",
+            formClassName,
+          )}
         >
           <div
             role="tablist"

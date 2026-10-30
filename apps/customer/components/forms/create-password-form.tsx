@@ -39,10 +39,10 @@ export function CreatePasswordForm() {
 
   return (
     <div className="w-full">
-      <span className="inline-block">
+      <span className="hidden md:inline-block">
         <Logo />
       </span>
-      <div className="mt-6 text-2xl font-bold text-default-900 2xl:mt-8 2xl:text-3xl">
+      <div className="text-2xl font-bold text-default-900 md:mt-6 2xl:mt-8 2xl:text-3xl">
         Create New Password
       </div>
       <div className="mt-2 text-base leading-6 text-default-600 2xl:text-lg">
@@ -50,10 +50,17 @@ export function CreatePasswordForm() {
       </div>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="mt-8 2xl:mt-7">
-          <Input name="token" label="Reset Code" type="text" autoComplete="one-time-code" />
+          <Input
+            name="token"
+            label="Reset Code"
+            placeholder="Enter the code from your email"
+            type="text"
+            autoComplete="one-time-code"
+          />
           <Input
             name="password"
             label="New Password"
+            placeholder="Enter a new password"
             type="password"
             autoComplete="new-password"
             className="mt-4"
@@ -61,12 +68,38 @@ export function CreatePasswordForm() {
           <Input
             name="confirmPassword"
             label="Confirm Password"
+            placeholder="Re-enter your new password"
             type="password"
             autoComplete="new-password"
             className="mt-4"
           />
           <div className="mt-5">
-            <Input name="terms" type="checkbox" label="You accept our Terms & Conditions" />
+            <Input
+              name="terms"
+              type="checkbox"
+              label={
+                <>
+                  You accept our{" "}
+                  <a
+                    href={`${process.env["NEXT_PUBLIC_WEBSITE_URL"]}/terms-and-conditions`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-primary hover:underline"
+                  >
+                    Terms & Conditions
+                  </a>{" "}
+                  and{" "}
+                  <a
+                    href={`${process.env["NEXT_PUBLIC_WEBSITE_URL"]}/privacy-policy`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-primary hover:underline"
+                  >
+                    Privacy Policy
+                  </a>
+                </>
+              }
+            />
           </div>
           <Button type="submit" className="mt-8 w-full" disabled={isLoading} isLoading={isLoading}>
             Reset Password

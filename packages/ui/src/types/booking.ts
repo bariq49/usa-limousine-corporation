@@ -259,3 +259,8 @@ export type LuggageType = {
   price?: number | null;
   maxQuantity: number;
 };
+
+export type Step1Props = {
+  className?: string;
+  formClassName?: string;
+};

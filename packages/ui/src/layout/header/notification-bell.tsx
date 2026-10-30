@@ -31,9 +31,9 @@ export function NotificationBell() {
           variant="ghost"
           size="icon"
           aria-label={unreadCount ? `Notifications (${unreadCount} unread)` : "Notifications"}
-          className="relative h-8 w-8 rounded-full text-default-500 hover:bg-default-100 hover:text-primary md:h-9 md:w-9 dark:text-default-800 dark:hover:bg-default-200"
+          className="relative h-10 w-10 rounded-full text-default-600 hover:bg-default-100 hover:text-primary dark:text-default-800 dark:hover:bg-default-200"
         >
-          <Bell className="h-5 w-5" />
+          <Bell className="h-6 w-6" />
           {unreadCount > 0 ? (
             <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] leading-none font-semibold text-destructive-foreground">
               {badge}

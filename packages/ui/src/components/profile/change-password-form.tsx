@@ -44,6 +44,7 @@ export function ChangePasswordForm({ onSubmit, isSubmitting }: ChangePasswordFor
             <Input
               name="currentPassword"
               label="Current Password"
+              placeholder="Enter your current password"
               type="password"
               autoComplete="current-password"
             />
@@ -52,6 +53,7 @@ export function ChangePasswordForm({ onSubmit, isSubmitting }: ChangePasswordFor
             <Input
               name="newPassword"
               label="New Password"
+              placeholder="Enter a new password"
               type="password"
               autoComplete="new-password"
             />
@@ -60,6 +62,7 @@ export function ChangePasswordForm({ onSubmit, isSubmitting }: ChangePasswordFor
             <Input
               name="confirmPassword"
               label="Confirm Password"
+              placeholder="Re-enter your new password"
               type="password"
               autoComplete="new-password"
             />

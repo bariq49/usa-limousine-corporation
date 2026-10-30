@@ -81,9 +81,15 @@ export function NewTicketDialog({ onCreated }: { onCreated?: (id: string) => voi
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(submit)} className="mt-2 space-y-4">
-            <Input name="subject" label="Subject" />
+            <Input name="subject" label="Subject" placeholder="Briefly summarise your issue" />
             <Input name="category" label="Category" type="select" options={CATEGORY_OPTIONS} />
-            <Input name="description" label="Describe the issue" type="textarea" rows={5} />
+            <Input
+              name="description"
+              label="Describe the issue"
+              placeholder="Tell us what happened and how we can help"
+              type="textarea"
+              rows={5}
+            />
             <Input
               name="attachment"
               label="Attachment (optional)"

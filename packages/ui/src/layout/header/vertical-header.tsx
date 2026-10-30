@@ -17,23 +17,23 @@ function MenuBar({
     <button
       type="button"
       aria-label="Toggle sidebar"
-      className="relative flex h-8 w-8 items-center justify-center overflow-hidden"
+      className="relative flex h-10 w-10 items-center justify-center overflow-hidden"
       onClick={() => setCollapsed(!collapsed)}
     >
-      <div className="flex w-5 flex-col justify-between gap-1">
+      <div className="flex w-6 flex-col justify-between gap-1.5">
         <span
-          className={cn("block h-0.5 w-5 rounded-full bg-card-foreground transition-all", {
-            "translate-y-[5px] rotate-45": collapsed,
+          className={cn("block h-0.5 w-6 rounded-full bg-card-foreground transition-all", {
+            "translate-y-2 rotate-45": collapsed,
           })}
         />
         <span
-          className={cn("block h-0.5 w-5 rounded-full bg-card-foreground transition-all", {
+          className={cn("block h-0.5 w-6 rounded-full bg-card-foreground transition-all", {
             "opacity-0": collapsed,
           })}
         />
         <span
-          className={cn("block h-0.5 w-5 rounded-full bg-card-foreground transition-all", {
-            "-translate-y-[5px] -rotate-45": collapsed,
+          className={cn("block h-0.5 w-6 rounded-full bg-card-foreground transition-all", {
+            "-translate-y-2 -rotate-45": collapsed,
           })}
         />
       </div>

@@ -233,6 +233,7 @@ export default function HelpCenterTicketPage() {
                       <Input
                         name="body"
                         label="Reply"
+                        placeholder="Write your reply"
                         type="textarea"
                         rows={3}
                         disabled={replyMutation.isPending}

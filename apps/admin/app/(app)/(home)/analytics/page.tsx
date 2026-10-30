@@ -123,7 +123,7 @@ const Analytics = () => {
         title="Booking Overview"
         description={`${data?.totalBookings ?? 0} bookings by booking date · performance and booking metrics breakdown.`}
         stats={bookingStats}
-        year={Number(formatDate({ date: new Date(), options: { year: "numeric" } }))}
+        year={Number(formatDate({ date: new Date(), as: "value" }).slice(0, 4))}
         categories={data?.labels ?? []}
         chartDescription={subtitle}
         isLoading={isLoading}
@@ -136,7 +136,7 @@ const Analytics = () => {
             title="Driver Assignment Overview"
             description={`${data?.activeDrivers ?? 0} active drivers · assigned rides, admin commission and driver payout by pickup date.`}
             stats={assignmentStats}
-            year={Number(formatDate({ date: new Date(), options: { year: "numeric" } }))}
+            year={Number(formatDate({ date: new Date(), as: "value" }).slice(0, 4))}
             categories={data?.labels ?? []}
             chartDescription={subtitle}
             isLoading={isLoading}
