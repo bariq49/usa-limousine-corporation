@@ -50,7 +50,14 @@ export const NAV_LINKS: NavLink[] = [
   { title: "Services", path: "/services" },
   {
     title: "Fleet",
-    sublinks: [{ title: "Luxury Sedan", path: "/luxury-sedan" }],
+    sublinks: [
+      { title: "Luxury Sedan", path: "/luxury-sedan" },
+      { title: "Premium Luxury Sedan", path: "/premium-luxury-sedan" },
+      { title: "Luxury SUV", path: "/luxury-suv" },
+      { title: "Luxury SUV w/ Bench Seat", path: "/luxury-suv-bench" },
+      { title: "Premium Luxury SUV", path: "/premium-luxury-suv" },
+      { title: "Passenger Van", path: "/passenger-van" },
+    ],
   },
   { title: "About Us", path: "/about-us" },
   { title: "Blog", path: "/blog" },

@@ -21,6 +21,7 @@ export default function PageBanner(props: Props) {
     highlightTopText = false,
     title,
     titleClassName,
+    overlayClassName,
     description,
     footnote,
     button,
@@ -92,14 +93,15 @@ export default function PageBanner(props: Props) {
             className="h-full w-full object-cover object-center"
             priority
           />
-          <div className="absolute inset-0 bg-black/60" />
+          <div className={cn("absolute inset-0 bg-black/60", overlayClassName)} />
         </div>
       </div>
 
       <div className="relative z-20">
         <div
           className={cn(
-            "container mx-auto grid gap-6 px-4",
+            "container mx-auto grid gap-6",
+            showBookingForm ? "max-lg:px-0 lg:px-4" : "px-4",
             "pt-16 lg:pt-32 lg:pb-32",
           )}
         >
@@ -115,7 +117,7 @@ export default function PageBanner(props: Props) {
                 className={cn(
                   "flex flex-col gap-3 sm:gap-4",
                   "items-center text-center md:items-start md:text-left",
-                  showBookingForm && "pb-2 lg:pb-8",
+                  showBookingForm && "pb-2 max-lg:px-4 lg:pb-8",
                 )}
               >
                 {topText &&

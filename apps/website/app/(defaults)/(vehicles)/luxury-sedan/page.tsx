@@ -19,7 +19,14 @@ export default function LuxurySedanPage() {
         image={IMAGES.FLEET.LUXURY_SEDAN.BANNER}
         imageAlt="Luxury sedan"
         topText="Luxury Sedan"
-        title="Comfortable, Reliable Travel<br/>Without Compromise"
+        title={
+          <>
+            Comfortable, Reliable Travel
+            <br />
+            <span className="text-primary">Without Compromise</span>
+          </>
+        }
+        overlayClassName="bg-black/70"
         titleClassName="text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl"
         description={`For everyday transportation that still feels like a step above, the Luxury Sedan class is ${PLATFORM.name}'s entry point into premium travel without cutting corners on comfort or safety. The Volvo S90, Cadillac CT6, and Genesis G90 all bring clean, well-maintained interiors, generous legroom, and a smooth, quiet ride, whether you're heading to a meeting, the airport, or a dinner reservation.`}
         footnote="Vehicles: Volvo S90, Cadillac CT6, Genesis G90"

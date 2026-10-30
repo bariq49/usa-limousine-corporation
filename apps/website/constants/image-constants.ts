@@ -31,6 +31,31 @@ export const IMAGES = {
       STORY: "/assets/images/fleet/luxury-sedan/story.png",
       WHY_CHOOSE_US: "/assets/images/fleet/luxury-sedan/why-choose-us.png",
     },
+    LUXURY_SUV: {
+      BANNER: "/assets/images/fleet/luxury-suv/hero.banner.png",
+      STORY: "/assets/images/fleet/luxury-suv/story.png",
+      WHY_CHOOSE_US: "/assets/images/fleet/luxury-suv/why-choose-us.png",
+    },
+    LUXURY_SUV_BENCH: {
+      BANNER: "/assets/images/fleet/luxury-suv-bench/hero.banner.png",
+      STORY: "/assets/images/fleet/luxury-suv-bench/story.png",
+      WHY_CHOOSE_US: "/assets/images/fleet/luxury-suv-bench/why-choose-us.png",
+    },
+    PREMIUM_LUXURY_SUV: {
+      BANNER: "/assets/images/fleet/premium-luxury-suv/hero.banner.png",
+      STORY: "/assets/images/fleet/premium-luxury-suv/story.png",
+      WHY_CHOOSE_US: "/assets/images/fleet/premium-luxury-suv/why-choose-us.png",
+    },
+    PREMIUM_LUXURY_SEDAN: {
+      BANNER: "/assets/images/fleet/premium-luxury-sedan/hero.banner.png",
+      STORY: "/assets/images/fleet/premium-luxury-sedan/story.png",
+      WHY_CHOOSE_US: "/assets/images/fleet/premium-luxury-sedan/why-choose-us.png",
+    },
+    PASSENGER_VAN: {
+      BANNER: "/assets/images/fleet/passenger-van/hero.banner.png",
+      STORY: "/assets/images/fleet/passenger-van/story.png",
+      WHY_CHOOSE_US: "/assets/images/fleet/passenger-van/why-choose-us.png",
+    },
   },
   CONTACT: {
     BANNER: "/assets/images/contact-us/hero.banner.png",

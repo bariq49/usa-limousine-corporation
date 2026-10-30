@@ -19,6 +19,7 @@ export type PageBannerProps = {
   highlightTopText?: boolean;
   title?: string | ReactNode;
   titleClassName?: string;
+  overlayClassName?: string;
   description?: string;
   footnote?: string;
   showBookingForm?: boolean;

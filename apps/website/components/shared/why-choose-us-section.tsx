@@ -37,7 +37,7 @@ export default function WhyChooseUsSection(props: WhyChooseUsSectionProps) {
 
             <div className="flex flex-col">
               {badge ? (
-                <span className="mb-3 text-xs font-semibold tracking-widest text-white/80 uppercase sm:text-sm">
+                <span className="mb-3 text-xs font-semibold tracking-widest text-primary uppercase sm:text-sm">
                   {badge}
                 </span>
               ) : null}
