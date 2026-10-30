@@ -53,6 +53,7 @@ export function VehicleCategoryForm(props: Props) {
       description: initialValues?.description ?? "",
       image: initialValues?.image ?? "",
       passengerCount: initialValues?.passengerCount ?? 4,
+      sortOrder: initialValues?.sortOrder ?? 0,
       isActive: initialValues?.isActive ?? true,
       standardLuggageCapacity: [],
     },
@@ -103,14 +104,23 @@ export function VehicleCategoryForm(props: Props) {
           <div className="grid gap-4 lg:grid-cols-2 lg:items-stretch">
             <div className="space-y-4">
               <Input name="name" label="Category Name" />
-              <Input
-                name="passengerCount"
-                label="Passenger Count"
-                type="number"
-                min="1"
-                max="100"
-                step="1"
-              />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Input
+                  name="passengerCount"
+                  label="Passenger Count"
+                  type="number"
+                  min="1"
+                  max="100"
+                  step="1"
+                />
+                <Input
+                  name="sortOrder"
+                  label="Display Order"
+                  type="number"
+                  min="0"
+                  step="1"
+                />
+              </div>
               <Input
                 name="models"
                 label="Vehicle Models"

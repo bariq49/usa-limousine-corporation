@@ -44,7 +44,6 @@ export default function Home() {
         ]}
       />
       <TestimonialsSection />
-      <VehicleCategoriesSection />
       <StorySection
         subtitle="About Us"
         title={
@@ -140,6 +139,7 @@ export default function Home() {
           },
         ]}
       />
+      <VehicleCategoriesSection />
       <WhyChooseUsSection
         badge="WHY CHOOSE US"
         title="Luxury · Reliability · Professionalism"

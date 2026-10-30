@@ -25,6 +25,10 @@ export const vehicleCategorySchema = z
         .min(1, "At least 1 passenger")
         .max(100, "Cannot exceed 100 passengers"),
     ),
+    sortOrder: z.preprocess(
+      (val) => (val === "" || val === null || val === undefined ? 0 : Number(val)),
+      z.number().int().min(0, "Order cannot be negative").max(10000),
+    ),
     isActive: z.boolean().default(true),
     standardLuggageCapacity: z.array(luggageCapacitySchema),
   })

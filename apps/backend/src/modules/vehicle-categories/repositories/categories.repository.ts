@@ -33,8 +33,8 @@ export class CategoriesRepository {
         searchFields: ["name", "models", "description"],
       },
       sort: {
-        allowedFields: ["createdAt", "updatedAt", "name", "passengerCount"],
-        defaultSortBy: "name",
+        allowedFields: ["createdAt", "updatedAt", "name", "passengerCount", "sortOrder"],
+        defaultSortBy: "sortOrder",
         defaultSortOrder: "asc",
       },
       pagination: {
@@ -63,8 +63,8 @@ export class CategoriesRepository {
         searchFields: ["name", "models", "description"],
       },
       sort: {
-        allowedFields: ["createdAt", "updatedAt", "name", "passengerCount"],
-        defaultSortBy: "name",
+        allowedFields: ["createdAt", "updatedAt", "name", "passengerCount", "sortOrder"],
+        defaultSortBy: "sortOrder",
         defaultSortOrder: "asc",
       },
       pagination: {
@@ -89,7 +89,7 @@ export class CategoriesRepository {
   findPublicActive() {
     return this.prisma.vehicleCategory.findMany({
       where: { deletedAt: null, isActive: true },
-      orderBy: { name: "asc" },
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
       include: categoryInclude,
     });
   }
@@ -115,6 +115,7 @@ export class CategoriesRepository {
         description: data.description?.trim() ?? null,
         image: data.image?.trim() ?? null,
         passengerCount: data.passengerCount,
+        sortOrder: data.sortOrder ?? 0,
         luggageCapacity: {
           create: luggageCapacity.map((capacity) => ({
             luggageTypeId: capacity.luggageTypeId,
@@ -161,6 +162,9 @@ export class CategoriesRepository {
       }
       if (data.passengerCount !== undefined) {
         updateData.passengerCount = data.passengerCount;
+      }
+      if (data.sortOrder !== undefined) {
+        updateData.sortOrder = data.sortOrder;
       }
       if (data.isActive !== undefined) {
         updateData.isActive = data.isActive;

@@ -5,6 +5,8 @@ import PageBanner from "@/components/banner/page-banner";
 import HowItWorksSection from "@/components/shared/how-it-works-section";
 import StatsBar from "@/components/shared/stats-bar";
 import StorySection from "@/components/shared/story-section";
+import TestimonialsSection from "@/components/shared/testimonials-section";
+import VehicleCategoriesSection from "@/components/shared/vehicle-categories-section";
 import WhyChooseUsSection from "@/components/shared/why-choose-us-section";
 import { IMAGES } from "@/constants/image-constants";
 
@@ -66,6 +68,7 @@ export default function PointToPointTransfersPage() {
         image={IMAGES.SERVICES.POINT_TO_POINT_TRANSFERS.STORY}
         imageAlt="Chauffeur holding door for point-to-point transfer passenger"
       />
+      <VehicleCategoriesSection />
       <WhyChooseUsSection
         variant="split"
         badge="Why Choose Us"
@@ -131,6 +134,7 @@ export default function PointToPointTransfersPage() {
           },
         ]}
       />
+      <TestimonialsSection />
     </main>
   );
 }

@@ -10,5 +10,6 @@ export type VehicleCategory = {
 
 export type VehicleCategoriesSectionProps = {
   title?: string;
+  description?: string;
   className?: string;
 };

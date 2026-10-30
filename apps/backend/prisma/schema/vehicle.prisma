@@ -17,6 +17,7 @@ model VehicleCategory {
   image       String?
 
   passengerCount Int     @default(4)
+  sortOrder      Int     @default(0)
   isActive       Boolean @default(true)
 
   luggageCapacity VehicleCategoryLuggageCapacity[]
@@ -30,6 +31,7 @@ model VehicleCategory {
   deletedAt DateTime?
 
   @@index([isActive])
+  @@index([sortOrder])
   @@index([deletedAt])
 }
 

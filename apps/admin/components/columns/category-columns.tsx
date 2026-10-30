@@ -82,6 +82,13 @@ export const getColumns = (options?: CategoryColumnOptions): ColumnDef<Item>[] =
     },
   },
   {
+    id: "sortOrder",
+    accessorKey: "sortOrder",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Order" />,
+    cell: ({ row }) => <span className="text-sm text-default-700">{row.original.sortOrder}</span>,
+    enableSorting: false,
+  },
+  {
     id: "passengerCount",
     accessorKey: "passengerCount",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Passengers" />,

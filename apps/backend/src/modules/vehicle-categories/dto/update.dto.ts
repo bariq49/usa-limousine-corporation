@@ -44,6 +44,13 @@ export class UpdateDto {
   passengerCount?: number;
 
   @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  @Max(10_000)
+  sortOrder?: number;
+
+  @IsOptional()
   @IsBoolean()
   isActive?: boolean;
 

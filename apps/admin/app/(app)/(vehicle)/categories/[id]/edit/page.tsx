@@ -38,6 +38,7 @@ export default function EditVehicleCategoryPage() {
       description: category.description ?? "",
       image: category.image ?? "",
       passengerCount: category.passengerCount,
+      sortOrder: category.sortOrder,
       isActive: category.isActive,
     };
   }, [category]);
@@ -54,6 +55,7 @@ export default function EditVehicleCategoryPage() {
         description: values.description?.trim() || null,
         image: values.image?.trim() || null,
         passengerCount: values.passengerCount,
+        sortOrder: values.sortOrder,
         isActive: values.isActive,
         standardLuggageCapacity,
       };

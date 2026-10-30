@@ -5,6 +5,8 @@ import PageBanner from "@/components/banner/page-banner";
 import HowItWorksSection from "@/components/shared/how-it-works-section";
 import StatsBar from "@/components/shared/stats-bar";
 import StorySection from "@/components/shared/story-section";
+import TestimonialsSection from "@/components/shared/testimonials-section";
+import VehicleCategoriesSection from "@/components/shared/vehicle-categories-section";
 import WhyChooseUsSection from "@/components/shared/why-choose-us-section";
 import { IMAGES } from "@/constants/image-constants";
 
@@ -66,6 +68,7 @@ export default function HourlyChauffeurPage() {
         image={IMAGES.SERVICES.HOURLY_CHAUFFEUR.STORY}
         imageAlt="Executive chauffeur waiting by luxury vehicle"
       />
+      <VehicleCategoriesSection />
       <WhyChooseUsSection
         variant="split"
         badge="Why Choose Us"
@@ -131,6 +134,7 @@ export default function HourlyChauffeurPage() {
           },
         ]}
       />
+      <TestimonialsSection />
     </main>
   );
 }

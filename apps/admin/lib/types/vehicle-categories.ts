@@ -28,6 +28,7 @@ export type Item = {
   description?: string | null | undefined;
   image?: string | null | undefined;
   passengerCount: number;
+  sortOrder: number;
   isActive: boolean;
   luggageCapacity?: LuggageCapacity[] | undefined;
   createdAt: string;
@@ -64,6 +65,7 @@ export type CreatePayload = {
   description?: string;
   image?: string;
   passengerCount: number;
+  sortOrder: number;
   standardLuggageCapacity: LuggageCapacityInput[];
 };
 
@@ -73,6 +75,7 @@ export type UpdatePayload = {
   description?: string | null;
   image?: string | null;
   passengerCount?: number;
+  sortOrder?: number;
   isActive?: boolean;
   standardLuggageCapacity?: LuggageCapacityInput[];
 };

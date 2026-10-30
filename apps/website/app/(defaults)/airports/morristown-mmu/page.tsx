@@ -5,6 +5,8 @@ import PageBanner from "@/components/banner/page-banner";
 import HowItWorksSection from "@/components/shared/how-it-works-section";
 import StatsBar from "@/components/shared/stats-bar";
 import StorySection from "@/components/shared/story-section";
+import TestimonialsSection from "@/components/shared/testimonials-section";
+import VehicleCategoriesSection from "@/components/shared/vehicle-categories-section";
 import WhyChooseUsSection from "@/components/shared/why-choose-us-section";
 import { IMAGES } from "@/constants/image-constants";
 
@@ -64,6 +66,7 @@ export default function MorristownMmuAirportPage() {
         image={IMAGES.AIRPORTS.MMU.STORY}
         imageAlt="Professional chauffeur assisting a passenger beside a luxury sedan on the airfield"
       />
+      <VehicleCategoriesSection />
       <WhyChooseUsSection
         variant="split"
         badge="Why Choose Us"
@@ -129,6 +132,7 @@ export default function MorristownMmuAirportPage() {
           },
         ]}
       />
+      <TestimonialsSection />
     </main>
   );
 }

@@ -41,6 +41,13 @@ export class CreateDto {
   @Max(100)
   passengerCount!: number;
 
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  @Max(10_000)
+  sortOrder?: number;
+
   @IsArray()
   @ArrayMinSize(1)
   @ValidateNested({ each: true })

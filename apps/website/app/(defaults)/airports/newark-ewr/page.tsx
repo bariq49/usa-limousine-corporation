@@ -5,6 +5,8 @@ import PageBanner from "@/components/banner/page-banner";
 import HowItWorksSection from "@/components/shared/how-it-works-section";
 import StatsBar from "@/components/shared/stats-bar";
 import StorySection from "@/components/shared/story-section";
+import TestimonialsSection from "@/components/shared/testimonials-section";
+import VehicleCategoriesSection from "@/components/shared/vehicle-categories-section";
 import WhyChooseUsSection from "@/components/shared/why-choose-us-section";
 import { IMAGES } from "@/constants/image-constants";
 
@@ -64,6 +66,7 @@ export default function NewarkEwrAirportPage() {
         image={IMAGES.AIRPORTS.EWR.STORY}
         imageAlt="Luxury SUV drop-off near a hotel entrance"
       />
+      <VehicleCategoriesSection />
       <WhyChooseUsSection
         variant="split"
         badge="Why Choose Us"
@@ -129,6 +132,7 @@ export default function NewarkEwrAirportPage() {
           },
         ]}
       />
+      <TestimonialsSection />
     </main>
   );
 }

@@ -24,6 +24,7 @@ export default function CreateVehicleCategoryPage() {
       const payload: CreatePayload = {
         name: values.name.trim(),
         passengerCount: values.passengerCount,
+        sortOrder: values.sortOrder,
         standardLuggageCapacity,
       };
 

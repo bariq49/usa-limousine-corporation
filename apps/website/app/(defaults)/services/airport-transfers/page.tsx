@@ -5,6 +5,8 @@ import PageBanner from "@/components/banner/page-banner";
 import HowItWorksSection from "@/components/shared/how-it-works-section";
 import StatsBar from "@/components/shared/stats-bar";
 import StorySection from "@/components/shared/story-section";
+import TestimonialsSection from "@/components/shared/testimonials-section";
+import VehicleCategoriesSection from "@/components/shared/vehicle-categories-section";
 import WhyChooseUsSection from "@/components/shared/why-choose-us-section";
 import { IMAGES } from "@/constants/image-constants";
 
@@ -62,6 +64,7 @@ export default function AirportTransfersPage() {
         image={IMAGES.SERVICES.AIRPORT_TRANSFERS.STORY}
         imageAlt="Chauffeur opening the door at the airport"
       />
+      <VehicleCategoriesSection />
       <WhyChooseUsSection
         variant="split"
         badge="Why Choose Us"
@@ -127,6 +130,7 @@ export default function AirportTransfersPage() {
           },
         ]}
       />
+      <TestimonialsSection />
     </main>
   );
 }
