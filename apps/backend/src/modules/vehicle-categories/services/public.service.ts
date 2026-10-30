@@ -28,6 +28,19 @@ export class PublicService {
     return page;
   }
 
+  async findAllCategories() {
+    const categories = await this.categoriesRepository.findPublicActive();
+    return categories.map((category) => ({
+      id: category.id,
+      name: category.name,
+      models: category.models,
+      description: category.description,
+      image: category.image,
+      passengerCount: category.passengerCount,
+      luggageCount: category.luggageCapacity.reduce((total, item) => total + item.quantity, 0),
+    }));
+  }
+
   async findCategoryLuggage(categoryId: string) {
     const category = await this.categoriesRepository.findById(categoryId);
     if (!category || category.deletedAt || !category.isActive) {

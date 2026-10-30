@@ -7,6 +7,7 @@ import StatsBar from "@/components/shared/stats-bar";
 import StorySection from "@/components/shared/story-section";
 import TestimonialsSection from "@/components/shared/testimonials-section";
 import TrustSection from "@/components/home/trust-section";
+import VehicleCategoriesSection from "@/components/shared/vehicle-categories-section";
 import WhyChooseUsSection from "@/components/shared/why-choose-us-section";
 import { PLATFORM } from "@usa-limousine-corporation/config";
 import { IMAGES } from "@/constants/image-constants";
@@ -43,6 +44,7 @@ export default function Home() {
         ]}
       />
       <TestimonialsSection />
+      <VehicleCategoriesSection />
       <StorySection
         subtitle="About Us"
         title={

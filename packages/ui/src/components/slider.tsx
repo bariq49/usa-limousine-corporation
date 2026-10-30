@@ -21,6 +21,7 @@ export function Slider(props: SliderProps) {
     navigation = true,
     pagination = true,
     loop = false,
+    centeredSlides = false,
   } = props;
 
   const id = useId().replace(/:/g, "");
@@ -38,6 +39,7 @@ export function Slider(props: SliderProps) {
         modules={modules}
         spaceBetween={spaceBetween}
         slidesPerView={slidesPerView}
+        centeredSlides={centeredSlides}
         {...(breakpoints ? { breakpoints } : undefined)}
         navigation={
           navigation

@@ -11,6 +11,7 @@ export type SliderProps = {
   navigation?: boolean;
   pagination?: boolean;
   loop?: boolean;
+  centeredSlides?: boolean;
 };
 
 export type SliderSlideProps = {

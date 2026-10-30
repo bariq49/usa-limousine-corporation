@@ -14,6 +14,11 @@ export class PublicController {
     return this.publicService.findCategories(query);
   }
 
+  @Get("vehicle-categories/all")
+  findAllCategories() {
+    return this.publicService.findAllCategories();
+  }
+
   @Get("vehicle-categories/hourly-durations")
   findHourlyDurations() {
     return this.publicService.findHourlyDurations();
