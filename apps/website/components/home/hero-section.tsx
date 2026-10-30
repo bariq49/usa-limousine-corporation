@@ -19,7 +19,7 @@ export default function HeroSection() {
           transition={{ duration: 0.85, ease: luxuryEase }}
         >
           <Image
-            src={IMAGES.HOME_BANNER}
+            src={IMAGES.HOME.BANNER}
             alt="Airport transfer and chauffeur service"
             fill
             sizes="100vw"
@@ -31,12 +31,12 @@ export default function HeroSection() {
       </div>
 
       <div className="relative z-20">
-        <div className="mx-auto grid max-w-screen-2xl gap-0 max-lg:landscape:grid-cols-2 max-lg:landscape:items-stretch lg:grid-cols-2 lg:gap-8 lg:px-5 lg:pt-40 lg:pb-16 xl:grid-cols-3 xl:pb-20">
+        <div className="container mx-auto grid gap-0 max-lg:landscape:grid-cols-2 max-lg:landscape:items-stretch lg:grid-cols-2 lg:gap-8 lg:px-4 lg:pt-40 lg:pb-16 xl:grid-cols-3 xl:pb-20">
           {/* Mobile image ends at the form; desktop uses full-bleed bg above */}
           <div className="relative order-1 flex min-h-vh-58 w-full flex-col items-center justify-end overflow-hidden pt-safe-hero pb-14 text-center sm:min-h-vh-54 sm:pt-safe-hero-lg sm:pb-16 max-lg:landscape:min-h-0 max-lg:landscape:justify-center max-lg:landscape:pb-6 max-lg:landscape:pt-safe-header lg:min-h-0 lg:items-start lg:overflow-visible lg:bg-transparent lg:pt-0 lg:pb-4 lg:text-left xl:col-span-2">
             <div className="absolute inset-0 lg:hidden">
               <Image
-                src={IMAGES.HOME_BANNER_MOBILE}
+                src={IMAGES.HOME.BANNER}
                 alt="Airport transfer and chauffeur service"
                 fill
                 sizes="100vw"
@@ -46,7 +46,7 @@ export default function HeroSection() {
               <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/45 to-black/25" />
             </div>
 
-            <HeroMotion className="relative z-10 flex w-full max-w-3xl flex-col items-center gap-5 px-4 text-center sm:px-5 lg:items-start lg:text-left">
+            <HeroMotion className="relative z-10 flex w-full max-w-3xl flex-col items-center gap-5 px-4 text-center sm:px-5 lg:items-start lg:px-0 lg:text-left">
               <HeroMotionItem>
                 <div className="flex items-center justify-center gap-2.5 lg:justify-start">
                   <span className="h-0.5 w-6 bg-secondary" />

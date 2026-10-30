@@ -5,7 +5,6 @@ import { PrismaService } from "../../../infrastructure/database/prisma.service";
 import type { QueryDto } from "../dto/ticket.dto";
 import type { CreateData, MessageData, PriorityData, StatusData } from "../types/ticket";
 
-/** Owner name/email/phone come from the customer's user (no copied columns). */
 const customerSummary = {
   select: {
     id: true,
@@ -45,7 +44,7 @@ const ticketInclude = {
 
 @Injectable()
 export class TicketRepository {
-  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
+  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) { }
 
   findMany(query: QueryDto) {
     const initialFilter: Prisma.HelpTicketWhereInput = {
@@ -103,7 +102,6 @@ export class TicketRepository {
     });
   }
 
-  /** Runs on the caller's transaction so related writes (e.g. notifications) commit together. */
   async create(data: CreateData, tx: Prisma.TransactionClient) {
     const ticket = await tx.helpTicket.create({
       data: {
@@ -145,7 +143,6 @@ export class TicketRepository {
     });
   }
 
-  /** Runs on the caller's transaction so related writes (e.g. notifications) commit together. */
   async addMessage(data: MessageData, tx: Prisma.TransactionClient) {
     const message = await tx.helpTicketMessage.create({
       data: {
@@ -174,7 +171,6 @@ export class TicketRepository {
     return message;
   }
 
-  /** Runs on the caller's transaction so related writes (e.g. notifications) commit together. */
   async updateStatus(data: StatusData, tx: Prisma.TransactionClient) {
     const current = await tx.helpTicket.findUniqueOrThrow({
       where: { id: data.ticketId },

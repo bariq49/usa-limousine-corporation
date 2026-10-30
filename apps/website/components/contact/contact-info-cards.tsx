@@ -30,13 +30,13 @@ export default function ContactInfoCards() {
     ];
 
     return (
-        <section className="py-16 relative z-30">
+        <section className="relative z-30 pt-16 pb-12 sm:pt-20 sm:pb-14 lg:pt-24 lg:pb-16">
             <div className="container mx-auto px-4">
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-3 md:gap-8">
                     {CONTACT_CARDS.map((card, index) => (
                         <div
                             key={index}
-                            className="flex flex-col items-center rounded-xl border border-gray-200 bg-gray-50/80 px-6 py-10 text-center md:px-8"
+                            className="flex flex-col items-center rounded-md border border-gray-200 bg-gray-50/80 px-6 py-10 text-center md:px-8"
                         >
                             <card.icon className="mb-5 h-9 w-9 text-secondary" strokeWidth={1.5} />
                             <h3 className="mb-2 text-lg font-bold text-gray-900">{card.title}</h3>

@@ -53,14 +53,14 @@ export const getBlogPage = async (query: BlogListQuery = {}): Promise<BlogPage> 
 export const fetchBlogPage = async (query: BlogListQuery = {}): Promise<BlogPage> => {
   const page = query.page ?? 1;
   const limit = query.limit ?? 9;
-  const response = await api.get(API_ROUTES.BLOGS, {
-    params: {
-      page,
-      limit,
-      ...(query.category ? { category: query.category } : {}),
-      ...(query.tag ? { tag: query.tag } : {}),
-    },
-  });
+  const params: BlogListQuery = {
+    page,
+    limit,
+  };
+  if (query.category) params.category = query.category;
+  if (query.tag) params.tag = query.tag;
+
+  const response = await api.get(API_ROUTES.BLOGS, { params });
   return response.data;
 };
 

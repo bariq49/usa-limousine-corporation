@@ -51,10 +51,28 @@ export function useHeaderMenu(pathname: string | null) {
     closeAll();
   }, [pathname, closeAll]);
 
-  // Body scroll lock
   useEffect(() => {
-    document.body.style.overflow = mobileOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    if (!mobileOpen) return;
+    const scrollY = window.scrollY;
+    const html = document.documentElement.style;
+    const body = document.body.style;
+    html.overflow = "hidden";
+    body.overflow = "hidden";
+    body.position = "fixed";
+    body.top = `-${scrollY}px`;
+    body.left = "0";
+    body.right = "0";
+    body.width = "100%";
+    return () => {
+      html.overflow = "";
+      body.overflow = "";
+      body.position = "";
+      body.top = "";
+      body.left = "";
+      body.right = "";
+      body.width = "";
+      window.scrollTo(0, scrollY);
+    };
   }, [mobileOpen]);
 
   // Outside click + Escape key

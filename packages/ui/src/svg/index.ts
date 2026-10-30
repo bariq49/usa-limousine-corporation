@@ -120,3 +120,4 @@ export { default as LinkIcon } from "./link";
 export { default as ImagePlus } from "./image-plus";
 export { default as Undo } from "./undo";
 export { default as Redo } from "./redo";
+export { default as Star } from "./star";

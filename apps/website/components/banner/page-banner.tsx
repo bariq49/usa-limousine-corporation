@@ -27,7 +27,7 @@ export default function PageBanner(props: Props) {
     className,
   } = props;
 
-  const defaultImage = IMAGES.HOME_BANNER;
+  const defaultImage = IMAGES.HOME.BANNER;
 
   const renderTitle = (titleContent: string | React.ReactNode) => {
     if (typeof titleContent !== "string") return titleContent;
@@ -97,8 +97,8 @@ export default function PageBanner(props: Props) {
       <div className="relative z-20">
         <div
           className={cn(
-            "mx-auto grid max-w-screen-2xl gap-6 lg:px-5",
-            "max-lg:px-3 pt-16 lg:pt-32 lg:pb-32",
+            "container mx-auto grid gap-6 px-4",
+            "pt-16 lg:pt-32 lg:pb-32",
           )}
         >
           <div className={showBookingForm ? "max-lg:px-0" : undefined}>
@@ -118,16 +118,14 @@ export default function PageBanner(props: Props) {
               >
                 {topText &&
                   (highlightTopText ? (
-                    <p className="text-xs font-bold text-secondary sm:text-sm">
-                      {topText}
-                    </p>
+                    <p className="text-xs font-bold text-secondary sm:text-sm">{topText}</p>
                   ) : (
                     <div className="flex flex-col items-center gap-2 md:flex-row md:gap-3">
-                      <div className="hidden h-0.5 w-8 bg-secondary md:block" />
-                      <span className="text-xs font-bold uppercase tracking-label text-white md:text-sm md:tracking-widest">
+                      <div className="hidden h-0.5 w-8 bg-primary md:block" />
+                      <span className="text-xs font-bold uppercase tracking-label text-primary md:text-sm md:tracking-widest">
                         {topText}
                       </span>
-                      <div className="h-0.5 w-10 bg-secondary md:hidden" />
+                      <div className="h-0.5 w-10 bg-primary md:hidden" />
                     </div>
                   ))}
                 <h1 className="text-center text-4xl font-extrabold text-white md:text-left md:text-6xl lg:text-7xl">

@@ -16,12 +16,14 @@ export default function ServicesPage() {
     <main className="min-h-screen">
       <PageBanner
         variant="centered"
-        image={IMAGES.HOME_BANNER}
+        image={IMAGES.HOME.BANNER}
         imageAlt="Our services"
         title="Our Services"
       />
       <section className="container mx-auto px-4 py-16">
-        <p className="mx-auto max-w-2xl text-center text-base text-gray-600">{PLATFORM.description}</p>
+        <p className="mx-auto max-w-2xl text-center text-base text-gray-600">
+          {PLATFORM.description}
+        </p>
         <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {SERVICE_LINKS.map((service) => (
             <Link

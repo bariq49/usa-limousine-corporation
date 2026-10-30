@@ -9,6 +9,11 @@
   overflow: hidden;
 }
 
+.ui-slider-wrap:not(:has(.swiper-pagination)):not(:has(.ui-slider-nav)) .ui-slider,
+.ui-slider:not(:has(.swiper-pagination)):not(:has(.ui-slider-nav)) {
+  padding-bottom: 0;
+}
+
 .ui-slider .swiper-wrapper {
   align-items: stretch;
   display: flex;
@@ -24,8 +29,13 @@
 .ui-slider .swiper-pagination {
   bottom: 0.85rem;
   left: 0;
-  right: 6.5rem;
+  right: 0;
   width: auto;
+  text-align: center;
+}
+
+.ui-slider-wrap:has(.ui-slider-nav) .swiper-pagination {
+  right: 6.5rem;
   text-align: left;
 }
 
