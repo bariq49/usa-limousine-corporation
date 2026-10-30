@@ -63,6 +63,46 @@ export const IMAGES = {
       STORY: "/assets/images/services/airport-transfers/story.png",
       WHY_CHOOSE_US: "/assets/images/services/airport-transfers/why-choose-us.png",
     },
+    HOURLY_CHAUFFEUR: {
+      BANNER: "/assets/images/services/hourly-chauffeur/hero.banner.png",
+      STORY: "/assets/images/services/hourly-chauffeur/story.png",
+      WHY_CHOOSE_US: "/assets/images/services/hourly-chauffeur/why-choose-us.png",
+    },
+    CORPORATE_TRANSPORTATION: {
+      BANNER: "/assets/images/services/corporate-transportation/hero.banner.png",
+      STORY: "/assets/images/services/corporate-transportation/story.png",
+      WHY_CHOOSE_US: "/assets/images/services/corporate-transportation/why-choose-us.png",
+    },
+    POINT_TO_POINT_TRANSFERS: {
+      BANNER: "/assets/images/services/point-to-point-transfers/hero.banner.png",
+      STORY: "/assets/images/services/point-to-point-transfers/story.png",
+      WHY_CHOOSE_US: "/assets/images/services/point-to-point-transfers/why-choose-us.png",
+    },
+    CONCERT_TRANSPORTATION: {
+      BANNER: "/assets/images/services/concert-transportation/hero.banner.png",
+      STORY: "/assets/images/services/concert-transportation/story.png",
+      WHY_CHOOSE_US: "/assets/images/services/concert-transportation/why-choose-us.png",
+    },
+    SPORTING_EVENT_TRANSPORTATION: {
+      BANNER: "/assets/images/services/sporting-event-transportation/hero.banner.png",
+      STORY: "/assets/images/services/sporting-event-transportation/story.png",
+      WHY_CHOOSE_US: "/assets/images/services/sporting-event-transportation/why-choose-us.png",
+    },
+    WEDDING_TRANSPORTATION: {
+      BANNER: "/assets/images/services/wedding-transportation/hero.banner.png",
+      STORY: "/assets/images/services/wedding-transportation/story.png",
+      WHY_CHOOSE_US: "/assets/images/services/wedding-transportation/why-choose-us.png",
+    },
+    PROM_TRANSPORTATION: {
+      BANNER: "/assets/images/services/prom-transportation/hero.banner.png",
+      STORY: "/assets/images/services/prom-transportation/story.png",
+      WHY_CHOOSE_US: "/assets/images/services/prom-transportation/why-choose-us.png",
+    },
+    DIPLOMATIC_GOVERNMENT_TRANSPORTATION: {
+      BANNER: "/assets/images/services/diplomatic-government-transportation/hero.banner.png",
+      STORY: "/assets/images/services/diplomatic-government-transportation/story.png",
+      WHY_CHOOSE_US: "/assets/images/services/diplomatic-government-transportation/why-choose-us.png",
+    },
   },
   CONTACT: {
     BANNER: "/assets/images/contact-us/hero.banner.png",

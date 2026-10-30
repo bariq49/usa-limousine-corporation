@@ -20,14 +20,14 @@ export const QUICK_NAV_ITEMS = [
 
 export const SERVICE_LINKS = [
   { title: "Airport Transfers", href: "/airport-transfers" },
-  { title: "Hourly Chauffeur", href: "/#hero-booking" },
-  { title: "Corporate Transportation", href: "/#hero-booking" },
-  { title: "Point-to-Point Transfers", href: "/#hero-booking" },
-  { title: "Concert Transportation", href: "/#hero-booking" },
-  { title: "Sporting Event Transportation", href: "/#hero-booking" },
-  { title: "Wedding Transportation", href: "/#hero-booking" },
-  { title: "Prom Transportation", href: "/#hero-booking" },
-  { title: "Diplomatic & Government", href: "/#hero-booking" },
+  { title: "Hourly Chauffeur", href: "/hourly-chauffeur" },
+  { title: "Corporate Transportation", href: "/corporate-transportation" },
+  { title: "Point-to-Point Transfers", href: "/point-to-point-transfers" },
+  { title: "Concert Transportation", href: "/concert-transportation" },
+  { title: "Sporting Event Transportation", href: "/sporting-event-transportation" },
+  { title: "Wedding Transportation", href: "/wedding-transportation" },
+  { title: "Prom Transportation", href: "/prom-transportation" },
+  { title: "Diplomatic & Government", href: "/diplomatic-government-transportation" },
 ] as const satisfies readonly NavItem[];
 
 
@@ -49,9 +49,7 @@ export const NAV_LINKS: NavLink[] = [
   { title: "Home", path: "/" },
   {
     title: "Services",
-    sublinks: [
-      { title: "Airport Transfers", path: "/airport-transfers" },
-    ],
+    sublinks: SERVICE_LINKS.map((service) => ({ title: service.title, path: service.href })),
   },
   {
     title: "Fleet",

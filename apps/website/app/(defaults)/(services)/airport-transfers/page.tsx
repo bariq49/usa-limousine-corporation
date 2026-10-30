@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { PLATFORM } from "@usa-limousine-corporation/config";
 import { CircleCheck, Clock, Star } from "@usa-limousine-corporation/ui/svg";
 import PageBanner from "@/components/banner/page-banner";
+import HowItWorksSection from "@/components/shared/how-it-works-section";
 import StatsBar from "@/components/shared/stats-bar";
 import StorySection from "@/components/shared/story-section";
 import WhyChooseUsSection from "@/components/shared/why-choose-us-section";
@@ -96,6 +97,35 @@ export default function AirportTransfersPage() {
         ]}
         image={IMAGES.SERVICES.AIRPORT_TRANSFERS.WHY_CHOOSE_US}
         imageAlt="Chauffeur welcoming a passenger"
+      />
+      <HowItWorksSection
+        badge="Simple Process"
+        title={
+          <>
+            How It <span className="text-primary">Works</span>
+          </>
+        }
+        steps={[
+          {
+            title: "Book Online or Call",
+            description: `Reserve via our website, call ${PLATFORM.contact.phone}, or WhatsApp us. Instant confirmation provided.`,
+          },
+          {
+            title: "We Track Your Flight",
+            description:
+              "Our dispatch team monitors your flight in real-time. Delays, early arrivals, and gate changes are handled automatically.",
+          },
+          {
+            title: "Chauffeur Meets You",
+            description:
+              "Your driver greets you at baggage claim with a personalized name board, assists with luggage, and escorts you to the vehicle.",
+          },
+          {
+            title: "Arrive in Comfort",
+            description:
+              "Relax in your luxury vehicle to your destination. No surprises, no stress, just a smooth premium ride.",
+          },
+        ]}
       />
     </main>
   );
