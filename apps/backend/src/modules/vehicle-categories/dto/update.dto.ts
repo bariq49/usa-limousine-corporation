@@ -23,6 +23,11 @@ export class UpdateDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(200)
+  models?: string | null;
+
+  @IsOptional()
+  @IsString()
   @MaxLength(500)
   description?: string | null;
 

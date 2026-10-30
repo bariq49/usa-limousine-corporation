@@ -11,6 +11,7 @@ const luggageCapacitySchema = z.object({
 export const vehicleCategorySchema = z
   .object({
     name: z.string().min(1, "Name is required").max(80),
+    models: z.string().max(200).optional().or(z.literal("")),
     description: z.string().max(500).optional().or(z.literal("")),
     image: z.string().url("Must be a valid URL").optional().or(z.literal("")),
     passengerCount: z.preprocess(

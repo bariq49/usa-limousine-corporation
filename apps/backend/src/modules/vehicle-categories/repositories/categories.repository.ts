@@ -30,7 +30,7 @@ export class CategoriesRepository {
       initialFilter: { deletedAt: null },
       filterFields: ["isActive"],
       search: {
-        searchFields: ["name", "description"],
+        searchFields: ["name", "models", "description"],
       },
       sort: {
         allowedFields: ["createdAt", "updatedAt", "name", "passengerCount"],
@@ -60,7 +60,7 @@ export class CategoriesRepository {
     const feature = new APIFeature(query, {
       initialFilter: { deletedAt: null, isActive: true },
       search: {
-        searchFields: ["name", "description"],
+        searchFields: ["name", "models", "description"],
       },
       sort: {
         allowedFields: ["createdAt", "updatedAt", "name", "passengerCount"],
@@ -111,6 +111,7 @@ export class CategoriesRepository {
     return this.prisma.vehicleCategory.create({
       data: {
         name: data.name.trim(),
+        models: data.models?.trim() || null,
         description: data.description?.trim() ?? null,
         image: data.image?.trim() ?? null,
         passengerCount: data.passengerCount,
@@ -148,6 +149,9 @@ export class CategoriesRepository {
 
       if (data.name !== undefined) {
         updateData.name = data.name.trim();
+      }
+      if (data.models !== undefined) {
+        updateData.models = data.models?.trim() || null;
       }
       if (data.description !== undefined) {
         updateData.description = data.description?.trim() ?? null;

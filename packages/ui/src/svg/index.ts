@@ -121,3 +121,6 @@ export { default as ImagePlus } from "./image-plus";
 export { default as Undo } from "./undo";
 export { default as Redo } from "./redo";
 export { default as Star } from "./star";
+export { default as Google } from "./google";
+export { default as StarSparkle } from "./star-sparkle";
+export { default as ArrowUpRight } from "./arrow-up-right";

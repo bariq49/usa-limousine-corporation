@@ -22,6 +22,11 @@ export class CreateDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(200)
+  models?: string;
+
+  @IsOptional()
+  @IsString()
   @MaxLength(500)
   description?: string;
 

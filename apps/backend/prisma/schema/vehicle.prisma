@@ -12,6 +12,7 @@ enum PricingStatus {
 model VehicleCategory {
   id          String  @id @default(cuid())
   name        String
+  models      String?
   description String?
   image       String?
 

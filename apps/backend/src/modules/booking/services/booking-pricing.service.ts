@@ -198,6 +198,7 @@ export class BookingPricingService {
         vehicleCategory: {
           id: vehicle.id,
           name: vehicle.name,
+          models: vehicle.models,
           description: vehicle.description,
           image: vehicle.image,
           passengerCount: vehicle.passengerCount,

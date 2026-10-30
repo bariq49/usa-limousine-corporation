@@ -24,6 +24,7 @@ export type LuggageCapacity = {
 export type Item = {
   id: string;
   name: string;
+  models?: string | null | undefined;
   description?: string | null | undefined;
   image?: string | null | undefined;
   passengerCount: number;
@@ -59,6 +60,7 @@ export type LuggageCapacityInput = {
 
 export type CreatePayload = {
   name: string;
+  models?: string;
   description?: string;
   image?: string;
   passengerCount: number;
@@ -67,6 +69,7 @@ export type CreatePayload = {
 
 export type UpdatePayload = {
   name?: string;
+  models?: string | null;
   description?: string | null;
   image?: string | null;
   passengerCount?: number;

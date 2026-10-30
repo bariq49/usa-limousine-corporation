@@ -226,6 +226,7 @@ export type VehicleEstimate = {
   vehicleCategory: {
     id: string;
     name: string;
+    models: string | null;
     description: string | null;
     image: string | null;
     passengerCount: number;

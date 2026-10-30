@@ -85,7 +85,7 @@ export default function VehicleCategoryCard({
                   </button>
                 </div>
                 <p className="hidden text-sm text-gray-500 sm:line-clamp-1">
-                  {vehicleCategory.description || `${vehicleCategory.name} or similar`}
+                  {vehicleCategory.models || `${vehicleCategory.name} or similar`}
                 </p>
               </div>
 

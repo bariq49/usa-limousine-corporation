@@ -6,6 +6,7 @@ export const API_ROUTES = {
     SETTINGS: `/public/settings`,
     CHECKOUT: `/public/bookings/checkout`,
     CONTACT: `/public/contact`,
+    REVIEWS: `/public/reviews`,
     BLOGS: `/public/blogs`,
     BLOG_CATEGORIES: `/public/blog-categories`,
 } as const;

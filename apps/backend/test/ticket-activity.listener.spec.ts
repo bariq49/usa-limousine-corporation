@@ -1,4 +1,4 @@
-import { HelpTicketCategory, HelpTicketStatus } from "@prisma/client";
+import { HelpTicketCategory, HelpTicketPriority, HelpTicketStatus } from "@prisma/client";
 import type { ActivityService } from "../src/modules/activity/services/activity.service";
 import { TicketActivityListener } from "../src/modules/help-center/listeners/ticket-activity.listener";
 
@@ -24,6 +24,7 @@ describe("TicketActivityListener", () => {
       subject: "Wallet issue",
       category: HelpTicketCategory.OTHER,
       status: HelpTicketStatus.PENDING,
+      priority: HelpTicketPriority.MEDIUM,
     });
 
     expect(activities.record).toHaveBeenCalledWith(
@@ -44,6 +45,7 @@ describe("TicketActivityListener", () => {
       subject: "Billing question",
       category: HelpTicketCategory.PAYMENTS,
       status: HelpTicketStatus.PENDING,
+      priority: HelpTicketPriority.MEDIUM,
     });
 
     expect(activities.record).toHaveBeenCalledWith(
@@ -62,6 +64,7 @@ describe("TicketActivityListener", () => {
       ticketNumber: "HC-000001",
       subject: "Wallet issue",
       messageId: "msg-1",
+      fromStaff: true,
     });
 
     expect(activities.record).toHaveBeenCalledWith(

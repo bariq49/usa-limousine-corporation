@@ -218,13 +218,14 @@ export class EnvironmentVariables {
   SQUARE_WEBHOOK_URL?: string;
 
   @IsOptional()
-  @IsUrl()
-  GOOGLE_REVIEW_URL?: string;
+  @IsString()
+  @IsNotEmpty()
+  GOOGLE_MAPS_API_KEY?: string;
 
   @IsOptional()
   @IsString()
   @IsNotEmpty()
-  GOOGLE_MAPS_API_KEY?: string;
+  GOOGLE_PLACE_ID?: string;
 
   @IsString()
   @IsNotEmpty()

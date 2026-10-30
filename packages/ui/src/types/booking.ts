@@ -24,6 +24,7 @@ export type TripType = "one-way" | "return" | "hourly";
 export type VehicleCategory = {
   id: string;
   name: string;
+  models?: string | null;
   description?: string | null;
   image?: string | null;
   passengerCount: number;

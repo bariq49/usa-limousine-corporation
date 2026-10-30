@@ -34,6 +34,7 @@ export default function EditVehicleCategoryPage() {
     if (!category) return undefined;
     return {
       name: category.name,
+      models: category.models ?? "",
       description: category.description ?? "",
       image: category.image ?? "",
       passengerCount: category.passengerCount,
@@ -49,6 +50,7 @@ export default function EditVehicleCategoryPage() {
 
       const payload: UpdatePayload = {
         name: values.name.trim(),
+        models: values.models?.trim() || null,
         description: values.description?.trim() || null,
         image: values.image?.trim() || null,
         passengerCount: values.passengerCount,

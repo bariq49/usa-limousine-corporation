@@ -1,6 +1,7 @@
 export type PricedVehicle = {
   id: string;
   name: string;
+  models: string | null;
   description: string | null;
   image: string | null;
   passengerCount: number;

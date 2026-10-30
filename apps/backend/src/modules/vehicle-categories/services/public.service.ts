@@ -83,6 +83,7 @@ export class PublicService {
         return {
           id: category.id,
           name: category.name,
+          models: category.models,
           description: category.description,
           image: category.image,
           passengerCount: category.passengerCount,
@@ -109,6 +110,7 @@ export class PublicService {
         return {
           id: category.id,
           name: category.name,
+          models: category.models,
           description: category.description,
           image: category.image,
           passengerCount: category.passengerCount,

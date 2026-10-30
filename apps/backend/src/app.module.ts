@@ -36,6 +36,8 @@ import { DriverModule } from "./modules/drivers/driver.module";
 import { DashboardModule } from "./modules/dashboard/dashboard.module";
 import { BlogModule } from "./modules/blogs/blog.module";
 import { ContactModule } from "./modules/contact/contact.module";
+import { ReviewsModule } from "./modules/reviews/reviews.module";
+import { GoogleModule } from "./infrastructure/google/google.module";
 
 @Module({
   imports: [
@@ -51,6 +53,7 @@ import { ContactModule } from "./modules/contact/contact.module";
     TwilioModule,
     SquareModule,
     MapsModule,
+    GoogleModule,
     EmailModule,
     ThrottlerModule.forRootAsync({
       inject: [ConfigService],
@@ -81,6 +84,7 @@ import { ContactModule } from "./modules/contact/contact.module";
     DashboardModule,
     BlogModule,
     ContactModule,
+    ReviewsModule,
   ],
   providers: [
     {

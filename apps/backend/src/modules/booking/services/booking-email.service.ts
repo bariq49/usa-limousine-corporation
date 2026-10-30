@@ -245,9 +245,12 @@ export class BookingEmailService {
   }
 
   context(): EmailContext {
+    const placeId = this.configService.get<string>("GOOGLE_PLACE_ID")?.trim();
     return {
       siteUrl: this.configService.getOrThrow<string>("WEBSITE_URL").replace(/\/+$/, ""),
-      reviewUrl: this.configService.get<string>("GOOGLE_REVIEW_URL"),
+      reviewUrl: placeId
+        ? `https://search.google.com/local/writereview?placeid=${encodeURIComponent(placeId)}`
+        : undefined,
     };
   }
 }

@@ -121,7 +121,7 @@ describe("Contact (e2e)", () => {
 
     await waitForMails(2);
     const customerMail = mails().find((mail) => mail.to === "grace@example.com");
-    const adminMail = mails().find((mail) => mail.to === process.env.DEFAULT_ADMIN_EMAIL);
+    const adminMail = mails().find((mail) => mail.to === process.env["DEFAULT_ADMIN_EMAIL"]);
     expect(customerMail?.subject).toContain(`We received your message · ${ticketNumber}`);
     expect(adminMail?.subject).toContain("[HIGH PRIORITY]");
     expect(adminMail?.replyTo).toBe("grace@example.com");
@@ -202,7 +202,7 @@ describe("Contact (e2e)", () => {
       .send({ priority: "HIGH" })
       .expect(200);
     await waitForMails(1);
-    expect(mails()[0]?.to).toBe(process.env.DEFAULT_ADMIN_EMAIL);
+    expect(mails()[0]?.to).toBe(process.env["DEFAULT_ADMIN_EMAIL"]);
     expect(mails()[0]?.subject).toContain(`[HIGH PRIORITY] Ticket ${ticket.ticketNumber}`);
 
     const before = await prisma.helpTicket.count();

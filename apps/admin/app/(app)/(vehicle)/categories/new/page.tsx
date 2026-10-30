@@ -27,6 +27,9 @@ export default function CreateVehicleCategoryPage() {
         standardLuggageCapacity,
       };
 
+      const models = values.models?.trim();
+      if (models) payload.models = models;
+
       const description = values.description?.trim();
       if (description) payload.description = description;
 

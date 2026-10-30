@@ -49,6 +49,7 @@ export function VehicleCategoryForm(props: Props) {
     mode: "all",
     defaultValues: {
       name: initialValues?.name ?? "",
+      models: initialValues?.models ?? "",
       description: initialValues?.description ?? "",
       image: initialValues?.image ?? "",
       passengerCount: initialValues?.passengerCount ?? 4,
@@ -109,6 +110,11 @@ export function VehicleCategoryForm(props: Props) {
                 min="1"
                 max="100"
                 step="1"
+              />
+              <Input
+                name="models"
+                label="Vehicle Models"
+                placeholder="e.g. Skoda Octavia, Toyota Prius or similar"
               />
               <Input name="description" label="Description" type="textarea" rows={5} />
             </div>
