@@ -16,19 +16,20 @@ import {
   getBookings,
   getReceipt,
 } from "@/lib/api/bookings";
+import type { AnalyticsPeriod } from "@/lib/types/analytics";
 
 export const bookingQueryKeys = {
   all: ["bookings"] as const,
   list: (params?: Query) => ["bookings", "list", params] as const,
   detail: (id: string) => ["bookings", "detail", id] as const,
-  analytics: (year: number, month: number | null) =>
-    ["bookings", "analytics", year, month] as const,
+  analytics: (period: AnalyticsPeriod) =>
+    ["bookings", "analytics", period.year, period.month, period.window] as const,
 };
 
-export const useBookingAnalytics = (year: number, month: number | null) => {
+export const useBookingAnalytics = (period: AnalyticsPeriod) => {
   return useQuery({
-    queryKey: bookingQueryKeys.analytics(year, month),
-    queryFn: () => getBookingAnalytics(year, month),
+    queryKey: bookingQueryKeys.analytics(period),
+    queryFn: () => getBookingAnalytics(period),
   });
 };
 

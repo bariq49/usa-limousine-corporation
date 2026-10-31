@@ -77,19 +77,30 @@ export type NotificationList = {
   unreadCount: number;
 };
 
-/** Response of GET /customers/bookings/analytics (the customer's own bookings, one year). */
+/** Response of GET /customers/bookings/analytics (the customer's own bookings). */
 export type BookingAnalytics = {
   year: number;
   month: number | null;
+  range: string | null;
+  labels: string[];
   totalBookings: number;
-  /** Amount of completed bookings. */
   totalRevenue: number;
+  completedAmount: number;
+  confirmedAmount: number;
+  pendingAmount: number;
+  cancelledAmount: number;
   completedBookings: number;
   confirmedBookings: number;
   pendingBookings: number;
   cancelledBookings: number;
   monthlyRevenue: number[];
   monthlyBookings: {
+    completed: number[];
+    confirmed: number[];
+    pending: number[];
+    cancelled: number[];
+  };
+  amountSeries: {
     completed: number[];
     confirmed: number[];
     pending: number[];

@@ -181,20 +181,26 @@ export type MonthlySeries = {
 export type Analytics = {
   year: number;
   month: number | null;
+  range: string | null;
+  labels: string[];
   totalBookings: number;
   totalRevenue: number;
+  completedAmount: number;
+  confirmedAmount: number;
+  pendingAmount: number;
+  cancelledAmount: number;
   completedBookings: number;
   confirmedBookings: number;
   pendingBookings: number;
   cancelledBookings: number;
   monthlyRevenue: number[];
   monthlyBookings: MonthlySeries;
+  amountSeries: MonthlySeries;
 };
 
-export type AnalyticsRow = {
-  bucket: number;
+export type AnalyticsEventRow = {
+  createdAt: Date;
   status: BookingStatus;
-  count: number;
   amount: number;
 };
 

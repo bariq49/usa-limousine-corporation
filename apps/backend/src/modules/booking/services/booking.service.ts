@@ -1,7 +1,18 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { BookingStatus, PaymentStatus, RoleKey } from "@prisma/client";
 import type { Request } from "express";
+import {
+  ANALYTICS_SHORT_RANGES,
+  analyticsAnchoredRangeBounds,
+  analyticsBucketIndex,
+  analyticsCalendarBounds,
+  analyticsRangeBounds,
+  type AnalyticsBucket,
+  type AnalyticsRange,
+  type AnalyticsShortRange,
+} from "../../../common/utils/analytics-range";
 import { auditLog } from "../../../common/utils/audit-log";
+import { formatDate } from "../../../common/utils/format-date";
 import { roundAmount } from "../../../common/utils/money";
 import { toRequestContext } from "../../../common/utils/to-request-context";
 import { PrismaService } from "../../../infrastructure/database/prisma.service";
@@ -48,11 +59,7 @@ export class BookingService {
   }
 
   analytics(query: AnalyticsQueryDto) {
-    return this.buildAnalytics(
-      query.year ?? new Date().getUTCFullYear(),
-      query.userId,
-      query.month,
-    );
+    return this.buildAnalytics(query);
   }
 
   async getOne(id: string) {
@@ -284,55 +291,149 @@ export class BookingService {
     });
   }
 
-  async buildAnalytics(year: number, userId?: string, month?: number): Promise<Analytics> {
-    const rows = await this.bookingRepository.analyticsRows(year, userId, month);
-    const size = month ? new Date(Date.UTC(year, month, 0)).getUTCDate() : 12;
-    const months = () => Array<number>(size).fill(0);
+  resolveAnalyticsWindow(query: AnalyticsQueryDto): {
+    year: number;
+    month: number | null;
+    range: AnalyticsRange | null;
+    start: Date;
+    end: Date;
+    buckets: AnalyticsBucket[];
+    labels: string[];
+  } {
+    const currentYear = Number(formatDate({ as: "value" }).slice(0, 4));
+    const year = query.year ?? currentYear;
+    const month = query.month ?? null;
+    const shortRange = ANALYTICS_SHORT_RANGES.find((item) => item === query.range);
+
+    if (shortRange) {
+      const bounds = analyticsAnchoredRangeBounds(shortRange as AnalyticsShortRange, year, month);
+      return {
+        year,
+        month,
+        range: shortRange,
+        start: bounds.start,
+        end: bounds.end,
+        buckets: bounds.buckets,
+        labels: bounds.labels,
+      };
+    }
+
+    if (query.range) {
+      const bounds = analyticsRangeBounds(query.range);
+      return {
+        year,
+        month: null,
+        range: query.range,
+        start: bounds.start,
+        end: bounds.end,
+        buckets: bounds.buckets,
+        labels: bounds.labels,
+      };
+    }
+
+    const bounds = analyticsCalendarBounds(year, month);
+    return {
+      year,
+      month,
+      range: null,
+      start: bounds.start,
+      end: bounds.end,
+      buckets: bounds.buckets,
+      labels: bounds.labels,
+    };
+  }
+
+  async buildAnalytics(query: AnalyticsQueryDto): Promise<Analytics> {
+    const window = this.resolveAnalyticsWindow(query);
+    const { start, end, buckets, labels, year, month, range } = window;
+    const size = buckets.length;
+    const series = () => Array<number>(size).fill(0);
+    const rows = await this.bookingRepository.analyticsEvents(start, end, query.userId);
     const result: Analytics = {
       year,
-      month: month ?? null,
+      month,
+      range,
+      labels,
       totalBookings: 0,
       totalRevenue: 0,
+      completedAmount: 0,
+      confirmedAmount: 0,
+      pendingAmount: 0,
+      cancelledAmount: 0,
       completedBookings: 0,
       confirmedBookings: 0,
       pendingBookings: 0,
       cancelledBookings: 0,
-      monthlyRevenue: months(),
+      monthlyRevenue: series(),
       monthlyBookings: {
-        completed: months(),
-        confirmed: months(),
-        pending: months(),
-        cancelled: months(),
+        completed: series(),
+        confirmed: series(),
+        pending: series(),
+        cancelled: series(),
+      },
+      amountSeries: {
+        completed: series(),
+        confirmed: series(),
+        pending: series(),
+        cancelled: series(),
       },
     };
 
     for (const row of rows) {
-      const index = row.bucket - 1;
-      result.totalBookings += row.count;
+      const index = analyticsBucketIndex(buckets, new Date(row.createdAt));
+      result.totalBookings += 1;
 
       if (row.status === BookingStatus.COMPLETED) {
-        result.completedBookings += row.count;
-        result.monthlyBookings.completed[index] =
-          (result.monthlyBookings.completed[index] ?? 0) + row.count;
+        result.completedBookings += 1;
+        result.completedAmount += row.amount;
         result.totalRevenue += row.amount;
-        result.monthlyRevenue[index] = (result.monthlyRevenue[index] ?? 0) + row.amount;
+        if (index >= 0) {
+          result.monthlyBookings.completed[index] =
+            (result.monthlyBookings.completed[index] ?? 0) + 1;
+          result.monthlyRevenue[index] = roundAmount(
+            (result.monthlyRevenue[index] ?? 0) + row.amount,
+          );
+          result.amountSeries.completed[index] = roundAmount(
+            (result.amountSeries.completed[index] ?? 0) + row.amount,
+          );
+        }
       } else if (row.status === BookingStatus.CONFIRMED) {
-        result.confirmedBookings += row.count;
-        result.monthlyBookings.confirmed[index] =
-          (result.monthlyBookings.confirmed[index] ?? 0) + row.count;
+        result.confirmedBookings += 1;
+        result.confirmedAmount += row.amount;
+        if (index >= 0) {
+          result.monthlyBookings.confirmed[index] =
+            (result.monthlyBookings.confirmed[index] ?? 0) + 1;
+          result.amountSeries.confirmed[index] = roundAmount(
+            (result.amountSeries.confirmed[index] ?? 0) + row.amount,
+          );
+        }
       } else if (row.status === BookingStatus.PENDING) {
-        result.pendingBookings += row.count;
-        result.monthlyBookings.pending[index] =
-          (result.monthlyBookings.pending[index] ?? 0) + row.count;
+        result.pendingBookings += 1;
+        result.pendingAmount += row.amount;
+        if (index >= 0) {
+          result.monthlyBookings.pending[index] = (result.monthlyBookings.pending[index] ?? 0) + 1;
+          result.amountSeries.pending[index] = roundAmount(
+            (result.amountSeries.pending[index] ?? 0) + row.amount,
+          );
+        }
       } else if (row.status === BookingStatus.CANCELLED) {
-        result.cancelledBookings += row.count;
-        result.monthlyBookings.cancelled[index] =
-          (result.monthlyBookings.cancelled[index] ?? 0) + row.count;
+        result.cancelledBookings += 1;
+        result.cancelledAmount += row.amount;
+        if (index >= 0) {
+          result.monthlyBookings.cancelled[index] =
+            (result.monthlyBookings.cancelled[index] ?? 0) + 1;
+          result.amountSeries.cancelled[index] = roundAmount(
+            (result.amountSeries.cancelled[index] ?? 0) + row.amount,
+          );
+        }
       }
     }
 
-    result.totalRevenue = Math.round(result.totalRevenue * 100) / 100;
-    result.monthlyRevenue = result.monthlyRevenue.map((value) => Math.round(value * 100) / 100);
+    result.totalRevenue = roundAmount(result.totalRevenue);
+    result.completedAmount = roundAmount(result.completedAmount);
+    result.confirmedAmount = roundAmount(result.confirmedAmount);
+    result.pendingAmount = roundAmount(result.pendingAmount);
+    result.cancelledAmount = roundAmount(result.cancelledAmount);
     return result;
   }
 

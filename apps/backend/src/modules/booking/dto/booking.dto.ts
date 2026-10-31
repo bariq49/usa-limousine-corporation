@@ -6,6 +6,7 @@ import {
   IsBoolean,
   IsEmail,
   IsEnum,
+  IsIn,
   IsInt,
   IsNotEmpty,
   IsNumber,
@@ -19,6 +20,10 @@ import {
 import { OmitType } from "@nestjs/swagger";
 import { BookingStatus, BookingType } from "@prisma/client";
 import { ApiFeatureQueryDto } from "../../../common/api-feature/api-feature-query.dto";
+import {
+  ANALYTICS_RANGES,
+  type AnalyticsRange,
+} from "../../../common/utils/analytics-range";
 
 export class LocationDto {
   @IsString()
@@ -429,6 +434,10 @@ export class AnalyticsQueryDto {
   @Min(1)
   @Max(12)
   month?: number;
+
+  @IsOptional()
+  @IsIn(ANALYTICS_RANGES)
+  range?: AnalyticsRange;
 
   @IsOptional()
   @IsString()

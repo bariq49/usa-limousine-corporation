@@ -2,6 +2,7 @@ export function getGridConfig(borderColor: string) {
   return {
     borderColor,
     strokeDashArray: 4,
+    show: true,
     xaxis: {
       lines: {
         show: false,
@@ -14,9 +15,9 @@ export function getGridConfig(borderColor: string) {
     },
     padding: {
       top: 0,
-      right: 20,
+      right: 8,
       bottom: 0,
-      left: 10,
+      left: 4,
     },
   };
 }

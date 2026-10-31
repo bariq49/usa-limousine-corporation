@@ -15,6 +15,7 @@ describe("admin navigation", () => {
       "/blogs/create",
       "/blogs/drafts",
       "/blogs/scheduled",
+      "/booking-analytics",
       "/bookings",
       "/cancelled-bookings",
       "/categories",

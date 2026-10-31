@@ -5,6 +5,7 @@ import { useTheme } from "next-themes";
 import { theme } from "../../lib/themes";
 import { useMediaQuery } from "../../hooks/use-media-query";
 import { getGridConfig, getXAxisConfig, getYAxisConfig } from "../../lib/apexcharts-options";
+import { chartTickAmount, shouldTrimChartLabels } from "../../lib/chart-axis";
 import type { ApexAxisChartSeries, ApexOptions } from "apexcharts";
 
 interface AreaChartProps {
@@ -27,7 +28,13 @@ const AreaChart = (props: AreaChartProps) => {
     formatTooltipValue,
     formatTooltipTitle,
   } = props;
-  const isMobile = !useMediaQuery("(min-width: 768px)");
+  const isMobile = !useMediaQuery("(min-width: 640px)");
+  const isTablet = !useMediaQuery("(min-width: 1024px)");
+  const chartHeight = isMobile
+    ? Math.min(height, 220)
+    : isTablet
+      ? Math.min(height, 260)
+      : height;
 
   const { theme: mode } = useTheme();
 
@@ -38,9 +45,11 @@ const AreaChart = (props: AreaChartProps) => {
 
   const options: ApexOptions = {
     chart: {
-      toolbar: {
-        show: false,
-      },
+      toolbar: { show: false },
+      parentHeightOffset: 0,
+      redrawOnParentResize: true,
+      redrawOnWindowResize: true,
+      animations: { enabled: true },
     },
     dataLabels: {
       enabled: false,
@@ -97,11 +106,12 @@ const AreaChart = (props: AreaChartProps) => {
       ...getXAxisConfig(chartLabelColor),
       ...(categories && { categories }),
       tickPlacement: "on",
-      tickAmount: isMobile ? 6 : Math.min(categories?.length ?? 12, 16),
+      tickAmount: chartTickAmount(categories?.length ?? 12, isMobile, isTablet),
       labels: {
         rotate: 0,
-        hideOverlappingLabels: true,
-        trim: false,
+        hideOverlappingLabels: shouldTrimChartLabels(categories?.length ?? 0),
+        trim: shouldTrimChartLabels(categories?.length ?? 0),
+        showDuplicates: false,
         style: {
           colors: chartLabelColor,
           fontSize: isMobile ? "10px" : "12px",
@@ -113,13 +123,9 @@ const AreaChart = (props: AreaChartProps) => {
   };
 
   return (
-    <Chart
-      options={options}
-      series={series}
-      type="area"
-      height={isMobile ? Math.min(height, 240) : height}
-      width={"100%"}
-    />
+    <div className="min-w-0 w-full">
+      <Chart options={options} series={series} type="area" height={chartHeight} width="100%" />
+    </div>
   );
 };
 

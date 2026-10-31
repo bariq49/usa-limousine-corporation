@@ -198,25 +198,30 @@ describe("BookingPricingService.create checks", () => {
 });
 
 describe("BookingService.buildAnalytics", () => {
-  it("folds (month, status) rows into yearly totals and Jan..Dec buckets", async () => {
-    const analyticsRows = jest.fn(async () => [
-      { bucket: 1, status: BookingStatus.COMPLETED, count: 2, amount: 150.5 },
-      { bucket: 1, status: BookingStatus.PENDING, count: 1, amount: 80 },
-      { bucket: 3, status: BookingStatus.CONFIRMED, count: 4, amount: 400 },
-      { bucket: 12, status: BookingStatus.CANCELLED, count: 1, amount: 60 },
-      { bucket: 12, status: BookingStatus.COMPLETED, count: 1, amount: 99.25 },
+  it("folds booking events into yearly totals and Jan..Dec buckets", async () => {
+    const analyticsEvents = jest.fn(async () => [
+      { createdAt: new Date("2026-01-10T12:00:00Z"), status: BookingStatus.COMPLETED, amount: 75.25 },
+      { createdAt: new Date("2026-01-20T12:00:00Z"), status: BookingStatus.COMPLETED, amount: 75.25 },
+      { createdAt: new Date("2026-01-15T12:00:00Z"), status: BookingStatus.PENDING, amount: 80 },
+      { createdAt: new Date("2026-03-05T12:00:00Z"), status: BookingStatus.CONFIRMED, amount: 100 },
+      { createdAt: new Date("2026-03-06T12:00:00Z"), status: BookingStatus.CONFIRMED, amount: 100 },
+      { createdAt: new Date("2026-03-07T12:00:00Z"), status: BookingStatus.CONFIRMED, amount: 100 },
+      { createdAt: new Date("2026-03-08T12:00:00Z"), status: BookingStatus.CONFIRMED, amount: 100 },
+      { createdAt: new Date("2026-12-02T12:00:00Z"), status: BookingStatus.CANCELLED, amount: 60 },
+      { createdAt: new Date("2026-12-18T12:00:00Z"), status: BookingStatus.COMPLETED, amount: 99.25 },
     ]);
     const service = new BookingService(
-      { analyticsRows } as never,
+      { analyticsEvents } as never,
+      {} as never,
       {} as never,
       {} as never,
       {} as never,
       {} as never,
     );
 
-    const result = await service.buildAnalytics(2026, "user-1");
+    const result = await service.buildAnalytics({ year: 2026, userId: "user-1" });
 
-    expect(analyticsRows).toHaveBeenCalledWith(2026, "user-1", undefined);
+    expect(analyticsEvents).toHaveBeenCalled();
     expect(result.totalBookings).toBe(9);
     expect(result.completedBookings).toBe(3);
     expect(result.confirmedBookings).toBe(4);
@@ -228,25 +233,28 @@ describe("BookingService.buildAnalytics", () => {
     expect(result.monthlyBookings.confirmed[2]).toBe(4);
     expect(result.monthlyBookings.cancelled[11]).toBe(1);
     expect(result.monthlyRevenue).toHaveLength(12);
+    expect(result.labels).toHaveLength(12);
     expect(result.month).toBeNull();
   });
 
   it("returns one bucket per day when a month is requested", async () => {
-    const analyticsRows = jest.fn(async () => [
-      { bucket: 5, status: BookingStatus.COMPLETED, count: 1, amount: 101.3 },
-      { bucket: 31, status: BookingStatus.CONFIRMED, count: 2, amount: 200 },
+    const analyticsEvents = jest.fn(async () => [
+      { createdAt: new Date("2026-10-05T12:00:00Z"), status: BookingStatus.COMPLETED, amount: 101.3 },
+      { createdAt: new Date("2026-10-31T12:00:00Z"), status: BookingStatus.CONFIRMED, amount: 100 },
+      { createdAt: new Date("2026-10-31T15:00:00Z"), status: BookingStatus.CONFIRMED, amount: 100 },
     ]);
     const service = new BookingService(
-      { analyticsRows } as never,
+      { analyticsEvents } as never,
+      {} as never,
       {} as never,
       {} as never,
       {} as never,
       {} as never,
     );
 
-    const result = await service.buildAnalytics(2026, "user-1", 10);
+    const result = await service.buildAnalytics({ year: 2026, month: 10, userId: "user-1" });
 
-    expect(analyticsRows).toHaveBeenCalledWith(2026, "user-1", 10);
+    expect(analyticsEvents).toHaveBeenCalled();
     expect(result.month).toBe(10);
     expect(result.monthlyRevenue).toHaveLength(31);
     expect(result.monthlyRevenue[4]).toBe(101.3);

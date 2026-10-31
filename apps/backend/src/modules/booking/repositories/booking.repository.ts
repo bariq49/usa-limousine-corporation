@@ -8,12 +8,10 @@ import {
   type PaymentMode,
 } from "@prisma/client";
 import { APIFeature } from "../../../common/api-feature";
-import { wallClock } from "../../../common/utils/day-bounds";
-import { APP_TIMEZONE } from "../../../common/utils/format-time";
 import { PrismaService } from "../../../infrastructure/database/prisma.service";
 import type { QueryDto } from "../dto/booking.dto";
 import type {
-  AnalyticsRow,
+  AnalyticsEventRow,
   CreateData,
   ExtraServiceItemInput,
   FindForCalendarParams,
@@ -340,26 +338,18 @@ export class BookingRepository {
     });
   }
 
-  analyticsRows(year: number, userId?: string, month?: number): Promise<AnalyticsRow[]> {
-    const start = month ? new Date(Date.UTC(year, month - 1, 1)) : new Date(Date.UTC(year, 0, 1));
-    const end = month ? new Date(Date.UTC(year, month, 1)) : new Date(Date.UTC(year + 1, 0, 1));
-    const from = wallClock(APP_TIMEZONE, start.toISOString().slice(0, 10), "00:00") ?? start;
-    const to = wallClock(APP_TIMEZONE, end.toISOString().slice(0, 10), "00:00") ?? end;
+  analyticsEvents(start: Date, end: Date, userId?: string): Promise<AnalyticsEventRow[]> {
     const byUser = userId ? Prisma.sql`AND "userId" = ${userId}` : Prisma.empty;
-    const bucket = month ? Prisma.sql`DAY` : Prisma.sql`MONTH`;
-
-    return this.prisma.$queryRaw<AnalyticsRow[]>`
+    return this.prisma.$queryRaw<AnalyticsEventRow[]>`
       SELECT
-        EXTRACT(${bucket} FROM ("createdAt" AT TIME ZONE 'UTC' AT TIME ZONE ${APP_TIMEZONE}))::int AS bucket,
+        "createdAt" AS "createdAt",
         "status" AS status,
-        COUNT(*)::int AS count,
-        COALESCE(SUM("totalPrice"), 0)::float8 AS amount
+        COALESCE("totalPrice", 0)::float8 AS amount
       FROM "Booking"
       WHERE "deletedAt" IS NULL
-        AND "createdAt" >= ${from}
-        AND "createdAt" < ${to}
+        AND "createdAt" >= ${start}
+        AND "createdAt" < ${end}
         ${byUser}
-      GROUP BY 1, 2
     `;
   }
 

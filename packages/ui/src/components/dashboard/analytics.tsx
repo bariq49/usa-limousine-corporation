@@ -127,15 +127,15 @@ export function Analytics({
   return (
     <Card
       className={cn(
-        "flex h-full flex-col max-md:border-none max-md:bg-transparent max-md:shadow-none",
+        "flex h-full min-w-0 flex-col overflow-hidden rounded-md border-none bg-transparent shadow-none md:border md:border-border/60 md:bg-card",
         className,
       )}
     >
-      <CardHeader className="gap-3 border-none pb-0 max-md:px-0 max-md:pt-0 md:flex-row md:items-start md:justify-between">
+      <CardHeader className="gap-3 border-none px-0 pb-3 pt-0 md:flex-row md:items-start md:justify-between md:border-b md:border-border/50 md:px-5 md:pb-4 md:pt-5">
         <div className="flex min-w-0 items-start justify-between gap-3">
           <div className="min-w-0 space-y-1">
-            <div className="text-xl font-semibold text-default-900">{title}</div>
-            <span className="block text-xs text-default-600 md:text-sm">{description}</span>
+            <div className="text-lg font-semibold text-default-900 md:text-xl">{title}</div>
+            <span className="block text-xs text-default-500 md:text-sm">{description}</span>
           </div>
           {showFilters ? (
             <Button
@@ -230,14 +230,15 @@ export function Analytics({
           </DialogContent>
         </Dialog>
       ) : null}
-      <CardContent className="flex flex-1 flex-col px-0 py-4 md:p-5">
+      <CardContent className="flex flex-1 flex-col gap-5 px-0 py-3 md:gap-6 md:p-5">
         <div
           className={cn(
-            "grid grid-cols-2 items-stretch gap-3 sm:gap-4 lg:gap-6",
+            "grid grid-cols-2 items-stretch gap-2 sm:gap-3",
             {
-              "lg:grid-cols-4": stats.length === 4,
-              "lg:grid-cols-5": stats.length >= 5,
               "lg:grid-cols-3": stats.length <= 3,
+              "lg:grid-cols-4": stats.length === 4,
+              "lg:grid-cols-5": stats.length === 5,
+              "lg:grid-cols-6": stats.length >= 6,
             },
             statsClassName,
           )}
@@ -249,13 +250,13 @@ export function Analytics({
               aria-pressed={selected?.key === item.key}
               onClick={() => setSelectedKey(item.key)}
               className={cn(
-                "relative flex h-full min-h-24 w-full cursor-pointer flex-col items-start justify-between gap-1 overflow-hidden rounded-md p-3.5 text-left transition hover:-translate-y-0.5 hover:shadow-sm focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none md:min-h-28 md:gap-1.5 md:p-4",
+                "relative flex h-full min-h-24 w-full cursor-pointer flex-col items-start justify-between gap-1 overflow-hidden rounded-md border-none p-3.5 text-left transition hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none md:min-h-28 md:gap-1.5 md:p-4",
                 {
-                  "bg-primary/30": item.color === "primary",
-                  "bg-warning/30": item.color === "warning",
-                  "bg-success/30": item.color === "success",
-                  "bg-info/30": item.color === "info",
-                  "bg-destructive/20": item.color === "destructive",
+                  "bg-primary/20": item.color === "primary",
+                  "bg-warning/20": item.color === "warning",
+                  "bg-success/20": item.color === "success",
+                  "bg-info/20": item.color === "info",
+                  "bg-destructive/15": item.color === "destructive",
                   "ring-2 ring-inset ring-primary": selected?.key === item.key,
                 },
               )}
@@ -266,10 +267,10 @@ export function Analytics({
                   "pointer-events-none absolute -top-6 -right-6 h-16 w-16 rounded-full md:-top-8 md:-right-8 md:h-20 md:w-20",
                   {
                     "bg-primary/40": item.color === "primary",
-                    "bg-amber-300/50": item.color === "warning",
-                    "bg-green-300/50": item.color === "success",
-                    "bg-cyan-300/50": item.color === "info",
-                    "bg-red-300/50": item.color === "destructive",
+                    "bg-warning/40": item.color === "warning",
+                    "bg-success/40": item.color === "success",
+                    "bg-info/40": item.color === "info",
+                    "bg-destructive/30": item.color === "destructive",
                   },
                 )}
               />
@@ -287,8 +288,8 @@ export function Analytics({
           ))}
         </div>
         {selected ? (
-          <div className="mt-6 flex flex-1 flex-col md:px-3">
-            <div className="mb-4">
+          <div className="flex flex-1 flex-col border-t border-border/50 pt-5">
+            <div className="mb-3">
               <h3 className="text-base font-semibold text-default-900">
                 {selected.label} Overview
               </h3>

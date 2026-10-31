@@ -42,9 +42,15 @@ export const navigation: MenuSection[] = [
         items: [
           {
             id: "analytics",
-            label: "Dashboard",
+            label: "Analytics",
             href: "/analytics",
             icon: Graph,
+          },
+          {
+            id: "booking-analytics",
+            label: "Booking Analytics",
+            href: "/booking-analytics",
+            icon: Calendar,
           },
           {
             id: "user-analytics",

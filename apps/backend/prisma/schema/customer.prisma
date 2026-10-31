@@ -1,6 +1,5 @@
 enum CustomerType {
   NORMAL
-  VIP
   CORPORATE
 }
 

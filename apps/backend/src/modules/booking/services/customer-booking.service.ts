@@ -130,11 +130,12 @@ export class CustomerBookingService {
 
   analytics(query: AnalyticsQueryDto, request: Request): Promise<Analytics> {
     const userId = requireUserId(toRequestContext(request));
-    return this.bookingService.buildAnalytics(
-      query.year ?? new Date().getUTCFullYear(),
+    return this.bookingService.buildAnalytics({
+      year: query.year,
+      month: query.month,
+      range: query.range,
       userId,
-      query.month,
-    );
+    });
   }
 
   async cancel(id: string, body: CancelDto, request: Request) {

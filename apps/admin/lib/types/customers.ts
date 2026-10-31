@@ -1,4 +1,4 @@
-export type CustomerType = "NORMAL" | "VIP" | "CORPORATE";
+export type CustomerType = "NORMAL" | "CORPORATE";
 
 export type CustomerUser = {
   id: string;

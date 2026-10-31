@@ -207,7 +207,7 @@ describe("Drivers (e2e)", () => {
     expect(stats.body.data.totalCommission).toBeCloseTo(total * 0.25, 2);
 
     const dashboard = await request(app.getHttpServer())
-      .get(`${basePath}/admin/dashboard`)
+      .get(`${basePath}/admin/dashboard/overview`)
       .query({ period: "daily" })
       .set(auth)
       .expect(200);

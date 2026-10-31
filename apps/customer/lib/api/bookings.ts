@@ -8,12 +8,14 @@ import type {
 } from "@usa-limousine-corporation/ui/types/booking-model";
 import { http } from "../http/client";
 import API_ROUTES from "./routes";
+import type { AnalyticsPeriod } from "../types/analytics";
 import type { BookingAnalytics } from "./types";
 
-export const getBookingAnalytics = (year: number, month: number | null) => {
-  return http.get<BookingAnalytics>(`${API_ROUTES.BOOKINGS}/analytics`, {
-    params: { year, month: month ?? undefined },
-  });
+export const getBookingAnalytics = (period: AnalyticsPeriod) => {
+  const params: Record<string, number | string> = { year: period.year };
+  if (period.month != null) params.month = period.month;
+  if (period.window !== "all") params.range = period.window;
+  return http.get<BookingAnalytics>(`${API_ROUTES.BOOKINGS}/analytics`, { params });
 };
 
 export const getBookings = (params?: Query) => {

@@ -19,7 +19,6 @@ import type { Customer, CustomerType } from "@/lib/types/customers";
 
 export const CUSTOMER_TYPE_LABELS: Record<CustomerType, string> = {
   NORMAL: "Normal",
-  VIP: "VIP",
   CORPORATE: "Corporate",
 };
 
