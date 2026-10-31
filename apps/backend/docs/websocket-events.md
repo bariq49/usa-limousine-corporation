@@ -33,9 +33,9 @@ JWT required on connect (no guest offer-watch). Customers receive marketplace ev
 `chat.conversation.opened`
 `chat.conversation.closed`
 
-### Inbox / FCM `NotificationType` (index)
+### Inbox `NotificationType` (index)
 
-Delivered on `notification.created` (user) or `driver.notification.created` (driver), plus optional FCM. See [firebase-notifications.md](./firebase-notifications.md).
+Delivered on `notification.created` (user) or `driver.notification.created` (driver).
 
 `BOOKING_AVAILABLE`
 `BOOKING_UNAVAILABLE`
@@ -189,9 +189,9 @@ Payload: `{ id, type, title, body, data, createdAt, readAt }`.
 
 Drivers receive only `driver.notification.created` (not both). Users receive only `notification.created`.
 
-For push / lock-screen delivery, see [firebase-notifications.md](./firebase-notifications.md).
+**Delivery order:** DB inbox row → WebSocket.
 
-**Delivery order:** DB inbox row → WebSocket → optional FCM (`push` flag; drivers via `Driver.fcmToken`, customers via `Customer.fcmToken` + push settings).
+The database inbox is authoritative. Realtime events are marked dispatched only after the WebSocket server or Redis transport accepts the broadcast; events that cannot be dispatched remain pending for retry. This does not represent acknowledgement by a client.
 
 ## Offer marketplace (logged-in customer)
 
@@ -201,11 +201,11 @@ Drivers go online for their vehicle category room `drivers:cat:<categoryId>`, th
 
 ### Flow
 
-1. Customer creates booking → `OfferService.startSeeking` → `NotifyService.available` (category WS + FCM) + match dispatch job
-2. Nearby matched drivers also get `offer.request` on `driver:<id>` (WS only; no second FCM)
-3. Driver submits quote → customer gets `offer.created` + FCM `OFFER_RECEIVED`; quoting driver gets `offer.result` `BOOKING_QUOTED` (remove from their available). Other drivers keep the card.
-4. Customer may raise fair price → `POST /customers/bookings/:id/counter` → category `booking.available` + FCM `BOOKING_AVAILABLE` (excludes drivers who already quoted) + tracked drivers `offer.request` `BOOKING_PRICE_UPDATED`
-5. Customer accepts → category `booking.taken` + FCM `BOOKING_UNAVAILABLE` (others) + FCM `OFFER_ACCEPTED` (winner) → checkout → after pay, trip created → `booking.taken` again with `tripId`
+1. Customer creates booking → `OfferService.startSeeking` → `NotifyService.available` (category WebSocket event) + match dispatch job
+2. Nearby matched drivers also get `offer.request` on `driver:<id>`
+3. Driver submits quote → customer gets `offer.created`; quoting driver gets `offer.result` `BOOKING_QUOTED` (remove from their available). Other drivers keep the card.
+4. Customer may raise fair price → `POST /customers/bookings/:id/counter` → category `booking.available` + tracked drivers `offer.request` `BOOKING_PRICE_UPDATED`
+5. Customer accepts → category `booking.taken` for other drivers and `OFFER_ACCEPTED` for the winner → checkout → after pay, trip created → `booking.taken` again with `tripId`
 6. Payment timeout / failed payment reopens seeking → `NotifyService.available` again
 
 Customer REST helpers: `GET /customers/bookings/current` and `GET /customers/bookings/:id` return `{ booking, offers }`.
@@ -244,8 +244,6 @@ Driver dismisses an available ride: `POST /offers/available/:bookingId/decline` 
 
 UI: countdown to `offerSessionExpiresAt`; remove the card when it hits zero, or on `booking.taken` / session end.
 
-FCM for available/taken: [firebase-notifications.md](./firebase-notifications.md).
-
 ## Ride chat (text-only V1)
 
 Centralized Chat Module. Conversations are keyed by `User.id` participants. Ride chat is the first subject (`subjectType=TRIP`).
@@ -273,16 +271,14 @@ REST: `GET /chat/conversations…`, `POST …/messages` (no mark-read route). Me
 Conversation payloads include `counterpart: { userId, name, avatar }` for the other participant (driver `avatarUrl`/name or passenger `User.avatar`/name).
 Opening a chat (`chat.join`, `GET /chat/conversations/:id`, or trip resolve) **auto-marks read** up to the latest message. If the peer is already in the chat room when you send, server auto-emits **delivered + read** (blue tick).
 
-FCM: [firebase-notifications.md](./firebase-notifications.md) (`CHAT_MESSAGE` per recipient not in chat room).
-
 ## Trip completed + wallet
 
 `POST /trips/:id/complete` (from `ARRIVED_AT_DROPOFF`):
 
 1. Trip → `COMPLETED`
 2. Credits driver wallet with booking `pricing.total` (idempotent per trip)
-3. Driver: inbox + FCM `WALLET_CREDITED`
-4. Customer (if `booking.userId`): inbox + FCM `TRIP_COMPLETED` → prompt to rate driver (`POST /customers/trips/:id/review`)
+3. Driver: inbox notification `WALLET_CREDITED`
+4. Customer (if `booking.userId`): inbox notification `TRIP_COMPLETED` → prompt to rate driver (`POST /customers/trips/:id/review`)
 5. Realtime wallet events on `driver:<driverId>`
 6. Leaves trip room / flushes live GPS
 
@@ -313,7 +309,7 @@ Refresh balance anytime via REST `GET /drivers/wallet`.
 `POST /trips/:id/cancel` (any active status):
 
 1. Trip + booking → `CANCELLED`
-2. Inbox + FCM `TRIP_CANCELLED` for that driver
+2. Inbox notification `TRIP_CANCELLED` for that driver
 3. Leaves trip room / flushes live GPS
 
 | Event                         | Room          | When                           |
@@ -322,7 +318,7 @@ Refresh balance anytime via REST `GET /drivers/wallet`.
 
 ## Driver subscriptions
 
-Subscription domain notifications use the standard inbox path (DB → WebSocket → optional FCM). Drivers listen on `driver.notification.created` only — there is no separate `subscription.*` Socket.IO event.
+Subscription domain notifications use the standard inbox path (DB → WebSocket). Drivers listen on `driver.notification.created` only — there is no separate `subscription.*` Socket.IO event.
 
 | Event                         | Room          | When                              |
 | ----------------------------- | ------------- | --------------------------------- |
@@ -365,8 +361,6 @@ Payload shape (inbox):
   "readAt": null
 }
 ```
-
-FCM titles/bodies and `push` flags: [firebase-notifications.md](./firebase-notifications.md) (Driver subscriptions).
 
 Refresh subscription UI from the REST endpoints above after these events.
 
@@ -412,7 +406,7 @@ Each transition appends a `PayoutEvent` row (`payoutId`, `event`, `previousStatu
 
 ### Inbox (WebSocket)
 
-Payout notifications use the standard inbox path (DB → WebSocket → optional FCM). Drivers listen on `driver.notification.created` only.
+Payout notifications use the standard inbox path (DB → WebSocket). Drivers listen on `driver.notification.created` only.
 
 | Event                         | Room          | When                        |
 | ----------------------------- | ------------- | --------------------------- |
@@ -425,8 +419,6 @@ Payout notifications use the standard inbox path (DB → WebSocket → optional 
 | `PAYOUT_PAID`      | `POST /admin/payouts/:id/mark-paid` | yes  |
 | `PAYOUT_REJECTED`  | `POST /admin/payouts/:id/reject`    | yes  |
 | `PAYOUT_CANCELLED` | `POST /drivers/payouts/:id/cancel`  | no   |
-
-FCM titles/bodies: [firebase-notifications.md](./firebase-notifications.md) (Driver payouts).
 
 ### Driver REST (refresh UI after events)
 
@@ -453,7 +445,7 @@ FCM titles/bodies: [firebase-notifications.md](./firebase-notifications.md) (Dri
 
 Online drivers join `drivers:online` + `drivers:cat:<vehicleCategoryId>` on go-online / heartbeat (and on WS connect if already online). Leave on go-offline.
 
-Marketplace available list is **`GET /offers/available`** (SEEKING_OFFERS in the driver’s category). Prefer Socket `booking.available` / FCM; REST is the poll fallback.
+Marketplace available list is **`GET /offers/available`** (SEEKING_OFFERS in the driver’s category). Prefer Socket `booking.available`; REST is the poll fallback.
 
 | Event               | Room                       | When                                                     |
 | ------------------- | -------------------------- | -------------------------------------------------------- |
@@ -467,7 +459,7 @@ Marketplace available list is **`GET /offers/available`** (SEEKING_OFFERS in the
 
 Payload: see Offer marketplace section above (same shape as list items). Session window is `offerSessionExpiresAt` from platform `offerSessionTtlMin`.
 
-FCM targets: online drivers in the same vehicle category (inbox + push when token / push settings allow). Location is for maps/fleet only — not used to filter who gets the notification.
+Notifications target online drivers in the same vehicle category. Location is for maps/fleet only — not used to filter who gets the notification.
 
 **`booking.taken`**
 

@@ -1,20 +1,18 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
 import { BookingStatus, DriverStatus } from "@prisma/client";
 import type { Request } from "express";
-import { PLATFORM } from "@usa-limousine-corporation/config";
 import { AppLogger } from "../../../common/logger/app.logger";
 import { auditLog } from "../../../common/utils/audit-log";
 import { roundAmount, toAmount } from "../../../common/utils/money";
 import { toRequestContext } from "../../../common/utils/to-request-context";
 import { PrismaService } from "../../../infrastructure/database/prisma.service";
-import { EmailService } from "../../../infrastructure/email/email.service";
-import { driverAssigned } from "../../../infrastructure/email/templates/booking/driver-assigned";
 
 import { BookingRepository } from "../../booking/repositories/booking.repository";
-import { BookingEmailService } from "../../booking/services/booking-email.service";
-import type { AssignDto } from "../dto/driver.dto";
+import { BookingEmailService } from "../../booking/services/email.service";
 import { DriverRepository } from "../repositories/driver.repository";
+import type { AssignInput } from "../types/assignment";
+import { DriverEmailService } from "./driver-email.service";
+import { DriverSmsService } from "./driver-sms.service";
 
 @Injectable()
 export class AssignmentService {
@@ -22,20 +20,27 @@ export class AssignmentService {
     @Inject(DriverRepository) private readonly repository: DriverRepository,
     @Inject(BookingRepository) private readonly bookingRepository: BookingRepository,
     @Inject(BookingEmailService) private readonly bookingEmails: BookingEmailService,
+    @Inject(DriverEmailService) private readonly driverEmails: DriverEmailService,
+    @Inject(DriverSmsService) private readonly driverSms: DriverSmsService,
     @Inject(PrismaService) private readonly prisma: PrismaService,
-    @Inject(EmailService) private readonly emailService: EmailService,
-    @Inject(ConfigService) private readonly configService: ConfigService,
     @Inject(AppLogger) private readonly logger: AppLogger,
   ) {}
 
   async list(bookingId: string) {
-    await this.requireBooking(bookingId);
+    const booking = await this.bookingRepository.findById(bookingId);
+    if (!booking) {
+      throw new NotFoundException("Booking not found");
+    }
     return this.repository.listAssignments(bookingId);
   }
 
-  async assign(bookingId: string, body: AssignDto, request: Request) {
+  async assign(input: AssignInput) {
+    const { bookingId, body, request } = input;
     const context = toRequestContext(request);
-    const booking = await this.requireBooking(bookingId);
+    const booking = await this.bookingRepository.findById(bookingId);
+    if (!booking) {
+      throw new NotFoundException("Booking not found");
+    }
 
     if (booking.status === BookingStatus.COMPLETED || booking.status === BookingStatus.CANCELLED) {
       throw new BadRequestException(
@@ -76,14 +81,47 @@ export class AssignmentService {
         commissionRate: body.commissionRate,
       },
     });
-    void this.notifyDriver(bookingId, assignment.id);
+    const user = assignment.driver.user;
+    const driverName = [user.firstName, user.lastName].filter(Boolean).join(" ") || "Driver";
+    const bookingEmail = this.bookingEmails.toBookingEmail(booking);
+    const phone = user.phone?.trim();
+
+    if (!phone) {
+      this.logger.warn(
+        `Driver assignment SMS skipped for ${bookingId}: driver phone is unavailable`,
+        AssignmentService.name,
+      );
+    }
+
+    void this.driverEmails.sendAssigned({
+      to: user.email,
+      booking: bookingEmail,
+      assignment: {
+        driverName,
+        driverAmount: toAmount(assignment.driverAmount),
+        note: assignment.note,
+      },
+    });
+
+    if (phone) {
+      void this.driverSms.sendAssigned({
+        to: phone,
+        bookingNumber: booking.bookingNumber,
+        pickupDate: bookingEmail.pickupDate,
+        pickupTime: bookingEmail.pickupTime,
+        pickupAddress: bookingEmail.pickupAddress,
+      });
+    }
 
     return assignment;
   }
 
   async unassign(bookingId: string, request: Request) {
     const context = toRequestContext(request);
-    const booking = await this.requireBooking(bookingId);
+    const booking = await this.bookingRepository.findById(bookingId);
+    if (!booking) {
+      throw new NotFoundException("Booking not found");
+    }
     const result = await this.repository.unassign(bookingId);
     if (result.count === 0) {
       throw new BadRequestException("This booking has no assigned driver");
@@ -99,46 +137,5 @@ export class AssignmentService {
     });
 
     return { message: "Driver unassigned", bookingId };
-  }
-
-  private async requireBooking(bookingId: string) {
-    const booking = await this.repository.findBookingForAssignment(bookingId);
-    if (!booking) {
-      throw new NotFoundException("Booking not found");
-    }
-    return booking;
-  }
-
-  private async notifyDriver(bookingId: string, assignmentId: string) {
-    try {
-      const row = await this.bookingRepository.findById(bookingId);
-      const assignment = (await this.repository.listAssignments(bookingId)).find(
-        (item) => item.id === assignmentId,
-      );
-      if (!row || !assignment) return;
-
-      const user = assignment.driver.user;
-      const driverName = [user.firstName, user.lastName].filter(Boolean).join(" ") || "Driver";
-      await this.emailService.send({
-        to: user.email,
-        subject: `New ride assigned · ${row.bookingNumber} - ${PLATFORM.shortName}`,
-        html: driverAssigned({
-          booking: this.bookingEmails.toBookingEmail(row),
-          siteUrl: this.configService.getOrThrow<string>("WEBSITE_URL").replace(/\/+$/, ""),
-          assignment: {
-            driverName,
-            driverAmount: toAmount(assignment.driverAmount),
-            note: assignment.note,
-          },
-        }),
-      });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Unknown error";
-      this.logger.error(
-        `Driver assignment email failed for ${bookingId}: ${message}`,
-        undefined,
-        AssignmentService.name,
-      );
-    }
   }
 }

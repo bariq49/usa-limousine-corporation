@@ -18,7 +18,7 @@ export class WebsocketService implements OnModuleDestroy {
   constructor(@Inject(RedisService) private readonly redis: RedisService) {}
 
   isReady() {
-    return this.server !== null || this.redis.isConfigured();
+    return this.server !== null || this.redis.isReady();
   }
 
   attachServer(server: Server) {

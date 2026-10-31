@@ -183,11 +183,7 @@ export function Input(props: InputProps) {
         return (
           <Checkbox
             size={checkboxSize}
-            className={cn(
-              "mt-[1px] border-default-300",
-              hasError && "border-destructive",
-              inputClassName,
-            )}
+            className={cn("border-default-300", hasError && "border-destructive", inputClassName)}
             disabled={disabled}
             checked={!!field.value}
             onCheckedChange={(checked) => field.onChange(checked === true)}

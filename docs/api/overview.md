@@ -149,8 +149,7 @@ newman run "docs/USA Limousine Corporation API.postman_collection.json" \
 
 ## 📡 Real-Time WebSocket Specifications
 
-For deep specifications on Socket.IO events, payloads, room subscriptions, and push notification triggers, consult the following dedicated references:
+For deep specifications on Socket.IO events, payloads, and room subscriptions, consult the following dedicated references:
 
 - **[WebSocket Events Specification](../../apps/backend/docs/websocket-events.md)** — Event index, payload schemas, GPS tracking channels, and ride chat lifecycle.
-- **[Firebase Push Notifications Specification](../../apps/backend/docs/firebase-notifications.md)** — FCM message contracts, device registration, and notification routing.
 - **[Payments (Square)](../../apps/backend/docs/payments.md)** — Guest checkout, webhook settling, payment records and checkout expiry.

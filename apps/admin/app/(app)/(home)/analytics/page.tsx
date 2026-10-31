@@ -159,7 +159,7 @@ const Analytics = () => {
             className="h-full"
           />
         </div>
-        <div className="flex min-w-0 lg:col-span-5 xl:col-span-4">
+        <div className="flex min-w-0 lg:col-span-5 xl:col-span-4 hiden lg:flex">
           <DashboardCalendarPanel />
         </div>
       </div>

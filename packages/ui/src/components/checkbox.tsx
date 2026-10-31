@@ -117,7 +117,7 @@ function Checkbox({
   return (
     <>
       {children ? (
-        <div className="flex items-start">
+        <div className="flex items-center">
           <CheckboxPrimitive.Root
             className={cn(checkboxVariants({ color, size, radius, variant }), className)}
             {...props}

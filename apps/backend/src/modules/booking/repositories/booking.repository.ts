@@ -190,15 +190,6 @@ export class BookingRepository {
     });
   }
 
-  async contactPreferences(userId: string | null) {
-    if (!userId) return { email: true, sms: true };
-    const customer = await this.prisma.customer.findUnique({
-      where: { userId },
-      select: { settings: { select: { email: true, sms: true } } },
-    });
-    return { email: customer?.settings?.email ?? true, sms: customer?.settings?.sms ?? true };
-  }
-
   async findCustomerIdByEmail(email: string) {
     const user = await this.prisma.user.findFirst({
       where: {

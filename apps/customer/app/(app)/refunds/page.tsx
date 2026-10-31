@@ -17,7 +17,9 @@ export default function CustomerRefundsPage() {
   const [search, setSearch] = useState("");
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
-  const statusFilter = columnFilters.find((f) => f.id === "Status")?.value;
+  const statusFilter = columnFilters.find(
+    (f) => f.id.toLowerCase() === "status",
+  )?.value;
   const status = (Array.isArray(statusFilter) ? statusFilter[0] : statusFilter) as
     RefundStatus | undefined;
 

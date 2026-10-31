@@ -39,8 +39,6 @@ docs/
   REST API conventions, standard response envelopes (`{ success, data, meta }`), error structures, WebSocket real-time rooms, and Postman collection usage.
 - **[WebSocket Events Specification](../apps/backend/docs/websocket-events.md)**  
   Complete Socket.IO event registry, room topologies, live trip GPS tracking (`driver.location`), offer marketplace, and ride chat.
-- **[Push Notifications Specification (FCM)](../apps/backend/docs/firebase-notifications.md)**  
-  Firebase Cloud Messaging payload definitions, device registration, notification types, and delivery gating.
 - **[Payment & Webhook Outbox Specification](../apps/backend/docs/payments.md)**  
   Square guest checkout, webhook settling, payment records and checkout expiry.
 
@@ -51,7 +49,7 @@ docs/
 - **[VPS Deployment Setup Guide](../deploy/README.md)**  
   Hostinger VPS host configuration, Caddy reverse proxy, DNS records, SSH deployment keys, and production environment provisioning.
 - **[Infrastructure Credentials Guide](../apps/backend/docs/guide.md)**  
-  Provisioning guide for third-party integrations: Square, Twilio SMS, Firebase Admin SDK, Cloudinary, and SMTP mailers.
+  Provisioning guide for third-party integrations: Square, Twilio SMS, Firebase Admin configuration, Cloudinary, and SMTP mailers.
 - **[Prisma Schema Organization](../apps/backend/prisma/schema/README.md)**  
   Domain-split Prisma schema design patterns and migration rules.
 

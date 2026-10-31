@@ -31,7 +31,7 @@ This folder splits the Prisma data model by domain so the schema can scale witho
 - `schema/wallets.prisma`
   Owns wallet balance and trip-credit transaction history (`Wallet`, `WalletTransaction`, `WalletOwnerType`); Nest module at `modules/wallet/`.
 - `schema/payouts.prisma`
-  Owns polymorphic payout requests and lifecycle events (`Payout`, `PayoutEvent`, `PayoutSequence`) keyed by `WalletOwnerType` + `recipientId` (same pattern as wallet); Nest module at `modules/payout/`. See `apps/backend/docs/websocket-events.md` and `apps/backend/docs/firebase-notifications.md`.
+  Owns polymorphic payout requests and lifecycle events (`Payout`, `PayoutEvent`, `PayoutSequence`) keyed by `WalletOwnerType` + `recipientId` (same pattern as wallet); Nest module at `modules/payout/`. See `apps/backend/docs/websocket-events.md`.
 
 ## Naming Conventions
 

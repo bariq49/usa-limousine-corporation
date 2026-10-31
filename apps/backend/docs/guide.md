@@ -8,7 +8,7 @@ Never commit real secrets. Check status with `GET /api/v1/health`.
 | Service            | Health key           | Required to boot?                      |
 | ------------------ | -------------------- | -------------------------------------- |
 | Twilio (SMS)       | `twilio`             | No — `not_configured` until set        |
-| Firebase (FCM)     | `firebase`           | No — `not_configured` until set        |
+| Firebase Admin SDK | `firebase`           | No — `not_configured` until set        |
 | Square (payments)  | —                    | No — checkout needs the active mode's keys |
 | Cloudinary         | `storage`            | Yes                                    |
 | Email (SMTP)       | `email`              | Yes                                    |
@@ -125,7 +125,7 @@ Domain endpoints will call `AgoraService.buildRtcToken({ channel, uid })` and re
 
 ---
 
-## Firebase (FCM push)
+## Firebase Admin SDK configuration
 
 Env vars:
 
@@ -134,8 +134,6 @@ FIREBASE_PROJECT_ID=your-firebase-project-id
 FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@your-project.iam.gserviceaccount.com
 FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
 ```
-
-More product detail: [firebase-notifications.md](./firebase-notifications.md).
 
 ### 1. Create a Firebase project
 
@@ -165,12 +163,7 @@ For `.env`, keep the key on one line with escaped newlines:
 FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIE...\n-----END PRIVATE KEY-----\n"
 ```
 
-### 4. Enable Cloud Messaging
-
-1. Firebase Console → **Build** → **Cloud Messaging** (ensure the project can send FCM).
-2. Mobile apps still need their own Firebase app config (Android/iOS); the backend only needs the Admin SDK keys above.
-
-### 5. Verify
+### 4. Verify
 
 Restart API → `GET /api/v1/health` → `"firebase": "up"`.
 

@@ -8,6 +8,7 @@ import { API_PREFIX, API_VERSION } from "../src/config/api.constants";
 import { formatDate } from "../src/common/utils/format-date";
 import { PrismaService } from "../src/infrastructure/database/prisma.service";
 import { EmailService } from "../src/infrastructure/email/email.service";
+import { TwilioService } from "../src/infrastructure/twilio/twilio.service";
 import { AuthEmailService } from "../src/modules/auth/services/auth-email.service";
 import { AuthEmailQueueService } from "../src/modules/auth/jobs/auth-email-queue.service";
 import {
@@ -24,6 +25,12 @@ describe("Drivers (e2e)", () => {
   let app: INestApplication;
   let prisma: PrismaService;
   const sendMail = jest.fn(async () => undefined);
+  const sendSms = jest.fn(async () => ({
+    sid: "sms-1",
+    status: "queued",
+    to: "+17325550100",
+    from: "+17325550199",
+  }));
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -35,6 +42,8 @@ describe("Drivers (e2e)", () => {
       .useValue(emailQueueLifecycleMock)
       .overrideProvider(EmailService)
       .useValue({ send: sendMail })
+      .overrideProvider(TwilioService)
+      .useValue({ send: sendSms })
       .compile();
 
     app = moduleFixture.createNestApplication();
@@ -51,6 +60,7 @@ describe("Drivers (e2e)", () => {
     await prisma.userRole.deleteMany();
     await prisma.user.deleteMany();
     sendMail.mockClear();
+    sendSms.mockClear();
   });
 
   afterAll(async () => {
@@ -139,11 +149,21 @@ describe("Drivers (e2e)", () => {
     expect(assigned.body.data.commissionAmount).toBeCloseTo(total * 0.2, 2);
     expect(assigned.body.data.driverAmount).toBeCloseTo(total * 0.8, 2);
     expect(assigned.body.data.driver.user.firstName).toBe("Dana");
-    for (let attempt = 0; attempt < 40 && sendMail.mock.calls.length < 3; attempt += 1) {
+    for (
+      let attempt = 0;
+      attempt < 40 && (sendMail.mock.calls.length < 3 || sendSms.mock.calls.length < 1);
+      attempt += 1
+    ) {
       await new Promise((resolve) => setTimeout(resolve, 50));
     }
     expect(sendMail).toHaveBeenCalledWith(
       expect.objectContaining({ to: "dana.driver@example.com" }),
+    );
+    expect(sendSms).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: "+17325550100",
+        body: expect.stringContaining(booking.body.data.bookingNumber as string),
+      }),
     );
 
     await request(app.getHttpServer())

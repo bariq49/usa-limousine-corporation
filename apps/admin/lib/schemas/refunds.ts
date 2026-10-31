@@ -22,3 +22,16 @@ export const rejectRefundSchema = z.object({
 });
 
 export type RejectRefundSchema = z.infer<typeof rejectRefundSchema>;
+
+export const refundPaymentSchema = z.object({
+  amount: z.coerce.number().positive("Amount must be greater than 0"),
+  manual: z.boolean().default(false),
+  reason: z
+    .string()
+    .trim()
+    .max(500, "Reason cannot exceed 500 characters")
+    .optional()
+    .or(z.literal("")),
+});
+
+export type RefundPaymentSchema = z.infer<typeof refundPaymentSchema>;

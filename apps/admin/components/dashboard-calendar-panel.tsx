@@ -46,7 +46,7 @@ export function DashboardCalendarPanel() {
   return (
     <Card className="flex h-full w-full min-w-0 flex-col overflow-hidden max-md:border-none max-md:bg-transparent max-md:shadow-none">
       <CardHeader className="shrink-0 gap-1 border-none pb-0 max-md:px-0 max-md:pt-0 md:px-5 md:pt-4">
-        <div className="text-xl font-semibold text-default-900">Ride Schedule</div>
+        <div className="text-xl font-semibold text-default-900">Scheduled Bookings</div>
         <p className="text-xs text-default-600 md:text-sm">
           {rides.length} ride{rides.length === 1 ? "" : "s"} on {formatDate({ date: selectedKey })}
         </p>
@@ -115,7 +115,7 @@ export function DashboardCalendarPanel() {
                 </div>
               ))}
               <Link
-                href="/calendar"
+                href="/scheduled-bookings"
                 className="flex items-center justify-center pt-2 text-sm font-medium text-primary hover:underline"
               >
                 View all

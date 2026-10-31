@@ -1,5 +1,5 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from "@nestjs/common";
-import { BookingStatus, BookingType, type Notification } from "@prisma/client";
+import { BookingStatus, BookingType } from "@prisma/client";
 import type { Request } from "express";
 import { auditLog } from "../../../common/utils/audit-log";
 import { allocateCode } from "../../../common/utils/allocate-sequence-code";
@@ -18,9 +18,9 @@ import type {
 } from "../dto/booking.dto";
 import { BookingRepository } from "../repositories/booking.repository";
 import type { Analytics, CalendarEvent, TimeInput } from "../types/booking";
-import { BookingEmailService } from "./booking-email.service";
+import { BookingEmailService } from "./email.service";
 import { NotificationService } from "./notification.service";
-import { BookingPricingService } from "./booking-pricing.service";
+import { BookingPricingService } from "./pricing.service";
 import { BookingService } from "./booking.service";
 
 @Injectable()
@@ -45,8 +45,7 @@ export class CustomerBookingService {
       prefix: "BK",
       nextSequence: () => this.sequenceService.nextBooking(),
     });
-    let stagedNotifications: Notification[] = [];
-    const booking = await this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       const created = await this.bookingRepository.create(
         {
           userId,
@@ -78,21 +77,20 @@ export class CustomerBookingService {
         tx,
       );
 
-      stagedNotifications = await this.notifications.stageCreated(
+      const stagedNotifications = await this.notifications.stageCreated(
         {
           bookingId: created.id,
           bookingNumber: created.bookingNumber,
           userId,
-          excludeUserId: userId,
         },
         tx,
       );
 
-      return created;
+      return { booking: created, notifications: stagedNotifications };
     });
 
-    void this.notifications.deliverStaged(stagedNotifications);
-    void this.bookingEmails.sendCreated(booking.id);
+    await this.notifications.deliverStaged(result.notifications);
+    void this.bookingEmails.sendCreated(result.booking.id);
 
     await auditLog({
       prisma: this.prisma,
@@ -101,13 +99,15 @@ export class CustomerBookingService {
       context,
       userId,
       metadata: {
-        bookingId: booking.id,
-        bookingNumber: booking.bookingNumber,
-        status: booking.status,
+        bookingId: result.booking.id,
+        bookingNumber: result.booking.bookingNumber,
+        status: result.booking.status,
       },
     });
 
-    return (await this.bookingRepository.findOwnedByUser(booking.id, userId)) ?? booking;
+    return (
+      (await this.bookingRepository.findOwnedByUser(result.booking.id, userId)) ?? result.booking
+    );
   }
 
   list(query: QueryDto, request: Request) {

@@ -22,9 +22,6 @@ describe("TicketService", () => {
     nextHelpTicket: jest.fn(),
   };
   const tx = {
-    customer: {
-      findUnique: jest.fn(),
-    },
     user: {
       findMany: jest.fn(async () => [{ id: "admin-1" }]),
     },
@@ -32,10 +29,6 @@ describe("TicketService", () => {
   const prisma = {
     auditLog: {
       create: jest.fn(),
-    },
-    customer: {
-      findUnique: jest.fn(),
-      findFirst: jest.fn(),
     },
     $transaction: jest.fn(async (fn: (client: typeof tx) => Promise<unknown>) => fn(tx)),
   };
@@ -60,8 +53,6 @@ describe("TicketService", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    prisma.customer.findFirst.mockResolvedValue(null);
-    tx.customer.findUnique.mockResolvedValue({ userId: "customer-user-1" });
     service = new TicketService(
       tickets as unknown as TicketRepository,
       sequenceService as unknown as SequenceService,
@@ -148,6 +139,7 @@ describe("TicketService", () => {
       category: HelpTicketCategory.OTHER,
       subject: "Wallet issue",
       customerId: "customer-1",
+      customer: { user: { id: "customer-user-1" } },
     });
 
     const result = await service.create(
@@ -179,7 +171,7 @@ describe("TicketService", () => {
       ]),
       tx,
     );
-    expect(appNotifications.deliverStaged).toHaveBeenCalledWith(staged);
+    expect(appNotifications.deliverStaged).toHaveBeenCalledWith(staged.concat(staged));
     expect(events.emit).toHaveBeenCalledWith(
       TICKET_EVENT.CREATED,
       expect.objectContaining({
@@ -201,6 +193,7 @@ describe("TicketService", () => {
       category: HelpTicketCategory.OTHER,
       subject: "Billing question",
       customerId: "customer-1",
+      customer: { user: { id: "customer-user-1" } },
     });
 
     await service.create(
@@ -242,6 +235,7 @@ describe("TicketService", () => {
       customerId: "customer-1",
       ticketNumber: "HC-000001",
       subject: "Wallet issue",
+      customer: { user: { id: "customer-user-1" } },
     });
     tickets.updateStatus.mockResolvedValue(resolved);
 
@@ -264,7 +258,6 @@ describe("TicketService", () => {
         expect.objectContaining({
           recipientId: "customer-user-1",
           type: "TICKET_RESOLVED",
-          push: true,
           idempotencyKey: `TICKET_STATUS:ticket-1:${resolved.updatedAt.getTime()}`,
         }),
       ],
@@ -273,17 +266,14 @@ describe("TicketService", () => {
     expect(appNotifications.deliverStaged).toHaveBeenCalledWith(staged);
   });
 
-  it("does not stage a customer notification when dashboard notifications are off", async () => {
-    tx.customer.findUnique.mockResolvedValue({
-      userId: "customer-user-1",
-      settings: { notification: false },
-    });
+  it("stages customer notifications without customer preferences", async () => {
     tickets.findById.mockResolvedValue({
       id: "ticket-1",
       status: HelpTicketStatus.IN_PROGRESS,
       customerId: "customer-1",
       ticketNumber: "HC-000001",
       subject: "Wallet issue",
+      customer: { user: { id: "customer-user-1" } },
     });
     tickets.updateStatus.mockResolvedValue({
       id: "ticket-1",
@@ -296,8 +286,16 @@ describe("TicketService", () => {
       user: { sub: "admin-user", sid: "s1", email: "a@test.com", roles: [] },
     } as never);
 
-    expect(appNotifications.stage).not.toHaveBeenCalled();
-    expect(appNotifications.deliverStaged).toHaveBeenCalledWith([]);
+    expect(appNotifications.stage).toHaveBeenCalledWith(
+      [
+        expect.objectContaining({
+          recipientId: "customer-user-1",
+          type: "TICKET_RESOLVED",
+        }),
+      ],
+      tx,
+    );
+    expect(appNotifications.deliverStaged).toHaveBeenCalledWith(staged);
   });
 
   it("emits status updated on non-resolved status changes", async () => {

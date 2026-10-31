@@ -1,10 +1,10 @@
 import { BookingStatus, BookingType } from "@prisma/client";
-import { BookingPricingService } from "../src/modules/booking/services/booking-pricing.service";
+import { BookingPricingService } from "../src/modules/booking/services/pricing.service";
 import { BookingService } from "../src/modules/booking/services/booking.service";
 import { CustomerBookingService } from "../src/modules/booking/services/customer-booking.service";
 
 describe("CustomerBookingService.create", () => {
-  it("creates a pending booking and stages admin notifications in the same transaction", async () => {
+  it("creates a pending booking and stages customer and admin notifications in the same transaction", async () => {
     const tx = { marker: "tx" };
     const booking = { id: "book-2", bookingNumber: "BK-2", status: BookingStatus.PENDING };
     const create = jest.fn(async () => booking);
@@ -87,7 +87,7 @@ describe("CustomerBookingService.create", () => {
       expect.objectContaining({
         bookingId: "book-2",
         bookingNumber: "BK-2",
-        excludeUserId: "customer-user",
+        userId: "customer-user",
       }),
       tx,
     );

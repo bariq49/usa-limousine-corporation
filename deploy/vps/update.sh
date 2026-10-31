@@ -179,7 +179,7 @@ echo "Deploying services: ${SERVICES[*]}"
 
 if [[ " ${SERVICES[*]} " == *" backend "* ]]; then
   if ! grep -q '^FIREBASE_PROJECT_ID=.' "${BACKEND_ENV}"; then
-    echo "WARN: FIREBASE_PROJECT_ID is missing in ${BACKEND_ENV} — FCM will show not_configured on /health"
+    echo "WARN: FIREBASE_PROJECT_ID is missing in ${BACKEND_ENV} — Firebase will show not_configured on /health"
     echo "      Add FIREBASE_* to apps/backend/.env.production on the VPS (deploy does not rsync .env files)."
   fi
   if ! grep -q '^TWILIO_ACCOUNT_SID=.' "${BACKEND_ENV}"; then

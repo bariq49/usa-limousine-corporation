@@ -8,17 +8,15 @@ describe("customer navigation", () => {
     );
     expect(hrefs.sort()).toEqual([
       "/bookings",
-      "/calendar",
       "/cancelled-bookings",
       "/completed-bookings",
       "/confirmed-bookings",
       "/dashboard",
       "/help-center",
-      "/notifications",
       "/payments",
-      "/pending-bookings",
       "/profile-setting",
       "/refunds",
+      "/scheduled-bookings",
     ]);
   });
 });

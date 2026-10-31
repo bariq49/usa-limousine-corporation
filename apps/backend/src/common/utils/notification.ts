@@ -1,11 +1,14 @@
 import { RoleKey, type Notification, type Prisma } from "@prisma/client";
 import type { PrismaService } from "../../infrastructure/database/prisma.service";
-import { RecipientType, type Client, type Create } from "../../modules/notification/types/notification";
-import type { AdminNotify, CustomerNotify } from "../types/notification.types";
+import {
+  RecipientType,
+  type Client,
+  type Create,
+} from "../../modules/notification/types/notification";
+import type { NotificationService } from "../../modules/notification/services/notification.service";
+import type { NotifyAdmins, NotifyUser } from "../types/notification.types";
 
-export type { AdminNotify, CustomerNotify };
-
-export async function findAdminUserIds(
+async function findAdminUserIds(
   prisma: Client | PrismaService,
   excludeUserId?: string | null,
 ): Promise<string[]> {
@@ -22,7 +25,8 @@ export async function findAdminUserIds(
 }
 
 export async function stageForAdmins(
-  params: AdminNotify,
+  notificationService: NotificationService,
+  params: NotifyAdmins,
   client: Client,
 ): Promise<Notification[]> {
   const adminIds = await findAdminUserIds(client, params.excludeUserId);
@@ -33,7 +37,6 @@ export async function stageForAdmins(
       type: params.type,
       title: params.title,
       body: params.body,
-      push: false,
       idempotencyKey: `${params.idempotencyKey}:${id}`,
     };
     if (params.data !== undefined) {
@@ -41,45 +44,34 @@ export async function stageForAdmins(
     }
     return input;
   });
-  return params.notificationService.stage(inputs, client);
+  return notificationService.stage(inputs, client);
 }
 
-export async function stageForCustomer(
-  params: CustomerNotify,
+export async function stageForUser(
+  notificationService: NotificationService,
+  params: NotifyUser,
   client: Client,
 ): Promise<Notification[]> {
-  const where: Prisma.CustomerWhereUniqueInput | null = params.userId
-    ? { userId: params.userId }
-    : params.customerId
-      ? { id: params.customerId }
-      : null;
-  if (!where) {
-    return [];
-  }
-  const customer = await client.customer.findUnique({
-    where,
-    select: { userId: true, settings: { select: { notification: true } } },
-  });
-  if (!customer?.userId || customer.settings?.notification === false) {
+  if (!params.userId) {
     return [];
   }
   const input: Create = {
     recipientType: RecipientType.USER,
-    recipientId: customer.userId,
+    recipientId: params.userId,
     type: params.type,
     title: params.title,
     body: params.body,
-    push: params.push !== false,
     idempotencyKey: params.idempotencyKey,
   };
   if (params.data !== undefined) {
     input.data = params.data;
   }
-  return params.notificationService.stage([input], client);
+  return notificationService.stage([input], client);
 }
 
 export async function notifyForAdmins(
-  params: AdminNotify,
+  notificationService: NotificationService,
+  params: NotifyAdmins,
   prisma: Client | PrismaService,
 ): Promise<Notification[]> {
   const adminIds = await findAdminUserIds(prisma, params.excludeUserId);
@@ -90,7 +82,6 @@ export async function notifyForAdmins(
       type: params.type,
       title: params.title,
       body: params.body,
-      push: false,
       idempotencyKey: `${params.idempotencyKey}:${id}`,
     };
     if (params.data !== undefined) {
@@ -98,39 +89,26 @@ export async function notifyForAdmins(
     }
     return input;
   });
-  return params.notificationService.notifyMany(inputs);
+  return notificationService.notifyMany(inputs);
 }
 
-export async function notifyCustomer(
-  params: CustomerNotify,
-  prisma: Client | PrismaService,
+export async function notifyUser(
+  notificationService: NotificationService,
+  params: NotifyUser,
 ): Promise<Notification | null> {
-  const where: Prisma.CustomerWhereUniqueInput | null = params.userId
-    ? { userId: params.userId }
-    : params.customerId
-      ? { id: params.customerId }
-      : null;
-  if (!where) {
-    return null;
-  }
-  const customer = await prisma.customer.findUnique({
-    where,
-    select: { userId: true, settings: { select: { notification: true } } },
-  });
-  if (!customer?.userId || customer.settings?.notification === false) {
+  if (!params.userId) {
     return null;
   }
   const input: Create = {
     recipientType: RecipientType.USER,
-    recipientId: customer.userId,
+    recipientId: params.userId,
     type: params.type,
     title: params.title,
     body: params.body,
-    push: params.push !== false,
     idempotencyKey: params.idempotencyKey,
   };
   if (params.data !== undefined) {
     input.data = params.data;
   }
-  return params.notificationService.notify(input);
+  return notificationService.notify(input);
 }

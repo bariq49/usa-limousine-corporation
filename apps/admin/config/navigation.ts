@@ -46,12 +46,6 @@ export const navigation: MenuSection[] = [
             href: "/analytics",
             icon: Graph,
           },
-          {
-            id: "booking-calendar",
-            label: "Upcoming Rides",
-            href: "/calendar",
-            icon: CalendarClock,
-          },
         ],
       },
     ],
@@ -71,7 +65,12 @@ export const navigation: MenuSection[] = [
             href: "/bookings",
             icon: Calendar,
           },
-
+          {
+            id: "scheduled-bookings",
+            label: "Scheduled Rides",
+            href: "/scheduled-bookings",
+            icon: CalendarClock,
+          },
           {
             id: "pending-bookings",
             label: "Pending Bookings",

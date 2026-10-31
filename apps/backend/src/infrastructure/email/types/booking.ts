@@ -56,7 +56,6 @@ export type BookingCancelMailProps = {
 
 export type DriverAssignedMailProps = {
   booking: BookingEmail;
-  siteUrl: string;
   assignment: {
     driverName: string;
     driverAmount: number;

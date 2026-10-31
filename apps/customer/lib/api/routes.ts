@@ -18,7 +18,6 @@ const API_ROUTES = {
   NOTIFICATIONS: "/customers/notifications",
   BOOKINGS: "/customers/bookings",
   CHECKOUT: "/public/bookings/checkout",
-  SETTINGS: "/customers/settings",
   TICKETS: "/customers/tickets",
   PAYMENTS: "/customers/payments",
   REFUNDS: "/customers/refunds",

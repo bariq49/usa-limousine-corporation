@@ -44,7 +44,7 @@ const ticketInclude = {
 
 @Injectable()
 export class TicketRepository {
-  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) { }
+  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
   findMany(query: QueryDto) {
     const initialFilter: Prisma.HelpTicketWhereInput = {
@@ -250,7 +250,6 @@ export class TicketRepository {
         createdAt: true,
         customer: {
           select: {
-            settings: { select: { email: true } },
             user: { select: { firstName: true, lastName: true, email: true, phone: true } },
           },
         },

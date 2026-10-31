@@ -1,6 +1,6 @@
-import { Inject, Injectable, forwardRef } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import type { Job, JobsOptions } from "bullmq";
+import type { Job } from "bullmq";
 import { AppLogger } from "../../../common/logger/app.logger";
 import { BaseQueueService } from "../../../infrastructure/queue/base-queue.service";
 import { QueueRegistry } from "../../../infrastructure/queue/queue-registry";
@@ -11,15 +11,11 @@ import {
   DELIVER_PENDING_EVERY_MS,
   NOTIFICATION_JOB_NAMES,
   NOTIFICATION_QUEUE_NAME,
-  PUSH_MAX_ATTEMPTS,
-  PUSH_RETRY_DELAY_MS,
   READ_RETENTION_DAYS,
   UNREAD_RETENTION_DAYS,
-} from "../constants/notification.constants";
+} from "../constants/constants";
 import { NotificationRepository } from "../repositories/notification.repository";
-import { NotificationDeliveryService } from "../services/notification-delivery.service";
-import { PushDeliveryService } from "../services/push-delivery.service";
-import type { Push } from "../types/notification";
+import { NotificationService } from "../services/notification.service";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -29,10 +25,8 @@ export class NotificationQueueService extends BaseQueueService {
     @Inject(ConfigService) configService: ConfigService,
     @Inject(AppLogger) logger: AppLogger,
     @Inject(QueueRegistry) registry: QueueRegistry,
-    @Inject(PushDeliveryService) private readonly pushDelivery: PushDeliveryService,
     @Inject(NotificationRepository) private readonly repository: NotificationRepository,
-    @Inject(forwardRef(() => NotificationDeliveryService))
-    private readonly delivery: NotificationDeliveryService,
+    @Inject(NotificationService) private readonly notifications: NotificationService,
   ) {
     super(configService, logger, registry);
   }
@@ -57,38 +51,16 @@ export class NotificationQueueService extends BaseQueueService {
   }
 
   protected async processJob(job: Job) {
-    if (job.name === NOTIFICATION_JOB_NAMES.DELIVER_PUSH) {
-      const payload = job.data as Push;
-      const attempt = payload.attempt ?? 1;
-      const result = await this.pushDelivery.deliver(payload);
-
-      if (result.retryTokens.length > 0 && attempt < PUSH_MAX_ATTEMPTS) {
-        await this.enqueuePush(
-          {
-            tokens: result.retryTokens,
-            title: payload.title,
-            body: payload.body,
-            data: payload.data,
-            attempt: attempt + 1,
-          },
-          PUSH_RETRY_DELAY_MS * attempt,
-        );
-      }
-      return;
-    }
-
     if (job.name === NOTIFICATION_JOB_NAMES.DELIVER_PENDING) {
-      const pending = await this.repository.findUndelivered(
+      const result = await this.notifications.deliverPending(
         new Date(Date.now() - DELIVER_PENDING_AFTER_MS),
         DELIVER_PENDING_BATCH,
       );
-      if (pending.length > 0) {
-        this.logger.warn(
-          `notification.redeliver count=${pending.length}`,
-          NotificationQueueService.name,
-        );
-        await this.delivery.deliverMany({ notifications: pending });
-      }
+      const status = await this.notifications.getDeliveryStatus();
+      this.logger.log(
+        `notification.delivery claimed=${result.claimed} delivered=${result.delivered} failed=${result.failed} deadLettered=${result.deadLettered} pending=${status.pending} retryScheduled=${status.retryScheduled} inProgress=${status.inProgress} totalDeadLettered=${status.deadLettered}`,
+        NotificationQueueService.name,
+      );
       return;
     }
 
@@ -103,27 +75,5 @@ export class NotificationQueueService extends BaseQueueService {
         NotificationQueueService.name,
       );
     }
-  }
-
-  async enqueuePush(payload: Push, delay = 0) {
-    if (!this.bullQueue.isReady()) {
-      await this.pushDelivery.deliver(payload);
-      return;
-    }
-
-    const notificationId = payload.data["notificationId"];
-    const attempt = payload.attempt ?? 1;
-
-    const options: JobsOptions = {
-      delay,
-      attempts: 3,
-      removeOnComplete: true,
-      removeOnFail: 200,
-    };
-    if (notificationId) {
-      options.jobId = `push-${notificationId}-${attempt}`;
-    }
-
-    await this.addJob(NOTIFICATION_JOB_NAMES.DELIVER_PUSH, payload, options);
   }
 }

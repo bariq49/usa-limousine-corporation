@@ -15,8 +15,11 @@ import type {
   EventSourceInput,
 } from "@fullcalendar/core";
 import { Card, CardContent } from "../card";
+import { Button } from "../button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../dialog";
 import { Form } from "../form";
 import { Input } from "../input";
+import { Filter } from "../../svg";
 import { formatDate, fromDateKey, toDateKey } from "../../utils/date";
 import { BOOKING_TYPE_COLORS, BOOKING_TYPE_LABELS } from "./labels";
 import { DayRideCards } from "./day-ride-cards";
@@ -26,15 +29,12 @@ import type { BookingCalendarProps } from "../../types/bookings";
 
 const ALL_BOOKING_TYPES: BookingType[] = ["ONE_WAY", "RETURN", "HOURLY"];
 
-const TYPE_OPTIONS = [{ value: "ALL", label: "All trip types" }].concat(
-  ALL_BOOKING_TYPES.map((type) => ({
-    value: type,
-    label: BOOKING_TYPE_LABELS[type],
-  })),
-);
+type TypeFilterValues = Record<BookingType, boolean>;
 
-type TypeFilterValues = {
-  bookingType: string;
+type MobileTypeFilterValues = {
+  mobile_ONE_WAY: boolean;
+  mobile_RETURN: boolean;
+  mobile_HOURLY: boolean;
 };
 
 export function BookingCalendar(props: BookingCalendarProps) {
@@ -58,12 +58,22 @@ export function BookingCalendar(props: BookingCalendarProps) {
   const today = formatDate({ date: new Date(), as: "value" });
   const [displayMonth, setDisplayMonth] = useState(() => fromDateKey(today));
   const [selectedDate, setSelectedDate] = useState(today);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const typeForm = useForm<TypeFilterValues>({
-    defaultValues: { bookingType: "ALL" },
+    defaultValues: {
+      ONE_WAY: true,
+      RETURN: true,
+      HOURLY: true,
+    },
   });
-  const bookingTypeValue = useWatch({ control: typeForm.control, name: "bookingType" }) ?? "ALL";
-  const bookingTypes =
-    bookingTypeValue === "ALL" ? ALL_BOOKING_TYPES : [bookingTypeValue as BookingType];
+  const mobileTypeForm = useForm<MobileTypeFilterValues>({
+    defaultValues: { mobile_ONE_WAY: true, mobile_RETURN: true, mobile_HOURLY: true },
+  });
+  const watchedTypes = useWatch({ control: typeForm.control });
+  const bookingTypes = useMemo(
+    () => ALL_BOOKING_TYPES.filter((type) => watchedTypes[type]),
+    [watchedTypes.HOURLY, watchedTypes.ONE_WAY, watchedTypes.RETURN],
+  );
 
   const emitQuery = useCallback(
     (range: { start: string; end: string }, types: BookingType[]) => {
@@ -140,20 +150,68 @@ export function BookingCalendar(props: BookingCalendarProps) {
       <Card className="overflow-hidden shadow-xs max-md:overflow-visible max-md:border-none max-md:bg-transparent max-md:shadow-none">
         <CardContent className="p-0">
           <div className="flex flex-col gap-3 border-b border-border px-5 py-5 max-md:border-none max-md:px-0 max-md:pt-0 md:flex-row md:items-end md:justify-between">
-            <div className="min-w-0 space-y-1">
-              <h2 className="text-xl font-semibold text-default-900">{title}</h2>
-              <p className="text-xs text-default-600 md:text-sm">{description}</p>
+            <div className="flex min-w-0 items-start justify-between gap-3">
+              <div className="min-w-0 space-y-1">
+                <h2 className="text-xl font-semibold text-default-900">{title}</h2>
+                <p className="text-xs text-default-600 md:text-sm">{description}</p>
+              </div>
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                className="shrink-0 border-0 bg-transparent text-default-600 shadow-none hover:bg-transparent hover:text-default-900 md:hidden"
+                aria-label="Open trip type filter"
+                onClick={() => {
+                  mobileTypeForm.reset({
+                    mobile_ONE_WAY: bookingTypes.includes("ONE_WAY"),
+                    mobile_RETURN: bookingTypes.includes("RETURN"),
+                    mobile_HOURLY: bookingTypes.includes("HOURLY"),
+                  });
+                  setFiltersOpen(true);
+                }}
+              >
+                <Filter className="h-5 w-5" />
+              </Button>
             </div>
-            <Form {...typeForm}>
-              <Input
-                name="bookingType"
-                type="select"
-                options={TYPE_OPTIONS}
-                className="w-full md:w-40"
-                inputClassName="h-9 bg-transparent"
-              />
-            </Form>
           </div>
+          <Dialog open={filtersOpen} onOpenChange={setFiltersOpen}>
+            <DialogContent className="max-w-md gap-5 max-md:top-auto max-md:bottom-0 max-md:left-0 max-md:right-0 max-md:max-w-none max-md:translate-x-0 max-md:translate-y-0 max-md:overflow-y-auto max-md:rounded-t-2xl max-md:rounded-b-none max-md:pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
+              <DialogHeader className="text-left">
+                <DialogTitle>Trip type filter</DialogTitle>
+                <DialogDescription>
+                  Choose which trip types to show on your calendar.
+                </DialogDescription>
+              </DialogHeader>
+              <Form {...mobileTypeForm}>
+                <div className="grid gap-4">
+                  {ALL_BOOKING_TYPES.map((type) => (
+                    <Input
+                      key={type}
+                      name={`mobile_${type}`}
+                      type="checkbox"
+                      label={BOOKING_TYPE_LABELS[type]}
+                      checkboxSize="md"
+                    />
+                  ))}
+                </div>
+              </Form>
+              <Button
+                type="button"
+                className="w-full"
+                onClick={() => {
+                  const mobileFilters = mobileTypeForm.getValues();
+                  typeForm.reset({
+                    ONE_WAY: mobileFilters.mobile_ONE_WAY,
+                    RETURN: mobileFilters.mobile_RETURN,
+                    HOURLY: mobileFilters.mobile_HOURLY,
+                  });
+                  setFiltersOpen(false);
+                }}
+              >
+                Apply filter
+              </Button>
+            </DialogContent>
+          </Dialog>
 
           <div className="grid grid-cols-1 xl:grid-cols-[300px_minmax(0,1fr)]">
             <aside className="border-b border-border bg-default-50/70 px-5 py-5 max-md:border-none max-md:bg-transparent max-md:px-0 max-md:pt-1 xl:border-b-0 xl:border-r">
@@ -170,6 +228,23 @@ export function BookingCalendar(props: BookingCalendarProps) {
                   }}
                   onSelect={selectDate}
                 />
+              </div>
+
+              <div className="mt-5 hidden border-t border-border pt-4 md:block">
+                <p className="mb-3 text-sm font-semibold text-default-800">Filter by trip type</p>
+                <Form {...typeForm}>
+                  <div className="grid gap-3">
+                    {ALL_BOOKING_TYPES.map((type) => (
+                      <Input
+                        key={type}
+                        name={type}
+                        type="checkbox"
+                        label={BOOKING_TYPE_LABELS[type]}
+                        checkboxSize="md"
+                      />
+                    ))}
+                  </div>
+                </Form>
               </div>
 
               <div className="mt-4 border-t border-border pt-4 md:hidden">

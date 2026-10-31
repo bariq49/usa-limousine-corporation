@@ -1,7 +1,7 @@
 import { Inject, Injectable } from "@nestjs/common";
 import type { TripPriceDto } from "../dto/booking.dto";
 import type { VehicleEstimate } from "../types/booking";
-import { BookingPricingService } from "./booking-pricing.service";
+import { BookingPricingService } from "./pricing.service";
 
 @Injectable()
 export class EstimateService {

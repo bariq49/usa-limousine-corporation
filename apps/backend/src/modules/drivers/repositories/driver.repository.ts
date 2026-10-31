@@ -9,6 +9,7 @@ import {
 import { APIFeature } from "../../../common/api-feature";
 import { PrismaService } from "../../../infrastructure/database/prisma.service";
 import type { CreateDto, DriverBookingsQueryDto, QueryDto, UpdateDto } from "../dto/driver.dto";
+import type { AssignmentData } from "../types/assignment";
 
 const driverInclude = {
   user: {
@@ -236,13 +237,6 @@ export class DriverRepository {
     });
   }
 
-  findBookingForAssignment(bookingId: string) {
-    return this.prisma.booking.findFirst({
-      where: { id: bookingId, deletedAt: null },
-      select: { id: true, bookingNumber: true, status: true, totalPrice: true },
-    });
-  }
-
   listAssignments(bookingId: string) {
     return this.prisma.bookingAssignment.findMany({
       where: { bookingId },
@@ -251,14 +245,7 @@ export class DriverRepository {
     });
   }
 
-  assign(data: {
-    bookingId: string;
-    driverId: string;
-    commissionRate: number;
-    commissionAmount: number;
-    driverAmount: number;
-    note: string | null;
-  }) {
+  assign(data: AssignmentData) {
     return this.prisma.$transaction(async (tx) => {
       await tx.bookingAssignment.updateMany({
         where: { bookingId: data.bookingId, status: AssignmentStatus.ACTIVE },

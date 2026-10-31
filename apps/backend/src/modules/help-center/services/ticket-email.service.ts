@@ -92,19 +92,15 @@ export class TicketEmailService {
       contactEmail: email,
       contactPhone: ticket.contactPhone ?? user?.phone ?? null,
     };
-    const canEmailUser =
-      ticket.source === HelpTicketSource.WEBSITE || ticket.customer?.settings?.email !== false;
     const userReplyTo = adminEmail ?? PLATFORM.contact.email;
 
     if (job.kind === "created") {
-      if (canEmailUser) {
-        await this.emailService.send({
-          to: email,
-          replyTo: userReplyTo,
-          subject: `We received your message · ${ticket.ticketNumber} - ${PLATFORM.shortName}`,
-          html: ticketCreatedUser({ siteUrl, ticket: view }),
-        });
-      }
+      await this.emailService.send({
+        to: email,
+        replyTo: userReplyTo,
+        subject: `We received your message · ${ticket.ticketNumber} - ${PLATFORM.shortName}`,
+        html: ticketCreatedUser({ siteUrl, ticket: view }),
+      });
       if (adminEmail) {
         await this.emailService.send({
           to: adminEmail,
@@ -122,7 +118,7 @@ export class TicketEmailService {
 
     if (job.kind === "replied") {
       const message = job.messageId ? await this.tickets.findMessage(job.messageId) : null;
-      if (!message || !canEmailUser) return;
+      if (!message) return;
       await this.emailService.send({
         to: email,
         replyTo: userReplyTo,

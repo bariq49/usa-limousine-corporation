@@ -14,17 +14,23 @@ export type Create = {
   title: string;
   body: string;
   data?: Prisma.InputJsonValue;
-  push?: boolean;
   idempotencyKey?: string;
 };
 
 export type Client = Prisma.TransactionClient;
 
 export type CursorPage = {
-  items: Notification[];
+  items: Item[];
   nextCursor: string | null;
   hasNextPage: boolean;
 };
+
+export type Item = Pick<
+  Notification,
+  "id" | "type" | "title" | "body" | "data" | "readAt" | "createdAt"
+>;
+
+export type Owned = Item;
 
 export type ReadEvent = Recipient & {
   ids: string[] | null;
@@ -32,10 +38,6 @@ export type ReadEvent = Recipient & {
 
 export type RemovedEvent = Recipient & {
   ids: string[];
-};
-
-export type CreateMany = {
-  inputs: Create[];
 };
 
 export type Query = {
@@ -74,32 +76,54 @@ export type RemoveMany = Recipient & {
   ids: string[];
 };
 
-export type FcmData = Record<string, string>;
+export type DeliveryClaim = {
+  now: Date;
+  lockUntil: Date;
+  take: number;
+} & (
+  | {
+      ids: string[];
+      createdBefore?: never;
+    }
+  | {
+      ids?: never;
+      createdBefore: Date;
+    }
+);
 
-export type FcmSource = {
-  type: string;
+export type DeliveryStatus = {
+  pending: number;
+  retryScheduled: number;
+  inProgress: number;
+  deadLettered: number;
+};
+
+export type DeliveryResult = {
+  claimed: number;
+  delivered: number;
+  failed: number;
+  deadLettered: number;
+};
+
+export type DeadLetterQuery = {
+  cursor?: string;
+  limit?: number;
+};
+
+export type DeadLetter = {
+  id: string;
+  recipientId: string;
+  type: NotificationType;
   title: string;
   body: string;
-  data?: Prisma.InputJsonValue | Prisma.JsonValue | null;
-  id?: string;
+  deliveryAttempts: number;
+  deadLetteredAt: Date | null;
+  lastDeliveryError: string | null;
+  createdAt: Date;
 };
 
-export type Deliver = {
-  notification: Notification;
-};
-
-export type DeliverMany = {
-  notifications: Notification[];
-};
-
-export type Push = {
-  tokens: string[];
-  title: string;
-  body: string;
-  data: FcmData;
-  attempt?: number;
-};
-
-export type PushResult = {
-  retryTokens: string[];
+export type DeadLetterPage = {
+  items: DeadLetter[];
+  nextCursor: string | null;
+  hasNextPage: boolean;
 };

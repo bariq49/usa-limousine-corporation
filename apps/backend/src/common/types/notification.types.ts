@@ -1,24 +1,19 @@
 import type { NotificationType, Prisma } from "@prisma/client";
-import type { NotificationService } from "../../modules/notification/services/notification.service";
 
-export type AdminNotify = {
-  notificationService: NotificationService;
+export type NotifyAdmins = {
   type: NotificationType;
   title: string;
   body: string;
-  data?: Prisma.InputJsonValue | undefined;
-  excludeUserId?: string | null | undefined;
+  data?: Prisma.InputJsonValue;
+  excludeUserId?: string | null;
   idempotencyKey: string;
 };
 
-export type CustomerNotify = {
-  notificationService: NotificationService;
+export type NotifyUser = {
   userId?: string | null | undefined;
-  customerId?: string | null | undefined;
   type: NotificationType;
   title: string;
   body: string;
-  data?: Prisma.InputJsonValue | undefined;
-  push?: boolean | undefined;
+  data?: Prisma.InputJsonValue;
   idempotencyKey: string;
 };

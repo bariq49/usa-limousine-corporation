@@ -4,7 +4,7 @@ import { PaymentStatus } from "@prisma/client";
 import { AppLogger } from "../../../common/logger/app.logger";
 import { renderReceiptPdf } from "../../../infrastructure/email/templates/booking/receipt-pdf";
 import { BookingRepository } from "../repositories/booking.repository";
-import { BookingEmailService } from "./booking-email.service";
+import { BookingEmailService } from "./email.service";
 
 const LOGO_TIMEOUT_MS = 3000;
 

@@ -23,9 +23,7 @@ export type Customer = {
   _count: { helpTickets: number };
 };
 
-export type CustomerDetail = Customer & {
-  settings?: { email: boolean; notification: boolean } | null;
-};
+export type CustomerDetail = Customer;
 
 export type CustomerQuery = {
   page?: number | undefined;

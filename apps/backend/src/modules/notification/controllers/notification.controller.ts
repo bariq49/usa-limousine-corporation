@@ -20,51 +20,58 @@ import { requireUserId, toRequestContext } from "../../../common/utils/to-reques
 import { Roles } from "../../auth/decorators/roles.decorator";
 import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../../auth/guards/roles.guard";
-import { BulkDeleteDto, QueryDto } from "../dto/notification.dto";
-import { TestPushDto } from "../dto/test-push.dto";
+import { BulkDeleteDto, DeadLetterQueryDto, QueryDto } from "../dto/notification.dto";
 import { NotificationService } from "../services/notification.service";
-import { TestPushService } from "../services/test-push.service";
-import { RecipientType, type Recipient } from "../types/notification";
-
-function adminRecipient(request: Request): Recipient {
-  return {
-    recipientType: RecipientType.USER,
-    recipientId: requireUserId(toRequestContext(request)),
-  };
-}
+import { RecipientType } from "../types/notification";
 
 @Controller("notifications")
 @UseGuards(ThrottlerGuard, JwtAuthGuard, RolesGuard)
 @Roles(RoleKey.SUPER_ADMIN)
 export class NotificationController {
-  constructor(
-    @Inject(NotificationService) private readonly notifications: NotificationService,
-    @Inject(TestPushService) private readonly testPush: TestPushService,
-  ) {}
+  constructor(@Inject(NotificationService) private readonly notifications: NotificationService) {}
 
   @Get()
   list(@Query() query: QueryDto, @Req() request: Request) {
-    return this.notifications.listWithUnread(query, adminRecipient(request));
+    const recipientId = requireUserId(toRequestContext(request));
+    return this.notifications.listWithUnread(query, {
+      recipientType: RecipientType.USER,
+      recipientId,
+    });
   }
 
-  @Post("test")
+  @Get("delivery-status")
+  deliveryStatus() {
+    return this.notifications.getDeliveryStatus();
+  }
+
+  @Get("dead-letters")
+  deadLetters(@Query() query: DeadLetterQueryDto) {
+    return this.notifications.listDeadLetters(query);
+  }
+
+  @Post(":id/retry")
   @HttpCode(HttpStatus.OK)
-  test(@Body() body: TestPushDto) {
-    return this.testPush.test({ token: body.token.trim() });
+  retryDeadLetter(@Param("id") id: string, @Req() request: Request) {
+    const userId = requireUserId(toRequestContext(request));
+    return this.notifications.retryDeadLetter(id, userId);
   }
 
   @Patch("read-all")
   @HttpCode(HttpStatus.OK)
   markAllRead(@Req() request: Request) {
-    return this.notifications.markAllRead(adminRecipient(request));
+    const recipientId = requireUserId(toRequestContext(request));
+    return this.notifications.markAllRead({
+      recipientType: RecipientType.USER,
+      recipientId,
+    });
   }
 
   @Patch(":id/read")
   markRead(@Param("id") id: string, @Req() request: Request) {
-    const recipient = adminRecipient(request);
+    const recipientId = requireUserId(toRequestContext(request));
     return this.notifications.markRead({
-      recipientType: recipient.recipientType,
-      recipientId: recipient.recipientId,
+      recipientType: RecipientType.USER,
+      recipientId,
       id,
     });
   }
@@ -72,10 +79,10 @@ export class NotificationController {
   @Delete("bulk")
   @HttpCode(HttpStatus.OK)
   removeMany(@Body() body: BulkDeleteDto, @Req() request: Request) {
-    const recipient = adminRecipient(request);
+    const recipientId = requireUserId(toRequestContext(request));
     return this.notifications.removeMany({
-      recipientType: recipient.recipientType,
-      recipientId: recipient.recipientId,
+      recipientType: RecipientType.USER,
+      recipientId,
       ids: body.ids,
     });
   }
@@ -83,10 +90,10 @@ export class NotificationController {
   @Delete(":id")
   @HttpCode(HttpStatus.OK)
   remove(@Param("id") id: string, @Req() request: Request) {
-    const recipient = adminRecipient(request);
+    const recipientId = requireUserId(toRequestContext(request));
     return this.notifications.remove({
-      recipientType: recipient.recipientType,
-      recipientId: recipient.recipientId,
+      recipientType: RecipientType.USER,
+      recipientId,
       id,
     });
   }

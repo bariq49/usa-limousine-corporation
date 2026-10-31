@@ -95,7 +95,7 @@ export function BookingActions({ booking }: BookingActionsProps) {
 
   return (
     <>
-      <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
+      <div className="grid w-full grid-cols-2 gap-2 sm:hidden">
         {canComplete && (
           <Button
             type="button"
@@ -185,4 +185,3 @@ export function BookingActions({ booking }: BookingActionsProps) {
     </>
   );
 }
-

@@ -176,9 +176,7 @@
                   "listen": "test",
                   "script": {
                     "type": "text/javascript",
-                    "exec": [
-                      "pm.test('Profile updated', () => pm.response.to.be.success);"
-                    ]
+                    "exec": ["pm.test('Profile updated', () => pm.response.to.be.success);"]
                   }
                 }
               ]
@@ -311,13 +309,8 @@
                 ],
                 "url": {
                   "raw": "{{base_url}}/admin/luggage?page=1&limit=20&sortBy=createdAt&sortOrder=desc&isActive=true&q=suitcase",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "admin",
-                    "luggage"
-                  ],
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "luggage"],
                   "query": [
                     {
                       "key": "page",
@@ -362,14 +355,8 @@
                 ],
                 "url": {
                   "raw": "{{base_url}}/admin/luggage/:id",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "admin",
-                    "luggage",
-                    ":id"
-                  ],
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "luggage", ":id"],
                   "variable": [
                     {
                       "key": "id",
@@ -455,14 +442,8 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/admin/luggage/:id",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "admin",
-                    "luggage",
-                    ":id"
-                  ],
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "luggage", ":id"],
                   "variable": [
                     {
                       "key": "id",
@@ -477,9 +458,7 @@
                   "listen": "test",
                   "script": {
                     "type": "text/javascript",
-                    "exec": [
-                      "pm.test('Update successful', () => pm.response.to.be.success);"
-                    ]
+                    "exec": ["pm.test('Update successful', () => pm.response.to.be.success);"]
                   }
                 }
               ]
@@ -496,14 +475,8 @@
                 ],
                 "url": {
                   "raw": "{{base_url}}/admin/luggage/:id",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "admin",
-                    "luggage",
-                    ":id"
-                  ],
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "luggage", ":id"],
                   "variable": [
                     {
                       "key": "id",
@@ -518,9 +491,7 @@
                   "listen": "test",
                   "script": {
                     "type": "text/javascript",
-                    "exec": [
-                      "pm.test('Delete successful', () => pm.response.to.be.success);"
-                    ]
+                    "exec": ["pm.test('Delete successful', () => pm.response.to.be.success);"]
                   }
                 }
               ]
@@ -550,14 +521,8 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/admin/luggage/bulk",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "admin",
-                    "luggage",
-                    "bulk"
-                  ]
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "luggage", "bulk"]
                 }
               },
               "response": [],
@@ -566,9 +531,7 @@
                   "listen": "test",
                   "script": {
                     "type": "text/javascript",
-                    "exec": [
-                      "pm.test('Delete successful', () => pm.response.to.be.success);"
-                    ]
+                    "exec": ["pm.test('Delete successful', () => pm.response.to.be.success);"]
                   }
                 }
               ]
@@ -615,14 +578,8 @@
                 ],
                 "url": {
                   "raw": "{{base_url}}/admin/vehicle-categories?page=1&limit=20&sortBy=createdAt&sortOrder=desc",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "admin",
-                    "vehicle-categories",
-                    "admin"
-                  ],
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "vehicle-categories", "admin"],
                   "query": [
                     {
                       "key": "page",
@@ -758,9 +715,7 @@
                   "listen": "test",
                   "script": {
                     "type": "text/javascript",
-                    "exec": [
-                      "pm.test('Delete successful', () => pm.response.to.be.success);"
-                    ]
+                    "exec": ["pm.test('Delete successful', () => pm.response.to.be.success);"]
                   }
                 }
               ]
@@ -791,9 +746,7 @@
                   "listen": "test",
                   "script": {
                     "type": "text/javascript",
-                    "exec": [
-                      "pm.test('Delete successful', () => pm.response.to.be.success);"
-                    ]
+                    "exec": ["pm.test('Delete successful', () => pm.response.to.be.success);"]
                   }
                 }
               ]
@@ -839,13 +792,8 @@
                 ],
                 "url": {
                   "raw": "{{base_url}}/admin/vehicle-category-pricing?page=1&limit=20&sortBy=createdAt&sortOrder=desc",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "admin",
-                    "vehicle-category-pricing"
-                  ],
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "vehicle-category-pricing"],
                   "query": [
                     {
                       "key": "page",
@@ -909,14 +857,8 @@
                 ],
                 "url": {
                   "raw": "{{base_url}}/admin/vehicle-category-pricing/:id",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "admin",
-                    "vehicle-category-pricing",
-                    ":id"
-                  ],
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "vehicle-category-pricing", ":id"],
                   "variable": [
                     {
                       "key": "id",
@@ -966,13 +908,8 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/admin/vehicle-category-pricing",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "admin",
-                    "vehicle-category-pricing"
-                  ]
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "vehicle-category-pricing"]
                 },
                 "description": "Create a new vehicle category pricing tier (`SUPER_ADMIN`).\n\n- `vehicleCategoryId`: ID of the vehicle category\n- `minimumDistance`: min distance in km (e.g. 0)\n- `maximumDistance`: null for infinite / unbounded distance (or max distance in km)\n- `pricingType`: FIXED | PER_UNIT | PERCENTAGE\n- `basePrice`: base price in EUR\n- `perUnitRate`: optional rate per km\n- `percentageRate`: optional percentage markup rate\n- `status`: ACTIVE | INACTIVE"
               },
@@ -1016,14 +953,8 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/admin/vehicle-category-pricing/:id",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "admin",
-                    "vehicle-category-pricing",
-                    ":id"
-                  ],
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "vehicle-category-pricing", ":id"],
                   "variable": [
                     {
                       "key": "id",
@@ -1042,9 +973,7 @@
                   "listen": "test",
                   "script": {
                     "type": "text/javascript",
-                    "exec": [
-                      "pm.test('Delete successful', () => pm.response.to.be.success);"
-                    ]
+                    "exec": ["pm.test('Delete successful', () => pm.response.to.be.success);"]
                   }
                 }
               ],
@@ -1058,14 +987,8 @@
                 ],
                 "url": {
                   "raw": "{{base_url}}/admin/vehicle-category-pricing/:id",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "admin",
-                    "vehicle-category-pricing",
-                    ":id"
-                  ],
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "vehicle-category-pricing", ":id"],
                   "variable": [
                     {
                       "key": "id",
@@ -1084,9 +1007,7 @@
                   "listen": "test",
                   "script": {
                     "type": "text/javascript",
-                    "exec": [
-                      "pm.test('Delete successful', () => pm.response.to.be.success);"
-                    ]
+                    "exec": ["pm.test('Delete successful', () => pm.response.to.be.success);"]
                   }
                 }
               ],
@@ -1113,14 +1034,8 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/admin/vehicle-category-pricing/bulk",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "admin",
-                    "vehicle-category-pricing",
-                    "bulk"
-                  ]
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "vehicle-category-pricing", "bulk"]
                 },
                 "description": "Bulk delete vehicle category pricing tiers (`SUPER_ADMIN`)."
               },
@@ -1285,9 +1200,7 @@
                   "listen": "test",
                   "script": {
                     "type": "text/javascript",
-                    "exec": [
-                      "pm.test('Delete successful', () => pm.response.to.be.success);"
-                    ]
+                    "exec": ["pm.test('Delete successful', () => pm.response.to.be.success);"]
                   }
                 }
               ]
@@ -1323,9 +1236,7 @@
                   "listen": "test",
                   "script": {
                     "type": "text/javascript",
-                    "exec": [
-                      "pm.test('Delete successful', () => pm.response.to.be.success);"
-                    ]
+                    "exec": ["pm.test('Delete successful', () => pm.response.to.be.success);"]
                   }
                 }
               ]
@@ -1432,7 +1343,7 @@
                       "raw": "{\n  \"status\": \"OPEN\",\n  \"note\": \"Picked up by support\"\n}"
                     },
                     "url": "{{base_url}}/admin/tickets/{{help_ticket_id}}/status",
-                    "description": "PENDING → OPEN. Inbox only (TICKET_STATUS_UPDATED), no push."
+                    "description": "PENDING → OPEN. Inbox notification: TICKET_STATUS_UPDATED."
                   },
                   "response": []
                 },
@@ -1472,7 +1383,7 @@
                       "raw": "{\n  \"status\": \"IN_PROGRESS\",\n  \"note\": \"Investigating the booking details\"\n}"
                     },
                     "url": "{{base_url}}/admin/tickets/{{help_ticket_id}}/status",
-                    "description": "OPEN/PENDING → IN_PROGRESS. Inbox only (TICKET_STATUS_UPDATED), no push."
+                    "description": "OPEN/PENDING → IN_PROGRESS. Inbox notification: TICKET_STATUS_UPDATED."
                   },
                   "response": []
                 },
@@ -1552,12 +1463,12 @@
                       "raw": "{\n  \"status\": \"CLOSED\"\n}"
                     },
                     "url": "{{base_url}}/admin/tickets/{{help_ticket_id}}/status",
-                    "description": "→ CLOSED. Inbox only (TICKET_STATUS_UPDATED), no push."
+                    "description": "→ CLOSED. Inbox notification: TICKET_STATUS_UPDATED."
                   },
                   "response": []
                 }
               ],
-              "description": "PATCH status. Non-resolved → inbox only (TICKET_STATUS_UPDATED). RESOLVED → push (TICKET_RESOLVED)."
+              "description": "PATCH status. Non-resolved → inbox notification TICKET_STATUS_UPDATED. RESOLVED → inbox notification TICKET_RESOLVED."
             },
             {
               "name": "List Tickets",
@@ -1591,13 +1502,8 @@
                 ],
                 "url": {
                   "raw": "{{base_url}}/admin/tickets?page=1&limit=20&sortBy=createdAt&sortOrder=desc",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "admin",
-                    "tickets"
-                  ],
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "tickets"],
                   "query": [
                     {
                       "key": "page",
@@ -1689,7 +1595,7 @@
                   "raw": "{\n  \"body\": \"We reviewed your booking — the price is correct. Let us know if you need more help.\"\n}"
                 },
                 "url": "{{base_url}}/admin/tickets/{{help_ticket_id}}/messages",
-                "description": "Adds a staff reply. A PENDING ticket moves to OPEN. The customer gets a TICKET_REPLY notification (dashboard bell + push) unless they turned notifications off."
+                "description": "Adds a staff reply. A PENDING ticket moves to OPEN. The customer gets a TICKET_REPLY inbox notification unless they turned notifications off."
               },
               "response": []
             },
@@ -1859,13 +1765,8 @@
                 ],
                 "url": {
                   "raw": "{{base_url}}/admin/bookings?page=1&limit=20&sortBy=createdAt&sortOrder=desc",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "admin",
-                    "bookings"
-                  ],
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "bookings"],
                   "query": [
                     {
                       "key": "page",
@@ -2081,9 +1982,7 @@
                   "listen": "test",
                   "script": {
                     "type": "text/javascript",
-                    "exec": [
-                      "pm.test('Delete successful', () => pm.response.to.be.success);"
-                    ]
+                    "exec": ["pm.test('Delete successful', () => pm.response.to.be.success);"]
                   }
                 }
               ]
@@ -2108,14 +2007,8 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/admin/bookings/bulk",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "admin",
-                    "bookings",
-                    "bulk"
-                  ]
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "bookings", "bulk"]
                 },
                 "description": "Bulk delete bookings by array of IDs."
               },
@@ -2125,9 +2018,7 @@
                   "listen": "test",
                   "script": {
                     "type": "text/javascript",
-                    "exec": [
-                      "pm.test('Delete successful', () => pm.response.to.be.success);"
-                    ]
+                    "exec": ["pm.test('Delete successful', () => pm.response.to.be.success);"]
                   }
                 }
               ]
@@ -2144,14 +2035,8 @@
                 ],
                 "url": {
                   "raw": "{{base_url}}/admin/bookings/calendar?start=2026-11-01&end=2026-11-30&bookingType=ONE_WAY,RETURN",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "admin",
-                    "bookings",
-                    "calendar"
-                  ],
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "bookings", "calendar"],
                   "query": [
                     {
                       "key": "start",
@@ -2380,39 +2265,6 @@
                 }
               },
               "response": []
-            },
-            {
-              "name": "Test Push (FCM token)",
-              "request": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{super_admin_access_token}}"
-                  }
-                ],
-                "url": "{{base_url}}/notifications/test",
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"token\": \"{{fcm_token}}\"\n}"
-                }
-              },
-              "response": [],
-              "event": [
-                {
-                  "listen": "test",
-                  "script": {
-                    "type": "text/javascript",
-                    "exec": [
-                      "pm.test('Notification sent', () => pm.response.to.be.success);"
-                    ]
-                  }
-                }
-              ]
             }
           ]
         }
@@ -2541,12 +2393,8 @@
             },
             "url": {
               "raw": "{{base_url}}/uploads?folder=uploads",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "uploads"
-              ],
+              "host": ["{{base_url}}"],
+              "path": ["uploads"],
               "query": [
                 {
                   "key": "folder",
@@ -2631,9 +2479,7 @@
                   "listen": "test",
                   "script": {
                     "type": "text/javascript",
-                    "exec": [
-                      "pm.test('Email verified', () => pm.response.to.be.success);"
-                    ]
+                    "exec": ["pm.test('Email verified', () => pm.response.to.be.success);"]
                   }
                 }
               ]
@@ -3027,9 +2873,7 @@
                       "listen": "test",
                       "script": {
                         "type": "text/javascript",
-                        "exec": [
-                          "pm.test('Password changed', () => pm.response.to.be.success);"
-                        ]
+                        "exec": ["pm.test('Password changed', () => pm.response.to.be.success);"]
                       }
                     }
                   ]
@@ -3088,9 +2932,7 @@
                       "listen": "test",
                       "script": {
                         "type": "text/javascript",
-                        "exec": [
-                          "pm.test('Session revoked', () => pm.response.to.be.success);"
-                        ]
+                        "exec": ["pm.test('Session revoked', () => pm.response.to.be.success);"]
                       }
                     }
                   ]
@@ -3117,9 +2959,7 @@
                   "listen": "test",
                   "script": {
                     "type": "text/javascript",
-                    "exec": [
-                      "pm.test('Me loaded', () => pm.response.to.be.success);"
-                    ]
+                    "exec": ["pm.test('Me loaded', () => pm.response.to.be.success);"]
                   }
                 }
               ]
@@ -3390,9 +3230,7 @@
                       "listen": "test",
                       "script": {
                         "type": "text/javascript",
-                        "exec": [
-                          "console.log('Spent', pm.response.json().data?.totalRevenue);"
-                        ]
+                        "exec": ["console.log('Spent', pm.response.json().data?.totalRevenue);"]
                       }
                     }
                   ]
@@ -3411,14 +3249,8 @@
                 ],
                 "url": {
                   "raw": "{{base_url}}/customers/bookings/calendar?start=2026-11-01&end=2026-11-30&bookingType=ONE_WAY,RETURN",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "customers",
-                    "bookings",
-                    "calendar"
-                  ],
+                  "host": ["{{base_url}}"],
+                  "path": ["customers", "bookings", "calendar"],
                   "query": [
                     {
                       "key": "start",
@@ -3480,9 +3312,7 @@
                   "listen": "test",
                   "script": {
                     "type": "text/javascript",
-                    "exec": [
-                      "pm.test('Profile loaded', () => pm.response.to.be.success);"
-                    ]
+                    "exec": ["pm.test('Profile loaded', () => pm.response.to.be.success);"]
                   }
                 }
               ]
@@ -3527,12 +3357,8 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/uploads?folder=customers/avatars",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "uploads"
-                  ],
+                  "host": ["{{base_url}}"],
+                  "path": ["uploads"],
                   "query": [
                     {
                       "key": "folder",
@@ -3585,84 +3411,7 @@
                   "listen": "test",
                   "script": {
                     "type": "text/javascript",
-                    "exec": [
-                      "pm.test('Profile updated', () => pm.response.to.be.success);"
-                    ]
-                  }
-                }
-              ]
-            }
-          ],
-          "auth": {
-            "type": "bearer",
-            "bearer": {
-              "token": "{{customer_access_token}}"
-            }
-          }
-        },
-        {
-          "name": "Settings",
-          "description": "Customer settings: `email` (email updates) and `notification` (dashboard bell notifications for ticket replies and status changes).",
-          "item": [
-            {
-              "name": "Get",
-              "request": {
-                "method": "GET",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{customer_access_token}}"
-                  }
-                ],
-                "url": "{{base_url}}/customers/settings",
-                "description": "Customer notification prefs and timezone."
-              },
-              "response": [],
-              "event": [
-                {
-                  "listen": "test",
-                  "script": {
-                    "type": "text/javascript",
-                    "exec": [
-                      "const json = pm.response.json();",
-                      "const d = json.data ?? json;",
-                      "console.log('Customer settings:', JSON.stringify(d));",
-                      "pm.test('Settings loaded', () => pm.response.to.be.success);"
-                    ]
-                  }
-                }
-              ]
-            },
-            {
-              "name": "Update",
-              "request": {
-                "method": "PATCH",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{customer_access_token}}"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"email\": true,\n  \"notification\": true\n}"
-                },
-                "url": "{{base_url}}/customers/settings",
-                "description": "Update email, push, and/or timezone."
-              },
-              "response": [],
-              "event": [
-                {
-                  "listen": "test",
-                  "script": {
-                    "type": "text/javascript",
-                    "exec": [
-                      "pm.test('Settings updated', () => pm.response.to.be.success);"
-                    ]
+                    "exec": ["pm.test('Profile updated', () => pm.response.to.be.success);"]
                   }
                 }
               ]
@@ -3677,7 +3426,7 @@
         },
         {
           "name": "Notifications",
-          "description": "In-app notification inbox for customers (`RecipientType.USER` + `userId`).\n\nPair with Socket.IO using the customer access token — listen on `notification.created`.\nPush (FCM) respects `GET/PATCH /customers/settings` → `push` and requires `PATCH /customers/fcm-token`.",
+          "description": "In-app notification inbox for customers (`RecipientType.USER` + `userId`).\n\nPair with Socket.IO using the customer access token — listen on `notification.created`.",
           "item": [
             {
               "name": "List Notifications (cursor, first page)",
@@ -3768,13 +3517,8 @@
                 ],
                 "url": {
                   "raw": "{{base_url}}/customers/notifications?page=1&limit=20&sortBy=createdAt&sortOrder=desc",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "customers",
-                    "notifications"
-                  ],
+                  "host": ["{{base_url}}"],
+                  "path": ["customers", "notifications"],
                   "query": [
                     {
                       "key": "page",
@@ -3875,41 +3619,6 @@
           }
         },
         {
-          "name": "FCM Token",
-          "description": "Register Firebase Cloud Messaging token for customer push. Push is sent only when `CustomerSettings.push` is true (default) and a token is registered.",
-          "item": [
-            {
-              "name": "Update FCM Token",
-              "request": {
-                "method": "PATCH",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{customer_access_token}}"
-                  },
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"token\": \"{{fcm_token}}\",\n  \"deviceId\": \"{{device_id}}\",\n  \"platform\": \"android\"\n}"
-                },
-                "url": "{{base_url}}/customers/fcm-token",
-                "description": "`PATCH /customers/fcm-token` — stores token on `Customer.fcmToken`.\n\nOptional `deviceId` / `platform` (`ios`|`android`|`web`) for multi-device registration."
-              },
-              "response": []
-            }
-          ],
-          "auth": {
-            "type": "bearer",
-            "bearer": {
-              "token": "{{customer_access_token}}"
-            }
-          }
-        },
-        {
           "name": "Help Center",
           "description": "Customer help tickets (`/customers/tickets`).\nCreate / list / get only — customers cannot reply.\nCreate starts as PENDING.",
           "item": [
@@ -3985,13 +3694,8 @@
                 ],
                 "url": {
                   "raw": "{{base_url}}/customers/tickets?page=1&limit=20&sortBy=createdAt&sortOrder=desc",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "customers",
-                    "tickets"
-                  ],
+                  "host": ["{{base_url}}"],
+                  "path": ["customers", "tickets"],
                   "query": [
                     {
                       "key": "page",
@@ -4088,13 +3792,8 @@
                 "header": [],
                 "url": {
                   "raw": "{{base_url}}/public/vehicle-categories?page=1&limit=20&sortBy=createdAt&sortOrder=desc",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "public",
-                    "vehicle-categories"
-                  ],
+                  "host": ["{{base_url}}"],
+                  "path": ["public", "vehicle-categories"],
                   "query": [
                     {
                       "key": "page",
@@ -4150,14 +3849,8 @@
                 "header": [],
                 "url": {
                   "raw": "{{base_url}}/public/vehicle-categories/pricing?distance=10&isAirport=false",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "public",
-                    "vehicle-categories",
-                    "pricing"
-                  ],
+                  "host": ["{{base_url}}"],
+                  "path": ["public", "vehicle-categories", "pricing"],
                   "query": [
                     {
                       "key": "distance",
@@ -4219,13 +3912,8 @@
                 "header": [],
                 "url": {
                   "raw": "{{base_url}}/public/luggage?page=1&limit=20&sortBy=name&sortOrder=asc&isActive=true&q=suitcase",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "public",
-                    "luggage"
-                  ],
+                  "host": ["{{base_url}}"],
+                  "path": ["public", "luggage"],
                   "query": [
                     {
                       "key": "page",
@@ -4451,11 +4139,6 @@
         "content": "Customer inbox notification id (from Customers → Notifications → List)",
         "type": "text/plain"
       }
-    },
-    {
-      "key": "fcm_token",
-      "value": "sample-fcm-device-token-replace-me",
-      "type": "string"
     },
     {
       "key": "session_id",

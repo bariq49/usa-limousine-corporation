@@ -1,10 +1,21 @@
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import type { Notification } from "@prisma/client";
+import { AppLogger } from "../../../common/logger/app.logger";
+import {
+  DELIVERY_LEASE_MS,
+  DELIVERY_MAX_ATTEMPTS,
+  DELIVERY_RETRY_BASE_MS,
+  DELIVERY_RETRY_MAX_MS,
+  DELIVER_PENDING_BATCH,
+} from "../constants/constants";
 import { NotificationRepository } from "../repositories/notification.repository";
 import {
-  type Client,
   type Create,
+  type DeadLetterQuery,
+  type DeliveryClaim,
+  type DeliveryResult,
+  type DeliveryStatus,
   type MarkRead,
   type Query,
   type Recipient,
@@ -12,17 +23,15 @@ import {
   type RemoveMany,
 } from "../types/notification";
 import { NotificationRealtimeService } from "../websocket/notification-realtime.service";
-import { NotificationDeliveryService } from "./notification-delivery.service";
 
 @Injectable()
 export class NotificationService {
   constructor(
     @Inject(NotificationRepository)
     private readonly repository: NotificationRepository,
-    @Inject(NotificationDeliveryService)
-    private readonly delivery: NotificationDeliveryService,
     @Inject(NotificationRealtimeService)
     private readonly realtime: NotificationRealtimeService,
+    @Inject(AppLogger) private readonly logger: AppLogger,
   ) {}
 
   async notify(input: Create) {
@@ -50,7 +59,7 @@ export class NotificationService {
       throw error;
     }
 
-    await this.delivery.deliver({ notification });
+    await this.deliverStaged([notification]);
     return notification;
   }
 
@@ -85,25 +94,65 @@ export class NotificationService {
       return results;
     }
 
-    const created = await this.repository.createManyAndReturn({ inputs: toCreate });
+    const created = await this.repository.createManyAndReturn(toCreate);
     for (const row of created) {
       results.push(row);
     }
 
-    await this.delivery.deliverMany({ notifications: created });
+    await this.deliverStaged(created);
     return results;
   }
 
-  stage(inputs: Create[], client: Client) {
-    return this.repository.createManyAndReturn({ inputs }, client);
+  stage(inputs: Create[], client: Prisma.TransactionClient) {
+    return this.repository.createManyAndReturn(inputs, client);
   }
 
-  deliverStaged(notifications: Notification[]) {
-    return this.delivery.deliverMany({ notifications });
+  async deliverStaged(notifications: Notification[]) {
+    if (notifications.length === 0) {
+      return;
+    }
+
+    const now = new Date();
+    const lockUntil = new Date(now.getTime() + DELIVERY_LEASE_MS);
+    const claimed = await this.claimForDelivery(
+      {
+        ids: notifications.map((notification) => notification.id),
+        now,
+        lockUntil,
+        take: notifications.length,
+      },
+      "staged",
+    );
+    await this.dispatchClaimed(claimed, lockUntil);
   }
 
-  list(query: Query, recipient: Recipient) {
-    return this.repository.list(query, recipient);
+  async deliverPending(createdBefore: Date, take = DELIVER_PENDING_BATCH): Promise<DeliveryResult> {
+    const now = new Date();
+    const lockUntil = new Date(now.getTime() + DELIVERY_LEASE_MS);
+    const claimed = await this.claimForDelivery({ createdBefore, now, lockUntil, take }, "pending");
+    return this.dispatchClaimed(claimed, lockUntil);
+  }
+
+  getDeliveryStatus(): Promise<DeliveryStatus> {
+    return this.repository.getDeliveryStatus();
+  }
+
+  listDeadLetters(query: DeadLetterQuery) {
+    return this.repository.findDeadLetters(query);
+  }
+
+  async retryDeadLetter(id: string, userId: string) {
+    const notification = await this.repository.requeueDeadLetter(id);
+    if (!notification) {
+      throw new NotFoundException("Dead-letter notification not found");
+    }
+
+    this.logger.warn(
+      `notification.dead-letter.retry id=${id} requestedBy=${userId}`,
+      NotificationService.name,
+    );
+    await this.deliverStaged([notification]);
+    return { requeued: true, id };
   }
 
   async listWithUnread(query: Query, recipient: Recipient) {
@@ -192,7 +241,103 @@ export class NotificationService {
     return { deleted: result.count };
   }
 
-  countUnread(params: Recipient) {
-    return this.repository.countUnread(params);
+  private async claimForDelivery(input: DeliveryClaim, source: string): Promise<Notification[]> {
+    try {
+      return await this.repository.claimForDelivery(input);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown error";
+      this.logger.error(
+        `Notification ${source} claim failed: ${message}`,
+        undefined,
+        NotificationService.name,
+      );
+      return [];
+    }
+  }
+
+  private async dispatchClaimed(
+    notifications: Notification[],
+    lockUntil: Date,
+  ): Promise<DeliveryResult> {
+    const deliveredIds: string[] = [];
+    const failed: { notification: Notification; error: string }[] = [];
+
+    for (const notification of notifications) {
+      try {
+        if (this.realtime.emitCreated(notification)) {
+          deliveredIds.push(notification.id);
+        } else {
+          failed.push({ notification, error: "Realtime transport unavailable" });
+        }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Unknown error";
+        this.logger.error(
+          `Notification realtime delivery failed for ${notification.id}: ${message}`,
+          undefined,
+          NotificationService.name,
+        );
+        failed.push({ notification, error: message });
+      }
+    }
+
+    let delivered = 0;
+    if (deliveredIds.length > 0) {
+      try {
+        const result = await this.repository.markDelivered(deliveredIds, lockUntil);
+        delivered = result.count;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Unknown error";
+        this.logger.error(
+          `Notification delivery status update failed: ${message}`,
+          undefined,
+          NotificationService.name,
+        );
+      }
+    }
+
+    let deadLettered = 0;
+    for (const failure of failed) {
+      const terminal = failure.notification.deliveryAttempts >= DELIVERY_MAX_ATTEMPTS;
+      const retryWindow = Math.min(
+        DELIVERY_RETRY_BASE_MS * 2 ** (failure.notification.deliveryAttempts - 1),
+        DELIVERY_RETRY_MAX_MS,
+      );
+      try {
+        const result = await this.repository.markDeliveryFailure({
+          id: failure.notification.id,
+          lockUntil,
+          error: failure.error,
+          nextDeliveryAt: terminal ? null : new Date(Date.now() + retryWindow),
+          deadLetteredAt: terminal ? new Date() : null,
+        });
+        if (result.count > 0 && terminal) {
+          deadLettered += result.count;
+          this.logger.error(
+            `Notification moved to dead letter id=${failure.notification.id} attempts=${failure.notification.deliveryAttempts}`,
+            undefined,
+            NotificationService.name,
+          );
+        } else if (result.count > 0) {
+          this.logger.warn(
+            `Notification delivery scheduled for retry id=${failure.notification.id} attempts=${failure.notification.deliveryAttempts}`,
+            NotificationService.name,
+          );
+        }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Unknown error";
+        this.logger.error(
+          `Notification delivery failure could not be recorded for ${failure.notification.id}: ${message}`,
+          undefined,
+          NotificationService.name,
+        );
+      }
+    }
+
+    return {
+      claimed: notifications.length,
+      delivered,
+      failed: notifications.length - delivered,
+      deadLettered,
+    };
   }
 }

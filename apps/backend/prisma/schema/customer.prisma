@@ -12,39 +12,10 @@ model Customer {
   updatedAt DateTime     @updatedAt
   deletedAt DateTime?
 
-  user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  settings    CustomerSettings?
-  pushDevices CustomerPushDevice[]
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   helpTickets HelpTicket[]
   activities  Activity[]
 
   @@index([type])
   @@index([deletedAt])
-}
-
-model CustomerSettings {
-  id           String   @id @default(cuid())
-  customerId   String   @unique
-  email        Boolean  @default(true)
-  notification Boolean  @default(true)
-  sms          Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-}
-
-model CustomerPushDevice {
-  id         String   @id @default(cuid())
-  customerId String
-  token      String   @unique
-  deviceId   String?
-  platform   String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-
-  @@unique([customerId, deviceId])
-  @@index([customerId])
 }

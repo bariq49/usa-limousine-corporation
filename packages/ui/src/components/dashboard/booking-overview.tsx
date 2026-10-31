@@ -3,10 +3,13 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { Card, CardContent, CardHeader } from "../card";
+import { Button } from "../button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../dialog";
 import { Form } from "../form";
 import { Input } from "../input";
 import { Skeleton } from "../skeleton";
 import AreaChart from "../charts/area-chart";
+import { SlidersHorizontal } from "../../svg";
 import { cn } from "../../utils/cn";
 import { formatPrice } from "../../utils/price";
 
@@ -67,8 +70,15 @@ export function BookingOverview({
   className,
 }: BookingOverviewProps) {
   const [selectedKey, setSelectedKey] = useState(stats[0]?.key ?? "");
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const selected = stats.find((item) => item.key === selectedKey) ?? stats[0];
   const form = useForm<FilterValues>({
+    defaultValues: {
+      month: month ? String(month) : "all",
+      year: String(year),
+    },
+  });
+  const mobileForm = useForm<FilterValues>({
     defaultValues: {
       month: month ? String(month) : "all",
       year: String(year),
@@ -80,7 +90,9 @@ export function BookingOverview({
   useEffect(() => {
     form.setValue("month", month ? String(month) : "all");
     form.setValue("year", String(year));
-  }, [form, month, year]);
+    mobileForm.setValue("month", month ? String(month) : "all");
+    mobileForm.setValue("year", String(year));
+  }, [form, mobileForm, month, year]);
 
   useEffect(() => {
     if (!onMonthChange || watchedMonth === undefined) return;
@@ -113,15 +125,33 @@ export function BookingOverview({
       )}
     >
       <CardHeader className="gap-3 border-none pb-0 max-md:px-0 max-md:pt-0 md:flex-row md:items-start md:justify-between">
-        <div className="min-w-0 space-y-1">
-          <div className="text-xl font-semibold text-default-900">{title}</div>
-          <span className="block text-xs text-default-600 md:text-sm">{description}</span>
+        <div className="flex min-w-0 items-start justify-between gap-3">
+          <div className="min-w-0 space-y-1">
+            <div className="text-xl font-semibold text-default-900">{title}</div>
+            <span className="block text-xs text-default-600 md:text-sm">{description}</span>
+          </div>
+          {years && onYearChange ? (
+            <Button
+              type="button"
+              size="icon"
+              variant="outline"
+              className="shrink-0 md:hidden"
+              aria-label="Open booking filters"
+              onClick={() => {
+                mobileForm.setValue("month", month ? String(month) : "all");
+                mobileForm.setValue("year", String(year));
+                setFiltersOpen(true);
+              }}
+            >
+              <SlidersHorizontal className="h-4 w-4" />
+            </Button>
+          ) : null}
         </div>
         {years && onYearChange ? (
           <Form {...form}>
             <div
               className={cn(
-                "grid gap-2 md:flex md:shrink-0",
+                "hidden gap-2 md:flex md:shrink-0",
                 onMonthChange ? "grid-cols-2" : "grid-cols-1",
               )}
             >
@@ -147,6 +177,52 @@ export function BookingOverview({
           actions
         )}
       </CardHeader>
+      {years && onYearChange ? (
+        <Dialog open={filtersOpen} onOpenChange={setFiltersOpen}>
+          <DialogContent className="max-w-md gap-5 max-md:top-auto max-md:bottom-0 max-md:left-0 max-md:right-0 max-md:max-w-none max-md:translate-x-0 max-md:translate-y-0 max-md:overflow-y-auto max-md:rounded-t-2xl max-md:rounded-b-none max-md:pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
+            <DialogHeader className="text-left">
+              <DialogTitle>Booking filters</DialogTitle>
+              <DialogDescription>
+                Choose a month and year to update your overview.
+              </DialogDescription>
+            </DialogHeader>
+            <Form {...mobileForm}>
+              <div className="grid gap-4">
+                {onMonthChange ? (
+                  <Input
+                    name="month"
+                    label="Month"
+                    type="select"
+                    options={monthOptions}
+                    inputClassName="h-11 bg-transparent"
+                  />
+                ) : null}
+                <Input
+                  name="year"
+                  label="Year"
+                  type="select"
+                  options={yearOptions}
+                  inputClassName="h-11 bg-transparent"
+                />
+              </div>
+            </Form>
+            <Button
+              type="button"
+              className="w-full"
+              onClick={() => {
+                const values = mobileForm.getValues();
+                if (onMonthChange) {
+                  onMonthChange(values.month === "all" ? null : Number(values.month));
+                }
+                onYearChange(Number(values.year));
+                setFiltersOpen(false);
+              }}
+            >
+              Apply filters
+            </Button>
+          </DialogContent>
+        </Dialog>
+      ) : null}
       <CardContent className="flex flex-1 flex-col px-0 py-4 md:p-5">
         <div
           className={cn(

@@ -23,9 +23,9 @@ import type {
   UpdateStatusData,
 } from "../types/booking";
 import { PlatformSettingsService } from "../../platform-settings/services/platform-settings.service";
-import { BookingEmailService } from "./booking-email.service";
+import { BookingEmailService } from "./email.service";
 import { NotificationService } from "./notification.service";
-import { BookingSmsService } from "./booking-sms.service";
+import { BookingSmsService } from "./sms.service";
 
 @Injectable()
 export class BookingService {

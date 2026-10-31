@@ -27,15 +27,7 @@ export const navigation: MenuSection[] = [
     groups: [
       {
         id: "main",
-        items: [
-          { id: "dashboard", label: "Dashboard", href: "/dashboard", icon: Graph },
-          {
-            id: "booking-calendar",
-            label: "Upcoming Rides",
-            href: "/calendar",
-            icon: CalendarClock,
-          },
-        ],
+        items: [{ id: "dashboard", label: "Dashboard", href: "/dashboard", icon: Graph }],
       },
     ],
   },
@@ -49,6 +41,12 @@ export const navigation: MenuSection[] = [
         id: "booking-group",
         items: [
           { id: "all-bookings", label: "All Bookings", href: "/bookings", icon: Calendar },
+          {
+            id: "scheduled-bookings",
+            label: "Scheduled Rides",
+            href: "/scheduled-bookings",
+            icon: CalendarClock,
+          },
           {
             id: "confirmed-bookings",
             label: "Confirmed Bookings",

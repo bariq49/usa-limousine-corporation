@@ -73,7 +73,7 @@ graph TD
     subgraph Gateways["Third-Party Cloud Gateways"]
         Square["Square Payments"]
         Twilio["Twilio SMS (OTP)"]
-        Firebase["Firebase Admin (FCM)"]
+        Firebase["Firebase Admin SDK (Configuration Health)"]
         Agora["Agora RTC (In-Trip Audio)"]
         Cloudinary["Cloudinary (Assets & KYC)"]
     end
@@ -265,7 +265,6 @@ Explore the comprehensive enterprise documentation portal under [`docs/`](docs):
 - 🌐 **[API Conventions & Envelopes](docs/api/overview.md)** — Standard response contracts, error formats, and Newman CLI integration.
 - 🛠️ **[Operations & Deployment Runbooks](docs/operations/runbooks.md)** — Hostinger VPS setup, zero-downtime rolling deploys, database backup/restore, and disaster recovery.
 - 📡 **[WebSocket Events Specification](apps/backend/docs/websocket-events.md)** — Real-time Socket.IO event registry, room topologies, and live GPS streaming.
-- 🔔 **[Firebase Push Notifications (FCM)](apps/backend/docs/firebase-notifications.md)** — Push notification payloads, device tokens, and delivery gating.
 - 💳 **[Payments (Square)](apps/backend/docs/payments.md)** — Guest checkout, webhook settling, payment records and checkout expiry.
 - 🔑 **[Infrastructure Credentials Guide](apps/backend/docs/guide.md)** — Configuration guide for Square, Twilio, Firebase, and Cloudinary.
 

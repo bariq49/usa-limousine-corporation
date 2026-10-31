@@ -82,10 +82,12 @@ export const useNotificationEvents = (socket: Socket | null) => {
     };
 
     const onCreated = (item: NotificationItem) => {
+      const current = queryClient.getQueryData<NotificationList>(notificationQueryKeys.list);
+      if (current?.items.some((existing) => existing.id === item.id)) {
+        return;
+      }
+
       queryClient.setQueryData<NotificationList>(notificationQueryKeys.list, (list) => {
-        if (list?.items.some((existing) => existing.id === item.id)) {
-          return list;
-        }
         if (!list) {
           const seeded: NotificationList = {
             items: [item],

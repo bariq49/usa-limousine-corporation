@@ -1,5 +1,5 @@
-import { BookingEmailService } from "../src/modules/booking/services/booking-email.service";
-import { BookingSmsService } from "../src/modules/booking/services/booking-sms.service";
+import { BookingEmailService } from "../src/modules/booking/services/email.service";
+import { BookingSmsService } from "../src/modules/booking/services/sms.service";
 
 const row = (userId: string | null, choices = { notifyByEmail: true, notifyBySms: true }) => ({
   notifyByEmail: choices.notifyByEmail,
@@ -11,7 +11,12 @@ const row = (userId: string | null, choices = { notifyByEmail: true, notifyBySms
   vehicleCount: 1,
   totalPrice: { toFixed: () => "110.00" },
   vehicleCategory: { name: "Sedan", description: null, image: null, passengerCount: 4 },
-  address: { pickup: { address: "A" }, dropoff: { address: "B" }, distance: 10, travelDuration: 20 },
+  address: {
+    pickup: { address: "A" },
+    dropoff: { address: "B" },
+    distance: 10,
+    travelDuration: 20,
+  },
   passenger: { passengerCount: 1, name: "Ada", email: "ada@example.com", phone: "+17322898928" },
   bookingTime: { pickupDate: "2030-09-11", pickupTime: "14:00" },
   flightDetails: null,
@@ -22,21 +27,16 @@ const row = (userId: string | null, choices = { notifyByEmail: true, notifyBySms
   pricing: { total: 110 },
 });
 
-function repository(
-  userId: string | null,
-  prefs = { email: true, sms: true },
-  choices = { notifyByEmail: true, notifyBySms: true },
-) {
+function repository(userId: string | null, choices = { notifyByEmail: true, notifyBySms: true }) {
   return {
     findById: jest.fn(async () => row(userId, choices)),
-    contactPreferences: jest.fn(async () => prefs),
   };
 }
 
 describe("BookingSmsService", () => {
   const twilio = () => ({ isConfigured: () => true, send: jest.fn(async () => undefined) });
 
-  it("texts a customer who has SMS turned on", async () => {
+  it("sends cancellation SMS regardless of the booking SMS choice", async () => {
     const sms = twilio();
     const service = new BookingSmsService(repository("user-1") as never, sms as never, {} as never);
 
@@ -44,24 +44,25 @@ describe("BookingSmsService", () => {
 
     expect(sms.send).toHaveBeenCalledWith({
       to: "+17322898928",
-      body: expect.stringContaining("BK-000001 has been cancelled. Reason: Flight cancelled."),
+      body: expect.stringContaining(
+        "has cancelled your booking BK-000001. Reason: Flight cancelled.",
+      ),
     });
   });
 
-  it("skips customers who turned SMS off", async () => {
+  it("sends SMS when the rider selected it for the booking", async () => {
     const sms = twilio();
-    const repo = repository("user-1", { email: true, sms: false });
+    const repo = repository("user-1");
     const service = new BookingSmsService(repo as never, sms as never, {} as never);
 
     await service.sendPaid("book-1");
 
-    expect(repo.contactPreferences).toHaveBeenCalledWith("user-1");
-    expect(sms.send).not.toHaveBeenCalled();
+    expect(sms.send).toHaveBeenCalled();
   });
 
   it("skips SMS when the rider did not choose SMS notifications for the booking", async () => {
     const sms = twilio();
-    const repo = repository("user-1", undefined, { notifyByEmail: true, notifyBySms: false });
+    const repo = repository("user-1", { notifyByEmail: true, notifyBySms: false });
     const service = new BookingSmsService(repo as never, sms as never, {} as never);
 
     await service.sendPaid("book-1");
@@ -81,16 +82,14 @@ describe("BookingSmsService", () => {
 
     expect(repo.findById).not.toHaveBeenCalled();
   });
+
 });
 
 describe("BookingEmailService preferences", () => {
-  const setup = (
-    prefs: { email: boolean; sms: boolean },
-    choices = { notifyByEmail: true, notifyBySms: true },
-  ) => {
+  const setup = (choices = { notifyByEmail: true, notifyBySms: true }) => {
     const email = { send: jest.fn(async () => ({ messageId: "m1" })) };
     const service = new BookingEmailService(
-      repository("user-1", prefs, choices) as never,
+      repository("user-1", choices) as never,
       email as never,
       {
         get: (key: string) => (key === "DEFAULT_ADMIN_EMAIL" ? "admin@example.com" : undefined),
@@ -109,20 +108,8 @@ describe("BookingEmailService preferences", () => {
     return { service, email };
   };
 
-  it("skips customer emails when email is turned off but still tells the admin", async () => {
-    const { service, email } = setup({ email: false, sms: true });
-
-    await service.sendPaid("book-1");
-
-    expect(email.send).toHaveBeenCalledTimes(1);
-    expect(email.send).toHaveBeenCalledWith(expect.objectContaining({ to: "admin@example.com" }));
-  });
-
   it("skips customer emails when the rider turned email notifications off for the booking", async () => {
-    const { service, email } = setup(
-      { email: true, sms: true },
-      { notifyByEmail: false, notifyBySms: true },
-    );
+    const { service, email } = setup({ notifyByEmail: false, notifyBySms: true });
 
     await service.sendPaid("book-1");
 
@@ -130,11 +117,12 @@ describe("BookingEmailService preferences", () => {
     expect(email.send).toHaveBeenCalledWith(expect.objectContaining({ to: "admin@example.com" }));
   });
 
-  it("emails the customer when email is on", async () => {
-    const { service, email } = setup({ email: true, sms: true });
+  it("emails the customer when email is selected for the booking", async () => {
+    const { service, email } = setup();
 
     await service.sendConfirmed("book-1");
 
     expect(email.send).toHaveBeenCalledWith(expect.objectContaining({ to: "ada@example.com" }));
   });
+
 });

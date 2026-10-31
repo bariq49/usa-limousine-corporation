@@ -6,9 +6,12 @@ import {
   IsArray,
   IsBoolean,
   IsEnum,
+  IsInt,
   IsOptional,
   IsString,
+  Max,
   MaxLength,
+  Min,
 } from "class-validator";
 import { ApiFeatureQueryDto } from "../../../common/api-feature/api-feature-query.dto";
 
@@ -43,4 +46,18 @@ export class QueryDto extends ApiFeatureQueryDto {
   @IsOptional()
   @IsEnum(NotificationType)
   type?: NotificationType;
+}
+
+export class DeadLetterQueryDto {
+  @IsOptional()
+  @Transform(({ value }) => (value === undefined ? undefined : Number(value)))
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  limit?: number;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(64)
+  cursor?: string;
 }

@@ -31,7 +31,7 @@ graph TD
     subgraph ExternalIntegrations["Third-Party Cloud Gateways"]
         Square["Square Payments<br/>Hosted checkout links"]
         Twilio["Twilio SMS<br/>OTP & Operational Alerts"]
-        Firebase["Firebase Admin (FCM)<br/>Push Notifications"]
+        Firebase["Firebase Admin SDK<br/>Configuration Health"]
         Agora["Agora RTC<br/>In-Trip Voice Calling"]
         Cloudinary["Cloudinary Storage<br/>KYC & Media Assets"]
         SMTP["SMTP Mailer<br/>Transactional Email & Verification"]
@@ -102,7 +102,7 @@ The persistence layer uses PostgreSQL 16 managed through a multi-file domain-spl
 | `booking.prisma`      | Customer booking records, trip pricing breakdown, pickup/dropoff points, booking status                              |
 | `trip.prisma`         | Driver trip execution lifecycle, trip status transitions (`STARTED`, `ARRIVED_AT_DROPOFF`, `COMPLETED`), trip events |
 | `payment.prisma`      | One payment per booking: TID, Square order and payment ids, card brand and last 4, amount, status                    |
-| `notification.prisma` | In-app notification inboxes for drivers and customers, push gating configuration                                     |
+| `notification.prisma` | In-app notification inboxes and delivery tracking                                                                     |
 | `wallets.prisma`      | Driver financial wallet, balances, and immutable transaction ledger                                                  |
 | `payouts.prisma`      | Driver payout requests, bank transfer snapshots, and lifecycle event logging                                         |
 | `shared.prisma`       | Cross-domain enums, reusable scalar types, and system-wide constants                                                 |
@@ -140,7 +140,7 @@ sequenceDiagram
 | :------- | :----------------------- | :--------------------------------------------------------------------------------------------- | :------------------------------- |
 | `all`    | `pnpm dev`               | Monolithic mode: HTTP API, WebSockets, and BullMQ workers run in a single process              | Local development only           |
 | `api`    | `pnpm start:prod`        | Stateless HTTP & WebSocket gateway: handles requests, enqueues background jobs                 | Scales horizontally behind Caddy |
-| `worker` | `pnpm start:prod:worker` | Background worker daemon: processes queues (emails, FCM push, outbox drain, billing reconcile) | Scales based on queue depth      |
+| `worker` | `pnpm start:prod:worker` | Background worker daemon: processes queues (emails, inbox redelivery, outbox drain, billing reconcile) | Scales based on queue depth      |
 
 ---
 

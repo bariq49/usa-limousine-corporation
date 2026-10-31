@@ -98,6 +98,7 @@ export { default as WhatsApp } from "./whatsapp";
 export { default as Percent } from "./percent";
 export { default as DollarSign } from "./dollar-sign";
 export { default as SlidersHorizontal } from "./sliders-horizontal";
+export { default as Filter } from "./filter";
 export { default as Visa } from "./visa";
 export { default as Mastercard } from "./mastercard";
 export { default as Amex } from "./amex";

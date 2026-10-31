@@ -35,9 +35,7 @@ export default function ConfirmedBookingsPage() {
         <CardContent className="p-6">
           <div className="mb-5">
             <h2 className="text-lg font-bold text-default-900">Confirmed Bookings</h2>
-            <p className="mt-1 text-xs text-default-500">
-              Upcoming rides that are confirmed and scheduled.
-            </p>
+            <p className="mt-1 text-xs text-default-500">Scheduled rides that are confirmed.</p>
           </div>
 
           <DataTable

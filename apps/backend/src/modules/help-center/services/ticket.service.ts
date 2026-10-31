@@ -73,6 +73,7 @@ export class TicketService {
             ticketNumber: ticket.ticketNumber,
             subject: ticket.subject,
             customerId: ticket.customerId,
+            userId: ticket.customer?.user?.id ?? null,
           },
           actorUserId,
         },
@@ -144,9 +145,9 @@ export class TicketService {
             ticketNumber: ticket.ticketNumber,
             subject: ticket.subject,
             customerId: ticket.customerId,
+            userId: customer?.userId ?? null,
           },
           contactName: input.name,
-          userId: customer?.userId ?? null,
           isHigh,
         },
         tx,
@@ -242,6 +243,7 @@ export class TicketService {
             ticketNumber: ticket.ticketNumber,
             subject: ticket.subject,
             customerId: ticket.customerId,
+            userId: ticket.customer?.user?.id ?? null,
           },
           messageId: message.id,
         },
@@ -291,7 +293,6 @@ export class TicketService {
           ticket: {
             id: ticket.id,
             ticketNumber: ticket.ticketNumber,
-            customerId: ticket.customerId,
           },
           messageId: message.id,
           body: body.body,
@@ -343,7 +344,9 @@ export class TicketService {
 
     const allowed = ALLOWED_STATUS_TRANSITIONS[ticket.status] || [];
     if (!allowed.includes(body.status)) {
-      throw new BadRequestException(`Cannot transition ticket from ${ticket.status} to ${body.status}`);
+      throw new BadRequestException(
+        `Cannot transition ticket from ${ticket.status} to ${body.status}`,
+      );
     }
 
     const payload: StatusUpdated = {
@@ -370,6 +373,7 @@ export class TicketService {
             ticketNumber: ticket.ticketNumber,
             subject: ticket.subject,
             customerId: ticket.customerId,
+            userId: ticket.customer?.user?.id ?? null,
           },
           from: ticket.status,
           to: body.status,

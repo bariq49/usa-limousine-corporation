@@ -16,7 +16,6 @@ describe("admin navigation", () => {
       "/blogs/drafts",
       "/blogs/scheduled",
       "/bookings",
-      "/calendar",
       "/cancelled-bookings",
       "/categories",
       "/completed-bookings",
@@ -31,6 +30,7 @@ describe("admin navigation", () => {
       "/pricing",
       "/profile-setting",
       "/refunds",
+      "/scheduled-bookings",
       "/standard-luggage",
     ]);
   });

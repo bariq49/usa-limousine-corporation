@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client";
-import { BookingEmailService } from "../src/modules/booking/services/booking-email.service";
+import { BookingEmailService } from "../src/modules/booking/services/email.service";
 import { ReceiptService } from "../src/modules/booking/services/receipt.service";
 
 const booking = (payment: Record<string, unknown> | null) => ({

@@ -20,7 +20,7 @@ export class AssignmentController {
 
   @Post()
   assign(@Param("bookingId") bookingId: string, @Body() body: AssignDto, @Req() request: Request) {
-    return this.assignments.assign(bookingId, body, request);
+    return this.assignments.assign({ bookingId, body, request });
   }
 
   @Delete()

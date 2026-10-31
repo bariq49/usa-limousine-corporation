@@ -13,23 +13,29 @@ enum NotificationType {
 }
 
 model Notification {
-  id             String                    @id @default(cuid())
-  recipientType  NotificationRecipientType
-  recipientId    String
-  type           NotificationType
-  title          String
-  body           String
-  data           Json?
-  idempotencyKey String?                   @unique
-  push           Boolean                   @default(true)
-  readAt         DateTime?
-  deliveredAt    DateTime?
-  createdAt      DateTime                  @default(now())
+  id                  String                    @id @default(cuid())
+  recipientType       NotificationRecipientType
+  recipientId         String
+  type                NotificationType
+  title               String
+  body                String
+  data                Json?
+  idempotencyKey      String?                   @unique
+  readAt              DateTime?
+  deliveredAt         DateTime?
+  deliveryAttempts    Int                       @default(0)
+  nextDeliveryAt      DateTime?                 @default(now())
+  deliveryLockedUntil DateTime?
+  deadLetteredAt      DateTime?
+  lastDeliveryError   String?
+  createdAt           DateTime                  @default(now())
 
   recipient User @relation(fields: [recipientId], references: [id], onDelete: Cascade)
 
   @@index([recipientType, recipientId, createdAt])
   @@index([recipientType, recipientId, readAt])
   @@index([deliveredAt, createdAt])
+  @@index([deliveredAt, deadLetteredAt, nextDeliveryAt, createdAt], map: "Notification_delivery_pending_idx")
+  @@index([deadLetteredAt, createdAt], map: "Notification_dead_letter_idx")
   @@index([readAt, createdAt])
 }

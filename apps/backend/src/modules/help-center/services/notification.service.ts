@@ -1,6 +1,11 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { HelpTicketSource, HelpTicketStatus, NotificationType, type Notification } from "@prisma/client";
-import { stageForAdmins, stageForCustomer } from "../../../common/utils/notification";
+import {
+  HelpTicketSource,
+  HelpTicketStatus,
+  NotificationType,
+  type Notification,
+} from "@prisma/client";
+import { stageForAdmins, stageForUser } from "../../../common/utils/notification";
 import { NotificationService as AppNotificationService } from "../../notification/services/notification.service";
 import type { Client } from "../../notification/types/notification";
 import type {
@@ -19,8 +24,8 @@ export class NotificationService {
 
   async stageCreated(input: TicketNotifyCreated, tx: Client): Promise<Notification[]> {
     const adminNotifications = await stageForAdmins(
+      this.appNotifications,
       {
-        notificationService: this.appNotifications,
         type: NotificationType.TICKET_CREATED,
         title: "New support ticket",
         body: `${input.ticket.ticketNumber}: ${input.ticket.subject}`,
@@ -36,36 +41,36 @@ export class NotificationService {
       tx,
     );
 
-    const customerNotifications = input.ticket.customerId
-      ? await stageForCustomer(
-          {
-            notificationService: this.appNotifications,
-            customerId: input.ticket.customerId,
-            type: NotificationType.TICKET_CREATED,
-            title: "Support ticket received",
-            body: `We received your ticket ${input.ticket.ticketNumber}: ${input.ticket.subject}`,
-            data: {
-              type: "TICKET_CREATED",
-              payload: {
-                ticketId: input.ticket.id,
-                ticketNumber: input.ticket.ticketNumber,
-                subject: input.ticket.subject,
-              },
-            },
-            push: true,
-            idempotencyKey: `TICKET_CREATED_CUSTOMER:${input.ticket.id}`,
+    const userNotifications = await stageForUser(
+      this.appNotifications,
+      {
+        userId: input.ticket.userId,
+        type: NotificationType.TICKET_CREATED,
+        title: "Support ticket received",
+        body: `We received your ticket ${input.ticket.ticketNumber}: ${input.ticket.subject}`,
+        data: {
+          type: "TICKET_CREATED",
+          payload: {
+            ticketId: input.ticket.id,
+            ticketNumber: input.ticket.ticketNumber,
+            subject: input.ticket.subject,
           },
-          tx,
-        )
-      : [];
+        },
+        idempotencyKey: `TICKET_CREATED_CUSTOMER:${input.ticket.id}`,
+      },
+      tx,
+    );
 
-    return adminNotifications.concat(customerNotifications);
+    return adminNotifications.concat(userNotifications);
   }
 
-  async stageWebsiteCreated(input: TicketNotifyWebsiteCreated, tx: Client): Promise<Notification[]> {
+  async stageWebsiteCreated(
+    input: TicketNotifyWebsiteCreated,
+    tx: Client,
+  ): Promise<Notification[]> {
     const adminNotifications = await stageForAdmins(
+      this.appNotifications,
       {
-        notificationService: this.appNotifications,
         type: NotificationType.TICKET_CREATED,
         title: input.isHigh ? "High priority enquiry" : "New website enquiry",
         body: `${input.ticket.ticketNumber}: ${input.ticket.subject} (${input.contactName})`,
@@ -81,41 +86,34 @@ export class NotificationService {
       tx,
     );
 
-    const customerNotifications = input.userId
-      ? await stageForCustomer(
-          {
-            notificationService: this.appNotifications,
-            userId: input.userId,
-            type: NotificationType.TICKET_CREATED,
-            title: "Support ticket received",
-            body: `We received your ticket ${input.ticket.ticketNumber}: ${input.ticket.subject}`,
-            data: {
-              type: "TICKET_CREATED",
-              payload: {
-                ticketId: input.ticket.id,
-                ticketNumber: input.ticket.ticketNumber,
-                subject: input.ticket.subject,
-              },
-            },
-            push: true,
-            idempotencyKey: `TICKET_CREATED_CUSTOMER:${input.ticket.id}`,
+    const userNotifications = await stageForUser(
+      this.appNotifications,
+      {
+        userId: input.ticket.userId,
+        type: NotificationType.TICKET_CREATED,
+        title: "Support ticket received",
+        body: `We received your ticket ${input.ticket.ticketNumber}: ${input.ticket.subject}`,
+        data: {
+          type: "TICKET_CREATED",
+          payload: {
+            ticketId: input.ticket.id,
+            ticketNumber: input.ticket.ticketNumber,
+            subject: input.ticket.subject,
           },
-          tx,
-        )
-      : [];
+        },
+        idempotencyKey: `TICKET_CREATED_CUSTOMER:${input.ticket.id}`,
+      },
+      tx,
+    );
 
-    return adminNotifications.concat(customerNotifications);
+    return adminNotifications.concat(userNotifications);
   }
 
   async stageStaffReply(input: TicketNotifyStaffReply, tx: Client): Promise<Notification[]> {
-    if (!input.ticket.customerId) {
-      return [];
-    }
-
-    return stageForCustomer(
+    return stageForUser(
+      this.appNotifications,
       {
-        notificationService: this.appNotifications,
-        customerId: input.ticket.customerId,
+        userId: input.ticket.userId,
         type: NotificationType.TICKET_REPLY,
         title: "Help ticket reply",
         body: `Support replied to ticket ${input.ticket.ticketNumber}`,
@@ -128,7 +126,6 @@ export class NotificationService {
             messageId: input.messageId,
           },
         },
-        push: true,
         idempotencyKey: `TICKET_REPLY:${input.messageId}`,
       },
       tx,
@@ -137,8 +134,8 @@ export class NotificationService {
 
   async stageCustomerReply(input: TicketNotifyCustomerReply, tx: Client): Promise<Notification[]> {
     return stageForAdmins(
+      this.appNotifications,
       {
-        notificationService: this.appNotifications,
         type: NotificationType.TICKET_REPLY,
         title: "Customer replied",
         body: `${input.ticket.ticketNumber}: ${input.body.slice(0, 120)}`,
@@ -156,12 +153,10 @@ export class NotificationService {
   }
 
   async stageStatusUpdated(input: TicketNotifyStatusUpdated, tx: Client): Promise<Notification[]> {
-    if (!input.ticket.customerId) {
-      return [];
-    }
-
     const isResolved = input.to === HelpTicketStatus.RESOLVED;
-    const type = isResolved ? NotificationType.TICKET_RESOLVED : NotificationType.TICKET_STATUS_UPDATED;
+    const type = isResolved
+      ? NotificationType.TICKET_RESOLVED
+      : NotificationType.TICKET_STATUS_UPDATED;
     const title = isResolved ? "Help ticket resolved" : "Help ticket updated";
     const body = isResolved
       ? `Ticket ${input.ticket.ticketNumber} has been resolved`
@@ -179,10 +174,10 @@ export class NotificationService {
       payload["to"] = input.to;
     }
 
-    return stageForCustomer(
+    return stageForUser(
+      this.appNotifications,
       {
-        notificationService: this.appNotifications,
-        customerId: input.ticket.customerId,
+        userId: input.ticket.userId,
         type,
         title,
         body,
@@ -190,7 +185,6 @@ export class NotificationService {
           type,
           payload: payload as never,
         },
-        push: isResolved,
         idempotencyKey: `TICKET_STATUS:${input.ticket.id}:${input.updatedAt.getTime()}`,
       },
       tx,

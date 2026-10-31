@@ -122,7 +122,7 @@ export default function CustomerDetailPage() {
     },
     {
       key: "upcoming",
-      label: "Upcoming Rides",
+      label: "Scheduled Rides",
       color: "info",
       chartColor: "#06b6d4",
       kind: "count",

@@ -36,8 +36,8 @@ export class NotificationService {
     try {
       const staged = await this.prisma.$transaction((tx) =>
         stageForAdmins(
+          this.appNotifications,
           {
-            notificationService: this.appNotifications,
             type: NotificationType.BLOG_COMMENT_CREATED,
             title: "New blog comment",
             body: `${input.comment.fullName} commented on "${input.blog.title}"`,

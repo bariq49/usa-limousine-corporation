@@ -29,7 +29,7 @@ import { NotificationModule } from "./modules/notification/notification.module";
     AuthModule,
     BlogModule,
     NotificationModule,
-    // Registers the USER socket channel + push-token resolver used by the delivery sweep.
+    // Registers the USER socket channel used by the delivery sweep.
     CustomerModule,
   ],
 })

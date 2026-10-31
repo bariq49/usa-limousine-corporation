@@ -5,6 +5,7 @@ export type TicketRef = {
   ticketNumber: string;
   subject: string;
   customerId: string | null;
+  userId: string | null;
 };
 
 export type TicketNotifyCreated = {
@@ -15,7 +16,6 @@ export type TicketNotifyCreated = {
 export type TicketNotifyWebsiteCreated = {
   ticket: TicketRef;
   contactName: string;
-  userId?: string | null | undefined;
   isHigh?: boolean | undefined;
 };
 
@@ -25,7 +25,7 @@ export type TicketNotifyStaffReply = {
 };
 
 export type TicketNotifyCustomerReply = {
-  ticket: Pick<TicketRef, "id" | "ticketNumber" | "customerId">;
+  ticket: Pick<TicketRef, "id" | "ticketNumber">;
   messageId: string;
   body: string;
   actorUserId?: string | null | undefined;

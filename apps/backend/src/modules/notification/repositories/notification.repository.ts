@@ -1,18 +1,20 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { type Notification, type Prisma } from "@prisma/client";
+import { Prisma, type Notification } from "@prisma/client";
 import { APIFeature } from "../../../common/api-feature";
 import { PrismaService } from "../../../infrastructure/database/prisma.service";
-import {
-  DEFAULT_NOTIFICATION_LIMIT,
-  MAX_NOTIFICATION_LIMIT,
-} from "../constants/notification.constants";
+import { DEFAULT_NOTIFICATION_LIMIT, MAX_NOTIFICATION_LIMIT } from "../constants/constants";
 import type {
   Client,
   Create,
-  CreateMany,
   CursorPage,
+  DeliveryClaim,
+  DeliveryStatus,
+  DeadLetterPage,
+  DeadLetterQuery,
   Id,
+  Item,
   MarkRead,
+  Owned,
   Query,
   Recipient,
   RemoveMany,
@@ -29,7 +31,6 @@ export class NotificationRepository {
       type: input.type,
       title: input.title,
       body: input.body,
-      push: input.push !== false,
     };
     if (input.data !== undefined) {
       data.data = input.data;
@@ -56,33 +57,7 @@ export class NotificationRepository {
     });
   }
 
-  createMany({ inputs }: CreateMany) {
-    if (inputs.length === 0) {
-      return Promise.resolve({ count: 0 });
-    }
-
-    return this.prisma.notification.createMany({
-      data: inputs.map((input) => {
-        const row: Prisma.NotificationCreateManyInput = {
-          recipientType: input.recipientType,
-          recipientId: input.recipientId,
-          type: input.type,
-          title: input.title,
-          body: input.body,
-          push: input.push !== false,
-        };
-        if (input.data !== undefined) {
-          row.data = input.data;
-        }
-        if (input.idempotencyKey !== undefined) {
-          row.idempotencyKey = input.idempotencyKey;
-        }
-        return row;
-      }),
-    });
-  }
-
-  createManyAndReturn({ inputs }: CreateMany, client: Client = this.prisma): Promise<Notification[]> {
+  createManyAndReturn(inputs: Create[], client: Client = this.prisma): Promise<Notification[]> {
     if (inputs.length === 0) {
       return Promise.resolve([]);
     }
@@ -95,7 +70,6 @@ export class NotificationRepository {
           type: input.type,
           title: input.title,
           body: input.body,
-          push: input.push !== false,
         };
         if (input.data !== undefined) {
           row.data = input.data;
@@ -147,6 +121,15 @@ export class NotificationRepository {
             orderBy: args.orderBy as never,
             skip: args.skip,
             take: args.take,
+            select: {
+              id: true,
+              type: true,
+              title: true,
+              body: true,
+              data: true,
+              readAt: true,
+              createdAt: true,
+            },
           }),
         count: ({ where }) => this.prisma.notification.count({ where: where as never }),
       })
@@ -196,6 +179,15 @@ export class NotificationRepository {
       where,
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       take: limit + 1,
+      select: {
+        id: true,
+        type: true,
+        title: true,
+        body: true,
+        data: true,
+        readAt: true,
+        createdAt: true,
+      },
     });
 
     const hasNextPage = rows.length > limit;
@@ -209,17 +201,35 @@ export class NotificationRepository {
     };
   }
 
-  findOwned(params: MarkRead): Promise<Notification | null> {
+  findOwned(params: MarkRead): Promise<Owned | null> {
     const { id, recipientType, recipientId } = params;
     return this.prisma.notification.findFirst({
       where: { id, recipientType, recipientId },
+      select: {
+        id: true,
+        type: true,
+        title: true,
+        body: true,
+        data: true,
+        readAt: true,
+        createdAt: true,
+      },
     });
   }
 
-  markRead({ id }: Id): Promise<Notification> {
+  markRead({ id }: Id): Promise<Item> {
     return this.prisma.notification.update({
       where: { id },
       data: { readAt: new Date() },
+      select: {
+        id: true,
+        type: true,
+        title: true,
+        body: true,
+        data: true,
+        readAt: true,
+        createdAt: true,
+      },
     });
   }
 
@@ -267,23 +277,164 @@ export class NotificationRepository {
     });
   }
 
-  markDelivered(ids: string[]) {
+  markDelivered(ids: string[], lockUntil: Date) {
     if (ids.length === 0) {
       return Promise.resolve({ count: 0 });
     }
 
     return this.prisma.notification.updateMany({
-      where: { id: { in: ids }, deliveredAt: null },
-      data: { deliveredAt: new Date() },
+      where: { id: { in: ids }, deliveredAt: null, deliveryLockedUntil: lockUntil },
+      data: { deliveredAt: new Date(), deliveryLockedUntil: null, lastDeliveryError: null },
     });
   }
 
-  findUndelivered(createdBefore: Date, take: number): Promise<Notification[]> {
-    return this.prisma.notification.findMany({
-      where: { deliveredAt: null, createdAt: { lt: createdBefore } },
-      orderBy: { createdAt: "asc" },
-      take,
+  claimForDelivery(input: DeliveryClaim): Promise<Notification[]> {
+    if (input.ids !== undefined && input.ids.length === 0) {
+      return Promise.resolve([]);
+    }
+
+    const scope =
+      input.ids === undefined
+        ? Prisma.sql`candidate."createdAt" < ${input.createdBefore}`
+        : Prisma.sql`candidate."id" IN (${Prisma.join(input.ids)})`;
+    const limit = input.ids === undefined ? Prisma.sql`LIMIT ${input.take}` : Prisma.empty;
+
+    return this.prisma.$queryRaw<Notification[]>(Prisma.sql`
+      UPDATE "Notification" AS notification
+      SET
+        "deliveryAttempts" = notification."deliveryAttempts" + 1,
+        "deliveryLockedUntil" = ${input.lockUntil}
+      WHERE notification."id" IN (
+        SELECT candidate."id"
+        FROM "Notification" AS candidate
+        WHERE ${scope}
+          AND candidate."deliveredAt" IS NULL
+          AND candidate."deadLetteredAt" IS NULL
+          AND candidate."nextDeliveryAt" <= ${input.now}
+          AND (
+            candidate."deliveryLockedUntil" IS NULL
+            OR candidate."deliveryLockedUntil" <= ${input.now}
+          )
+        ORDER BY candidate."createdAt" ASC
+        ${limit}
+        FOR UPDATE SKIP LOCKED
+      )
+      RETURNING notification.*
+    `);
+  }
+
+  markDeliveryFailure(params: {
+    id: string;
+    lockUntil: Date;
+    error: string;
+    nextDeliveryAt: Date | null;
+    deadLetteredAt: Date | null;
+  }) {
+    return this.prisma.notification.updateMany({
+      where: {
+        id: params.id,
+        deliveredAt: null,
+        deliveryLockedUntil: params.lockUntil,
+      },
+      data: {
+        lastDeliveryError: params.error.slice(0, 1000),
+        nextDeliveryAt: params.nextDeliveryAt,
+        deadLetteredAt: params.deadLetteredAt,
+        deliveryLockedUntil: null,
+      },
     });
+  }
+
+  async getDeliveryStatus(): Promise<DeliveryStatus> {
+    const now = new Date();
+    const [pending, retryScheduled, inProgress, deadLettered] = await Promise.all([
+      this.prisma.notification.count({
+        where: {
+          deliveredAt: null,
+          deadLetteredAt: null,
+          nextDeliveryAt: { lte: now },
+          OR: [{ deliveryLockedUntil: null }, { deliveryLockedUntil: { lte: now } }],
+        },
+      }),
+      this.prisma.notification.count({
+        where: {
+          deliveredAt: null,
+          deadLetteredAt: null,
+          nextDeliveryAt: { gt: now },
+          OR: [{ deliveryLockedUntil: null }, { deliveryLockedUntil: { lte: now } }],
+        },
+      }),
+      this.prisma.notification.count({
+        where: {
+          deliveredAt: null,
+          deadLetteredAt: null,
+          deliveryLockedUntil: { gt: now },
+        },
+      }),
+      this.prisma.notification.count({ where: { deadLetteredAt: { not: null } } }),
+    ]);
+
+    return { pending, retryScheduled, inProgress, deadLettered };
+  }
+
+  async findDeadLetters(query: DeadLetterQuery): Promise<DeadLetterPage> {
+    const requested = Number(query.limit) || 50;
+    const limit = Math.min(Math.max(requested, 1), 100);
+    const args: Prisma.NotificationFindManyArgs = {
+      where: { deadLetteredAt: { not: null } },
+      select: {
+        id: true,
+        recipientId: true,
+        type: true,
+        title: true,
+        body: true,
+        deliveryAttempts: true,
+        deadLetteredAt: true,
+        lastDeliveryError: true,
+        createdAt: true,
+      },
+      orderBy: [{ deadLetteredAt: "desc" }, { id: "desc" }],
+      take: limit + 1,
+    };
+    if (query.cursor) {
+      const anchor = await this.prisma.notification.findFirst({
+        where: { id: query.cursor, deadLetteredAt: { not: null } },
+        select: { id: true },
+      });
+      if (anchor) {
+        args.cursor = { id: anchor.id };
+        args.skip = 1;
+      }
+    }
+
+    const rows = await this.prisma.notification.findMany(args);
+    const hasNextPage = rows.length > limit;
+    const items = hasNextPage ? rows.slice(0, limit) : rows;
+    const last = items[items.length - 1];
+
+    return {
+      items,
+      hasNextPage,
+      nextCursor: hasNextPage && last ? last.id : null,
+    };
+  }
+
+  async requeueDeadLetter(id: string): Promise<Notification | null> {
+    const result = await this.prisma.notification.updateMany({
+      where: { id, deadLetteredAt: { not: null }, deliveredAt: null },
+      data: {
+        deliveryAttempts: 0,
+        nextDeliveryAt: new Date(),
+        deliveryLockedUntil: null,
+        deadLetteredAt: null,
+        lastDeliveryError: null,
+      },
+    });
+    if (result.count === 0) {
+      return null;
+    }
+
+    return this.prisma.notification.findUnique({ where: { id } });
   }
 
   deleteExpired(readBefore: Date, unreadBefore: Date) {

@@ -67,7 +67,7 @@ export default function DashboardPage() {
     },
     {
       key: "upcoming",
-      label: "Upcoming Rides",
+      label: "Scheduled Rides",
       color: "info",
       chartColor: "#06b6d4",
       kind: "count",
@@ -115,19 +115,37 @@ export default function DashboardPage() {
             Book a ride
           </a>
         </Button>
-        <Button asChild size="sm" variant="outline" color="secondary" className="h-10 w-full gap-1.5">
-          <Link href="/calendar">
+        <Button
+          asChild
+          size="sm"
+          variant="outline"
+          color="secondary"
+          className="h-10 w-full gap-1.5"
+        >
+          <Link href="/scheduled-bookings">
             <CalendarClock className="h-4 w-4 shrink-0" />
-            Upcoming rides
+            Scheduled rides
           </Link>
         </Button>
-        <Button asChild size="sm" variant="outline" color="secondary" className="h-10 w-full gap-1.5">
+        <Button
+          asChild
+          size="sm"
+          variant="outline"
+          color="secondary"
+          className="h-10 w-full gap-1.5"
+        >
           <Link href="/bookings">
             <Calendar className="h-4 w-4 shrink-0" />
             All bookings
           </Link>
         </Button>
-        <Button asChild size="sm" variant="outline" color="secondary" className="h-10 w-full gap-1.5">
+        <Button
+          asChild
+          size="sm"
+          variant="outline"
+          color="secondary"
+          className="h-10 w-full gap-1.5"
+        >
           <Link href="/profile-setting">
             <User className="h-4 w-4 shrink-0" />
             Profile

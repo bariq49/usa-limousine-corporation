@@ -10,9 +10,10 @@ export type EmailLayoutProps = {
 };
 
 export function emailLayout(props: EmailLayoutProps) {
-  const { title, body, subtitle, preheader, siteUrl = emailSiteUrl() } = props;
+  const { title, body, subtitle, preheader, siteUrl } = props;
   const safeTitle = escapeHtml(title);
   const logoUrl = emailLogoUrl();
+  const contactLink = `<p style="margin:0 0 18px;"><a href="${escapeHtml(`${siteUrl ?? emailSiteUrl()}/contact-us`)}" style="color:${EMAIL_BRAND.accent};text-decoration:underline;font-size:13px;font-weight:600;">Contact Us</a></p>`;
   const subtitleHtml = subtitle
     ? `<p style="margin:12px 0 0;"><span style="display:inline-block;padding:6px 14px;border:1px solid rgba(201,168,76,0.6);border-radius:999px;font-size:13px;line-height:1.4;letter-spacing:0.06em;color:${EMAIL_BRAND.accent};font-weight:600;">${escapeHtml(subtitle)}</span></p>`
     : "";
@@ -48,9 +49,7 @@ export function emailLayout(props: EmailLayoutProps) {
               <p style="margin:0 0 6px;font-size:13px;line-height:1.5;color:rgba(255,255,255,0.85);">
                 ${escapeHtml(EMAIL_BRAND.phone)} &nbsp;•&nbsp; ${escapeHtml(EMAIL_BRAND.email)}
               </p>
-              <p style="margin:0 0 18px;">
-                <a href="${escapeHtml(siteUrl)}/contact-us" style="color:${EMAIL_BRAND.accent};text-decoration:underline;font-size:13px;font-weight:600;">Contact Us</a>
-              </p>
+              ${contactLink}
               <p style="margin:0;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.6);">
                 © ${new Date().getFullYear()} ${escapeHtml(EMAIL_BRAND.name)}. All rights reserved.
               </p>

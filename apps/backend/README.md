@@ -87,24 +87,24 @@ Host environment variables always override file values.
 
 Unset optional services report `not_configured` in health and do not block startup.
 
-| Variable                       | Purpose                                                     |
-| ------------------------------ | ----------------------------------------------------------- |
-| `DEFAULT_ADMIN_EMAIL`          | Admin inbox for new and paid booking emails                 |
-| `SQUARE_ACCESS_TOKEN_TEST`     | Square sandbox access token                                 |
-| `SQUARE_LOCATION_ID_TEST`      | Square sandbox location id                                  |
-| `SQUARE_WEBHOOK_SIGNATURE_KEY_TEST` | Signature key of the sandbox webhook subscription      |
-| `SQUARE_ACCESS_TOKEN_LIVE`     | Square production access token                              |
-| `SQUARE_LOCATION_ID_LIVE`      | Square production location id                               |
-| `SQUARE_WEBHOOK_SIGNATURE_KEY_LIVE` | Signature key of the production webhook subscription   |
-| `SQUARE_WEBHOOK_URL`           | Public webhook URL exactly as entered in Square             |
-| `WEBSITE_URL`                  | Public website; Square redirects and email images use it    |
-| `GOOGLE_REVIEW_URL`            | Google review link in the ride completed email              |
-| `FIREBASE_PROJECT_ID`          | Firebase project id (FCM push; optional until configured)   |
-| `FIREBASE_CLIENT_EMAIL`        | Firebase service account email                              |
-| `FIREBASE_PRIVATE_KEY`         | Firebase service account private key (`\n` escaped OK)      |
-| `TWILIO_ACCOUNT_SID`           | Twilio account SID (SMS; optional until configured)         |
-| `TWILIO_AUTH_TOKEN`            | Twilio auth token                                           |
-| `TWILIO_SENDER_ID`             | SMS sender name, max 11 characters (e.g. `USALimoCorp`)     |
+| Variable                            | Purpose                                                  |
+| ----------------------------------- | -------------------------------------------------------- |
+| `DEFAULT_ADMIN_EMAIL`               | Admin inbox for new and paid booking emails              |
+| `SQUARE_ACCESS_TOKEN_TEST`          | Square sandbox access token                              |
+| `SQUARE_LOCATION_ID_TEST`           | Square sandbox location id                               |
+| `SQUARE_WEBHOOK_SIGNATURE_KEY_TEST` | Signature key of the sandbox webhook subscription        |
+| `SQUARE_ACCESS_TOKEN_LIVE`          | Square production access token                           |
+| `SQUARE_LOCATION_ID_LIVE`           | Square production location id                            |
+| `SQUARE_WEBHOOK_SIGNATURE_KEY_LIVE` | Signature key of the production webhook subscription     |
+| `SQUARE_WEBHOOK_URL`                | Public webhook URL exactly as entered in Square          |
+| `WEBSITE_URL`                       | Public website; Square redirects and email images use it |
+| `GOOGLE_REVIEW_URL`                 | Google review link in the ride completed email           |
+| `FIREBASE_PROJECT_ID`               | Firebase project id (optional; health status only)       |
+| `FIREBASE_CLIENT_EMAIL`             | Firebase service account email                           |
+| `FIREBASE_PRIVATE_KEY`              | Firebase service account private key (`\n` escaped OK)   |
+| `TWILIO_ACCOUNT_SID`                | Twilio account SID (SMS; optional until configured)      |
+| `TWILIO_AUTH_TOKEN`                 | Twilio auth token                                        |
+| `TWILIO_SENDER_ID`                  | SMS sender name, max 11 characters (e.g. `USALimoCorp`)  |
 
 See [Payments (Square)](#payments-square) for running Square locally.
 
@@ -152,6 +152,7 @@ The **Live Payment Mode** switch in admin **Platform settings** picks the keys: 
 
    `SQUARE_WEBHOOK_URL` must match the subscription URL exactly, or signatures will not verify.
    Without a tunnel, payments are still confirmed when the rider lands on the success page.
+
 4. Start the apps (`pnpm dev` from the repository root) and make sure **Live Payment Mode** is off.
 5. Book a ride on the website and pay with a
    [sandbox test card](https://developer.squareup.com/docs/devtools/sandbox/payments):
@@ -181,7 +182,7 @@ Business modules must consume facades only:
 - `EmailService` → `NodemailerEmailProvider` (Nodemailer today; SES/SendGrid later)
 - `StorageService` → `STORAGE_PROVIDER` (Cloudinary today; S3/ImageKit later; required)
 - `SquareService` → Square payment links, order lookup + webhook verification (optional)
-- `FirebaseService` → Firebase Admin / FCM push (optional)
+- `FirebaseService` → Firebase Admin configuration and health (optional)
 - `TwilioService` → Twilio SMS client (optional)
 - `RedisService` — shared Redis client (required)
 - `BullMqQueue` / `BaseQueueService` — shared BullMQ lifecycle for domain `*QueueService` (requires Redis)
@@ -210,13 +211,15 @@ Shared job defaults live in `DEFAULT_JOB_OPTIONS`. Metrics: `GET /api/v1/health/
 
 ## Notification delivery
 
-When a notification is created for a driver:
+Notification delivery:
 
 1. One **database** notification row is written (authoritative inbox).
-2. A **WebSocket** event is emitted to the driver’s authorized room(s).
-3. If push is enabled and the driver has an FCM token + push settings, an **FCM** push is also enqueued.
+2. A **WebSocket** event is emitted to the recipient’s authorized room(s) when the server or Redis is ready.
+3. Only successfully dispatched events are marked delivered. Unavailable or failed dispatches use bounded exponential backoff and an expiring database lease to prevent concurrent workers from sending the same row.
 
-Online drivers may therefore receive both a live WebSocket event and an FCM push for the same domain notification. That is the current product behavior; there is no “FCM only when offline” gate. Both channels represent the same notification — they do not create duplicate inbox rows.
+After eight failed attempts, a notification moves to the dead-letter queue. Super admins can inspect `GET /api/v1/notifications/delivery-status` and page through `GET /api/v1/notifications/dead-letters?limit=50&cursor=...`, then retry one with `POST /api/v1/notifications/:id/retry`.
+
+The database inbox remains authoritative; `deliveredAt` records successful realtime dispatch, not acknowledgement by a connected client. A crash after transport dispatch but before the database update can cause a duplicate event, so delivery is at-least-once and clients should deduplicate by notification ID.
 
 ## Health
 

@@ -25,10 +25,10 @@ import { SequenceService } from "../../../infrastructure/sequence/sequence.servi
 import { SquareService } from "../../../infrastructure/square/square.service";
 import type { CheckoutDto } from "../../booking/dto/booking.dto";
 import { BookingRepository } from "../../booking/repositories/booking.repository";
-import { BookingEmailService } from "../../booking/services/booking-email.service";
+import { BookingEmailService } from "../../booking/services/email.service";
 import { NotificationService } from "../../booking/services/notification.service";
-import { BookingSmsService } from "../../booking/services/booking-sms.service";
-import { BookingPricingService } from "../../booking/services/booking-pricing.service";
+import { BookingSmsService } from "../../booking/services/sms.service";
+import { BookingPricingService } from "../../booking/services/pricing.service";
 import type { PassengerInput } from "../../booking/types/booking";
 import { PlatformSettingsService } from "../../platform-settings/services/platform-settings.service";
 import type {

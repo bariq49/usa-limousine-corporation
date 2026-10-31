@@ -13,9 +13,8 @@ import {
 import { helpLine } from "./components/help-line";
 
 export function driverAssigned(props: DriverAssignedMailProps) {
-  const { booking, siteUrl, assignment } = props;
+  const { booking, assignment } = props;
   return emailLayout({
-    siteUrl,
     title: "New Ride Assigned",
     subtitle: booking.bookingNumber,
     preheader: `You have been assigned ride ${booking.bookingNumber}.`,

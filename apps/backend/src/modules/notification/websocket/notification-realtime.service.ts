@@ -1,24 +1,17 @@
 import { Inject, Injectable } from "@nestjs/common";
 import type { Notification } from "@prisma/client";
+import { userRoom } from "../../../infrastructure/websocket/constants/rooms";
 import { WebsocketService } from "../../../infrastructure/websocket/websocket.service";
 import type { Payload } from "../../../infrastructure/websocket/types/websocket.types";
-import { ChannelRegistry } from "../services/recipient-channel.registry";
+import { NOTIFICATION_WS_EVENTS } from "../constants/constants";
 import type { ReadEvent, RemovedEvent } from "../types/notification";
 
 @Injectable()
 export class NotificationRealtimeService {
-  constructor(
-    @Inject(WebsocketService) private readonly websocketService: WebsocketService,
-    @Inject(ChannelRegistry) private readonly channels: ChannelRegistry,
-  ) {}
+  constructor(@Inject(WebsocketService) private readonly websocketService: WebsocketService) {}
 
-  emitCreated(notification: Notification): void {
-    const channel = this.channels.get(notification.recipientType);
-    if (!channel) {
-      return;
-    }
-
-    this.broadcast(channel.room(notification.recipientId), channel.createdEvent, {
+  emitCreated(notification: Notification): boolean {
+    return this.broadcast(userRoom(notification.recipientId), NOTIFICATION_WS_EVENTS.CREATED, {
       id: notification.id,
       type: notification.type,
       title: notification.title,
@@ -31,12 +24,7 @@ export class NotificationRealtimeService {
 
   /** Keeps the badge in sync on every tab/device of the recipient. */
   emitRead(event: ReadEvent, unreadCount: number): void {
-    const channel = this.channels.get(event.recipientType);
-    if (!channel) {
-      return;
-    }
-
-    this.broadcast(channel.room(event.recipientId), channel.readEvent, {
+    this.broadcast(userRoom(event.recipientId), NOTIFICATION_WS_EVENTS.READ, {
       ids: event.ids,
       readAt: new Date().toISOString(),
       unreadCount,
@@ -44,22 +32,18 @@ export class NotificationRealtimeService {
   }
 
   emitRemoved(event: RemovedEvent, unreadCount: number): void {
-    const channel = this.channels.get(event.recipientType);
-    if (!channel) {
-      return;
-    }
-
-    this.broadcast(channel.room(event.recipientId), channel.removedEvent, {
+    this.broadcast(userRoom(event.recipientId), NOTIFICATION_WS_EVENTS.REMOVED, {
       ids: event.ids,
       unreadCount,
     });
   }
 
-  private broadcast(room: string, event: string, payload: Payload): void {
+  private broadcast(room: string, event: string, payload: Payload): boolean {
     if (!this.websocketService.isReady()) {
-      return;
+      return false;
     }
 
     this.websocketService.broadcastToRoom({ room, event, payload });
+    return true;
   }
 }

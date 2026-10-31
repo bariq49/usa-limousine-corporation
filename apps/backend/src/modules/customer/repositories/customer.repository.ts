@@ -5,7 +5,6 @@ import { PrismaService } from "../../../infrastructure/database/prisma.service";
 import type { AdminCustomerQueryDto } from "../dto/admin-customer.dto";
 import type { Create } from "../types/customer";
 
-/** Account fields admins may see (never the password hash or lockout internals). */
 const userSummary = {
   select: {
     id: true,
@@ -29,7 +28,6 @@ export class CustomerRepository {
     return this.prisma.customer.create({
       data: {
         userId: params.userId,
-        settings: { create: {} },
       },
     });
   }
@@ -84,7 +82,6 @@ export class CustomerRepository {
     });
   }
 
-  /** Admin detail with settings and counts (bookings/tickets load as paginated lists). */
   findById(id: string) {
     return this.prisma.customer.findFirst({
       where: { id, deletedAt: null },
@@ -103,7 +100,6 @@ export class CustomerRepository {
             _count: { select: { bookings: true } },
           },
         },
-        settings: { select: { email: true, notification: true } },
         _count: { select: { helpTickets: true } },
       },
     });

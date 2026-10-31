@@ -1,4 +1,4 @@
-import { BookingPricingService } from "../src/modules/booking/services/booking-pricing.service";
+import { BookingPricingService } from "../src/modules/booking/services/pricing.service";
 import type { PlatformRates } from "../src/modules/platform-settings/types/platform-settings";
 
 const rates: PlatformRates = {
