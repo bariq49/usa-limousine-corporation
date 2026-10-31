@@ -1,7 +1,7 @@
 "use client";
 
 import { PageHeader } from "@usa-limousine-corporation/ui/layout/page-header";
-import { NotificationsPage } from "@usa-limousine-corporation/ui/components/notifications/notifications-page";
+import { NotificationList } from "@usa-limousine-corporation/ui/components/notifications/notification-list";
 
 export default function CustomerNotificationsPage() {
   return (
@@ -11,7 +11,7 @@ export default function CustomerNotificationsPage() {
         description="Updates about your bookings and support tickets."
         breadcrumbs={[{ label: "Customer" }, { label: "Notifications" }]}
       />
-      <NotificationsPage />
+      <NotificationList />
     </div>
   );
 }

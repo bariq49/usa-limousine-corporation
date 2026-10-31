@@ -26,7 +26,7 @@ export const getColumns = (): ColumnDef<Refund>[] => [
       return (
         <div className="flex flex-col">
           <span className="font-mono text-xs font-semibold text-default-900">
-            {item.squareRefundId || item.id}
+            {item.refundNumber || item.squareRefundId || item.id}
           </span>
           <span className="text-xs text-default-500">
             {item.createdAt ? formatDate({ date: item.createdAt }) : "—"}
@@ -48,6 +48,25 @@ export const getColumns = (): ColumnDef<Refund>[] => [
           className="font-medium text-xs text-primary hover:underline"
         >
           {bookingNumber}
+        </Link>
+      );
+    },
+    enableSorting: false,
+  },
+  {
+    id: "Transaction",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Transaction" />,
+    cell: ({ row }) => {
+      const transactionId = row.original.payment?.transactionId;
+      if (!transactionId) {
+        return <span className="text-xs text-default-400">—</span>;
+      }
+      return (
+        <Link
+          href={`/payments?search=${encodeURIComponent(transactionId)}`}
+          className="font-mono text-xs font-medium text-primary hover:underline"
+        >
+          {transactionId}
         </Link>
       );
     },

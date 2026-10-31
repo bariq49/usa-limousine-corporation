@@ -95,11 +95,25 @@ export function CompleteRefundModal({
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-2">
             <div className="space-y-1 rounded-lg border border-border bg-muted/40 p-3 text-xs text-default-600">
               <div className="flex justify-between">
+                <span>Refund ID:</span>
+                <span className="font-mono font-semibold text-default-900">
+                  {refund.refundNumber || refund.squareRefundId || refund.id}
+                </span>
+              </div>
+              <div className="flex justify-between">
                 <span>Booking Number:</span>
                 <span className="font-semibold text-default-900">
                   {refund.booking?.bookingNumber || refund.bookingId}
                 </span>
               </div>
+              {refund.payment?.transactionId ? (
+                <div className="flex justify-between">
+                  <span>Transaction:</span>
+                  <span className="font-mono font-semibold text-default-900">
+                    {refund.payment.transactionId}
+                  </span>
+                </div>
+              ) : null}
               <div className="flex justify-between">
                 <span>Customer:</span>
                 <span className="font-semibold text-default-900">

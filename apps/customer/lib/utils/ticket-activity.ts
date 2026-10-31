@@ -20,7 +20,6 @@ function priorityLabel(value?: string | null) {
   return PRIORITY_LABELS[value as TicketPriority] ?? value.replaceAll("_", " ").toLowerCase();
 }
 
-/** Customers see "You" or "Support team", never staff emails. */
 function actorLabel(event: TicketEvent, currentUserId?: string | null) {
   return event.actorUserId && event.actorUserId === currentUserId ? "You" : "Support team";
 }

@@ -18,7 +18,7 @@ import { useUser } from "@usa-limousine-corporation/ui/providers/user-context";
 import { useAuthChangePassword, useAuthUpdateProfile } from "@/hooks/queries/use-auth";
 import { useUploadFile } from "@/hooks/queries/use-upload";
 import { useSessions, useRevokeSession } from "@/hooks/queries/use-sessions";
-import { NotificationPreferences } from "@/components/profile/notification-preferences";
+import { NotificationPreferences } from "@/components/profile/notifications";
 
 const TABS = [
   { value: "overview", label: "Overview" },

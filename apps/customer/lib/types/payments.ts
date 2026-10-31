@@ -48,6 +48,7 @@ export type RefundStatus = "PENDING" | "COMPLETED" | "REJECTED" | "FAILED";
 
 export type Refund = {
   id: string;
+  refundNumber?: string | null;
   bookingId: string;
   paymentId: string;
   amount: number;
@@ -58,6 +59,10 @@ export type Refund = {
   processedAt: string | null;
   createdAt: string;
   booking?: PaymentBooking | null;
+  payment?: {
+    id: string;
+    transactionId: string | null;
+  } | null;
 };
 
 export type RefundQuery = {

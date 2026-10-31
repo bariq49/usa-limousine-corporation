@@ -1,4 +1,3 @@
-import { randomInt } from "node:crypto";
 import { Inject, Injectable } from "@nestjs/common";
 import {
   BookingStatus,
@@ -102,10 +101,10 @@ export class PaymentRepository {
       initialFilter,
       filterFields: ["status"],
       search: {
-        searchFields: ["reason", "squareRefundId"],
+        searchFields: ["reason", "refundNumber", "squareRefundId"],
       },
       sort: {
-        allowedFields: ["createdAt", "updatedAt", "amount", "processedAt", "status"],
+        allowedFields: ["createdAt", "updatedAt", "amount", "processedAt", "status", "refundNumber"],
         defaultSortBy: "createdAt",
         defaultSortOrder: "desc",
       },
@@ -321,7 +320,12 @@ export class PaymentRepository {
     });
   }
 
-  recordPaid(booking: CheckoutBooking, result: OrderResult, mode: PaymentMode) {
+  recordPaid(
+    booking: CheckoutBooking,
+    result: OrderResult,
+    mode: PaymentMode,
+    transactionId?: string,
+  ) {
     const now = new Date();
     return this.record(
       {
@@ -330,7 +334,7 @@ export class PaymentRepository {
         mode,
         amount: result.amount,
         currency: result.currency,
-        transactionId: transactionId(),
+        transactionId: transactionId ?? `TX-${Date.now().toString().slice(-6)}`,
         squarePaymentId: result.paymentId,
         squareOrderId: result.orderId,
         cardBrand: result.cardBrand,
@@ -387,8 +391,4 @@ export class PaymentRepository {
       throw error;
     }
   }
-}
-
-function transactionId() {
-  return `TID-${Date.now().toString().slice(-8)}${randomInt(1000, 10000)}`;
 }

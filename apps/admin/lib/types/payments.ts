@@ -78,6 +78,7 @@ export type RefundPayment = {
 
 export type Refund = {
   id: string;
+  refundNumber?: string | null;
   bookingId: string;
   paymentId: string;
   amount: number;

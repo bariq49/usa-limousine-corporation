@@ -11,7 +11,7 @@ import { PageHeader } from "@usa-limousine-corporation/ui/layout/page-header";
 import { useUser } from "@usa-limousine-corporation/ui/providers/user-context";
 import { Calendar, CalendarClock, Plus, User } from "@usa-limousine-corporation/ui/svg";
 import { formatDate, formatTime } from "@usa-limousine-corporation/ui/utils/date";
-import { HelpCenterCard } from "@/components/dashboard/help-center-card";
+import { HelpCenterCard } from "@/components/help-center/help-center-card";
 import { useBookingAnalytics } from "@/hooks/queries/use-bookings";
 
 const CURRENT_YEAR = Number(formatDate({ date: new Date(), as: "value" }).slice(0, 4));

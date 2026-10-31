@@ -4,6 +4,8 @@ import { PrismaService } from "../database/prisma.service";
 export const SEQUENCE_ID = {
   BOOKING: "booking",
   HELP_TICKET: "help-ticket",
+  TRANSACTION: "transaction",
+  REFUND: "refund",
 } as const;
 
 @Injectable()
@@ -27,5 +29,13 @@ export class SequenceService {
 
   nextHelpTicket() {
     return this.next(SEQUENCE_ID.HELP_TICKET);
+  }
+
+  nextTransaction() {
+    return this.next(SEQUENCE_ID.TRANSACTION);
+  }
+
+  nextRefund() {
+    return this.next(SEQUENCE_ID.REFUND);
   }
 }

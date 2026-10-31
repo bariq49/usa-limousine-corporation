@@ -2,13 +2,17 @@
 
 import { Button } from "@usa-limousine-corporation/ui/components/button";
 import { Card, CardContent } from "@usa-limousine-corporation/ui/components/card";
-import { Skeleton } from "@usa-limousine-corporation/ui/components/skeleton";
 import { Switch } from "@usa-limousine-corporation/ui/components/switch";
 import { useCustomerSettings, useUpdateCustomerSettings } from "@/hooks/queries/use-settings";
+import { NotificationPreferencesSkeleton } from "@/components/skeleton/notification-skeleton";
 
 export function NotificationPreferences() {
   const { data: settings, isLoading, isError, refetch } = useCustomerSettings();
   const update = useUpdateCustomerSettings();
+
+  if (!isError && (isLoading || !settings)) {
+    return <NotificationPreferencesSkeleton />;
+  }
 
   return (
     <Card className="shadow-xs">
@@ -24,12 +28,6 @@ export function NotificationPreferences() {
             <Button type="button" size="sm" variant="outline" onClick={() => void refetch()}>
               Try again
             </Button>
-          </div>
-        ) : isLoading || !settings ? (
-          <div className="mt-6 space-y-4">
-            <Skeleton className="h-12 w-full" />
-            <Skeleton className="h-12 w-full" />
-            <Skeleton className="h-12 w-full" />
           </div>
         ) : (
           <div className="mt-6 space-y-5">

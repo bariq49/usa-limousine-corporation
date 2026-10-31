@@ -179,12 +179,17 @@ export class PaymentService implements OnModuleInit, OnModuleDestroy {
       status = RefundStatus.COMPLETED;
       processedAt = new Date();
     } else if (body.manual) {
-      squareRefundId = `MANUAL-${Date.now()}`;
       status = RefundStatus.COMPLETED;
       processedAt = new Date();
     }
 
+    const refundNumber = await allocateCode({
+      prefix: "RF",
+      nextSequence: () => this.sequenceService.nextRefund(),
+    });
+
     const refund = await this.paymentRepository.createRefund({
+      refundNumber,
       bookingId: payment.bookingId,
       paymentId: payment.id,
       amount: refundAmount,
@@ -245,7 +250,7 @@ export class PaymentService implements OnModuleInit, OnModuleDestroy {
         body.reason || refund.reason || "Admin completed refund",
       );
     } else {
-      squareRefundId = refund.squareRefundId || `MANUAL-${Date.now()}`;
+      squareRefundId = refund.squareRefundId ?? null;
     }
 
     const updated = await this.paymentRepository.completeRefund(refund.id, {
@@ -325,7 +330,13 @@ export class PaymentService implements OnModuleInit, OnModuleDestroy {
     amount: number;
     reason: string;
   }) {
+    const refundNumber = await allocateCode({
+      prefix: "RF",
+      nextSequence: () => this.sequenceService.nextRefund(),
+    });
+
     const refund = await this.paymentRepository.createRefund({
+      refundNumber,
       bookingId: data.bookingId,
       paymentId: data.paymentId,
       amount: data.amount,
@@ -471,7 +482,11 @@ export class PaymentService implements OnModuleInit, OnModuleDestroy {
     };
 
     if (result.paid) {
-      if (await this.paymentRepository.recordPaid(checkoutBooking, result, mode)) {
+      const transactionId = await allocateCode({
+        prefix: "TX",
+        nextSequence: () => this.sequenceService.nextTransaction(),
+      });
+      if (await this.paymentRepository.recordPaid(checkoutBooking, result, mode, transactionId)) {
         await this.onPaid(checkoutBooking);
       }
     } else if (expired) {
