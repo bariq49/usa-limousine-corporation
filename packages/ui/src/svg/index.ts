@@ -2,6 +2,7 @@ export { default as Blog } from "./blog";
 export { default as Calendar } from "./calendar";
 export { default as CalendarCheck } from "./calender-check";
 export { default as Car } from "./car";
+export { default as Card } from "./card";
 export { default as Dashboard } from "./dashboard";
 export { default as Device } from "./device";
 export { default as Expand } from "./expand";

@@ -1,5 +1,12 @@
 import { BadRequestException, Inject, Injectable } from "@nestjs/common";
-import { BookingStatus, PaymentStatus, Prisma, RoleKey, type PaymentMode } from "@prisma/client";
+import {
+  BookingStatus,
+  PaymentStatus,
+  Prisma,
+  RefundStatus,
+  RoleKey,
+  type PaymentMode,
+} from "@prisma/client";
 import { APIFeature } from "../../../common/api-feature";
 import { wallClock } from "../../../common/utils/day-bounds";
 import { APP_TIMEZONE } from "../../../common/utils/format-time";
@@ -164,6 +171,23 @@ export class BookingRepository {
       },
     });
     return result.count > 0;
+  }
+
+  createCancellationRefund(data: {
+    bookingId: string;
+    paymentId: string;
+    amount: number;
+    reason: string;
+  }) {
+    return this.prisma.refund.create({
+      data: {
+        bookingId: data.bookingId,
+        paymentId: data.paymentId,
+        amount: data.amount,
+        status: RefundStatus.PENDING,
+        reason: data.reason,
+      },
+    });
   }
 
   async contactPreferences(userId: string | null) {

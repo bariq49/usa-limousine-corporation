@@ -20,6 +20,8 @@ const API_ROUTES = {
   CHECKOUT: "/public/bookings/checkout",
   SETTINGS: "/customers/settings",
   TICKETS: "/customers/tickets",
+  PAYMENTS: "/customers/payments",
+  REFUNDS: "/customers/refunds",
 } as const;
 
 export default API_ROUTES;

@@ -25,10 +25,12 @@ describe("admin navigation", () => {
       "/drivers",
       "/extra-services",
       "/help-center",
+      "/payments",
       "/pending-bookings",
       "/platform-settings",
       "/pricing",
       "/profile-setting",
+      "/refunds",
       "/standard-luggage",
     ]);
   });

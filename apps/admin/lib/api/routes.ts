@@ -25,6 +25,8 @@ const API_ROUTES = {
   BLOG_COMMENTS: "/admin/blog-comments",
   PLATFORM_SETTINGS: "/admin/settings/platform",
   NOTIFICATIONS: "/notifications",
+  PAYMENTS: "/admin/payments",
+  REFUNDS: "/admin/refunds",
 } as const;
 
 export default API_ROUTES;

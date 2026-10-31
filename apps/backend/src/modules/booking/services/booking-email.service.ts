@@ -79,7 +79,10 @@ export class BookingEmailService {
         returnEnabled: Boolean(meetAndGreet.returnEnabled),
         signName: meetAndGreet.signName ?? null,
       },
-      luggage: row.luggage.map((item) => ({ name: item.luggageType.name, quantity: item.quantity })),
+      luggage: row.luggage.map((item) => ({
+        name: item.luggageType.name,
+        quantity: item.quantity,
+      })),
       extras: row.extraServices.map((item) => ({
         name: item.extraService.name,
         quantity: item.quantity,
@@ -147,7 +150,7 @@ export class BookingEmailService {
   }
 
   sendCancelled(props: CancelEmailProps) {
-    const { bookingId, reason, refundAmount, byCustomer } = props;
+    const { bookingId, reason, byCustomer } = props;
     return this.deliver({
       bookingId,
       kind: "cancelled",
@@ -160,7 +163,6 @@ export class BookingEmailService {
             booking,
             siteUrl: context.siteUrl,
             reason,
-            refundAmount,
             byCustomer,
           }),
         });
@@ -172,7 +174,6 @@ export class BookingEmailService {
               booking,
               siteUrl: context.siteUrl,
               reason,
-              refundAmount,
               admin: true,
               byCustomer: true,
             }),

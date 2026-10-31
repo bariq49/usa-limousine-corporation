@@ -48,6 +48,7 @@ model Booking {
   luggage         BookingLuggage[]
   extraServices   BookingExtraService[]
   payment         Payment?
+  refunds         Refund[]
   assignments     BookingAssignment[]
 
   @@index([userId, createdAt])

@@ -2,12 +2,11 @@ import type { BookingCancelMailProps } from "../../types/booking";
 import { emailParagraph } from "../shared/components/paragraph";
 import { escapeHtml } from "../shared/html";
 import { emailLayout } from "../shared/layout";
-import { bookingSummary, formatPrice } from "./components/cards";
+import { bookingSummary } from "./components/cards";
 import { helpLine } from "./components/help-line";
-import { refundParagraph } from "./components/refund";
 
 export function bookingCancelled(props: BookingCancelMailProps) {
-  const { booking, siteUrl, reason, refundAmount, admin = false, byCustomer = false } = props;
+  const { booking, siteUrl, reason, admin = false, byCustomer = false } = props;
 
   if (admin) {
     return emailLayout({
@@ -18,11 +17,6 @@ export function bookingCancelled(props: BookingCancelMailProps) {
       body: `
         ${emailParagraph(`Booking ${escapeHtml(booking.bookingNumber)} was cancelled by ${escapeHtml(booking.passenger.name)}.`, { strong: true })}
         ${emailParagraph(reason ? `Reason: ${escapeHtml(reason)}` : "No reason was given.")}
-        ${emailParagraph(
-          refundAmount > 0
-            ? `${escapeHtml(formatPrice(refundAmount))} was refunded to the customer's card automatically.`
-            : "No refund was issued.",
-        )}
         ${bookingSummary(booking)}
       `,
     });
@@ -41,7 +35,6 @@ export function bookingCancelled(props: BookingCancelMailProps) {
       ${emailParagraph(`Hello, ${escapeHtml(booking.passenger.name)}.`, { strong: true })}
       ${emailParagraph(message)}
       ${reason ? emailParagraph(`Reason: ${escapeHtml(reason)}`) : ""}
-      ${refundParagraph(refundAmount)}
       ${bookingSummary(booking)}
       ${helpLine}
     `,

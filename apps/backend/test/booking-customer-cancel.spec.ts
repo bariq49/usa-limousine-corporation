@@ -46,6 +46,7 @@ function setup(options: { hoursToPickup: number; status?: BookingStatus; paid?: 
           },
     ),
     recordRefund: jest.fn(async () => true),
+    createCancellationRefund: jest.fn(async () => ({ id: "ref-1" })),
   };
   const rates = {
     cancellationMinutes: 120,
@@ -71,12 +72,14 @@ function setup(options: { hoursToPickup: number; status?: BookingStatus; paid?: 
     auditLog: { create: jest.fn(async () => undefined) },
     $transaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn({})),
   };
+  const platformSettingsService = { get: jest.fn(async () => rates) };
   const bookingService = new BookingService(
     repository as never,
     prisma as never,
     notifications as never,
     emails as never,
     sms as never,
+    platformSettingsService as never,
   );
   const service = new CustomerBookingService(
     repository as never,
@@ -101,6 +104,13 @@ describe("CustomerBookingService.cancel", () => {
 
     expect(square.refundPayment).not.toHaveBeenCalled();
     expect(repository.recordRefund).not.toHaveBeenCalled();
+    expect(repository.createCancellationRefund).toHaveBeenCalledWith(
+      expect.objectContaining({
+        bookingId: "book-1",
+        paymentId: "pay-1",
+        amount: 150,
+      }),
+    );
     expect(repository.updateStatus).toHaveBeenCalledWith(
       "book-1",
       BookingStatus.CANCELLED,
@@ -109,7 +119,6 @@ describe("CustomerBookingService.cancel", () => {
     expect(emails.sendCancelled).toHaveBeenCalledWith({
       bookingId: "book-1",
       reason: null,
-      refundAmount: 0,
       byCustomer: true,
     });
     expect(sms.sendCancelled).toHaveBeenCalledWith("book-1", null, true);
@@ -140,7 +149,6 @@ describe("CustomerBookingService.cancel", () => {
     expect(emails.sendCancelled).toHaveBeenCalledWith({
       bookingId: "book-1",
       reason: null,
-      refundAmount: 0,
       byCustomer: true,
     });
   });

@@ -13,7 +13,6 @@ export type ContactPreferences = {
 export type CancelEmailProps = {
   bookingId: string;
   reason: string | null;
-  refundAmount: number;
   byCustomer: boolean;
 };
 

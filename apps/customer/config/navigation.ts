@@ -5,11 +5,14 @@ import {
   CalendarCheck2,
   CalendarClock,
   CalendarCross,
+  Card,
   Dashboard,
   Device,
   Graph,
   Support,
   User,
+  DollarSign,
+  Refresh,
 } from "@usa-limousine-corporation/ui/svg";
 import { APP_CONFIG } from "./app";
 
@@ -33,7 +36,6 @@ export const navigation: MenuSection[] = [
             icon: CalendarClock,
           },
         ],
-
       },
     ],
   },
@@ -71,6 +73,21 @@ export const navigation: MenuSection[] = [
             href: "/cancelled-bookings",
             icon: CalendarCross,
           },
+        ],
+      },
+    ],
+  },
+  {
+    id: "payment",
+    label: "Payment",
+    icon: Card,
+    submenu: true,
+    groups: [
+      {
+        id: "payment-group",
+        items: [
+          { id: "payments", label: "Payment History", href: "/payments", icon: DollarSign },
+          { id: "refunds", label: "Refunds", href: "/refunds", icon: Refresh },
         ],
       },
     ],

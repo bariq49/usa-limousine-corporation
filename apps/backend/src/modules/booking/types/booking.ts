@@ -1,15 +1,5 @@
-import type { Request } from "express";
 import type { BookingPricing } from "../../platform-settings/types/platform-settings";
 import type { BookingStatus, BookingType, Prisma } from "@prisma/client";
-import type { CancelDto } from "../dto/booking.dto";
-
-export type CancelParams = {
-  id: string;
-  body: CancelDto;
-  request: Request;
-  refundAmount?: number;
-  byCustomer?: boolean;
-};
 
 export const bookingPaymentSelect = {
   select: {

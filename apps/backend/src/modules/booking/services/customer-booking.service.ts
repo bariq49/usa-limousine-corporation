@@ -150,17 +150,11 @@ export class CustomerBookingService {
       const unit = rates.cancellationNoticeUnit === "HOUR" ? "hour" : "minute";
       const plural = rates.cancellationNotice === 1 ? "" : "s";
       throw new BadRequestException(
-        `Bookings must be cancelled at least ${rates.cancellationNotice} ${unit}${plural} before pickup`
+        `Bookings must be cancelled at least ${rates.cancellationNotice} ${unit}${plural} before pickup`,
       );
     }
 
-    return this.bookingService.cancel({
-      id,
-      body,
-      request,
-      refundAmount: 0,
-      byCustomer: true,
-    });
+    return this.bookingService.cancel(id, body, request);
   }
 
   async complete(id: string, request: Request) {

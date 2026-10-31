@@ -1,12 +1,14 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from "@nestjs/common";
-import { BookingStatus } from "@prisma/client";
+import { BookingStatus, PaymentStatus, RoleKey } from "@prisma/client";
 import type { Request } from "express";
 import { auditLog } from "../../../common/utils/audit-log";
+import { roundAmount } from "../../../common/utils/money";
 import { toRequestContext } from "../../../common/utils/to-request-context";
 import { PrismaService } from "../../../infrastructure/database/prisma.service";
 import type {
   AnalyticsQueryDto,
   CalendarQueryDto,
+  CancelDto,
   QueryDto,
   UpdateDto,
 } from "../dto/booking.dto";
@@ -15,12 +17,12 @@ import type {
   AddressInput,
   Analytics,
   CalendarEvent,
-  CancelParams,
   PassengerInput,
   TimeInput,
   UpdateData,
   UpdateStatusData,
 } from "../types/booking";
+import { PlatformSettingsService } from "../../platform-settings/services/platform-settings.service";
 import { BookingEmailService } from "./booking-email.service";
 import { NotificationService } from "./notification.service";
 import { BookingSmsService } from "./booking-sms.service";
@@ -33,7 +35,9 @@ export class BookingService {
     @Inject(NotificationService) private readonly notifications: NotificationService,
     @Inject(BookingEmailService) private readonly bookingEmails: BookingEmailService,
     @Inject(BookingSmsService) private readonly bookingSms: BookingSmsService,
-  ) { }
+    @Inject(PlatformSettingsService)
+    private readonly platformSettingsService: PlatformSettingsService,
+  ) {}
 
   list(query: QueryDto) {
     return this.bookingRepository.findMany(query);
@@ -332,19 +336,16 @@ export class BookingService {
     return result;
   }
 
-  async cancel({
-    id,
-    body,
-    request,
-    refundAmount = 0,
-    byCustomer = false,
-  }: CancelParams) {
+  async cancel(id: string, body: CancelDto, request: Request) {
     const context = toRequestContext(request);
 
     const booking = await this.bookingRepository.findById(id);
     if (!booking) {
       throw new NotFoundException("Booking not found");
     }
+
+    const roles = (request.user as { roles?: string[] } | undefined)?.roles || [];
+    const byCustomer = !roles.includes(RoleKey.SUPER_ADMIN);
 
     const statusData: UpdateStatusData = { cancelledAt: new Date() };
     if (body.cancellationReason !== undefined) {
@@ -356,6 +357,23 @@ export class BookingService {
       statusData,
     );
 
+    let refundAmount = 0;
+    const payment = await this.bookingRepository.findPaymentForRefund(id);
+    if (payment && payment.status === PaymentStatus.PAID) {
+      const rates = await this.platformSettingsService.get();
+      refundAmount = roundAmount((Number(payment.amount) * rates.cancellationRefundRate) / 100);
+      if (refundAmount > 0) {
+        await this.bookingRepository.createCancellationRefund({
+          bookingId: updated.id,
+          paymentId: payment.id,
+          amount: refundAmount,
+          reason: byCustomer
+            ? `Customer cancellation (${rates.cancellationRefundRate}% refund rate)`
+            : `Admin cancellation (${rates.cancellationRefundRate}% refund rate)`,
+        });
+      }
+    }
+
     await auditLog({
       prisma: this.prisma,
       event: "booking.cancelled",
@@ -366,6 +384,7 @@ export class BookingService {
         bookingId: updated.id,
         bookingNumber: updated.bookingNumber,
         reason: updated.cancellationReason,
+        refundAmount,
       },
     });
 
@@ -375,14 +394,9 @@ export class BookingService {
     void this.bookingEmails.sendCancelled({
       bookingId: updated.id,
       reason: updated.cancellationReason,
-      refundAmount,
       byCustomer,
     });
-    void this.bookingSms.sendCancelled(
-      updated.id,
-      updated.cancellationReason,
-      byCustomer,
-    );
+    void this.bookingSms.sendCancelled(updated.id, updated.cancellationReason, byCustomer);
 
     await this.notifications.cancelled({
       bookingId: updated.id,
@@ -397,5 +411,4 @@ export class BookingService {
 
     return updated;
   }
-
 }

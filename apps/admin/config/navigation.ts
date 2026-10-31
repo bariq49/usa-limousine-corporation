@@ -4,6 +4,7 @@ import {
   Calendar,
   CalendarCheck,
   Car,
+  Card,
   Grid,
   Luggage,
   Device,
@@ -22,6 +23,8 @@ import {
   FileText,
   MessageSquare,
   Plus,
+  DollarSign,
+  Refresh,
 } from "@usa-limousine-corporation/ui/svg";
 import { APP_CONFIG } from "./app";
 
@@ -92,6 +95,31 @@ export const navigation: MenuSection[] = [
             label: "Cancelled Bookings",
             href: "/cancelled-bookings",
             icon: CalendarCross,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "payment",
+    label: "Payment",
+    icon: Card,
+    submenu: true,
+    groups: [
+      {
+        id: "payment-group",
+        items: [
+          {
+            id: "all-payments",
+            label: "Payment History",
+            href: "/payments",
+            icon: DollarSign,
+          },
+          {
+            id: "refunds",
+            label: "Refunds",
+            href: "/refunds",
+            icon: Refresh,
           },
         ],
       },
@@ -194,7 +222,6 @@ export const navigation: MenuSection[] = [
           { id: "blog-tags", label: "Tags", href: "/blog-tags", icon: Tag },
           { id: "blog-comments", label: "Comments", href: "/blog-comments", icon: MessageSquare },
         ],
-
       },
     ],
   },

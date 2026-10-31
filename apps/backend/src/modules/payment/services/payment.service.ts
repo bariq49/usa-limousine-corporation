@@ -8,12 +8,18 @@ import {
   ServiceUnavailableException,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { BookingStatus, BookingType, PaymentMode } from "@prisma/client";
+import {
+  BookingStatus,
+  BookingType,
+  PaymentMode,
+  RefundStatus,
+} from "@prisma/client";
 import type { Request } from "express";
 import { AppLogger } from "../../../common/logger/app.logger";
 import { allocateCode } from "../../../common/utils/allocate-sequence-code";
 import { auditLog } from "../../../common/utils/audit-log";
-import { toRequestContext } from "../../../common/utils/to-request-context";
+import { decimalsToNumbers, roundAmount, toAmount } from "../../../common/utils/money";
+import { requireUserId, toRequestContext } from "../../../common/utils/to-request-context";
 import { PrismaService } from "../../../infrastructure/database/prisma.service";
 import { SequenceService } from "../../../infrastructure/sequence/sequence.service";
 import { SquareService } from "../../../infrastructure/square/square.service";
@@ -25,6 +31,14 @@ import { BookingSmsService } from "../../booking/services/booking-sms.service";
 import { BookingPricingService } from "../../booking/services/booking-pricing.service";
 import type { PassengerInput } from "../../booking/types/booking";
 import { PlatformSettingsService } from "../../platform-settings/services/platform-settings.service";
+import type {
+  CompleteRefundDto,
+  CreateRefundDto,
+  QueryDto,
+  RefundDto,
+  RefundQueryDto,
+  RejectRefundDto,
+} from "../dto/payment.dto";
 import { PaymentRepository } from "../repositories/payment.repository";
 import type { CheckoutBooking, SquareWebhookEvent } from "../types/payment";
 
@@ -55,7 +69,7 @@ export class PaymentService implements OnModuleInit, OnModuleDestroy {
     @Inject(BookingSmsService) private readonly bookingSms: BookingSmsService,
     @Inject(ConfigService) private readonly configService: ConfigService,
     @Inject(AppLogger) private readonly logger: AppLogger,
-  ) {}
+  ) { }
 
   onModuleInit() {
     if (this.configService.get<string>("NODE_ENV") === "test") return;
@@ -64,6 +78,266 @@ export class PaymentService implements OnModuleInit, OnModuleDestroy {
 
   onModuleDestroy() {
     if (this.sweepTimer) clearInterval(this.sweepTimer);
+  }
+
+  async list(query: QueryDto) {
+    const result = await this.paymentRepository.findMany(query);
+    return decimalsToNumbers(result);
+  }
+
+  async listByCustomer(query: QueryDto, request: Request) {
+    const context = toRequestContext(request);
+    const userId = requireUserId(context);
+    const result = await this.paymentRepository.findMany(query, userId);
+    return decimalsToNumbers(result);
+  }
+
+  async getOne(id: string) {
+    const payment = await this.paymentRepository.findById(id);
+    if (!payment) {
+      throw new NotFoundException("Payment not found");
+    }
+    return decimalsToNumbers(payment);
+  }
+
+  async getOneForCustomer(id: string, request: Request) {
+    const context = toRequestContext(request);
+    const userId = requireUserId(context);
+    const payment = await this.paymentRepository.findById(id);
+    if (!payment || payment.booking?.userId !== userId) {
+      throw new NotFoundException("Payment not found");
+    }
+    return decimalsToNumbers(payment);
+  }
+
+  async listRefunds(query: RefundQueryDto) {
+    const result = await this.paymentRepository.findRefunds(query);
+    return decimalsToNumbers(result);
+  }
+
+  async listRefundsByCustomer(query: RefundQueryDto, request: Request) {
+    const context = toRequestContext(request);
+    const userId = requireUserId(context);
+    const result = await this.paymentRepository.findRefunds(query, userId);
+    return decimalsToNumbers(result);
+  }
+
+  async getRefund(id: string) {
+    const refund = await this.paymentRepository.findRefundById(id);
+    if (!refund) {
+      throw new NotFoundException("Refund not found");
+    }
+    return decimalsToNumbers(refund);
+  }
+
+  async getRefundForCustomer(id: string, request: Request) {
+    const context = toRequestContext(request);
+    const userId = requireUserId(context);
+    const refund = await this.paymentRepository.findRefundById(id);
+    if (!refund || refund.booking?.userId !== userId) {
+      throw new NotFoundException("Refund not found");
+    }
+    return decimalsToNumbers(refund);
+  }
+
+  async createRefund(body: CreateRefundDto, request: Request) {
+    const context = toRequestContext(request);
+    const payment = await this.paymentRepository.findById(body.paymentId);
+    if (!payment) {
+      throw new NotFoundException("Payment not found");
+    }
+
+    const maxRefundable = roundAmount(
+      toAmount(payment.amount) - toAmount(payment.refundedAmount ?? 0),
+    );
+    if (maxRefundable <= 0) {
+      throw new BadRequestException("This payment has already been fully refunded");
+    }
+
+    const refundAmount = body.amount !== undefined ? roundAmount(body.amount) : maxRefundable;
+    if (refundAmount <= 0) {
+      throw new BadRequestException("Refund amount must be greater than 0");
+    }
+    if (refundAmount > maxRefundable) {
+      throw new BadRequestException(
+        `Refund amount cannot exceed remaining refundable amount of $${maxRefundable}`,
+      );
+    }
+
+    const isManual = body.manual === true || !payment.squarePaymentId;
+    let squareRefundId: string | null = null;
+    let status: RefundStatus = RefundStatus.PENDING;
+    let processedAt: Date | null = null;
+
+    if (!isManual && payment.squarePaymentId) {
+      squareRefundId = await this.square.refundPayment(
+        payment.mode,
+        payment.squarePaymentId,
+        refundAmount,
+        body.reason || "Admin issued refund",
+      );
+      status = RefundStatus.COMPLETED;
+      processedAt = new Date();
+    } else if (body.manual) {
+      squareRefundId = `MANUAL-${Date.now()}`;
+      status = RefundStatus.COMPLETED;
+      processedAt = new Date();
+    }
+
+    const refund = await this.paymentRepository.createRefund({
+      bookingId: payment.bookingId,
+      paymentId: payment.id,
+      amount: refundAmount,
+      status,
+      reason: body.reason ?? null,
+      isManual,
+      squareRefundId,
+      processedAt,
+      processedBy: context.userId ?? null,
+    });
+
+    if (status === RefundStatus.COMPLETED) {
+      await this.paymentRepository.recordRefund(payment.id, {
+        refundedAmount: roundAmount(toAmount(payment.refundedAmount ?? 0) + refundAmount),
+        refundedAt: processedAt ?? new Date(),
+        squareRefundId,
+      });
+    }
+
+    await auditLog({
+      prisma: this.prisma,
+      event: "payment.refund_created",
+      result: "success",
+      context,
+      userId: context.userId,
+      metadata: {
+        refundId: refund.id,
+        paymentId: payment.id,
+        bookingId: payment.bookingId,
+        amount: refundAmount,
+        status,
+        manual: isManual,
+      },
+    });
+
+    return decimalsToNumbers(refund);
+  }
+
+  async completeRefund(id: string, body: CompleteRefundDto, request: Request) {
+    const context = toRequestContext(request);
+    const refund = await this.paymentRepository.findRefundById(id);
+    if (!refund) {
+      throw new NotFoundException("Refund not found");
+    }
+    if (refund.status !== RefundStatus.PENDING) {
+      throw new BadRequestException(`Cannot complete a refund with status ${refund.status}`);
+    }
+
+    const payment = refund.payment;
+    const isManual = body.manual === true || !payment.squarePaymentId;
+    let squareRefundId: string | null = null;
+
+    if (!isManual && payment.squarePaymentId) {
+      squareRefundId = await this.square.refundPayment(
+        payment.mode,
+        payment.squarePaymentId,
+        toAmount(refund.amount),
+        body.reason || refund.reason || "Admin completed refund",
+      );
+    } else {
+      squareRefundId = refund.squareRefundId || `MANUAL-${Date.now()}`;
+    }
+
+    const updated = await this.paymentRepository.completeRefund(refund.id, {
+      squareRefundId,
+      isManual,
+      processedBy: context.userId ?? null,
+    });
+
+    await auditLog({
+      prisma: this.prisma,
+      event: "payment.refund_completed",
+      result: "success",
+      context,
+      userId: context.userId,
+      metadata: {
+        refundId: updated.id,
+        paymentId: payment.id,
+        bookingId: refund.bookingId,
+        amount: toAmount(refund.amount),
+        manual: isManual,
+        squareRefundId,
+      },
+    });
+
+    return decimalsToNumbers(updated);
+  }
+
+  async rejectRefund(id: string, body: RejectRefundDto, request: Request) {
+    const context = toRequestContext(request);
+    const refund = await this.paymentRepository.findRefundById(id);
+    if (!refund) {
+      throw new NotFoundException("Refund not found");
+    }
+    if (refund.status !== RefundStatus.PENDING) {
+      throw new BadRequestException(`Cannot reject a refund with status ${refund.status}`);
+    }
+
+    const updated = await this.paymentRepository.updateRefund(id, {
+      status: RefundStatus.REJECTED,
+      reason: body.reason ?? refund.reason,
+      processedAt: new Date(),
+      processedBy: context.userId ?? null,
+    });
+
+    await auditLog({
+      prisma: this.prisma,
+      event: "payment.refund_rejected",
+      result: "success",
+      context,
+      userId: context.userId,
+      metadata: {
+        refundId: updated.id,
+        paymentId: refund.paymentId,
+        bookingId: refund.bookingId,
+        reason: body.reason ?? null,
+      },
+    });
+
+    return decimalsToNumbers(updated);
+  }
+
+  async refund(id: string, body: RefundDto, request: Request) {
+    return this.createRefund(
+      {
+        paymentId: id,
+        amount: body.amount,
+        reason: body.reason,
+        manual: body.manual,
+      },
+      request,
+    );
+  }
+
+  async recordCancellationRefund(data: {
+    bookingId: string;
+    paymentId: string;
+    amount: number;
+    reason: string;
+  }) {
+    const refund = await this.paymentRepository.createRefund({
+      bookingId: data.bookingId,
+      paymentId: data.paymentId,
+      amount: data.amount,
+      status: RefundStatus.PENDING,
+      reason: data.reason,
+      isManual: false,
+      squareRefundId: null,
+      processedAt: null,
+      processedBy: null,
+    });
+
+    return decimalsToNumbers(refund);
   }
 
   async startCheckout(body: CheckoutDto, request: Request) {
@@ -88,11 +362,10 @@ export class PaymentService implements OnModuleInit, OnModuleDestroy {
       vehicleCount: body.vehicleCount,
       status: BookingStatus.PENDING,
       pricing,
-      address: {
-        ...body.address,
+      address: Object.assign({}, body.address, {
         distance: body.address.distance ?? 0,
         travelDuration: body.address.travelDuration ?? 0,
-      },
+      }),
       passenger: body.passenger,
       bookingTime: body.bookingTime,
       flightDetails: body.flightDetails,

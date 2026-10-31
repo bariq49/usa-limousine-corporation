@@ -44,11 +44,7 @@ export class BookingSmsService {
     });
   }
 
-  sendCancelled(
-    bookingId: string,
-    reason: string | null,
-    byCustomer = false,
-  ) {
+  sendCancelled(bookingId: string, reason: string | null, byCustomer = false) {
     return sendBookingSms({
       bookingId,
       kind: "cancelled",
@@ -57,9 +53,7 @@ export class BookingSmsService {
           ? `${BRAND}: your booking ${booking.bookingNumber} has been cancelled.`
           : `${BRAND} has cancelled your booking ${booking.bookingNumber}.`;
         return (
-          prefix +
-          (reason ? ` Reason: ${reason}.` : "") +
-          ` Questions? Call ${SUPPORT_PHONE}.`
+          prefix + (reason ? ` Reason: ${reason}.` : "") + ` Questions? Call ${SUPPORT_PHONE}.`
         );
       },
       bookingRepository: this.bookingRepository,

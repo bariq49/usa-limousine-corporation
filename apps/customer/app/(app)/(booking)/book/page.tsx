@@ -17,7 +17,6 @@ import { formatPrice } from "@usa-limousine-corporation/ui/utils/price";
 import { Calendar, CalendarClock, Car, Location, User } from "@usa-limousine-corporation/ui/svg";
 import { useCreateBooking } from "@/hooks/queries/use-bookings";
 
-/** Booking request built on the public website, passed here as the `draft` query param. */
 type Draft = CreateInput & { vehicleCategoryName?: string };
 
 const crumbs = [
@@ -42,7 +41,6 @@ function parseDraft(raw: string | null): Draft | null {
   }
 }
 
-/** Only the fields the API accepts; it rejects unknown properties. */
 function toCreateInput(draft: Draft): CreateInput {
   return {
     vehicleCategoryId: draft.vehicleCategoryId,

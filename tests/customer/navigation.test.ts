@@ -15,8 +15,10 @@ describe("customer navigation", () => {
       "/dashboard",
       "/help-center",
       "/notifications",
+      "/payments",
       "/pending-bookings",
       "/profile-setting",
+      "/refunds",
     ]);
   });
 });

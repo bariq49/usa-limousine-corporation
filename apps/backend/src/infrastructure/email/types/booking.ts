@@ -50,7 +50,6 @@ export type BookingCancelMailProps = {
   booking: BookingEmail;
   siteUrl: string;
   reason: string | null;
-  refundAmount: number;
   admin?: boolean | undefined;
   byCustomer?: boolean | undefined;
 };
