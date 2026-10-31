@@ -21,6 +21,7 @@ describe("admin navigation", () => {
       "/completed-bookings",
       "/confirmed-bookings",
       "/customers",
+      "/driver-analytics",
       "/drivers",
       "/extra-services",
       "/help-center",
@@ -32,6 +33,7 @@ describe("admin navigation", () => {
       "/refunds",
       "/scheduled-bookings",
       "/standard-luggage",
+      "/user-analytics",
     ]);
   });
 });

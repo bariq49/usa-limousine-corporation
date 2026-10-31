@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
-  BookingOverview,
+  Analytics,
   type OverviewStat,
-} from "@usa-limousine-corporation/ui/components/dashboard/booking-overview";
+} from "@usa-limousine-corporation/ui/components/dashboard/analytics";
 import { Button } from "@usa-limousine-corporation/ui/components/button";
 import { PageHeader } from "@usa-limousine-corporation/ui/layout/page-header";
 import { useUser } from "@usa-limousine-corporation/ui/providers/user-context";
@@ -15,7 +15,6 @@ import { HelpCenterCard } from "@/components/help-center/help-center-card";
 import { useBookingAnalytics } from "@/hooks/queries/use-bookings";
 
 const CURRENT_YEAR = Number(formatDate({ date: new Date(), as: "value" }).slice(0, 4));
-const YEARS = [CURRENT_YEAR, CURRENT_YEAR - 1, CURRENT_YEAR - 2];
 const EMPTY_MONTHS = Array<number>(12).fill(0);
 const MONTH_NAMES = [
   "January",
@@ -67,7 +66,7 @@ export default function DashboardPage() {
     },
     {
       key: "upcoming",
-      label: "Scheduled Rides",
+      label: "Scheduled Bookings",
       color: "info",
       chartColor: "#06b6d4",
       kind: "count",
@@ -124,7 +123,7 @@ export default function DashboardPage() {
         >
           <Link href="/scheduled-bookings">
             <CalendarClock className="h-4 w-4 shrink-0" />
-            Scheduled rides
+            Scheduled bookings
           </Link>
         </Button>
         <Button
@@ -152,7 +151,7 @@ export default function DashboardPage() {
           </Link>
         </Button>
       </div>
-      <BookingOverview
+      <Analytics
         title="My Bookings"
         description={
           month
@@ -161,10 +160,11 @@ export default function DashboardPage() {
         }
         stats={stats}
         year={year}
-        years={YEARS}
-        onYearChange={setYear}
         month={month}
-        onMonthChange={setMonth}
+        onFiltersChange={(filters) => {
+          setYear(filters.year);
+          setMonth(filters.month);
+        }}
         categories={
           month ? Array.from({ length: days }, (_, index) => String(index + 1)) : undefined
         }

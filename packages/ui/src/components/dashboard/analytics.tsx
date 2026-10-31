@@ -11,6 +11,7 @@ import { Skeleton } from "../skeleton";
 import AreaChart from "../charts/area-chart";
 import { SlidersHorizontal } from "../../svg";
 import { cn } from "../../utils/cn";
+import { formatDate } from "../../utils/date";
 import { formatPrice } from "../../utils/price";
 
 export type OverviewStatColor = "primary" | "success" | "info" | "warning" | "destructive";
@@ -25,15 +26,19 @@ export interface OverviewStat {
   monthly: number[];
 }
 
-export interface BookingOverviewProps {
+export type AnalyticsFilters = {
+  year: number;
+  month: number | null;
+};
+
+export interface AnalyticsProps {
   title: string;
   description: string;
   stats: OverviewStat[];
   year: number;
-  years?: number[] | undefined;
-  onYearChange?: ((year: number) => void) | undefined;
   month?: number | null | undefined;
-  onMonthChange?: ((month: number | null) => void) | undefined;
+  onFiltersChange?: ((filters: AnalyticsFilters) => void) | undefined;
+  monthFilter?: boolean | undefined;
   isLoading?: boolean | undefined;
   categories?: string[] | undefined;
   chartDescription?: string | undefined;
@@ -43,6 +48,8 @@ export interface BookingOverviewProps {
 }
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const CURRENT_YEAR = Number(formatDate({ date: new Date(), as: "value" }).slice(0, 4));
+const DEFAULT_YEARS = [CURRENT_YEAR, CURRENT_YEAR - 1, CURRENT_YEAR - 2];
 
 type FilterValues = {
   month: string;
@@ -53,25 +60,26 @@ function formatValue(kind: OverviewStat["kind"], value: number) {
   return kind === "currency" ? formatPrice({ price: value }) : Math.round(value).toString();
 }
 
-export function BookingOverview({
+export function Analytics({
   title,
   description,
   stats,
   year,
-  years,
-  onYearChange,
-  month,
-  onMonthChange,
+  month = null,
+  onFiltersChange,
+  monthFilter = true,
   isLoading,
   categories = MONTHS,
   chartDescription,
   actions,
   statsClassName,
   className,
-}: BookingOverviewProps) {
+}: AnalyticsProps) {
   const [selectedKey, setSelectedKey] = useState(stats[0]?.key ?? "");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const selected = stats.find((item) => item.key === selectedKey) ?? stats[0];
+  const showFilters = Boolean(onFiltersChange);
+  const showMonth = showFilters && monthFilter;
   const form = useForm<FilterValues>({
     defaultValues: {
       month: month ? String(month) : "all",
@@ -95,16 +103,15 @@ export function BookingOverview({
   }, [form, mobileForm, month, year]);
 
   useEffect(() => {
-    if (!onMonthChange || watchedMonth === undefined) return;
-    const next = watchedMonth === "all" ? null : Number(watchedMonth);
-    if (next !== month) onMonthChange(next);
-  }, [month, onMonthChange, watchedMonth]);
-
-  useEffect(() => {
-    if (!onYearChange || watchedYear === undefined) return;
-    const next = Number(watchedYear);
-    if (next !== year) onYearChange(next);
-  }, [onYearChange, watchedYear, year]);
+    if (!onFiltersChange || watchedYear === undefined) return;
+    const nextYear = Number(watchedYear);
+    const nextMonth =
+      !showMonth || watchedMonth === undefined || watchedMonth === "all"
+        ? null
+        : Number(watchedMonth);
+    if (nextYear === year && nextMonth === month) return;
+    onFiltersChange({ year: nextYear, month: nextMonth });
+  }, [month, onFiltersChange, showMonth, watchedMonth, watchedYear, year]);
 
   const monthOptions = [{ value: "all", label: "All months" }].concat(
     MONTHS.map((option, index) => ({
@@ -112,7 +119,7 @@ export function BookingOverview({
       label: option,
     })),
   );
-  const yearOptions = (years ?? []).map((option) => ({
+  const yearOptions = DEFAULT_YEARS.map((option) => ({
     value: String(option),
     label: String(option),
   }));
@@ -130,13 +137,13 @@ export function BookingOverview({
             <div className="text-xl font-semibold text-default-900">{title}</div>
             <span className="block text-xs text-default-600 md:text-sm">{description}</span>
           </div>
-          {years && onYearChange ? (
+          {showFilters ? (
             <Button
               type="button"
               size="icon"
               variant="outline"
               className="shrink-0 md:hidden"
-              aria-label="Open booking filters"
+              aria-label="Open analytics filters"
               onClick={() => {
                 mobileForm.setValue("month", month ? String(month) : "all");
                 mobileForm.setValue("year", String(year));
@@ -147,15 +154,15 @@ export function BookingOverview({
             </Button>
           ) : null}
         </div>
-        {years && onYearChange ? (
+        {showFilters ? (
           <Form {...form}>
             <div
               className={cn(
                 "hidden gap-2 md:flex md:shrink-0",
-                onMonthChange ? "grid-cols-2" : "grid-cols-1",
+                showMonth ? "grid-cols-2" : "grid-cols-1",
               )}
             >
-              {onMonthChange ? (
+              {showMonth ? (
                 <Input
                   name="month"
                   type="select"
@@ -177,18 +184,18 @@ export function BookingOverview({
           actions
         )}
       </CardHeader>
-      {years && onYearChange ? (
+      {showFilters ? (
         <Dialog open={filtersOpen} onOpenChange={setFiltersOpen}>
           <DialogContent className="max-w-md gap-5 max-md:top-auto max-md:bottom-0 max-md:left-0 max-md:right-0 max-md:max-w-none max-md:translate-x-0 max-md:translate-y-0 max-md:overflow-y-auto max-md:rounded-t-2xl max-md:rounded-b-none max-md:pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
             <DialogHeader className="text-left">
-              <DialogTitle>Booking filters</DialogTitle>
+              <DialogTitle>Analytics filters</DialogTitle>
               <DialogDescription>
-                Choose a month and year to update your overview.
+                Choose a month and year to update your analytics.
               </DialogDescription>
             </DialogHeader>
             <Form {...mobileForm}>
               <div className="grid gap-4">
-                {onMonthChange ? (
+                {showMonth ? (
                   <Input
                     name="month"
                     label="Month"
@@ -211,10 +218,10 @@ export function BookingOverview({
               className="w-full"
               onClick={() => {
                 const values = mobileForm.getValues();
-                if (onMonthChange) {
-                  onMonthChange(values.month === "all" ? null : Number(values.month));
-                }
-                onYearChange(Number(values.year));
+                onFiltersChange?.({
+                  year: Number(values.year),
+                  month: showMonth && values.month !== "all" ? Number(values.month) : null,
+                });
                 setFiltersOpen(false);
               }}
             >
@@ -242,7 +249,7 @@ export function BookingOverview({
               aria-pressed={selected?.key === item.key}
               onClick={() => setSelectedKey(item.key)}
               className={cn(
-                "relative flex h-full min-h-24 w-full cursor-pointer flex-col items-start justify-between gap-1 overflow-hidden rounded-md p-3.5 text-left md:min-h-28 md:gap-1.5 md:p-4 transition hover:-translate-y-0.5 hover:shadow-sm focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none",
+                "relative flex h-full min-h-24 w-full cursor-pointer flex-col items-start justify-between gap-1 overflow-hidden rounded-md p-3.5 text-left transition hover:-translate-y-0.5 hover:shadow-sm focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none md:min-h-28 md:gap-1.5 md:p-4",
                 {
                   "bg-primary/30": item.color === "primary",
                   "bg-warning/30": item.color === "warning",
@@ -254,14 +261,15 @@ export function BookingOverview({
               )}
             >
               <span
+                aria-hidden
                 className={cn(
-                  "absolute -top-3 -right-3 h-8 w-8 rounded-full ring-6 md:h-10 md:w-10 md:ring-8",
+                  "pointer-events-none absolute -top-6 -right-6 h-16 w-16 rounded-full md:-top-8 md:-right-8 md:h-20 md:w-20",
                   {
-                    "bg-primary/50 ring-primary/20": item.color === "primary",
-                    "bg-amber-200 ring-amber-100": item.color === "warning",
-                    "bg-green-200 ring-green-100": item.color === "success",
-                    "bg-cyan-200 ring-cyan-100": item.color === "info",
-                    "bg-red-200 ring-red-100": item.color === "destructive",
+                    "bg-primary/40": item.color === "primary",
+                    "bg-amber-300/50": item.color === "warning",
+                    "bg-green-300/50": item.color === "success",
+                    "bg-cyan-300/50": item.color === "info",
+                    "bg-red-300/50": item.color === "destructive",
                   },
                 )}
               />
@@ -294,7 +302,7 @@ export function BookingOverview({
             {isLoading ? (
               <Skeleton className="h-64 w-full md:h-72" />
             ) : (
-              <div className="min-w-0 overflow-x-auto">
+              <div className="min-w-0">
                 <AreaChart
                   series={[{ name: selected.label, data: selected.monthly }]}
                   chartColor={selected.chartColor}

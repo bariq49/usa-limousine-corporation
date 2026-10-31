@@ -12,7 +12,7 @@ import {
 } from "@/hooks/queries/use-bookings";
 import { getBooking } from "@/lib/api/bookings";
 
-const crumbs = [{ label: "Home", href: "/dashboard" }, { label: "Scheduled Rides" }];
+const crumbs = [{ label: "Home", href: "/dashboard" }, { label: "Scheduled Bookings" }];
 
 export default function BookingCalendarPage() {
   const [query, setQuery] = useState<CalendarQuery | null>(null);
@@ -28,8 +28,8 @@ export default function BookingCalendarPage() {
         isFetching={isFetching}
         onQueryChange={setQuery}
         basePath="/bookings"
-        title="Scheduled Rides"
-        description="Pick a date to see your rides for that day."
+        title="Scheduled Bookings"
+        description="Pick a date to see your bookings for that day."
         getBooking={getBooking}
         bookingQueryKey={bookingQueryKeys.detail}
         onCancelBooking={({ id, reason }) => cancelMutation.mutateAsync({ id, reason })}

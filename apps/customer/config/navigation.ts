@@ -43,7 +43,7 @@ export const navigation: MenuSection[] = [
           { id: "all-bookings", label: "All Bookings", href: "/bookings", icon: Calendar },
           {
             id: "scheduled-bookings",
-            label: "Scheduled Rides",
+            label: "Scheduled Bookings",
             href: "/scheduled-bookings",
             icon: CalendarClock,
           },

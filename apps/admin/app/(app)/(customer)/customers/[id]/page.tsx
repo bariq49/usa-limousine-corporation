@@ -14,9 +14,9 @@ import { Skeleton } from "@usa-limousine-corporation/ui/components/skeleton";
 import { DataTable } from "@usa-limousine-corporation/ui/components/data-table/data-table";
 import { getColumns as getBookingColumns } from "@usa-limousine-corporation/ui/components/bookings/booking-columns";
 import {
-  BookingOverview,
+  Analytics,
   type OverviewStat,
-} from "@usa-limousine-corporation/ui/components/dashboard/booking-overview";
+} from "@usa-limousine-corporation/ui/components/dashboard/analytics";
 import { Breadcrumbs } from "@usa-limousine-corporation/ui/layout/breadcrumbs";
 import { CoverHeader } from "@usa-limousine-corporation/ui/components/profile/cover-header";
 import { cn } from "@usa-limousine-corporation/ui/utils/cn";
@@ -29,7 +29,6 @@ import { useCustomer } from "@/hooks/queries/use-customers";
 import { useTickets } from "@/hooks/queries/use-tickets";
 
 const CURRENT_YEAR = Number(formatDate({ date: new Date(), as: "value" }).slice(0, 4));
-const YEARS = [CURRENT_YEAR, CURRENT_YEAR - 1, CURRENT_YEAR - 2];
 const EMPTY_MONTHS = Array<number>(12).fill(0);
 
 /** One labelled value with a round icon, as on the driver profile card. */
@@ -122,7 +121,7 @@ export default function CustomerDetailPage() {
     },
     {
       key: "upcoming",
-      label: "Scheduled Rides",
+      label: "Scheduled Bookings",
       color: "info",
       chartColor: "#06b6d4",
       kind: "count",
@@ -194,13 +193,15 @@ export default function CustomerDetailPage() {
         </div>
 
         <div className="col-span-12 xl:col-span-8">
-          <BookingOverview
+          <Analytics
             title="Customer Stats"
             description={`${data?.totalBookings ?? 0} bookings in ${year} · ${user._count.bookings} all time · ${customer._count.helpTickets} support tickets`}
             stats={stats}
             year={year}
-            years={YEARS}
-            onYearChange={setYear}
+            monthFilter={false}
+            onFiltersChange={(filters) => {
+              setYear(filters.year);
+            }}
             isLoading={analytics.isLoading}
           />
         </div>

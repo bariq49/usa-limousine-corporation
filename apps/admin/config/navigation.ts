@@ -46,6 +46,18 @@ export const navigation: MenuSection[] = [
             href: "/analytics",
             icon: Graph,
           },
+          {
+            id: "user-analytics",
+            label: "User Analytics",
+            href: "/user-analytics",
+            icon: Users,
+          },
+          {
+            id: "driver-analytics",
+            label: "Driver Analytics",
+            href: "/driver-analytics",
+            icon: UserSign,
+          },
         ],
       },
     ],
@@ -67,7 +79,7 @@ export const navigation: MenuSection[] = [
           },
           {
             id: "scheduled-bookings",
-            label: "Scheduled Rides",
+            label: "Scheduled Bookings",
             href: "/scheduled-bookings",
             icon: CalendarClock,
           },
@@ -164,7 +176,7 @@ export const navigation: MenuSection[] = [
   {
     id: "customer",
     label: "Customer",
-    icon: User,
+    icon: Users,
     submenu: true,
     groups: [
       {

@@ -41,14 +41,14 @@ function DashBoardFrame({ children }: { children: ReactNode }) {
         <Sidebar />
         <div
           className={cn(
-            "content-wrapper page-min-height max-w-full min-h-screen bg-background transition-all duration-150 max-md:bg-card",
+            "content-wrapper page-min-height max-w-full bg-background transition-all duration-150 max-md:bg-card",
             {
               "xl:ml-[300px]": !collapsed,
               "xl:ml-[72px]": collapsed,
             },
           )}
         >
-          <div className="layout-padding page-min-height max-w-full px-4 pt-6 sm:px-6">
+          <div className="layout-padding max-w-full px-4 pt-6 sm:px-6">
             <main>
               <Suspense fallback={<LayoutLoader />}>{children}</Suspense>
             </main>

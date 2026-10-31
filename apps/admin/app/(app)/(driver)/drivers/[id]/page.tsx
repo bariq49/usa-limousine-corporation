@@ -16,9 +16,9 @@ import {
 import { Skeleton } from "@usa-limousine-corporation/ui/components/skeleton";
 import { DataTable } from "@usa-limousine-corporation/ui/components/data-table/data-table";
 import {
-  BookingOverview,
+  Analytics,
   type OverviewStat,
-} from "@usa-limousine-corporation/ui/components/dashboard/booking-overview";
+} from "@usa-limousine-corporation/ui/components/dashboard/analytics";
 import { Breadcrumbs } from "@usa-limousine-corporation/ui/layout/breadcrumbs";
 import { CoverHeader } from "@usa-limousine-corporation/ui/components/profile/cover-header";
 import { BOOKING_STATUS_LABELS } from "@usa-limousine-corporation/ui/components/bookings/labels";
@@ -209,7 +209,7 @@ export default function DriverDetailPage() {
         </div>
 
         <div className="col-span-12 xl:col-span-8">
-          <BookingOverview
+          <Analytics
             key={period}
             title="Driver Stats"
             description={`${data?.totalRides ?? 0} rides · ${driver._count.assignments} assigned all time`}
